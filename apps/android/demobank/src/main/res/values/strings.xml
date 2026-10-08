@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ngân hàng Mẫu</string>
+    <string name="demo_banner">ỨNG DỤNG DEMO — không phải ngân hàng thật, không có tiền thật.</string>
+    <string name="greeting">Xin chào, Khách hàng Mẫu</string>
+    <string name="balance_label">Số dư khả dụng (hư cấu)</string>
+    <string name="balance_value">25.000.000 ₫</string>
+    <string name="transfer">Chuyển tiền</string>
+</resources>

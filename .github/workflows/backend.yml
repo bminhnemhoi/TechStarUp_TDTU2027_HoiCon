@@ -1,0 +1,47 @@
+name: backend
+
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**", "docs/schemas/**", ".github/workflows/backend.yml"]
+  pull_request:
+    paths: ["backend/**", "docs/schemas/**", ".github/workflows/backend.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      db:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: hoicon
+          POSTGRES_PASSWORD: hoicon_ci
+          POSTGRES_DB: hoicon
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U hoicon -d hoicon" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      HOICON_DATABASE_URL: postgresql+psycopg://hoicon:hoicon_ci@localhost:5432/hoicon
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run alembic upgrade head
+      - run: uv run pytest -q

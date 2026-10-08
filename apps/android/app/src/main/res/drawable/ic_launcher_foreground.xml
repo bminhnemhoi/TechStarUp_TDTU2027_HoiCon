@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tạm thời (P0-06): khiên trắng có dấu tích, nằm trong vùng an toàn 66dp của adaptive icon. Logo thật ở P1-05. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,28L78,37V54C78,68.5 68,79 54,84C40,79 30,68.5 30,54V37Z" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M43,55L51,63L66,46"
+        android:strokeWidth="6"
+        android:strokeColor="#1F3A5F"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

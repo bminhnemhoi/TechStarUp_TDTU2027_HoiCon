@@ -1,0 +1,62 @@
+# --- Bí mật (KHÔNG bao giờ commit) ---
+.env*
+!.env.example
+*~
+*pepper*.txt
+*.jks
+*.keystore
+keystore.properties
+google-services.json
+service-account*.json
+
+# --- Python / uv ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage*
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+playwright-report/
+test-results/
+
+# --- Android / Gradle ---
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+.cxx/
+.externalNativeBuild/
+captures/
+*.hprof
+
+# --- IDE / OS ---
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+~$*
+
+# --- Claude Code (cục bộ) ---
+.claude/settings.local.json
+.claude/worktrees/
+.claude/.cache/
+
+# --- Dữ liệu sinh ra ---
+eval/reports/*.json
+docs/proposal/src/fig_*.png
+docs/proposal/src/out/
+docs/proposal/src/node_modules/
+*.log

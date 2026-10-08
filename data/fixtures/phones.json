@@ -1,0 +1,7 @@
+{
+  "_note": "Số điện thoại HƯ CẤU chỉ dùng cho test/máy ảo/demo (CLAUDE.md luật 2, 8). Không bao giờ thay bằng số thật. Đầu 0900000xxx được chọn để dễ nhận ra là giả.",
+  "unknown_caller": "0900000001",
+  "flagged_caller": "0900000002",
+  "trusted_child": "0900000003",
+  "drill_fake_police": "0900000099"
+}

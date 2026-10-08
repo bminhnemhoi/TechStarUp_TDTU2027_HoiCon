@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tòa nhà ngân hàng chung chung (không mô phỏng logo ngân hàng thật nào). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30L80,44H28Z M33,48h6v20h-6Z M45,48h6v20h-6Z M57,48h6v20h-6Z M69,48h6v20h-6Z M28,72h52v6h-52Z" />
+</vector>

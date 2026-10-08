@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "ANDROID_HOME": "D:\\Android\\Sdk",
+    "ANDROID_SDK_ROOT": "D:\\Android\\Sdk",
+    "ANDROID_AVD_HOME": "D:\\Android\\avd",
+    "GRADLE_USER_HOME": "D:\\.gradle",
+    "PYTHONUTF8": "1",
+    "NO_COLOR": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(uv run *)",
+      "Bash(uv sync *)",
+      "Bash(uv lock *)",
+      "Bash(uv add *)",
+      "Bash(uv tree *)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm run *)",
+      "Bash(pnpm dev *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm build *)",
+      "Bash(pnpm --dir apps/web *)",
+      "Bash(apps/android/gradlew *)",
+      "Bash(./gradlew *)",
+      "Bash(adb *)",
+      "Bash(D:/Android/Sdk/platform-tools/adb.exe *)",
+      "Bash(D:/Android/Sdk/emulator/emulator.exe *)",
+      "Bash(D:/Android/Sdk/cmdline-tools/latest/bin/android.exe *)",
+      "Bash(docker compose -f infra/compose.dev.yml *)",
+      "Bash(docker ps *)",
+      "Bash(python scripts/emu-scenario.py *)",
+      "Bash(node .claude/hooks/*)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(git show *)",
+      "Bash(git switch *)",
+      "Bash(git add *)",
+      "Bash(git worktree list *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)",
+      "Bash(rtk *)",
+      "Read(//c/Users/Admin/.claude/plugins/marketplaces/**)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./**/.env)",
+      "Read(./**/.env.local)",
+      "Read(./**/.env.*.local)",
+      "Read(./**/.env.development)",
+      "Read(./**/.env.production)",
+      "Read(./**/.env.test)",
+      "Edit(./**/.env)",
+      "Edit(./**/.env.local)",
+      "Edit(./**/.env.*.local)",
+      "Edit(./**/.env.production)",
+      "Read(./**/*.jks)",
+      "Read(./**/*.keystore)",
+      "Read(./**/keystore.properties)",
+      "Read(./**/google-services.json)",
+      "Read(//d/secrets/**)",
+      "Edit(//d/secrets/**)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git push origin main)",
+      "Bash(git push origin main *)",
+      "PowerShell(git push --force *)",
+      "PowerShell(git push -f *)",
+      "PowerShell(git push origin main)",
+      "PowerShell(git push origin main *)"
+    ],
+    "ask": [
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git worktree add *)",
+      "Bash(git worktree remove *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh repo *)",
+      "Bash(bash scripts/setup-claude-tools.sh*)",
+      "Bash(bash scripts/stop-other-stacks.sh*)",
+      "Bash(bash scripts/deploy*)",
+      "Bash(docker compose -f infra/compose.prod.yml *)",
+      "Bash(pnpm run db:reset*)",
+      "Bash(adb shell pm uninstall *)",
+      "Bash(adb uninstall *)",
+      "PowerShell(git commit *)",
+      "PowerShell(git push *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.mjs\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-shell.mjs\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/rtk-rewrite.mjs\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-migrations.mjs\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-privacy.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-on-edit.mjs\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-check.mjs\"",
+            "timeout": 120,
+            "statusMessage": "Kiểm tra lint + unit test liên quan…"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "ponytail@ponytail": true,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": true,
+    "frontend-design@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "kotlin-lsp@claude-plugins-official": false,
+    "example-skills@anthropic-agent-skills": true,
+    "caveman@caveman": false
+  },
+  "extraKnownMarketplaces": {
+    "ponytail": { "source": { "source": "github", "repo": "DietrichGebert/ponytail" } },
+    "ui-ux-pro-max-skill": { "source": { "source": "github", "repo": "nextlevelbuilder/ui-ux-pro-max-skill" } },
+    "caveman": { "source": { "source": "github", "repo": "JuliusBrussee/caveman" } },
+    "anthropic-agent-skills": { "source": { "source": "github", "repo": "anthropics/skills" } }
+  }
+}

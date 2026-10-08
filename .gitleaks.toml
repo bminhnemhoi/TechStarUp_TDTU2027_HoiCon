@@ -1,0 +1,19 @@
+# Cấu hình gitleaks cho HỏiCon: luật mặc định + luật riêng cho biến môi trường HOICON_* (token Zalo không nằm trong
+# danh sách đối tác secret scanning của GitHub). Chạy tay: gitleaks git . --config .gitleaks.toml --redact
+[extend]
+useDefault = true
+
+[[rules]]
+id = "hoicon-env-secret"
+description = "Biến bí mật HOICON_* có giá trị (chỉ được nằm trong backend/.env, không bao giờ commit)"
+regex = '''HOICON_(?:ANTHROPIC_API_KEY|GEMINI_API_KEY|ZALO_BOT_TOKEN|ZALO_WEBHOOK_SECRET|PHONE_PEPPER_\d+)\s*=\s*([^\s#'"]{8,})'''
+secretGroup = 1
+
+# Test của init_env/check_keys cố ý dùng khóa GIẢ dạng HOICON_*=sk-fake… — chỉ miễn luật riêng này, luật mặc định
+# của gitleaks vẫn quét thư mục test.
+[[rules.allowlists]]
+paths = ['''^backend/tests/''']
+
+[allowlist]
+description = "Mã nguồn công cụ và mẫu không chứa giá trị thật"
+paths = ['''backend/\.env\.example$''']

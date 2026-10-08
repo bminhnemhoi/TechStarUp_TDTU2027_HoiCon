@@ -1,0 +1,24 @@
+digraph J {
+  graph [dpi=300, rankdir=LR, nodesep=0.35, ranksep=0.45, pad=0.15, fontname="Arial,", bgcolor="white"];
+  node  [shape=box, style="rounded,filled", fontname="Arial,", fontsize=10.5, margin="0.14,0.09", width=2.15, color="#1F3A5F", penwidth=1.1];
+  edge  [color="#1F3A5F", penwidth=1.2, arrowsize=0.7, fontname="Arial,", fontsize=9];
+
+  s1 [fillcolor="#FDEBDD", color="#C4561D", label=<<B>1. Số lạ gọi đến</B><BR/><FONT POINT-SIZE="9.5">«Tôi là công an. Bà liên quan<BR/>một vụ án, phải giữ bí mật<BR/>và chuyển tiền để xác minh.»</FONT>>];
+  s2 [fillcolor="#EAF1F8", label=<<B>2. Lính gác gắn nhãn</B><BR/><FONT POINT-SIZE="9.5">Màn hình cuộc gọi hiện<BR/>«Số lạ – hãy cẩn trọng»;<BR/>hệ thống ghi nhận sự kiện.</FONT>>];
+  s3 [fillcolor="#FDEBDD", color="#C4561D", label=<<B>3. Chuỗi hành vi rủi ro</B><BR/><FONT POINT-SIZE="9.5">Đang nghe số lạ thì mở<BR/>ứng dụng ngân hàng<BR/>→ bật «khoảng dừng an toàn».</FONT>>];
+  s4 [fillcolor="#EAF1F8", label=<<B>4. Tác tử chấm rủi ro</B><BR/><FONT POINT-SIZE="9.5">Hỏi 2–3 câu bằng giọng nói:<BR/>người gọi xưng là ai, có đòi<BR/>chuyển tiền, giữ bí mật? → CAO</FONT>>];
+  s5 [fillcolor="#EAF1F8", label=<<B>5. «Hỏi con» qua Zalo</B><BR/><FONT POINT-SIZE="9.5">Con nhận cảnh báo trong vài giây:<BR/>tóm tắt, mức rủi ro, nút<BR/>[Gọi mẹ] [Xác minh] [Cho phép]</FONT>>];
+  s6 [fillcolor="#E3F4EC", color="#1E7B53", label=<<B>6. Xác minh &amp; quyết định</B><BR/><FONT POINT-SIZE="9.5">Số gọi đến nằm trong danh sách<BR/>cảnh báo; con gọi lại cho mẹ<BR/>→ giao dịch dừng lại.</FONT>>];
+  s7 [fillcolor="#F2F2F0", color="#6B6A66", label=<<B>7. Sau sự việc</B><BR/><FONT POINT-SIZE="9.5">Hồ sơ vụ việc, nhắc khóa tài<BR/>khoản nếu cần; bài diễn tập<BR/>tuần sau theo chiêu vừa gặp.</FONT>>];
+
+  { rank=same; s1; s6 }
+  { rank=same; s2; s5 }
+  { rank=same; s3; s4 }
+  s1 -> s2 -> s3;
+  s3 -> s4;
+  s6 -> s5 -> s4 [style=invis];
+  s4 -> s5 [constraint=false];
+  s5 -> s6 [constraint=false];
+  s6 -> s7 [constraint=false, style=dashed, color="#6B6A66"];
+  { rank=same; s7 }
+}

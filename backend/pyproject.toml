@@ -1,0 +1,53 @@
+[project]
+name = "hoicon"
+version = "0.1.0"
+description = "HỏiCon backend — API, tác tử LangGraph, MCP, job worker"
+readme = "README.md"
+authors = [
+    { name = "bminhnemhoi", email = "bminhnemhoi@users.noreply.github.com" }
+]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "alembic>=1.20.0",
+    "fastapi>=0.142.3",
+    "psycopg[binary]>=3.3.6",
+    "pydantic-settings>=2.15.0",
+    "python-dotenv>=1.1",
+    "sqlalchemy[asyncio]>=2.1",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "jsonschema>=4.26.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.16.10",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "S", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"] # chữ tiếng Việt trong chuỗi/docstring/comment là chủ ý
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"] # assert + khóa GIẢ trong test
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+markers = ["integration: cần Postgres dev ở 127.0.0.1:15432 (docker compose -f infra/compose.dev.yml up -d)"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["hoicon"]

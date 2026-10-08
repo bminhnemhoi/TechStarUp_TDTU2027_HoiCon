@@ -1,0 +1,14 @@
+# Dependabot chỉ cho GitHub Actions (đã ghim theo SHA) — cập nhật hằng tuần, gom một PR.
+# Thư viện ứng dụng (uv/pnpm/gradle) nâng có chủ đích theo task, không tự động.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"
