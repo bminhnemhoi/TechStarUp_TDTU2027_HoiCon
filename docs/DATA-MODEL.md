@@ -74,7 +74,7 @@
 ## 3. Băm số điện thoại / số tài khoản (ADR-006)
 
 ```
-Thiết bị:  e164 = normalize("09…")                 # :rules — PhoneNormalizer
+Thiết bị:  e164 = PhoneHasher.toE164("09…")         # :rules — vector dùng chung docs/schemas/fixtures/h1_vectors.json
            h1   = SHA-256("hoicon:v1:" + e164)      # chỉ h1 + last3 rời máy
 Máy chủ:   phone_hmac = HMAC-SHA256(pepper[kid], h1);  lưu phone_hmac, phone_kid, last3
 ```

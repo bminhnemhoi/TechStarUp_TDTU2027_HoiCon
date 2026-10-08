@@ -52,14 +52,17 @@
 | `:app` | UI Compose (E1–E12), dịch vụ, Room (`sentinel.db`), DataStore + Tink, mạng (outbox), FCM, TTS | `:rules` |
 | `:demobank` | App "Ngân hàng Mẫu" để thử trên máy ảo và demo ở gian (app ngân hàng thật thường chặn máy ảo) | — |
 
-**Cơ chế cảm biến** (đã kiểm chứng ở P1-S1):
-- `CallScreeningService` (vai trò `CALL_SCREENING`): biết có cuộc gọi đến, số có trong danh bạ hay không
-  (`Call.Details`), gắn nhãn số bị gắn cờ — **không cần** `READ_CALL_LOG`.
-- Trạng thái cuộc gọi: `TelephonyCallback` (cần `READ_PHONE_STATE`) hoặc `AudioManager.mode` — chọn ở P1-S1.
-- Cửa sổ rủi ro: foreground service `specialUse` khi đang gọi hoặc ≤ 10 phút sau cuộc gọi số lạ; trong cửa sổ quét
-  `UsageStatsManager` mỗi 1 s để biết app ngân hàng/ví (`data/bank_apps.vn.json`) lên tiền cảnh.
-- `SafePauseActivity` toàn màn hình, mở nhờ quyền "hiển thị trên ứng dụng khác" (miễn trừ giới hạn khởi chạy nền).
-  **Không vẽ đè lên app ngân hàng**; nút "tiếp tục" giữ 3 s; không bao giờ chặn vĩnh viễn.
+**Cơ chế cảm biến** (chốt ở **ADR-007** sau spike P1-S1 trên máy ảo API 36/34/29):
+- `CallScreeningService` (vai trò `CALL_SCREENING`): hệ thống chỉ gọi `onScreenCall` cho số **không có trong danh bạ**
+  ⇒ biết "số lạ" mà **không cần** `READ_CONTACTS`/`READ_CALL_LOG`; chỉ quan sát, luôn cho cuộc gọi đi qua. Số thô chỉ
+  tồn tại trong lời gọi `PhoneHasher.hash()` (giữ `h1` + 3 số cuối).
+- Trạng thái cuộc gọi: `AudioManager.mode` (không cần quyền) — **không dùng `READ_PHONE_STATE`**.
+- Cửa sổ rủi ro: foreground service `specialUse` mở từ `onScreenCall`, ≤ 10 phút sau cuộc gọi số lạ; quét
+  `UsageStatsManager` mỗi 1 s, khớp **đúng tên gói** với `data/bank_apps.vn.json` (bank/wallet/securities).
+  **Android 15+: người dùng phải tắt tối ưu pin** cho HỏiCon, nếu không FGS bị từ chối (đã đo trên API 36).
+- `SafePauseActivity` toàn màn hình, mở trực tiếp từ FGS nhờ quyền "hiển thị trên ứng dụng khác" (miễn trừ BAL), task
+  riêng. **Không vẽ đè lên app ngân hàng**; nút "tiếp tục" giữ 3 s; không bao giờ chặn vĩnh viễn. Watchdog 1,5 s ⇒
+  thông báo heads-up + TTS nếu màn không hiện.
 - Cấm: SMS, nhật ký cuộc gọi, danh bạ (dùng contact picker), `QUERY_ALL_PACKAGES` (khai báo `<queries>` cho các gói
   ngân hàng), `REQUEST_INSTALL_PACKAGES`, Accessibility, Notification Listener, ghi âm — hook `guard-privacy` chặn.
 

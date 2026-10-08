@@ -16,6 +16,10 @@ private val HoiConColors = lightColorScheme(
     onBackground = BrandNavy,
     surface = SurfaceWhite,
     onSurface = BrandNavy,
+    // UX-9: Material defaults (grey outlines/secondary text) fall below 7:1 on white; keep everything navy.
+    onSurfaceVariant = BrandNavy,
+    outline = BrandNavy,
+    outlineVariant = BrandNavy.copy(alpha = 0.4f),
 )
 
 @Composable

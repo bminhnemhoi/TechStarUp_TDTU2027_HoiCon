@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  E7 "Khoan chuyển tiền đã" bằng View thuần (frame đầu nhanh hơn Compose khi tiến trình nguội — spike P1-S1).
+  Cùng nội dung với ui/SafePauseScreen.kt. UX-1: chỉ phần chữ cuộn; thanh nút ghim đáy, luôn thấy ngay ở mọi cỡ chữ.
+  Không khóa cỡ chữ (sp). Thanh nút cách thanh cử chỉ ≥ 16dp (fitsSystemWindows + paddingBottom).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface_white"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:id="@+id/pause_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fadeScrollbars="false"
+        android:fadingEdgeLength="48dp"
+        android:requiresFadingEdge="vertical"
+        android:scrollbarStyle="outsideOverlay"
+        android:scrollbars="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    android:layout_weight="1"
+                    android:text="@string/pause_disclosure"
+                    android:textColor="@color/brand_navy"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/pause_replay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/outline_button"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:minWidth="64dp"
+                    android:minHeight="64dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:stateListAnimator="@null"
+                    android:text="@string/pause_replay"
+                    android:textAllCaps="false"
+                    android:textColor="@color/brand_navy"
+                    android:textSize="20sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_stat_shield"
+                    android:tint="@color/brand_orange" />
+
+                <TextView
+                    android:id="@+id/pause_level"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/pause_level_high"
+                    android:textColor="@color/brand_navy"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:accessibilityHeading="true"
+                android:text="@string/pause_title"
+                android:textColor="@color/brand_navy"
+                android:textSize="32sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:lineSpacingExtra="6sp"
+                android:text="@string/pause_body"
+                android:textColor="@color/brand_navy"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/pause_reason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:lineSpacingExtra="4sp"
+                android:textColor="@color/brand_navy"
+                android:textSize="20sp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/navy_40"
+        android:importantForAccessibility="no" />
+
+    <!--
+      Thanh nút ghim đáy. Trạng thái + nút xác nhận (đường trợ năng) nằm TRÊN hai nút: khi chữ dài ra, chỉ phần trên
+      giãn lên — hai nút giữ nguyên vị trí so với đáy màn hình, không dời đi dưới ngón tay đang giữ (UX-2).
+    -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:id="@+id/pause_continue_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center"
+            android:textColor="@color/brand_navy"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/pause_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/outline_button"
+            android:filterTouchesWhenObscured="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:minHeight="72dp"
+            android:stateListAnimator="@null"
+            android:text="@string/pause_confirm_button"
+            android:textAllCaps="false"
+            android:textColor="@color/brand_navy"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/pause_ask_child"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/brand_navy"
+            android:filterTouchesWhenObscured="true"
+            android:minHeight="72dp"
+            android:text="@string/pause_ask_child"
+            android:textAllCaps="false"
+            android:textColor="@color/surface_white"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <FrameLayout
+            android:id="@+id/pause_continue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/hold_button"
+            android:contentDescription="@string/pause_continue"
+            android:filterTouchesWhenObscured="true"
+            android:focusable="true"
+            android:minHeight="72dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                android:importantForAccessibility="noHideDescendants"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/pause_continue"
+                    android:textColor="@color/brand_navy"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/pause_continue_hint"
+                    android:textColor="@color/brand_navy"
+                    android:textSize="20sp" />
+            </LinearLayout>
+
+            <!-- UX-6: solid navy bar (≥ 3:1 on white) filling left→right while held. -->
+            <View
+                android:id="@+id/pause_continue_progress"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:layout_gravity="bottom"
+                android:background="@color/brand_navy"
+                android:importantForAccessibility="no"
+                android:scaleX="0" />
+        </FrameLayout>
+    </LinearLayout>
+</LinearLayout>

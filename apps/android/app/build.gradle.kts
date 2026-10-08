@@ -22,6 +22,8 @@ android {
 
     buildFeatures {
         compose = true
+        // BuildConfig.DEBUG gates spike diagnostics (HC_TIMING/HC_SPIKE logs, demo h1, UI A/B switch) out of release.
+        buildConfig = true
     }
 }
 

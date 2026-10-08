@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Custom accessibility action "Tiếp tục" on the hold button (SEC-2). -->
+    <item name="a11y_continue" type="id" />
+</resources>

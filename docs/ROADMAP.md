@@ -6,7 +6,7 @@
 
 <!-- STATUS -->
 Phase 1 — Spike + hồ sơ Vòng 1 (15/10–13/11) · G0 ĐẠT 08/10 (docs/phase-reports/G0.md) · Gate G1: 08/11
-Việc kế tiếp: P1-S1 (đang làm từ 08/10 — docs/spikes/P1-S1-cam-bien.md)
+Việc kế tiếp: P1-S2 (P1-S1 xong phần cơ chế — ADR-007; độ trễ chờ máy thật)
 P0-01…P0-07 xong (PR #1, #2 đã merge) · Chờ Minh: P0-08 tài khoản — Play Console NGAY, Firebase trước 15/10
 Minh: chạy init_env · đăng ký theo docs/setup/ACCOUNTS.md · làm máy ảo ⇒ Claude hỏi trước khi dừng stack khác
 Cập nhật: 08/10/2026
@@ -53,7 +53,7 @@ Cập nhật: 08/10/2026
 
 | Mã | Việc | Thời gian | Ngưỡng đạt / sản phẩm | Trạng thái |
 |---|---|---|---|---|
-| P1-S1 | Cảm biến trên máy ảo: vai trò call screening, trạng thái cuộc gọi (`TelephonyCallback` vs `AudioManager`), FGS `specialUse` + chip "đang bảo vệ", quét UsageStats, mở SafePause qua miễn trừ "hiển thị trên app khác" | 15–24/10 | bắt 10/10 cuộc gọi; phát hiện → dừng p95 ≤ 3 s; sống sót khi app bị kill; có phương án dự phòng | ◐ |
+| P1-S1 | Cảm biến trên máy ảo: vai trò call screening, trạng thái cuộc gọi (`TelephonyCallback` vs `AudioManager`), FGS `specialUse` + chip "đang bảo vệ", quét UsageStats, mở SafePause qua miễn trừ "hiển thị trên app khác" | 15–24/10 | bắt 10/10 cuộc gọi; phát hiện → dừng p95 ≤ 3 s; sống sót khi app bị kill; có phương án dự phòng | ◐ cơ chế chốt (ADR-007): bắt 10/10, offline OK, không cần READ_PHONE_STATE; Android 15+ cần tắt tối ưu pin. **p95 ≤ 3 s chưa đạt trên máy ảo quá tải ⇒ đo máy thật (Firebase Test Lab) trước G1** |
 | P1-S2 | Dừng an toàn với app ngân hàng: `:demobank`, phản ứng của app ngân hàng thật (Firebase Test Lab hoặc ghi rủi ro), full-screen intent Android 14 | 20–28/10 | bảng kết quả + `data/bank_apps.vn.json` v1 | ☐ |
 | P1-S3 | Zalo Bot: webhook qua cloudflared, `/start <mã>`, nút bấm, đo hạn mức thật, điều khoản | 22–30/10 | giao tin p95 ≤ 5 s; chốt dự phòng (trang hành động / Telegram) | ☐ |
 | P1-S4 | Lõi tác tử: đồ thị 2 interrupt + `AsyncPostgresSaver`, chạy tiếp sau `kill -9`, hẹn giờ bằng job, MCP `threat`, `agent_steps`, che PII, so Haiku 4.5 vs Flash-Lite | 26/10–04/11 | p95 một lượt ≤ 8 s; ghi chi phí | ☐ |
@@ -135,3 +135,6 @@ Cập nhật: 08/10/2026
 - Compose BOM ≥ 2026.08 (UI 1.12) và core-ktx 1.19 đòi **compileSdk 37** ⇒ hiện ghim BOM 2026.06.01. Khi cần: cài
   `platforms;android-37`, nâng compileSdk 37 (giữ targetSdk 36) — cân nhắc trước P2 (08/10, từ P0-06).
 - RAM máy dev rất thấp (0,65–3 GB trống): chạy `scripts/stop-other-stacks.sh` (Minh đồng ý) trước khi làm máy ảo.
+- **Chặn phát hành (review 09/10):** KHÔNG đưa bản build nào cho người thật (closed testing, thí điểm, gian trưng bày)
+  trước khi có: E3 công bố nổi bật + bản ghi đồng ý có phiên bản (P2-02), Room + Tink thay SharedPreferences (P2-05),
+  buildType `demo`/release với R8 + log chẩn đoán tắt (P1-08). Bản spike chỉ dùng trên máy ảo/máy dev.
