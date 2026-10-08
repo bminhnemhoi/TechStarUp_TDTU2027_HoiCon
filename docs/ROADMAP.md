@@ -6,7 +6,7 @@
 
 <!-- STATUS -->
 Phase 1 — Spike + hồ sơ Vòng 1 (15/10–13/11) · G0 ĐẠT 08/10 (docs/phase-reports/G0.md) · Gate G1: 08/11
-Việc kế tiếp: P1-S1
+Việc kế tiếp: P1-S1 (đang làm từ 08/10 — docs/spikes/P1-S1-cam-bien.md)
 P0-01…P0-07 xong (PR #1, #2 đã merge) · Chờ Minh: P0-08 tài khoản — Play Console NGAY, Firebase trước 15/10
 Minh: chạy init_env · đăng ký theo docs/setup/ACCOUNTS.md · làm máy ảo ⇒ Claude hỏi trước khi dừng stack khác
 Cập nhật: 08/10/2026
@@ -53,14 +53,14 @@ Cập nhật: 08/10/2026
 
 | Mã | Việc | Thời gian | Ngưỡng đạt / sản phẩm | Trạng thái |
 |---|---|---|---|---|
-| P1-S1 | Cảm biến trên máy ảo: vai trò call screening, trạng thái cuộc gọi (`TelephonyCallback` vs `AudioManager`), FGS `specialUse` + chip "đang bảo vệ", quét UsageStats, mở SafePause qua miễn trừ "hiển thị trên app khác" | 15–24/10 | bắt 10/10 cuộc gọi; phát hiện → dừng p95 ≤ 3 s; sống sót khi app bị kill; có phương án dự phòng | ☐ |
+| P1-S1 | Cảm biến trên máy ảo: vai trò call screening, trạng thái cuộc gọi (`TelephonyCallback` vs `AudioManager`), FGS `specialUse` + chip "đang bảo vệ", quét UsageStats, mở SafePause qua miễn trừ "hiển thị trên app khác" | 15–24/10 | bắt 10/10 cuộc gọi; phát hiện → dừng p95 ≤ 3 s; sống sót khi app bị kill; có phương án dự phòng | ◐ |
 | P1-S2 | Dừng an toàn với app ngân hàng: `:demobank`, phản ứng của app ngân hàng thật (Firebase Test Lab hoặc ghi rủi ro), full-screen intent Android 14 | 20–28/10 | bảng kết quả + `data/bank_apps.vn.json` v1 | ☐ |
 | P1-S3 | Zalo Bot: webhook qua cloudflared, `/start <mã>`, nút bấm, đo hạn mức thật, điều khoản | 22–30/10 | giao tin p95 ≤ 5 s; chốt dự phòng (trang hành động / Telegram) | ☐ |
 | P1-S4 | Lõi tác tử: đồ thị 2 interrupt + `AsyncPostgresSaver`, chạy tiếp sau `kill -9`, hẹn giờ bằng job, MCP `threat`, `agent_steps`, che PII, so Haiku 4.5 vs Flash-Lite | 26/10–04/11 | p95 một lượt ≤ 8 s; ghi chi phí | ☐ |
 | P1-S5 | Giọng nói tiếng Việt: STT (`SpeechRecognizer` vi-VN, FPT.AI, Gemini) trên dữ liệu công khai + 20 câu tự thu; TTS giọng người già, 5 người nghe chấm | 28/10–08/11 | chốt nút bấm là chính, giọng nói tùy chọn; chọn nhà cung cấp âm thanh thu sẵn | ☐ |
 | P1-S6 | Phát hiện cài app ngoài Play (R2) | nếu còn thời gian | | ☐ |
 | P1-01 | Cập nhật thuyết minh qua `docs/proposal/src`: đội ngũ thật (1 người + đội tác tử AI + cố vấn), thí điểm 20–30 gia đình, Play testing, Zalo Bot | 26/10–08/11 | Word + PDF mới; `pitch-sync` sạch | ☐ |
-| P1-02 | Khảo sát Google Form ≥ 300 phản hồi (tác tử soạn bảng hỏi, Minh phát tán) | 20/10–08/11 | báo cáo số liệu | ☐ |
+| P1-02 | Khảo sát Google Form ≥ 300 phản hồi (tác tử soạn bảng hỏi, Minh phát tán) | 20/10–08/11 | báo cáo số liệu — bảng hỏi v1: `docs/research/survey/P1-02-bang-hoi.md` (Minh dựng Google Form + phát tán) | ◐ |
 | P1-03 | Video 3 phút trên máy ảo: cuộc gọi lạ → demobank → dừng an toàn có giọng nói → cảnh báo Zalo | quay 05–08/11 | file video | ☐ |
 | P1-04 | `judge` chấm thử 10/11 → sửa → **nộp 13/11** | 10–13/11 | biên nhận nộp | ☐ |
 | P1-05 | Design system: ui-ux-pro-max → `docs/DESIGN-SYSTEM.md` + `design-system/hoicon/tokens.json` (Be Vietnam Pro) | 14–22/11 | | ☐ |

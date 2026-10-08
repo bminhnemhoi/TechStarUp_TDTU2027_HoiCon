@@ -1,0 +1,408 @@
+{
+  "version": "2026.10.08-seed",
+  "description": "Danh sách app tài chính VN cho luật R1 + <queries> (P1-S1 seed; hoàn thiện ở P1-S2)",
+  "source": "Google Play, xác minh thủ công từng trang",
+  "verified_at": "2026-10-08",
+  "apps": [
+    {
+      "package": "com.mbmobile",
+      "name": "MB Bank",
+      "org": "Ngân hàng TMCP Quân đội (MB)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.mbmobile"
+    },
+    {
+      "package": "vn.com.techcombank.bb.app",
+      "name": "Techcombank Mobile",
+      "org": "Ngân hàng TMCP Kỹ Thương Việt Nam (Techcombank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.techcombank.bb.app"
+    },
+    {
+      "package": "com.VCB",
+      "name": "VCB Digibank",
+      "org": "Ngân hàng TMCP Ngoại thương Việt Nam (Vietcombank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.VCB"
+    },
+    {
+      "package": "com.vnpay.vpbankonline",
+      "name": "VPBank NEO",
+      "org": "Ngân hàng TMCP Việt Nam Thịnh Vượng (VPBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.vnpay.vpbankonline"
+    },
+    {
+      "package": "com.vnpay.Agribank3g",
+      "name": "Agribank Plus",
+      "org": "Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam (Agribank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.vnpay.Agribank3g",
+      "note": "Tên cũ Agribank E-Mobile Banking, cùng package. Tài khoản nhà phát triển trên Play đứng tên VNPAY (đơn vị phát triển), website agribankemobilebanking.vn."
+    },
+    {
+      "package": "com.vnpay.bidv",
+      "name": "BIDV SmartBanking",
+      "org": "Ngân hàng TMCP Đầu tư và Phát triển Việt Nam (BIDV)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.vnpay.bidv"
+    },
+    {
+      "package": "com.vietinbank.ipay",
+      "name": "VietinBank iPay",
+      "org": "Ngân hàng TMCP Công Thương Việt Nam (VietinBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.vietinbank.ipay"
+    },
+    {
+      "package": "com.tpb.mb.gprsandroid",
+      "name": "TPBank Mobile",
+      "org": "Ngân hàng TMCP Tiên Phong (TPBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.tpb.mb.gprsandroid"
+    },
+    {
+      "package": "com.sacombank.ewallet",
+      "name": "SACOMBANK PAY",
+      "org": "Ngân hàng TMCP Sài Gòn Thương Tín (Sacombank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.sacombank.ewallet"
+    },
+    {
+      "package": "xyz.be.cake",
+      "name": "CAKE - Ngân hàng số",
+      "org": "Ngân hàng số Cake by VPBank",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=xyz.be.cake"
+    },
+    {
+      "package": "mobile.acb.com.vn",
+      "name": "ACB ONE",
+      "org": "Ngân hàng TMCP Á Châu (ACB)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=mobile.acb.com.vn"
+    },
+    {
+      "package": "com.shinhan.global.vn.bank",
+      "name": "Shinhan SOL Việt Nam",
+      "org": "Ngân hàng TNHH MTV Shinhan Việt Nam",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.shinhan.global.vn.bank"
+    },
+    {
+      "package": "vn.tnex.consumer",
+      "name": "TNEX - Tài chính số toàn diện",
+      "org": "TNEX - ngân hàng số của MSB",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.tnex.consumer",
+      "note": "Nhà phát triển trên Play là MSB (VIETNAM MARITIME COMMERCIAL JOINT STOCK BANK)."
+    },
+    {
+      "package": "com.ocb.liobank",
+      "name": "Liobank: Ngân hàng số",
+      "org": "Liobank - ngân hàng số của OCB",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.ocb.liobank",
+      "note": "Nhà phát triển trên Play là OCB (Orient Commercial Joint Stock Bank)."
+    },
+    {
+      "package": "src.com.sacombank",
+      "name": "SACOMBANK mBanking",
+      "org": "Ngân hàng TMCP Sài Gòn Thương Tín (Sacombank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=src.com.sacombank",
+      "note": "App cũ chạy song song với SACOMBANK PAY, vẫn cập nhật năm 2026 (1 Tr+ lượt tải)."
+    },
+    {
+      "package": "com.vnpay.hdbank",
+      "name": "HDBank",
+      "org": "Ngân hàng TMCP Phát triển TP.HCM (HDBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.vnpay.hdbank"
+    },
+    {
+      "package": "com.vib.myvib2",
+      "name": "MyVIB",
+      "org": "Ngân hàng TMCP Quốc tế Việt Nam (VIB)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.vib.myvib2"
+    },
+    {
+      "package": "vn.com.msb.smartBanking",
+      "name": "MSB mBank (Cá nhân)",
+      "org": "Ngân hàng TMCP Hàng Hải Việt Nam (MSB)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.msb.smartBanking",
+      "note": "MSB có 2 app cá nhân song song: MSB mBank (1 Tr+) và MSB Digital Bank (mới, 100 N+)."
+    },
+    {
+      "package": "vn.com.seabank.mb1",
+      "name": "SeAMobile",
+      "org": "Ngân hàng TMCP Đông Nam Á (SeABank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.seabank.mb1"
+    },
+    {
+      "package": "vn.com.lpb.lienviet24h",
+      "name": "LPBank",
+      "org": "Ngân hàng TMCP Lộc Phát Việt Nam (LPBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.lpb.lienviet24h",
+      "note": "App cũ (gốc LienViet24h), vẫn phát hành, 1 Tr+ lượt tải; app mới là LPBank Plus."
+    },
+    {
+      "package": "io.lifestyle.plus",
+      "name": "Timo - Ngân hàng số by BVBank",
+      "org": "Timo - ngân hàng số của BVBank",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=io.lifestyle.plus",
+      "note": "Nhà phát triển trên Play là Ngân hàng Bản Việt - BVBank."
+    },
+    {
+      "package": "com.finx.vikki",
+      "name": "Vikki - Ngân Hàng Số",
+      "org": "Vikki Digital Bank",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.finx.vikki"
+    },
+    {
+      "package": "ops.namabank.com.vn",
+      "name": "Nam A Bank Open Banking",
+      "org": "Ngân hàng TMCP Nam Á (Nam A Bank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=ops.namabank.com.vn"
+    },
+    {
+      "package": "com.ncb.bank",
+      "name": "NCB iziMobile",
+      "org": "Ngân hàng TMCP Quốc Dân (NCB)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.ncb.bank"
+    },
+    {
+      "package": "vn.com.ocb.awe",
+      "name": "OCB OMNI",
+      "org": "Ngân hàng TMCP Phương Đông (OCB)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.ocb.awe"
+    },
+    {
+      "package": "com.vnpay.SCB",
+      "name": "SCB Mobile Banking",
+      "org": "Ngân hàng TMCP Sài Gòn (SCB)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.vnpay.SCB"
+    },
+    {
+      "package": "vn.shb.saha.mbanking",
+      "name": "SHB SAHA",
+      "org": "Ngân hàng TMCP Sài Gòn - Hà Nội (SHB)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.shb.saha.mbanking",
+      "note": "App cá nhân hiện hành của SHB; không còn app 'SHB Mobile' riêng trên Play."
+    },
+    {
+      "package": "com.sunshine.ksbank",
+      "name": "KienlongBank Plus",
+      "org": "Ngân hàng TMCP Kiên Long (KienlongBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.sunshine.ksbank"
+    },
+    {
+      "package": "vn.banvietbank.mobilebanking",
+      "name": "digimi - Ngân hàng số",
+      "org": "Ngân hàng TMCP Bản Việt (BVBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.banvietbank.mobilebanking"
+    },
+    {
+      "package": "com.vnpay.EximBankOmni",
+      "name": "Eximbank EDigi",
+      "org": "Ngân hàng TMCP Xuất Nhập khẩu Việt Nam (Eximbank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.vnpay.EximBankOmni"
+    },
+    {
+      "package": "com.pvcombank.retail",
+      "name": "PVConnect",
+      "org": "Ngân hàng TMCP Đại Chúng Việt Nam (PVcomBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.pvcombank.retail"
+    },
+    {
+      "package": "vn.com.lpbank.digibank",
+      "name": "LPBank Plus",
+      "org": "Ngân hàng TMCP Lộc Phát Việt Nam (LPBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.lpbank.digibank",
+      "note": "App mới của LPBank, chạy song song với app LPBank cũ."
+    },
+    {
+      "package": "com.bab.retailUAT",
+      "name": "BAC A BANK Mobile Banking",
+      "org": "Ngân hàng TMCP Bắc Á (BAC A BANK)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.bab.retailUAT",
+      "note": "Package có hậu tố 'UAT' nhưng là bản phát hành chính thức cho khách hàng cá nhân; Play xếp mục BUSINESS."
+    },
+    {
+      "package": "com.msb.digibank.retail",
+      "name": "MSB Digital Bank",
+      "org": "Ngân hàng TMCP Hàng Hải Việt Nam (MSB)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.msb.digibank.retail",
+      "note": "App mới của MSB, chạy song song với MSB mBank."
+    },
+    {
+      "package": "com.vnpay.coopbank",
+      "name": "Co-opBank Mobile Banking",
+      "org": "Ngân hàng Hợp tác xã Việt Nam (Co-opBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.vnpay.coopbank",
+      "note": "Ngân hàng của hệ thống quỹ tín dụng nhân dân, phổ biến ở nông thôn."
+    },
+    {
+      "package": "vn.com.agribank.ebanking.ru",
+      "name": "Agribank Retail eBanking",
+      "org": "Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam (Agribank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.agribank.ebanking.ru",
+      "note": "App phụ cho khách hàng cá nhân (100 N+ lượt tải); app chính là Agribank Plus."
+    },
+    {
+      "package": "com.hdbank.dihdbank",
+      "name": "Đi HDBank",
+      "org": "Ngân hàng TMCP Phát triển TP.HCM (HDBank)",
+      "category": "bank",
+      "play_url": "https://play.google.com/store/apps/details?id=com.hdbank.dihdbank",
+      "note": "App mới (10 N+ lượt tải), chạy song song với app HDBank."
+    },
+    {
+      "package": "vn.hoicon.demobank",
+      "name": "Ngân hàng Mẫu (demo HỏiCon)",
+      "org": "HỏiCon",
+      "category": "bank",
+      "play_url": null,
+      "demo": true
+    },
+    {
+      "package": "com.mservice.momotransfer",
+      "name": "MoMo-Trợ Thủ Tài Chính với AI",
+      "org": "Công ty CP Dịch vụ Di Động Trực Tuyến (M_Service) - MoMo",
+      "category": "wallet",
+      "play_url": "https://play.google.com/store/apps/details?id=com.mservice.momotransfer"
+    },
+    {
+      "package": "com.bplus.vtpay",
+      "name": "Viettel Money",
+      "org": "Tổng Công ty Dịch vụ số Viettel (Viettel Digital Services)",
+      "category": "wallet",
+      "play_url": "https://play.google.com/store/apps/details?id=com.bplus.vtpay"
+    },
+    {
+      "package": "vn.com.vng.zalopay",
+      "name": "Zalopay-Thanh toán & Tài chính",
+      "org": "Công ty CP ZION (Zalopay)",
+      "category": "wallet",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.vng.zalopay"
+    },
+    {
+      "package": "com.beeasy.toppay",
+      "name": "ShopeePay - Tài Chính Dễ Dàng",
+      "org": "Công ty CP ShopeePay",
+      "category": "wallet",
+      "play_url": "https://play.google.com/store/apps/details?id=com.beeasy.toppay",
+      "note": "Package kế thừa từ ví AirPay cũ (website nhà phát triển vẫn là airpay.vn)."
+    },
+    {
+      "package": "vnpay.smartacccount",
+      "name": "Ứng dụng VNPAY",
+      "org": "Công ty CP Giải pháp Thanh toán Việt Nam (VNPAY)",
+      "category": "wallet",
+      "play_url": "https://play.google.com/store/apps/details?id=vnpay.smartacccount",
+      "note": "Package đúng chính tả trên Play: 'smartacccount' (3 chữ c)."
+    },
+    {
+      "package": "vnptpay.vnptmedia.vnpt.com.vnptpay",
+      "name": "VNPT Money",
+      "org": "Tổng Công ty Truyền thông (VNPT-Media)",
+      "category": "wallet",
+      "play_url": "https://play.google.com/store/apps/details?id=vnptpay.vnptmedia.vnpt.com.vnptpay"
+    },
+    {
+      "package": "com.mobifone.mmdt",
+      "name": "MobiFone Money",
+      "org": "Tổng Công ty Viễn thông MobiFone",
+      "category": "wallet",
+      "play_url": "https://play.google.com/store/apps/details?id=com.mobifone.mmdt"
+    },
+    {
+      "package": "vn.com.vpbs.smartone",
+      "name": "VPS SmartOne",
+      "org": "Công ty CP Chứng khoán VPS",
+      "category": "securities",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.vpbs.smartone"
+    },
+    {
+      "package": "vn.com.vndirect.stocks",
+      "name": "VNDIRECT DGO",
+      "org": "Công ty CP Chứng khoán VNDIRECT",
+      "category": "securities",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.vndirect.stocks"
+    },
+    {
+      "package": "vn.com.mbs.m24np",
+      "name": "MBS Mobile",
+      "org": "Công ty CP Chứng khoán MB (MBS)",
+      "category": "securities",
+      "play_url": "https://play.google.com/store/apps/details?id=vn.com.mbs.m24np"
+    },
+    {
+      "package": "com.fss.tcbs.mobiletrading",
+      "name": "TCInvest",
+      "org": "Công ty CP Chứng khoán Kỹ Thương (TCBS)",
+      "category": "securities",
+      "play_url": "https://play.google.com/store/apps/details?id=com.fss.tcbs.mobiletrading"
+    },
+    {
+      "package": "org.ssi.iBoardSSI.Pro",
+      "name": "SSI iBoard Pro",
+      "org": "Công ty CP Chứng khoán SSI",
+      "category": "securities",
+      "play_url": "https://play.google.com/store/apps/details?id=org.ssi.iBoardSSI.Pro",
+      "note": "App giao dịch chính của SSI trên Android; tài khoản nhà phát triển 'SSI APP'."
+    }
+  ],
+  "unverified": [
+    {
+      "name": "SHB Mobile",
+      "candidate_package": "vn.shb.mbanking",
+      "reason": "Google Play trả 404 (không tồn tại). App cá nhân hiện hành của SHB là SHB SAHA (vn.shb.saha.mbanking)."
+    },
+    {
+      "name": "Ocean Bank Mobile Banking",
+      "candidate_package": "com.aci.ocean.mobile",
+      "reason": "Trùng tên nhưng nhà phát triển là Ocean Bank (oceanbank.com, ngân hàng ở Mỹ), không phải OceanBank Việt Nam (nay là MBV, app com.mbv.mobilebanking). Không đưa vào."
+    },
+    {
+      "name": "SCB One",
+      "candidate_package": "vn.com.scb.one",
+      "reason": "Đúng nhà phát triển SCB nhưng là app nội bộ nhận OTP cho nhân viên, không phải app khách hàng. App cá nhân của SCB là com.vnpay.SCB."
+    },
+    {
+      "name": "One PV (My PVcomBank)",
+      "candidate_package": "com.pvcombank.mypvcb.production",
+      "reason": "App tác nghiệp nội bộ của PVcomBank, không phải app khách hàng. App cá nhân là PVConnect (com.pvcombank.retail)."
+    },
+    {
+      "name": "SSI iBroker",
+      "candidate_package": "com.ssi.ibroker",
+      "reason": "App nghiệp vụ cho môi giới/cộng tác viên SSI, không phải app giao dịch của nhà đầu tư."
+    },
+    {
+      "name": "Techcombank OneU",
+      "candidate_package": "com.vingroup.vinid",
+      "reason": "App ưu đãi/tích điểm (đổi tên từ VinID ngày 4/7/2026), Play xếp mục LIFESTYLE, không phải app ngân hàng hay ví. Cân nhắc lại ở P1-S2."
+    }
+  ]
+}

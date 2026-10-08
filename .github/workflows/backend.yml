@@ -3,9 +3,9 @@ name: backend
 on:
   push:
     branches: [main]
-    paths: ["backend/**", "docs/schemas/**", ".github/workflows/backend.yml"]
+    paths: ["backend/**", "docs/schemas/**", "data/**", ".github/workflows/backend.yml"]
   pull_request:
-    paths: ["backend/**", "docs/schemas/**", ".github/workflows/backend.yml"]
+    paths: ["backend/**", "docs/schemas/**", "data/**", ".github/workflows/backend.yml"]
 
 permissions:
   contents: read
