@@ -1,5 +1,4 @@
 import asyncio
-import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
@@ -10,11 +9,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def pytest_asyncio_loop_factories(
     config: pytest.Config, item: pytest.Item
-) -> Mapping[str, Callable[[], asyncio.AbstractEventLoop]] | None:
-    # psycopg async không chạy trên ProactorEventLoop (mặc định của Windows).
-    if sys.platform == "win32":
-        return {"selector": asyncio.SelectorEventLoop}
-    return None
+) -> Mapping[str, Callable[[], asyncio.AbstractEventLoop]]:
+    # psycopg async không chạy trên ProactorEventLoop (mặc định của Windows). Linux vốn dùng SelectorEventLoop.
+    # pytest-asyncio ≥ 1.4 bắt buộc hook trả về mapping khác rỗng (trả None ⇒ UsageError trên CI Linux).
+    return {"selector": asyncio.SelectorEventLoop}
 
 
 @pytest.fixture(scope="session")
