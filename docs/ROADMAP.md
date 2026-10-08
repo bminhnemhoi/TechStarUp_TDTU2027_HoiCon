@@ -6,8 +6,8 @@
 
 <!-- STATUS -->
 Phase 0 — Nền móng (08–14/10) · Gate G0: 14/10
-Việc kế tiếp: P0-07
-Đã xong: P0-02…P0-06 · PR #1 khởi tạo đang chờ CI xanh + Minh duyệt merge (P0-01, P0-07) · Chờ Minh: P0-08
+Việc kế tiếp: P0-01
+Đã xong: P0-02…P0-07 (CI 5/5 xanh) · P0-01: PR #1 chờ Minh duyệt merge · Chờ Minh: P0-08
 Minh: chạy init_env · đăng ký Play Console (hôm nay) / Student Pack / Zalo Bot / Anthropic / Gemini / Firebase — docs/setup/ACCOUNTS.md
 Cập nhật: 08/10/2026
 <!-- /STATUS -->
@@ -39,7 +39,7 @@ Cập nhật: 08/10/2026
 | P0-04 | `CLAUDE.md`, `AGENTS.md`, 8 subagent, 8 skill | ☑ | |
 | P0-05 | Khung tài liệu: ROADMAP, ARCHITECTURE, DATA-MODEL, ADR-001…006, EMULATOR, HARNESS + stub PRD/API/AGENTS/DESIGN-SYSTEM/PRIVACY-DPIA/PLAY-POLICY/EVAL/PILOT-PROTOCOL | ☑ | + `docs/schemas/risk_event.v1.json` + fixture; stub được hoàn thiện theo task tương ứng |
 | P0-06 | Khung chạy được: `infra/compose.dev.yml` (15432), backend `/healthz` + pytest + Alembic, `apps/web` (3100), `apps/android` `:app/:rules/:demobank`, `package.json` gốc (`dev:all`) | ☑ | `pnpm dev:all` ⇒ readyz 200 + web 200; backend 9 test; `:rules:test` (gồm test hợp đồng `rule_floor`); app hello cài trên hc-api36 |
-| P0-07 | CI GitHub Actions: backend, web, android (lọc theo đường dẫn) + test hook | ◐ | Lần chạy đầu trên PR #1: android ✓ (1m56s), web ✓, harness ✓, backend ✗ (`setup-uv@v10` không tồn tại ⇒ ghim `v10.2.0`) — chạy lại |
+| P0-07 | CI GitHub Actions: backend, web, android (lọc theo đường dẫn) + test hook | ☑ | PR #1: **5/5 job xanh** — backend (27s), android (2m04s), web (35s), harness (8s), secrets/gitleaks (6s). Đã sửa: tag `setup-uv@v10` không tồn tại; hook loop factory trả None trên Linux. Action ghim SHA + Dependabot |
 | P0-08 | Tài khoản: Anthropic API (trần chi tiêu), Gemini, Zalo Bot Platform (`hoicon-dev`), **đăng ký Play Console ngay**, Firebase, cloudflared | ⏸ | Hướng dẫn từng bước: `docs/setup/ACCOUNTS.md`. Claude đã làm: `gh` đăng nhập, cloudflared 2026.10, `init_env`/`check_keys`. Play Console cá nhân cần xác minh bằng **máy Android thật** (mượn được) trước P1-08 |
 
 **Gate G0 (14/10)** — skill `phase-gate`:
