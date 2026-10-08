@@ -5,10 +5,10 @@
 > Hook SessionStart đọc khối STATUS dưới đây (≤ 6 dòng) — cập nhật mỗi khi đổi task.
 
 <!-- STATUS -->
-Phase 0 — Nền móng (08–14/10) · Gate G0: 14/10
-Việc kế tiếp: P0-01
-Đã xong: P0-02…P0-07 (CI 5/5 xanh) · P0-01: PR #1 chờ Minh duyệt merge · Chờ Minh: P0-08
-Minh: chạy init_env · đăng ký Play Console (hôm nay) / Student Pack / Zalo Bot / Anthropic / Gemini / Firebase — docs/setup/ACCOUNTS.md
+Phase 1 — Spike + hồ sơ Vòng 1 (15/10–13/11) · G0 ĐẠT 08/10 (docs/phase-reports/G0.md) · Gate G1: 08/11
+Việc kế tiếp: P1-S1
+P0-01…P0-07 xong (PR #1, #2 đã merge) · Chờ Minh: P0-08 tài khoản — Play Console NGAY, Firebase trước 15/10
+Minh: chạy init_env · đăng ký theo docs/setup/ACCOUNTS.md · làm máy ảo ⇒ Claude hỏi trước khi dừng stack khác
 Cập nhật: 08/10/2026
 <!-- /STATUS -->
 
@@ -33,9 +33,9 @@ Cập nhật: 08/10/2026
 
 | Mã | Việc | Trạng thái | Ghi chú |
 |---|---|---|---|
-| P0-01 | git init, tái cấu trúc thư mục, `.gitignore/.gitattributes/.editorconfig`, chép pipeline thuyết minh vào `docs/proposal/src/`; repo GitHub (public — Minh chọn 08/10) + `gh` | ◐ | Repo public `bminhnemhoi/TechStarUp_TDTU2027_HoiCon`; `main` chỉ có README; toàn bộ code qua PR #1 `feat/p0-01-bootstrap` (gitleaks + quét số điện thoại/email sạch; `gradlew` + `*.sh` đã có bit thực thi). Còn: merge khi CI xanh (Minh duyệt) |
+| P0-01 | git init, tái cấu trúc thư mục, `.gitignore/.gitattributes/.editorconfig`, chép pipeline thuyết minh vào `docs/proposal/src/`; repo GitHub (public — Minh chọn 08/10) + `gh` | ☑ | Repo public `bminhnemhoi/TechStarUp_TDTU2027_HoiCon`; PR #1 bootstrap (squash `b9e8dc9`) + PR #2 siết quyền (`ad685e4`); gitleaks + quét số điện thoại/email sạch; `gradlew` + `*.sh` có bit thực thi |
 | P0-02 | Toolchain Android trên D: (JDK 21, SDK, Android CLI), WHPX, AVD hc-api36/34/29, `env-android.ps1`, smoke test máy ảo | ☑ | `docs/EMULATOR.md`; hc-api29 boot thử ở P1-S1 |
-| P0-03 | Harness: plugin (ponytail, ui-ux-pro-max, official…), RTK, 7 hook + test, settings, `.mcp.json`, LSP; dọn settings cấp người dùng | ☑ | 49 test hook xanh; kotlin-lsp tắt (RAM); cần khởi động lại Claude Code — `docs/HARNESS.md` |
+| P0-03 | Harness: plugin (ponytail, ui-ux-pro-max, official…), RTK, 7 hook + test, settings, `.mcp.json`, LSP; dọn settings cấp người dùng | ☑ | 64 test hook xanh; quyền đã siết (PR #2); kotlin-lsp tắt (RAM); cần khởi động lại Claude Code — `docs/HARNESS.md` |
 | P0-04 | `CLAUDE.md`, `AGENTS.md`, 8 subagent, 8 skill | ☑ | |
 | P0-05 | Khung tài liệu: ROADMAP, ARCHITECTURE, DATA-MODEL, ADR-001…006, EMULATOR, HARNESS + stub PRD/API/AGENTS/DESIGN-SYSTEM/PRIVACY-DPIA/PLAY-POLICY/EVAL/PILOT-PROTOCOL | ☑ | + `docs/schemas/risk_event.v1.json` + fixture; stub được hoàn thiện theo task tương ứng |
 | P0-06 | Khung chạy được: `infra/compose.dev.yml` (15432), backend `/healthz` + pytest + Alembic, `apps/web` (3100), `apps/android` `:app/:rules/:demobank`, `package.json` gốc (`dev:all`) | ☑ | `pnpm dev:all` ⇒ readyz 200 + web 200; backend 9 test; `:rules:test` (gồm test hợp đồng `rule_floor`); app hello cài trên hc-api36 |
