@@ -48,6 +48,15 @@ const BLOCKED = [
   `cat backend/${ENV}`,
   `head -5 apps/web/${ENV}.local`,
   "cat D:/secrets/release.jks",
+  // review bảo mật 08/10: đọc bí mật qua script nội tuyến / ghi .env / ép add file bị ignore
+  `uv run --directory backend python -c "from hoicon.config import get_settings; print(get_settings().zalo_bot_token.get_secret_value())"`,
+  `python -c "print(open('backend/${ENV}').read())"`,
+  `uv run python -c "from dotenv import dotenv_values; print(dotenv_values())"`,
+  `node -e "console.log(require('fs').readFileSync('backend/${ENV}','utf8'))"`,
+  `python - <<'PY'\nimport os; print(os.environ['HOICON_ANTHROPIC_API_KEY'])\nPY`,
+  "uv run --directory backend python -m hoicon.ops.init_env",
+  `git add -f backend/${ENV}`,
+  `git add --force backend/${ENV}`,
 ];
 const ALLOWED = [
   "git status",
@@ -62,6 +71,13 @@ const ALLOWED = [
   `cat backend/${ENV}.example`,
   "uv run alembic upgrade head",
   "uv run alembic -x url=postgresql+psycopg://hoicon:hoicon@localhost:15432/hoicon upgrade head",
+  "uv run --directory backend python -m hoicon.ops.check_keys",
+  `uv run python -c "print(1 + 1)"`,
+  `node -e "console.log(require('./package.json').name)"`,
+  `python -c "print(open('backend/${ENV}.example').read())"`,
+  "git add -A",
+  "git add x && ls -lf",
+  "git add docs/setup/ACCOUNTS.md",
 ];
 for (const cmd of BLOCKED) test(`guard-shell blocks: ${cmd}`, () => assert.equal(shell(cmd).code, 2));
 for (const cmd of ALLOWED) test(`guard-shell allows: ${cmd}`, () => assert.equal(shell(cmd).code, 0));
