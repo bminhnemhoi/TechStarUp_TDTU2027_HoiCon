@@ -57,7 +57,7 @@
       "additionalProperties": false,
       "required": ["category"],
       "properties": {
-        "category": { "enum": ["bank", "wallet", "sideloaded", "other"] },
+        "category": { "enum": ["bank", "wallet", "securities", "sideloaded", "other"] },
         "package": {
           "type": "string",
           "maxLength": 128,

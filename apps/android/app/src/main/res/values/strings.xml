@@ -1,7 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Xưng hô: người dùng là "bác" (mặc định; sau này lấy từ members.address_form). Trợ lý luôn tự xưng "HỏiCon",
+  không bao giờ "con/cháu". Câu đầu tiên tới người cao tuổi và phụ đề mọi thông báo công khai AI (CLAUDE.md luật 6,
+  có test: rules/AiDisclosureCopyTest).
+-->
 <resources>
     <string name="app_name">HỏiCon</string>
     <string name="hello_title">Xin chào!</string>
-    <string name="hello_ai_disclosure">Đây là trợ lý AI HỏiCon — người gác cổng giúp cả nhà tránh bị lừa qua điện thoại.</string>
-    <string name="hello_status">Đây là bản thử nghiệm: HỏiCon chưa bật bảo vệ trên máy này.</string>
+    <string name="hello_ai_disclosure">Đây là trợ lý AI HỏiCon — như một người gác cổng giúp cả nhà tránh bị lừa qua điện thoại.</string>
+    <!-- Phụ đề (subText) của MỌI thông báo. -->
+    <string name="notif_ai_subtext">Trợ lý AI HỏiCon</string>
+
+    <!-- Màn quyền dành cho nhà phát triển (spike P1-S1), chưa phải màn E3 cho người cao tuổi. -->
+    <string name="perm_screen_intro">Bản thử nghiệm kỹ thuật. Để HỏiCon nhận ra lúc có số lạ gọi rồi mở ứng dụng ngân hàng, cần bật các mục dưới đây.</string>
+    <string name="perm_status_on">✓ Đã bật</string>
+    <string name="perm_status_off">✗ Chưa bật</string>
+    <string name="perm_open_settings">Mở cài đặt</string>
+    <string name="perm_open_settings_for">Mở cài đặt cho mục %1$s</string>
+    <string name="perm_role_title">Nhận biết cuộc gọi số lạ</string>
+    <string name="perm_role_why">Cho HỏiCon biết khi có số không có trong danh bạ gọi tới. HỏiCon không chặn cuộc gọi và không đọc danh bạ.</string>
+    <string name="perm_overlay_title">Hiển thị trên ứng dụng khác</string>
+    <string name="perm_overlay_why">Để màn hình “Khoan chuyển tiền đã” mở được ngay cả khi đang dùng ứng dụng khác.</string>
+    <string name="perm_usage_title">Quyền truy cập dữ liệu sử dụng</string>
+    <string name="perm_usage_why">Để biết ứng dụng ngân hàng vừa được mở, chỉ trong 10 phút sau cuộc gọi số lạ. HỏiCon chỉ biết tên ứng dụng vừa mở. HỏiCon không xem được bên trong, không biết số dư hay giao dịch.</string>
+    <string name="perm_notif_title">Thông báo</string>
+    <string name="perm_notif_why">Để hiện dòng “HỏiCon đang để ý giúp bác” và nhắc nhở khi cần.</string>
+    <string name="perm_battery_title">Không giới hạn pin</string>
+    <string name="perm_battery_why">Để máy không tắt HỏiCon khi đang bảo vệ. Trong danh sách, chọn HỏiCon rồi chọn “Không tối ưu hóa”.</string>
+
+    <!-- Cửa sổ rủi ro (foreground service): không nói "10 phút" để không gây áp lực thời gian. -->
+    <string name="channel_protecting">Đang để ý giúp bác</string>
+    <string name="channel_pause">Nhắc khoan chuyển tiền</string>
+    <string name="protecting_title">HỏiCon đang để ý giúp bác</string>
+    <string name="protecting_text">Vừa có số lạ gọi tới. Ai bảo chuyển tiền hay đọc mã, bác hỏi con trước nhé.</string>
+
+    <!-- E7 Dừng an toàn — bản spike sau review UX (ux-elder-reviewer duyệt lại ở P2-05). -->
+    <string name="pause_window_title">HỏiCon — Khoan chuyển tiền đã</string>
+    <string name="pause_disclosure">Đây là trợ lý AI HỏiCon</string>
+    <string name="pause_replay">Nghe lại</string>
+    <string name="pause_level_high">Cần cẩn thận</string>
+    <string name="pause_level_critical">Rất cần cẩn thận</string>
+    <string name="pause_title">Bác ơi, khoan chuyển tiền đã</string>
+    <string name="pause_body">Công an, ngân hàng không bao giờ bảo chuyển tiền hay đọc mã xác thực (OTP) qua điện thoại. Dù ai gọi, bác cũng hỏi con trước đã. Việc thật thì chờ được vài phút.</string>
+    <string name="pause_reason_active">HỏiCon nhắc vì bác đang nghe một số lạ và vừa mở %1$s.</string>
+    <string name="pause_reason_ended">HỏiCon nhắc vì bác vừa nói chuyện với một số lạ rồi mở %1$s.</string>
+    <string name="app_kind_bank">ứng dụng ngân hàng</string>
+    <string name="app_kind_wallet">ví điện tử</string>
+    <string name="app_kind_securities">ứng dụng chứng khoán</string>
+    <!-- Spike: mở trình quay số. P2-06 thay bằng luồng "Hỏi con" thật. -->
+    <string name="pause_ask_child">Gọi cho con</string>
+    <string name="pause_continue">Vẫn tiếp tục</string>
+    <string name="pause_continue_hint">Giữ ngón tay 3 giây</string>
+    <string name="pause_continue_holding">Giữ yên nhé…</string>
+    <string name="pause_continue_too_short">Chưa đủ 3 giây. Bác đặt ngón tay lên nút và giữ yên đến khi thanh màu chạy hết.</string>
+    <string name="pause_continue_long_click_label">giữ 3 giây để tiếp tục</string>
+    <string name="pause_continue_a11y_action">Tiếp tục</string>
+    <!-- Đường thay thế cho TalkBack / Switch Access (SEC-2): đếm 3 giây có đọc to, rồi mới có nút xác nhận. -->
+    <string name="pause_confirm_counting">HỏiCon đếm 3 giây rồi bác xác nhận nhé: %1$d</string>
+    <string name="pause_confirm_ready">Nếu bác chắc chắn, bấm nút “Đúng, vẫn tiếp tục”.</string>
+    <string name="pause_confirm_button">Đúng, vẫn tiếp tục</string>
+
+    <!-- Câu đọc to: mỗi mục là một câu nói riêng, nghỉ 350 ms giữa các câu. Câu 1 luôn là câu công khai AI. -->
+    <string-array name="pause_speech">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>Bác ơi, khoan chuyển tiền đã.</item>
+        <item>Công an, ngân hàng không bao giờ bảo chuyển tiền qua điện thoại.</item>
+        <item>Bác bấm nút Gọi cho con trước nhé.</item>
+    </string-array>
+    <!-- Thêm vào cuối khi SafePause không mở được và chỉ còn thông báo dự phòng. -->
+    <string name="pause_fallback_speech_extra">Bác chạm vào dòng chữ HỏiCon ở đầu màn hình nhé.</string>
+
+    <!-- Thông báo dự phòng (khi không mở được màn E7). -->
+    <string name="fallback_title">Khoan chuyển tiền đã — HỏiCon nhắc bác</string>
+    <string name="fallback_text">Hỏi con trước nhé. Chạm vào đây để xem.</string>
+    <string name="fallback_big_text">Công an, ngân hàng không bao giờ bảo chuyển tiền qua điện thoại. Chạm vào đây để hỏi con.</string>
 </resources>

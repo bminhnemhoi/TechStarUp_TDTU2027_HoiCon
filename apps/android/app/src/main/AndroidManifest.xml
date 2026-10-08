@@ -1,9 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Khung P0-06: chưa xin quyền nào. Mọi quyền thêm sau phải khớp docs/PLAY-POLICY.md
-  (cấm SMS, nhật ký cuộc gọi, danh bạ, QUERY_ALL_PACKAGES, REQUEST_INSTALL_PACKAGES, Accessibility, Notification Listener).
+  Spike P1-S1: chuỗi cảm biến "cuộc gọi số lạ → app ngân hàng → dừng an toàn". Mọi quyền phải khớp docs/PLAY-POLICY.md.
+  CẤM (không bao giờ khai báo): SMS, nhật ký cuộc gọi, danh bạ, QUERY_ALL_PACKAGES, REQUEST_INSTALL_PACKAGES,
+  REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Accessibility, Notification Listener, ghi âm cuộc gọi.
+  Không có INTERNET: đường găng không dùng mạng (H6) — outbox/đồng bộ thêm sau.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Cửa sổ rủi ro ≤ 10 phút sau cuộc gọi số lạ (RiskWindowService). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Thông báo "HỏiCon đang bảo vệ" + thông báo dự phòng khi không mở được SafePause. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- "Hiển thị trên ứng dụng khác": chỉ để được MỞ SafePauseActivity từ nền (miễn trừ BAL). Không vẽ overlay. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!--
+      SEC-1: ẩn cửa sổ nổi của app khác khi màn "Khoan chuyển tiền đã" đang hiện (chống tapjacking nút "Vẫn tiếp
+      tục"). Quyền mức normal, tự cấp; chỉ có tác dụng từ Android 12 (Window.setHideOverlayWindows).
+    -->
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
+    <!-- Quyền đặc biệt người dùng cấp: biết app ngân hàng lên tiền cảnh trong cửa sổ rủi ro. -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+    <!--
+      KHÔNG khai báo READ_PHONE_STATE (ADR-007): spike P1-S1 chứng minh AudioManager.mode (không cần quyền) bắt đủ
+      đổ chuông / nhấc máy / kết thúc 11/11 lần trên API 29/34/36 — ít quyền hơn, ít khai báo Play hơn.
+    -->
+
+    <!--
+      Thay cho QUERY_ALL_PACKAGES: chỉ các gói ngân hàng/ví cần nhìn thấy trong UsageStats (khớp ĐÚNG tên gói,
+      sensing/BankApps.kt). Tập con của data/bank_apps.vn.json — danh sách đầy đủ ở P1-S2.
+    -->
+    <queries>
+        <package android:name="vn.hoicon.demobank" />
+        <package android:name="com.VCB" />
+        <package android:name="com.vnpay.bidv" />
+        <package android:name="com.vietinbank.ipay" />
+        <package android:name="com.vnpay.Agribank3g" />
+        <package android:name="com.mbmobile" />
+        <package android:name="vn.com.techcombank.bb.app" />
+        <package android:name="com.mservice.momotransfer" />
+        <package android:name="vn.com.vng.zalopay" />
+        <!-- Bộ đọc TTS trên máy (Android 11+ phải khai báo để kết nối engine). -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="false"
@@ -20,6 +64,33 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Task riêng (taskAffinity rỗng): nằm trên task của app ngân hàng, không chen vào task đó. -->
+        <activity
+            android:name=".pause.SafePauseActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="" />
+
+        <!-- Chỉ quan sát: luôn cho cuộc gọi đi qua (vai trò CALL_SCREENING, không cần READ_CALL_LOG/READ_CONTACTS). -->
+        <service
+            android:name=".sensing.HcCallScreeningService"
+            android:exported="true"
+            android:permission="android.permission.BIND_SCREENING_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".sensing.RiskWindowService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Anti-scam risk window for elderly users: runs only during a call with a number not in contacts and up to 10 minutes after it; checks which banking app is in the foreground so an on-device safety pause can be shown. Stops automatically; no data leaves the device." />
+        </service>
     </application>
 
 </manifest>

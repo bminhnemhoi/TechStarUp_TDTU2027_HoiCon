@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brand tokens (docs/DESIGN-SYSTEM.md), same values as ui/theme/Color.kt; P1-05 generates both from tokens.json. -->
+<resources>
+    <color name="brand_navy">#1F3A5F</color>
+    <color name="brand_orange">#C4561D</color>
+    <color name="surface_white">#FFFFFF</color>
+    <!-- navy 40%: dividers / outlineVariant -->
+    <color name="navy_40">#661F3A5F</color>
+</resources>

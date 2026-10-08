@@ -1,5 +1,5 @@
 {
-  "_note": "Số điện thoại HƯ CẤU chỉ dùng cho test/máy ảo/demo (CLAUDE.md luật 2, 8). Không bao giờ thay bằng số thật. Đầu 0900000xxx được chọn để dễ nhận ra là giả.",
+  "_note": "Số dùng cho test/MÁY ẢO (CLAUDE.md luật 2, 8). VN không có dải số hư cấu chính thức — đầu 090 là dải MobiFone đã cấp phát, các số này CÓ THỂ có chủ thật: KHÔNG BAO GIỜ gọi, nhắn, điền sẵn vào trình quay số, gửi qua Zalo hay dùng diễn tập trên mạng thật. Code drill/Zalo/dialer phải từ chối các số trong file này (review bảo mật 09/10).",
   "unknown_caller": "0900000001",
   "flagged_caller": "0900000002",
   "trusted_child": "0900000003",

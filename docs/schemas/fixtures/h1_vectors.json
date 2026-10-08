@@ -1,0 +1,139 @@
+{
+  "description": "Vector kiểm chuẩn hóa E.164 + h1 = SHA-256(\"hoicon:v1:\"+E164) (ADR-006). Dùng chung: :rules PhoneHasherVectorsTest (Kotlin) và backend tests/contract. Chỉ số HƯ CẤU — sinh bởi scripts/fixtures/gen_h1_vectors.mjs.",
+  "prefix": "hoicon:v1:",
+  "vectors": [
+    {
+      "input": "0900000001",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "di động, dạng quốc nội"
+    },
+    {
+      "input": "090 000 0001",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "có khoảng trắng"
+    },
+    {
+      "input": "090.000.0001",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "có dấu chấm"
+    },
+    {
+      "input": "+84900000001",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "đã là E.164"
+    },
+    {
+      "input": "+84 90 000 0001",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "E.164 có khoảng trắng"
+    },
+    {
+      "input": "84900000001",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "thiếu dấu +"
+    },
+    {
+      "input": "0084900000001",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "tiền tố quốc tế 00"
+    },
+    {
+      "input": "+840900000001",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "+84 kèm số 0 thừa"
+    },
+    {
+      "input": "090 000 0001",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "khoảng trắng không ngắt (NBSP U+00A0)"
+    },
+    {
+      "input": "‪+84 90 000 0001‬",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "bọc ký tự định hướng LRE/PDF (U+202A/U+202C) khi dán số"
+    },
+    {
+      "input": "‎0900000001",
+      "e164": "+84900000001",
+      "h1": "3f0f23b3e724e869e1b0552e6c64ea562a022c311476be6dadb58b6011936956",
+      "last3": "001",
+      "note": "dấu LRM (U+200E) ở đầu"
+    },
+    {
+      "input": "0900000002",
+      "e164": "+84900000002",
+      "h1": "aa1b1fcd5c51853e998738c59cffa5a4d95bd39ef7ef3b6d905c9c6c3af987e4",
+      "last3": "002",
+      "note": "số gắn cờ hư cấu (data/fixtures/phones.json)"
+    },
+    {
+      "input": "02800000000",
+      "e164": "+842800000000",
+      "h1": "aa71fa275225e7ee386b14eda3fbfcdf263236cba702d8def4dd452b02285862",
+      "last3": "000",
+      "note": "máy bàn TP.HCM hư cấu (NSN 10 chữ số)"
+    },
+    {
+      "input": "+12025550123",
+      "e164": "+12025550123",
+      "h1": "97c27718f9ad23b26439accaf7a63acc99d17225fe9bdfe0b8c4912b0092a7a0",
+      "last3": "123",
+      "note": "số quốc tế (Mỹ, dải 555 hư cấu)"
+    },
+    {
+      "input": "",
+      "e164": null,
+      "h1": null,
+      "last3": null,
+      "note": "ẩn số"
+    },
+    {
+      "input": "1900000000",
+      "e164": null,
+      "h1": null,
+      "last3": null,
+      "note": "đầu số dịch vụ, không phải số cá nhân"
+    },
+    {
+      "input": "12345",
+      "e164": null,
+      "h1": null,
+      "last3": null,
+      "note": "quá ngắn"
+    },
+    {
+      "input": "09000000",
+      "e164": null,
+      "h1": null,
+      "last3": null,
+      "note": "di động thiếu chữ số"
+    },
+    {
+      "input": "0900abc001",
+      "e164": null,
+      "h1": null,
+      "last3": null,
+      "note": "có chữ cái"
+    }
+  ]
+}

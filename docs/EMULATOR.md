@@ -73,7 +73,11 @@ kế tiếp — chỉ cần một lần vì userdata được giữ), cỡ chữ
 (ảnh `D:/Android/g0-hello-api36*.png`). Cài APK mất 3 phút 37 giây khi máy ảo + daemon Gradle chạy cùng lúc với
 ~0,9 GB RAM trống; khi RAM thấp, hệ thống hay báo "Digital Wellbeing/Pixel Launcher không phản hồi" (không phải lỗi app).
 
-hc-api29 chưa boot thử (làm ở P1-S1). Thời gian boot phụ thuộc mạnh vào RAM trống ⇒ dừng stack Docker khác khi làm
+hc-api29 boot nguội lần đầu ~264 s (P1-S1). Trên API 29 không có `cmd role get-role-holders` ⇒ dùng `dumpsys role`.
+
+**Spike P1-S1 (08/10):** chuỗi cảm biến chạy đủ trên cả 3 AVD — kết quả `docs/spikes/P1-S1-cam-bien.md`, ma trận
+`docs/spikes/device-matrix.md`, quyết định ADR-007. **Độ trễ trên máy ảo này bị thổi phồng** (đối chứng: mở app tầm
+thường 4–6 s khi RAM máy chủ còn 0,6–1,8 GB) ⇒ gate p95 ≤ 3 s phải đo trên máy thật. Thời gian boot phụ thuộc mạnh vào RAM trống ⇒ dừng stack Docker khác khi làm
 Android (`scripts/stop-other-stacks.sh`, P0-06).
 
 ## 5. Kịch bản mô phỏng (`scripts/emu-scenario.py`, task P1-S1)

@@ -23,14 +23,20 @@ $ADB emu kill                                   # tắt khi xong
 Nếu RAM thiếu: đề nghị Minh chạy `bash scripts/stop-other-stacks.sh` (có liệt kê container trước).
 
 ## 2. Cài và cấp quyền (gói `vn.hoicon.sentinel`, demo `vn.hoicon.demobank`)
+RAM ít ⇒ **build trước, tắt Gradle, rồi mới bật máy ảo**; cài bằng adb (không `gradlew installDebug` khi máy ảo chạy):
 ```bash
-apps/android/gradlew -p apps/android :app:installDebug :demobank:installDebug
+apps/android/gradlew -p apps/android :app:assembleDebug :demobank:assembleDebug && apps/android/gradlew -p apps/android --stop
+$ADB install -r apps/android/app/build/outputs/apk/debug/app-debug.apk
+$ADB install -r apps/android/demobank/build/outputs/apk/debug/demobank-debug.apk
 PKG=vn.hoicon.sentinel
+$ADB shell cmd package compile -m speed -f $PKG     # AOT ~ bản cài từ Play; APK debug chưa AOT có thể trễ hạn sàng lọc 5 s
 $ADB shell cmd role add-role-holder android.app.role.CALL_SCREENING $PKG
 $ADB shell appops set $PKG GET_USAGE_STATS allow
 $ADB shell appops set $PKG SYSTEM_ALERT_WINDOW allow
 $ADB shell pm grant $PKG android.permission.POST_NOTIFICATIONS
-$ADB shell cmd role get-role-holders android.app.role.CALL_SCREENING   # xác nhận
+$ADB shell dumpsys deviceidle whitelist +$PKG       # "không giới hạn pin" — BẮT BUỘC trên API 35+ để mở FGS từ nền (ADR-007)
+$ADB shell cmd role get-role-holders android.app.role.CALL_SCREENING   # xác nhận (API 29: dùng `dumpsys role`)
+$ADB logcat -G 16M                                   # đệm logcat đủ cho lô 10 lần đo
 ```
 
 ## 3. Kịch bản chuẩn (hoặc `python scripts/emu-scenario.py --avd hc-api36 --scenario fake_police`)
@@ -55,6 +61,13 @@ $ADB emu gsm cancel 0900000001
 - App bị kill: `$ADB shell am kill $PKG` rồi chạy lại kịch bản.
 - Cài ngoài Play (luật R2): `$ADB install -i com.android.chrome <apk-thử>` ngay sau cuộc gọi lạ.
 - Cỡ chữ lớn: `$ADB shell settings put system font_scale 2.0` (nhớ trả về 1.0).
+- **Luôn `gsm cancel` mọi cuộc gọi trước `adb emu kill`**: tắt máy ảo khi đang có cuộc gọi ⇒ snapshot giữ cuộc gọi treo,
+  các cuộc gọi sau không tới Telecom (phải boot `--cold`).
+- **Lỗi modem giả lập (API 34):** sau khi `gsm accept` rồi `gsm cancel`, modem có thể kẹt OFFHOOK ⇒ cuộc gọi kế tiếp không
+  tới Telecom. `emu-scenario.py` ghi nguyên nhân (`screening_diagnosis`) — loại các lần này khỏi tỉ lệ "bắt được", có log
+  radio làm bằng chứng; kịch bản không nhấc máy (`screen_only`) không bị.
+- Kịch bản của `emu-scenario.py`: `smoke_call`, `screen_only`, `call_state`, `fake_police`, `launch_baseline` (đối chứng
+  mở app tầm thường); `--prep none|kill|force-stop` (ấm / bị kill / nguội).
 
 ## 5. Ghi kết quả
 - Cập nhật `docs/spikes/device-matrix.md`: AVD/API, kịch bản, số lần chạy, p50/p95 độ trễ, đạt/không, ảnh chụp.
