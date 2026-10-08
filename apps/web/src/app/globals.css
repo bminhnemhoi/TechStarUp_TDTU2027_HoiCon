@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* Token tạm theo docs/DESIGN-SYSTEM.md — sẽ sinh từ design-system/hoicon/tokens.json ở P1-05. */
+@theme inline {
+  --color-background: #ffffff;
+  --color-foreground: #1f3a5f;
+  --color-brand-navy: #1f3a5f;
+  --color-brand-orange: #c4561d;
+  --color-brand-orange-text: #b04a17;
+  --color-brand-green: #1e7b53;
+  --font-sans: var(--font-be-vietnam-pro), Arial, sans-serif;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}

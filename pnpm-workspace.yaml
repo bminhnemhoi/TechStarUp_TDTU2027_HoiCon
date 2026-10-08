@@ -1,0 +1,7 @@
+packages:
+  - apps/web
+
+# Không chạy script cài đặt của các gói native trừ khi cần (giữ mặc định của create-next-app).
+allowBuilds:
+  sharp: false
+  unrs-resolver: false

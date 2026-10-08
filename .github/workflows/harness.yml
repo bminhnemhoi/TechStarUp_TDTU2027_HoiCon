@@ -1,0 +1,26 @@
+name: harness
+
+on:
+  push:
+    branches: [main]
+    paths: [".claude/**", ".github/workflows/harness.yml"]
+  pull_request:
+    paths: [".claude/**", ".github/workflows/harness.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  hooks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # Hook guard-shell / guard-privacy / … (49 ca) — xem docs/HARNESS.md
+      - run: node --test ".claude/hooks/test/*.test.mjs"
+      - name: settings.json còn đủ 7 hook (claude plugin install từng xóa mất args)
+        run: |
+          node -e "const s=require('./.claude/settings.json');const n=Object.values(s.hooks).flat().flatMap(m=>m.hooks).filter(h=>/\.claude\/hooks\/.+\.mjs/.test(h.command)).length;if(n<7)process.exit(1);console.log('hooks',n)"

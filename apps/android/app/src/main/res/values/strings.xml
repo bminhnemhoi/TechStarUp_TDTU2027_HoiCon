@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HỏiCon</string>
+    <string name="hello_title">Xin chào!</string>
+    <string name="hello_ai_disclosure">Đây là trợ lý AI HỏiCon — người gác cổng giúp cả nhà tránh bị lừa qua điện thoại.</string>
+    <string name="hello_status">Đây là bản thử nghiệm: HỏiCon chưa bật bảo vệ trên máy này.</string>
+</resources>

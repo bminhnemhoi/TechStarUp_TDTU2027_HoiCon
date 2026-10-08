@@ -1,0 +1,2 @@
+# Thư mục dữ liệu phiên của Kotlin 2.x (build/, .gradle/, local.properties đã có trong .gitignore gốc)
+.kotlin/

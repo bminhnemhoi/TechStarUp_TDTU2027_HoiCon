@@ -1,0 +1,23 @@
+{
+  "name": "hoicon",
+  "private": true,
+  "description": "HỏiCon — task runner cho monorepo (backend uv, web pnpm, android gradle). Xem CLAUDE.md.",
+  "packageManager": "pnpm@12.4.2",
+  "scripts": {
+    "dev:db": "docker compose -f infra/compose.dev.yml up -d --wait",
+    "dev:api": "uv run --directory backend uvicorn hoicon.api.main:app --port 18000 --reload --loop asyncio:SelectorEventLoop",
+    "dev:web": "pnpm --dir apps/web dev",
+    "dev:all": "pnpm dev:db && pnpm db:migrate && concurrently -k -n api,web -c blue,magenta \"pnpm dev:api\" \"pnpm dev:web\"",
+    "db:migrate": "uv run --directory backend alembic upgrade head",
+    "test": "pnpm test:hooks && pnpm test:backend && pnpm typecheck",
+    "test:hooks": "node --test \".claude/hooks/test/*.test.mjs\"",
+    "test:backend": "uv run --directory backend pytest",
+    "test:android": "apps/android/gradlew -p apps/android :rules:test",
+    "lint": "uv run --directory backend ruff check . && pnpm --dir apps/web lint",
+    "typecheck": "pnpm --dir apps/web typecheck",
+    "gen:api": "bash scripts/gen-api-client.sh"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

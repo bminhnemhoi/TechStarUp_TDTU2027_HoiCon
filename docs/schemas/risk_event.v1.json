@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/risk_event.v1.json",
+  "title": "RiskEvent v1",
+  "description": "Sự kiện rủi ro do app Lính gác gửi lên POST /v1/events (theo lô). Chỉ siêu dữ liệu: không nội dung cuộc gọi, không số điện thoại thô (chỉ h1 + 3 số cuối, ADR-006). id do máy sinh (UUIDv7) ⇒ gửi lại an toàn.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "schema_version", "type", "occurred_at", "rule_floor", "is_drill", "app_version", "rules_version"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid", "description": "UUIDv7 sinh trên máy" },
+    "schema_version": { "const": 1 },
+    "type": {
+      "enum": [
+        "call_started",
+        "call_ended",
+        "flagged_number_call",
+        "risk_window_opened",
+        "risk_window_closed",
+        "banking_app_foreground",
+        "sideload_detected",
+        "safe_pause_shown",
+        "safe_pause_continued",
+        "safe_pause_cancelled",
+        "ask_child_pressed"
+      ]
+    },
+    "occurred_at": { "type": "string", "format": "date-time", "description": "Giờ máy (UTC, ISO 8601)" },
+    "rule_id": { "enum": ["R0", "R1", "R2", "R4"], "description": "Luật đã kích hoạt (nếu có)" },
+    "rule_floor": {
+      "enum": ["none", "low", "medium", "high", "critical"],
+      "description": "Mức sàn do luật tất định trên máy quyết định; máy chủ/LLM không được hạ dưới mức này"
+    },
+    "caller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["h1", "last3", "in_contacts"],
+      "properties": {
+        "h1": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256(\"hoicon:v1:\"+E164), hex" },
+        "last3": { "type": "string", "pattern": "^[0-9]{3}$" },
+        "in_contacts": { "type": "boolean", "description": "Theo Call.Details của CallScreeningService" },
+        "trusted": { "type": "boolean", "description": "Khớp liên hệ tin cậy (R0)" },
+        "flagged": { "type": "boolean", "description": "Khớp danh sách đe dọa cục bộ" }
+      }
+    },
+    "call": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "direction": { "enum": ["incoming", "outgoing"] },
+        "active": { "type": "boolean" },
+        "duration_s": { "type": "integer", "minimum": 0 },
+        "since_end_s": { "type": "integer", "minimum": 0, "description": "Số giây kể từ khi cuộc gọi kết thúc (cửa sổ ≤ 600)" }
+      }
+    },
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category"],
+      "properties": {
+        "category": { "enum": ["bank", "wallet", "sideloaded", "other"] },
+        "package": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Chỉ gửi khi gói nằm trong danh sách bank_apps.vn.json (không phải dữ liệu cá nhân)"
+        }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Mốc đo độ trễ đường găng (ms, đồng hồ đơn điệu trên máy)",
+      "properties": {
+        "detect_ms": { "type": "integer", "minimum": 0, "description": "app_foreground → risk_detected" },
+        "pause_ms": { "type": "integer", "minimum": 0, "description": "app_foreground → pause_shown" }
+      }
+    },
+    "is_drill": { "type": "boolean" },
+    "drill_id": { "type": "string", "format": "uuid" },
+    "app_version": { "type": "string", "maxLength": 32 },
+    "rules_version": { "type": "string", "maxLength": 32 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "is_drill": { "const": true } } },
+      "then": { "required": ["drill_id"] }
+    }
+  ]
+}

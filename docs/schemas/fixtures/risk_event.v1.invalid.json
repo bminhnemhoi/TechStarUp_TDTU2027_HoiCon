@@ -1,0 +1,36 @@
+[
+  {
+    "_why": "rule_floor không hợp lệ",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e81",
+    "schema_version": 1,
+    "type": "call_started",
+    "occurred_at": "2026-12-01T02:10:00Z",
+    "rule_floor": "severe",
+    "is_drill": false,
+    "app_version": "0.1.0",
+    "rules_version": "r1"
+  },
+  {
+    "_why": "caller.h1 không phải hex 64 ký tự (ví dụ gửi nhầm số thô)",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e82",
+    "schema_version": 1,
+    "type": "call_started",
+    "occurred_at": "2026-12-01T02:10:00Z",
+    "rule_floor": "none",
+    "caller": { "h1": "not-a-hash", "last3": "000", "in_contacts": false },
+    "is_drill": false,
+    "app_version": "0.1.0",
+    "rules_version": "r1"
+  },
+  {
+    "_why": "diễn tập thiếu drill_id",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e83",
+    "schema_version": 1,
+    "type": "safe_pause_shown",
+    "occurred_at": "2026-12-01T02:10:00Z",
+    "rule_floor": "high",
+    "is_drill": true,
+    "app_version": "0.1.0",
+    "rules_version": "r1"
+  }
+]

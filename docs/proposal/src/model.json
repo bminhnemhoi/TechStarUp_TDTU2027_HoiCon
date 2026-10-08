@@ -1,0 +1,204 @@
+{
+ "assumptions": {
+  "price_family_month": 49000,
+  "arpu_family_month": 45000,
+  "b2b_fee_mau_month": 5000,
+  "b2b_setup_fee": 150000000,
+  "b2b_setup_fee_pilot": 100000000,
+  "csr_program_fee": 40000000,
+  "cost_free_family_month": 600,
+  "cost_paid_family_month": 6000,
+  "cost_b2b_mau_month": 2000,
+  "payment_fee_rate": 0.02,
+  "csr_direct_cost_rate": 0.3
+ },
+ "volumes": {
+  "2027": {
+   "free_end": 15000,
+   "free_avg": 7500,
+   "paid_end": 600,
+   "paid_avg": 300,
+   "b2b_partners_end": 1,
+   "b2b_mau_avg": 5000,
+   "b2b_months": 3,
+   "new_partner_setup": 100000000,
+   "csr_programs": 3
+  },
+  "2028": {
+   "free_end": 60000,
+   "free_avg": 37500,
+   "paid_end": 3000,
+   "paid_avg": 1800,
+   "b2b_partners_end": 2,
+   "b2b_mau_avg": 30000,
+   "b2b_months": 12,
+   "new_partner_setup": 150000000,
+   "csr_programs": 8
+  },
+  "2029": {
+   "free_end": 150000,
+   "free_avg": 105000,
+   "paid_end": 7500,
+   "paid_avg": 5250,
+   "b2b_partners_end": 3,
+   "b2b_mau_avg": 100000,
+   "b2b_months": 12,
+   "new_partner_setup": 150000000,
+   "csr_programs": 15
+  }
+ },
+ "fixed": {
+  "2027": {
+   "personnel": 330,
+   "infra": 60,
+   "marketing": 150,
+   "legal": 80,
+   "office": 36,
+   "rnd": 40
+  },
+  "2028": {
+   "personnel": 1536,
+   "infra": 180,
+   "marketing": 500,
+   "legal": 150,
+   "office": 200,
+   "rnd": 120
+  },
+  "2029": {
+   "personnel": 2592,
+   "infra": 300,
+   "marketing": 900,
+   "legal": 200,
+   "office": 300,
+   "rnd": 200
+  }
+ },
+ "years": {
+  "2027": {
+   "rev_b2c": 162000000,
+   "rev_b2b": 175000000,
+   "rev_csr": 120000000,
+   "rev": 457000000,
+   "c_free": 54000000,
+   "c_paid": 21600000,
+   "c_b2b": 30000000,
+   "c_pay": 3240000.0,
+   "c_csr": 36000000.0,
+   "var": 144840000.0,
+   "gp": 312160000.0,
+   "gm": 0.6830634573304157,
+   "fixed": 696000000,
+   "ebitda": -383840000.0,
+   "tax": 0.0,
+   "net": -383840000.0,
+   "total_cost": 840840000.0,
+   "headcount": "5 sáng lập (bán thời gian) + 1 CTV",
+   "cum_net": -383840000.0
+  },
+  "2028": {
+   "rev_b2c": 972000000,
+   "rev_b2b": 1950000000,
+   "rev_csr": 320000000,
+   "rev": 3242000000,
+   "c_free": 270000000,
+   "c_paid": 129600000,
+   "c_b2b": 720000000,
+   "c_pay": 19440000.0,
+   "c_csr": 96000000.0,
+   "var": 1235040000.0,
+   "gp": 2006960000.0,
+   "gm": 0.6190499691548427,
+   "fixed": 2686000000,
+   "ebitda": -679040000.0,
+   "tax": 0.0,
+   "net": -679040000.0,
+   "total_cost": 3921040000.0,
+   "headcount": "8 nhân sự toàn thời gian",
+   "cum_net": -1062880000.0
+  },
+  "2029": {
+   "rev_b2c": 2835000000,
+   "rev_b2b": 6150000000,
+   "rev_csr": 600000000,
+   "rev": 9585000000,
+   "c_free": 756000000,
+   "c_paid": 378000000,
+   "c_b2b": 2400000000,
+   "c_pay": 56700000.0,
+   "c_csr": 180000000.0,
+   "var": 3770700000.0,
+   "gp": 5814300000.0,
+   "gm": 0.60660406885759,
+   "fixed": 4492000000,
+   "ebitda": 1322300000.0,
+   "tax": 51884000.0,
+   "net": 1270416000.0,
+   "total_cost": 8262700000.0,
+   "headcount": "12 nhân sự toàn thời gian",
+   "cum_net": 207536000.0
+  }
+ },
+ "conservative_2029": {
+  "rev": 4051000000.0,
+  "var": 1856820000.0,
+  "fixed": 2954600000.0000005,
+  "ebitda": -760420000.0000005
+ },
+ "optimistic_2029": {
+  "rev": 13785500000.0,
+  "var": 5387910000.0,
+  "fixed": 5344000000,
+  "ebitda": 3053590000.0
+ },
+ "unit": {
+  "family": {
+   "price": 45000,
+   "var": 6900.0,
+   "contrib": 38100.0
+  },
+  "b2b": {
+   "price": 5000,
+   "var": 2000,
+   "contrib": 3000
+  }
+ },
+ "mvp_budget": [
+  [
+   "Điện thoại Android thử nghiệm (2 máy đã qua sử dụng, khác đời Android)",
+   6000000
+  ],
+  [
+   "Tài khoản nhà phát triển Google Play (25 USD, trả một lần)",
+   650000
+  ],
+  [
+   "Tên miền, máy chủ đám mây và công cụ giám sát (5 tháng)",
+   1500000
+  ],
+  [
+   "API mô hình ngôn ngữ và giọng nói vượt hạn mức miễn phí",
+   3500000
+  ],
+  [
+   "Khảo sát và phỏng vấn (quà tặng người tham gia)",
+   5000000
+  ],
+  [
+   "In thẻ “Mật khẩu gia đình”, poster và vật phẩm gian trưng bày",
+   6000000
+  ],
+  [
+   "Sản xuất video thuyết trình (3 phút và 5 phút)",
+   4000000
+  ],
+  [
+   "Đi lại, tổ chức buổi hướng dẫn cho gia đình thí điểm",
+   3000000
+  ],
+  [
+   "Dự phòng (khoảng 10%)",
+   3000000
+  ]
+ ],
+ "mvp_total": 32650000
+}
