@@ -3,6 +3,7 @@
 uv run --directory backend uvicorn hoicon.api.main:app --port 18000 --reload --loop asyncio:SelectorEventLoop
 """
 
+import asyncio
 import logging
 
 from fastapi import FastAPI, Response, status
@@ -13,6 +14,7 @@ from hoicon import __version__
 from hoicon.db.session import get_engine
 
 logger = logging.getLogger(__name__)
+READYZ_TIMEOUT_S = 6
 
 app = FastAPI(title="HỏiCon API", version=__version__)
 
@@ -25,11 +27,12 @@ async def healthz() -> dict[str, str]:
 
 @app.get("/readyz", tags=["ops"])
 async def readyz(response: Response) -> dict[str, str]:
-    """Readiness: kết nối được Postgres."""
+    """Readiness: kết nối được Postgres (trả lời trong ≤ READYZ_TIMEOUT_S kể cả khi DB treo)."""
     try:
-        async with get_engine().connect() as conn:
-            await conn.execute(text("select 1"))
-    except (SQLAlchemyError, OSError) as exc:
+        async with asyncio.timeout(READYZ_TIMEOUT_S):
+            async with get_engine().connect() as conn:
+                await conn.execute(text("select 1"))
+    except (SQLAlchemyError, OSError, TimeoutError) as exc:
         logger.warning("readyz: database unreachable (%s)", type(exc).__name__)
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"status": "unavailable", "db": "down"}

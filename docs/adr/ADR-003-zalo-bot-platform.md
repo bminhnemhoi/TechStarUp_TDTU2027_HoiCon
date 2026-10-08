@@ -15,6 +15,15 @@ gửi/nhận tin với người đã tương tác, có webhook và nút bấm; g
   được ưu tiên. Chia gia đình thí điểm qua 3 bot.
 - Dự phòng: magic link `/a/[token]` (web, web push) có cùng các hành động; Telegram nếu P1-S3 thất bại.
 
+## Yêu cầu bảo mật bắt buộc cho code Zalo (review 08/10/2026)
+Zalo Bot API đặt **token trên đường dẫn URL** (`https://bot-api.zaloplatforms.com/bot<TOKEN>/<method>`), nên:
+- Mọi lời gọi đi qua **một** `ZaloClient`; logger `httpx` đặt mức WARNING; thêm `logging.Filter` thay `/bot[^/]+/`
+  bằng `/bot***/`; lỗi HTTP gói thành `ZaloError(status)` **không mang URL** (`raise … from None`).
+- Trace/OTel/Sentry (nếu dùng) phải scrub `url.full` và không ghi biến cục bộ của frame.
+- `setWebhook` chạy bằng script `hoicon.ops.zalo_webhook` (chỉ in Đạt/Lỗi) — không ai dựng lệnh curl chứa token.
+- Đường hầm dev chỉ phơi **route webhook** (app con), không phơi `/docs`, `/openapi.json`, `/mcp/*`.
+- Webhook kiểm `X-Bot-Api-Secret-Token` bằng so sánh hằng thời gian (`hmac.compare_digest`).
+
 ## Hệ quả
 - (+) Không cần app cho người giám hộ; quen thuộc; demo được ở gian.
 - (−) Hạn mức giới hạn quy mô thí điểm (~150 người giám hộ) — đủ cho Vòng 2/chung kết; gian chung kết dùng web push

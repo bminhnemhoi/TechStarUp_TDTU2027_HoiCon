@@ -6,9 +6,9 @@
 
 <!-- STATUS -->
 Phase 0 — Nền móng (08–14/10) · Gate G0: 14/10
-Việc kế tiếp: P0-01
-Đã xong: P0-02…P0-06 · Còn: P0-01 (repo GitHub + commit đầu), P0-07 (CI chạy xanh) · Chờ Minh: P0-08
-Minh: khởi động lại Claude Code · gh auth login · đăng ký Play Console/Zalo Bot/Anthropic/Gemini/Firebase
+Việc kế tiếp: P0-07
+Đã xong: P0-02…P0-06 · PR #1 khởi tạo đang chờ CI xanh + Minh duyệt merge (P0-01, P0-07) · Chờ Minh: P0-08
+Minh: chạy init_env · đăng ký Play Console (hôm nay) / Student Pack / Zalo Bot / Anthropic / Gemini / Firebase — docs/setup/ACCOUNTS.md
 Cập nhật: 08/10/2026
 <!-- /STATUS -->
 
@@ -33,14 +33,14 @@ Cập nhật: 08/10/2026
 
 | Mã | Việc | Trạng thái | Ghi chú |
 |---|---|---|---|
-| P0-01 | git init, tái cấu trúc thư mục, `.gitignore/.gitattributes/.editorconfig`, chép pipeline thuyết minh vào `docs/proposal/src/`; repo GitHub riêng tư + `gh` | ◐ | `gh` 2.102 đã cài. Còn: `gh auth login` (Minh), tạo repo, commit đầu khi Minh yêu cầu — **nhớ `git add --chmod=+x apps/android/gradlew`** (repo `core.filemode=false`, thiếu bit thực thi ⇒ CI Linux lỗi) |
+| P0-01 | git init, tái cấu trúc thư mục, `.gitignore/.gitattributes/.editorconfig`, chép pipeline thuyết minh vào `docs/proposal/src/`; repo GitHub (public — Minh chọn 08/10) + `gh` | ◐ | Repo public `bminhnemhoi/TechStarUp_TDTU2027_HoiCon`; `main` chỉ có README; toàn bộ code qua PR #1 `feat/p0-01-bootstrap` (gitleaks + quét số điện thoại/email sạch; `gradlew` + `*.sh` đã có bit thực thi). Còn: merge khi CI xanh (Minh duyệt) |
 | P0-02 | Toolchain Android trên D: (JDK 21, SDK, Android CLI), WHPX, AVD hc-api36/34/29, `env-android.ps1`, smoke test máy ảo | ☑ | `docs/EMULATOR.md`; hc-api29 boot thử ở P1-S1 |
 | P0-03 | Harness: plugin (ponytail, ui-ux-pro-max, official…), RTK, 7 hook + test, settings, `.mcp.json`, LSP; dọn settings cấp người dùng | ☑ | 49 test hook xanh; kotlin-lsp tắt (RAM); cần khởi động lại Claude Code — `docs/HARNESS.md` |
 | P0-04 | `CLAUDE.md`, `AGENTS.md`, 8 subagent, 8 skill | ☑ | |
 | P0-05 | Khung tài liệu: ROADMAP, ARCHITECTURE, DATA-MODEL, ADR-001…006, EMULATOR, HARNESS + stub PRD/API/AGENTS/DESIGN-SYSTEM/PRIVACY-DPIA/PLAY-POLICY/EVAL/PILOT-PROTOCOL | ☑ | + `docs/schemas/risk_event.v1.json` + fixture; stub được hoàn thiện theo task tương ứng |
 | P0-06 | Khung chạy được: `infra/compose.dev.yml` (15432), backend `/healthz` + pytest + Alembic, `apps/web` (3100), `apps/android` `:app/:rules/:demobank`, `package.json` gốc (`dev:all`) | ☑ | `pnpm dev:all` ⇒ readyz 200 + web 200; backend 9 test; `:rules:test` (gồm test hợp đồng `rule_floor`); app hello cài trên hc-api36 |
-| P0-07 | CI GitHub Actions: backend, web, android (lọc theo đường dẫn) + test hook | ◐ | 4 workflow đã viết (`.github/workflows/`); chạy xanh sau khi có repo |
-| P0-08 | Tài khoản: Anthropic API (trần chi tiêu), Gemini, Zalo Bot Platform (`hoicon-dev`), **đăng ký Play Console ngay**, Firebase, cloudflared | ⏸ | cloudflared 2026.10 đã cài; còn lại Minh tự đăng ký; khóa để ở `backend/.env` / `D:\secrets` |
+| P0-07 | CI GitHub Actions: backend, web, android (lọc theo đường dẫn) + test hook | ◐ | Lần chạy đầu trên PR #1: android ✓ (1m56s), web ✓, harness ✓, backend ✗ (`setup-uv@v10` không tồn tại ⇒ ghim `v10.2.0`) — chạy lại |
+| P0-08 | Tài khoản: Anthropic API (trần chi tiêu), Gemini, Zalo Bot Platform (`hoicon-dev`), **đăng ký Play Console ngay**, Firebase, cloudflared | ⏸ | Hướng dẫn từng bước: `docs/setup/ACCOUNTS.md`. Claude đã làm: `gh` đăng nhập, cloudflared 2026.10, `init_env`/`check_keys`. Play Console cá nhân cần xác minh bằng **máy Android thật** (mượn được) trước P1-08 |
 
 **Gate G0 (14/10)** — skill `phase-gate`:
 - `pnpm dev:all` chạy DB + API + web; `GET :18000/healthz` = 200.
@@ -129,7 +129,8 @@ Cập nhật: 08/10/2026
 
 ## Ghi chú (ý tưởng ngoài phạm vi — không làm khi chưa có task)
 
-- Mua máy Android cũ 1–2 triệu trước 06/12 (rủi ro #2) — Minh quyết.
+- Mua máy Android cũ 1–2 triệu trước 06/12 (rủi ro #2) — Minh quyết. Trước mắt: mượn máy người thân để xác minh Play
+  Console (< 1 phút); kiểm thử máy thật qua Firebase Test Lab (5 lượt/ngày) + Device Streaming (30 phút/tháng).
 - Đánh giá `android device remote` (Device Streaming, cần dự án Google Cloud) như nguồn máy thật bổ sung.
 - Compose BOM ≥ 2026.08 (UI 1.12) và core-ktx 1.19 đòi **compileSdk 37** ⇒ hiện ghim BOM 2026.06.01. Khi cần: cài
   `platforms;android-37`, nâng compileSdk 37 (giữ targetSdk 36) — cân nhắc trước P2 (08/10, từ P0-06).

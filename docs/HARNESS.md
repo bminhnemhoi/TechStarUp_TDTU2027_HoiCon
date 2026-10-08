@@ -85,12 +85,17 @@ Cách "đội chuyên gia tác tử" được cấu hình: hook, quyền, plugin
 
 ## 7. MCP (`.mcp.json`)
 
-context7 (tài liệu thư viện), playwright (screenshot web). Trên Windows bọc `cmd /c npx …`. Tùy chọn sau: mobile-mcp
-để tác tử nhìn/chạm màn hình máy ảo (đánh giá mã nguồn trước khi bật).
+context7 (tài liệu thư viện, `@upstash/context7-mcp@4.2.0`), playwright (screenshot web, `@playwright/mcp@0.0.83`) —
+ghim phiên bản, trên Windows bọc `cmd /c npx …`. Lần chạy đầu `npx` phải tải gói nên health check có thể báo "Failed
+to connect"; chạy `claude mcp list` lần nữa (08/10: cả hai ✓ Connected). Tùy chọn sau: mobile-mcp để tác tử
+nhìn/chạm màn hình máy ảo (đánh giá mã nguồn trước khi bật).
+
+**GitHub CLI:** `gh` 2.102 đăng nhập 08/10 bằng thông tin GitHub đã lưu trong Git Credential Manager
+(`git credential fill | gh auth login --with-token`, token không in ra; scope `repo, workflow, read:org`).
 
 ## 8. Việc Minh làm tay
 
-- Khởi động lại Claude Code trong repo để nạp hook/plugin; chạy `/plugin` kiểm tra; `/hooks` để xem hook.
+- Hook, plugin, 8 subagent, MCP đã nạp (kiểm 08/10: `claude plugin list`, `claude mcp list`). `/hooks` để xem hook.
 - Ủy quyền connector claude.ai (Gmail, Calendar, Drive) nếu muốn dùng — hiện chưa ủy quyền.
 - Settings cấp người dùng đã dọn 08/10 (bỏ `Bash(pip install *)`, sửa `additionalDirectories`); bản sao lưu
   `%USERPROFILE%\.claude\settings.json.bak-2026-10-08`.

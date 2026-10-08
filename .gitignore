@@ -1,7 +1,8 @@
 # --- Bí mật (KHÔNG bao giờ commit) ---
-.env
-.env.*
+.env*
 !.env.example
+*~
+*pepper*.txt
 *.jks
 *.keystore
 keystore.properties

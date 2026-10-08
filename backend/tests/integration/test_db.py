@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
@@ -9,9 +11,11 @@ pytestmark = pytest.mark.integration
 
 
 async def _db_up() -> bool:
+    # Chặn thêm một lớp: kể cả khi driver không tôn trọng connect_timeout, test không bao giờ treo.
     try:
-        async with get_engine().connect() as conn:
-            await conn.execute(text("select 1"))
+        async with asyncio.timeout(8):
+            async with get_engine().connect() as conn:
+                await conn.execute(text("select 1"))
     except Exception:
         return False
     return True
