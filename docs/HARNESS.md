@@ -11,7 +11,7 @@ Cách "đội chuyên gia tác tử" được cấu hình: hook, quyền, plugin
 | Quyền + hook + plugin | `.claude/settings.json` | allow/ask/deny, 7 hook, `enabledPlugins`, `extraKnownMarketplaces` |
 | Ghi đè cá nhân | `.claude/settings.local.json` | gitignore — không commit |
 | Hook | `.claude/hooks/*.mjs` (+ `lib.mjs`) | Chặn lệnh nguy hiểm, bảo vệ quyền riêng tư, format, kiểm tra khi dừng |
-| Test hook | `.claude/hooks/test/hooks.test.mjs` | `node --test ".claude/hooks/test/*.test.mjs"` (49 ca) — chạy trong CI |
+| Test hook | `.claude/hooks/test/hooks.test.mjs` | `node --test ".claude/hooks/test/*.test.mjs"` (64 ca) — chạy trong CI |
 | Subagent | `.claude/agents/*.md` | 8 chuyên gia (bảng §4) |
 | Skill dự án | `.claude/skills/*/SKILL.md` | Quy trình lặp lại (bảng §5) |
 | Cài plugin + RTK | `scripts/setup-claude-tools.sh` | Bước 1 thêm marketplace (đọc mã nguồn), bước 2 `--install` |
@@ -37,9 +37,17 @@ Cách "đội chuyên gia tác tử" được cấu hình: hook, quyền, plugin
 
 ## 3. Quyền
 
-- **allow:** `uv run|sync|lock|add|tree`, script `pnpm`, `gradlew`, adb/emulator/Android CLI, `docker compose -f infra/compose.dev.yml`, `docker ps`, `scripts/emu-scenario.py`, git chỉ-đọc + `switch`/`add`, `gh pr|run view|list`, `rtk`.
+- **allow:** `uv run` **chỉ** cho `pytest`, `ruff`, `alembic`, `uvicorn hoicon.api.main:app`, `python -m hoicon.ops.check_keys`
+  (siết 08/10 theo review bảo mật — `uv run *` cũ cho phép `uv run python -c …` đọc `.env` không hỏi); `uv sync|lock|add|tree`,
+  script `pnpm`, `gradlew`, adb/emulator/Android CLI, `docker compose -f infra/compose.dev.yml`, `docker ps`,
+  `scripts/emu-scenario.py`, git chỉ-đọc + `switch`/`add`, `gh pr|run view|list`, `rtk`. Lệnh `uv run` khác ⇒ hỏi Minh.
 - **ask:** `git commit|push`, worktree add/remove, `gh pr create|merge`, `gh repo`, script cài đặt/dừng stack khác/deploy, `compose.prod`, `db:reset`, gỡ app trên máy ảo.
-- **deny:** đọc/sửa `.env*`, `*.jks`, `*.keystore`, `keystore.properties`, `google-services.json`, `D:/secrets/**`; force push; push vào main.
+- **deny:** đọc/sửa `.env*` (kể cả `.env.tmp`), `*.jks`, `*.keystore`, `keystore.properties`, `google-services.json`,
+  `D:/secrets/**`; `git add -f/--force`; mọi lệnh chạy `hoicon.ops.init_env` (chỉ Minh chạy); force push; push vào main.
+- **guard-shell (lớp 2, không phụ thuộc permission):** chặn thêm script nội tuyến (`python -c`, `node -e`, here-doc)
+  chạm tới `get_secret_value`/`dotenv`/`.env`/biến `HOICON_*KEY|TOKEN|SECRET|PEPPER`, chạy `init_env`, `git add -f`.
+  Luật này thiên về an toàn nên có thể chặn nhầm commit message/here-doc chỉ *nhắc tới* các chuỗi đó ⇒ ghi message
+  ra file trong scratchpad rồi `git commit -F <file>`.
 - `ask`/`deny` ở project thắng `allow` cấp người dùng (settings cấp người dùng của Minh có `Bash(git push *)` — trong repo này vẫn bị hỏi).
 
 ## 4. Subagent ("đội chuyên gia")

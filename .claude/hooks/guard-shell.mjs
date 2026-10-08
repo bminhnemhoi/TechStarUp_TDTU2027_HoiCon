@@ -69,6 +69,22 @@ const rules = [
     test: () => /(\bcat\b|\btype\b|Get-Content|\bhead\b|\btail\b|\bkeytool\b)[^|;&]*(\.jks\b|\.keystore\b|keystore\.properties|[\\/]secrets[\\/])/i.test(c),
     msg: "Không đọc keystore/bí mật ký app. Ký bản phát hành qua script release có xác nhận.",
   },
+  {
+    // Script nội tuyến (python -c, node -e, here-doc) chạm vào bí mật: `Bash(uv run …)` không đủ hẹp để chặn bằng
+    // permission rule, và văn bản lừa đảo/tài liệu web có thể chứa lệnh chèn (review bảo mật 08/10).
+    test: () =>
+      /(\bpython3?(\.exe)?\b|\bpy\b|\bnode(\.exe)?\b|\bdeno\b|\bbun\b)[^|;&]*(\s-c\b|\s-e\b|\s--eval\b|<<)/i.test(c) &&
+      /(get_secret_value|dotenv_values|load_dotenv|[\\/'"\s]\.env(?!\.example)\b|HOICON_[A-Z_]*(KEY|TOKEN|SECRET|PEPPER))/i.test(c),
+    msg: "Không đọc bí mật bằng script nội tuyến. Kiểm tra khóa: `uv run --directory backend python -m hoicon.ops.check_keys` (chỉ in Đạt/Lỗi).",
+  },
+  {
+    test: () => /hoicon\.ops\.init_env\b/.test(c),
+    msg: "init_env ghi backend/.env — chỉ Minh tự chạy (CLAUDE.md luật 9). Hãy nhắc Minh chạy lệnh trong docs/setup/ACCOUNTS.md.",
+  },
+  {
+    test: () => /\bgit\s+add\b[^|;&]*(\s--force\b|\s-[a-zA-Z]*f[a-zA-Z]*\b)/.test(c),
+    msg: "Không `git add -f`: file bị .gitignore thường là bí mật (.env, keystore). Sửa .gitignore nếu thật sự cần, có lý do.",
+  },
 ];
 
 for (const rule of rules) {

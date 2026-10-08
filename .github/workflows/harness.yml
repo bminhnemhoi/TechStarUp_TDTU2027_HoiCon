@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-      # Hook guard-shell / guard-privacy / … (49 ca) — xem docs/HARNESS.md
+      # Hook guard-shell / guard-privacy / … (64 ca) — xem docs/HARNESS.md
       - run: node --test ".claude/hooks/test/*.test.mjs"
       - name: settings.json còn đủ 7 hook (claude plugin install từng xóa mất args)
         run: |
