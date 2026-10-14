@@ -1,0 +1,22 @@
+id: benign_utility_bill_app_002
+category: benign_utility
+is_benign: true
+twin_of: fake_evn_overpaid_refund_003
+region: central
+channel: phone_call
+script_vi: |
+  Bác tự mở ứng dụng ví điện tử để trả hóa đơn điện như hằng tháng, ngay sau cuộc gọi của người hàng xóm chưa
+  lưu số hỏi mượn cái thang.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: lt_1m, app_category: wallet}
+elder_answers: {knows_caller: "yes", asks_transfer: "no"}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Trả hóa đơn quen thuộc trong ứng dụng chính thức là an toàn"
+source_ref: "Thanh Niên 25/02/2025 – Thủ đoạn giả nhân viên điện lực đòi cắt điện: https://thanhnien.vn/ro-thu-doan-gia-nhan-vien-doi-cat-dien-diem-mat-cach-lua-dao-185250225200811774.htm"
+draft: true

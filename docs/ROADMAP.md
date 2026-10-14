@@ -65,7 +65,7 @@ Cập nhật: 08/10/2026
 | P1-04 | `judge` chấm thử 10/11 → sửa → **nộp 13/11** | 10–13/11 | biên nhận nộp | ☐ |
 | P1-05 | Design system: ui-ux-pro-max → `docs/DESIGN-SYSTEM.md` + `design-system/hoicon/tokens.json` (Be Vietnam Pro) | 14–22/11 | | ☐ |
 | P1-06 | Văn bản đồng ý v1, DPIA rút gọn, quy trình thí điểm | 14–22/11 | `docs/legal/consent/`, `PRIVACY-DPIA.md`, `PILOT-PROTOCOL.md` | ☐ |
-| P1-07 | ~60 kịch bản lừa đảo (tác tử soạn, Minh duyệt) | 14–22/11 | `data/scenarios/*.yaml` | ☐ |
+| P1-07 | ~60 kịch bản lừa đảo (tác tử soạn, Minh duyệt) | 14–22/11 | `data/scenarios/*.yaml` | ◐ bản nháp 60 ca (40 lừa đảo / 20 hợp lệ song sinh = 33%, 10 chèn lệnh, 3 miền, nguồn báo chí đã kiểm) + schema `scenario.v1.json` + test hợp đồng — **chờ Minh duyệt** (`draft: true`) |
 | P1-08 | Kênh Play internal testing + Google Group tester | 14–22/11 | | ☐ |
 | P1-09 | VPS + tên miền + Caddy | 14–22/11 | | ☐ |
 

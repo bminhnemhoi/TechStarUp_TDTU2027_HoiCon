@@ -1,0 +1,22 @@
+id: benign_bank_card_delivery_001
+category: benign_bank
+is_benign: true
+twin_of: fake_bank_card_locked_002
+region: north
+channel: phone_call
+script_vi: |
+  Nhân viên ngân hàng gọi hẹn giờ giao thẻ mới tại nhà, chỉ xác nhận địa chỉ, không hỏi mã OTP hay mật khẩu. Sau
+  cuộc gọi bác mở ứng dụng ngân hàng xem số dư.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: bank}
+elder_answers: {claims_authority: "yes", asks_transfer: "no", asks_secrecy: "no"}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Ngân hàng thật không hỏi OTP; bác có thể gọi lại tổng đài để chắc chắn"
+source_ref: "Thanh Niên 28/07/2026 – 8 chiêu trò lừa đảo nhắm vào người cao tuổi: https://thanhnien.vn/canh-bao-8-chieu-tro-lua-dao-nham-vao-nguoi-cao-tuoi-185260728154001279.htm"
+draft: true
