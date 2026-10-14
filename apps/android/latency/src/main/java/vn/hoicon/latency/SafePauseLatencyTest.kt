@@ -4,12 +4,15 @@ import android.os.Build
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
+import android.provider.Settings
 import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import kotlin.math.ceil
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -22,13 +25,19 @@ import org.junit.Test
  * (process started by the broadcast, SafePause is its first UI); "warm" = process alive, as after a real call.
  *
  * Needs the debug build of :app (HC_TIMING marks) and :demobank installed. Arguments (`-e`): runs (default 10),
- * compile (default "speed": AOT like a Play install; "none" keeps the APK as installed).
+ * compile (default "speed": full AOT — Play installs get speed-profile, so this is the best case for code
+ * compilation, while the debug build (no R8) is slower than release: a pass is conclusive, a miss is not; ADR-008).
+ *
+ * It grants special accesses without the consent screens and changes device settings ⇒ runs ONLY on an emulator
+ * or a Firebase Test Lab device, never on a phone that happens to be plugged in (e.g. a borrowed one), and undoes
+ * its settings afterwards.
  * Output: logcat tag HC_LATENCY + latency.json in this APK's external files dir (FTL: --directories-to-pull).
  */
 class SafePauseLatencyTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val args: Bundle = InstrumentationRegistry.getArguments()
     private val runs = args.getString("runs")?.toIntOrNull() ?: 10
+    private var prepared = false // JUnit 4 runs @After even when @Before was skipped by assume
 
     private fun sh(command: String): String =
         ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(command))
@@ -37,6 +46,10 @@ class SafePauseLatencyTest {
 
     @Before
     fun grantAndWake() {
+        val context = instrumentation.context
+        val emulator = Build.HARDWARE in setOf("ranchu", "goldfish")
+        val testLab = Settings.System.getString(context.contentResolver, "firebase.test.lab") == "true"
+        assumeTrue("only on an emulator or Firebase Test Lab", emulator || testLab)
         assertTrue("install the debug :demobank APK", sh("pm path $DEMOBANK").contains("package:"))
         sh("appops set $SENTINEL SYSTEM_ALERT_WINDOW allow")
         sh("appops set $SENTINEL GET_USAGE_STATS allow")
@@ -47,6 +60,15 @@ class SafePauseLatencyTest {
         sh("input keyevent KEYCODE_WAKEUP")
         sh("wm dismiss-keyguard")
         sh("svc power stayon true")
+        prepared = true
+    }
+
+    @After
+    fun restoreDevice() {
+        if (!prepared) return
+        sh("svc power stayon false")
+        sh("dumpsys deviceidle whitelist -$SENTINEL")
+        sh("am broadcast -f 0x20 -n $SENTINEL/.debug.ScenarioReceiver -a vn.hoicon.debug.CLEAR")
     }
 
     @Test

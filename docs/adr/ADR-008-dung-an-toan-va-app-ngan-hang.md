@@ -12,7 +12,7 @@ ADR-007 đã chốt cách mở SafePause: dùng activity riêng được miễn 
 3. Danh sách app tài chính quản lý ra sao?
 
 Thông tư 77/2025/TT-NHNN (hiệu lực 01/3/2026) buộc app Mobile Banking tự dừng khi phát hiện máy ảo, trình gỡ lỗi,
-chế độ ADB, hooking, root.
+chế độ ADB, hooking, root (theo nguồn thứ cấp, chưa đối chiếu Công báo; tra vbpl.vn trước khi đưa vào thuyết minh).
 
 ## Quyết định
 1. **Không khai báo `USE_FULL_SCREEN_INTENT` ở bản phát hành.** R1 chỉ kích hoạt khi app ngân hàng đang ở tiền cảnh,
@@ -23,14 +23,18 @@ chế độ ADB, hooking, root.
    chuyển tiền kèm các hành vi của app thật có ảnh hưởng tới HỏiCon (`FLAG_SECURE` bật được, trạng thái giữ nguyên qua
    SafePause). Không quay hay chụp app ngân hàng thật.
 3. **Độ trễ trên máy thật đo bằng `:latency` trên Firebase Test Lab.** Cuộc gọi được mô phỏng bằng
-   `ScenarioReceiver`, receiver này chỉ có ở bản debug và được bảo vệ bằng quyền `DUMP` (chỉ shell/adb gửi được).
-   Phần còn lại là đường găng thật. Kết quả FTL thay cho số máy ảo khi xét ngưỡng p95 ≤ 3 s của ADR-007.
+   `ScenarioReceiver`, receiver này chỉ có ở bản debug và được bảo vệ bằng quyền `DUMP` (chỉ shell/adb, root hoặc app
+   hệ thống gửi được). Phần còn lại là đường găng thật. Bộ đo chỉ chạy trên máy ảo hoặc FTL (tự bỏ qua máy khác) và
+   hoàn tác cài đặt sau khi đo. Kết quả FTL thay cho số máy ảo khi xét ngưỡng p95 ≤ 3 s của ADR-007, luôn kèm nhãn
+   "máy thật FTL · bản debug · cuộc gọi mô phỏng · demobank": đạt thì kết luận được; trượt thì chưa (bản debug chậm
+   hơn bản phát hành), phải đo lại bằng bản `demo` có R8 (P1-08).
 4. **HỏiCon chỉ đến tay người dùng qua Google Play** (củng cố ADR-005). Không bao giờ gửi APK; không hướng dẫn bật tùy
    chọn nhà phát triển hay gỡ lỗi USB, vì làm vậy khiến app ngân hàng của người già ngừng chạy (TT 77).
 5. **Danh sách app tài chính có một nguồn sự thật** là `data/bank_apps.vn.json` (schema `bank_apps.v1.json`).
    `scripts/gen-bank-apps.py` sinh `BankAppCatalog` (`:rules`) và `<queries>`; `BankAppCatalogTest` chặn lệch. Chỉ
    khớp đúng tên gói. Rà soát mỗi quý; tải bản mới qua `GET /v1/config` từ P2.
-6. **Phản ứng của app ngân hàng thật với các quyền của HỏiCon** được thử theo giao thức §5 của spike sau P1-08. Nếu ≥ 1
+6. **Phản ứng của app ngân hàng thật với các quyền của HỏiCon** được thử theo giao thức §5 của spike: trên máy của
+   thành viên đội sau P1-08; trên máy mượn chỉ sau P1-08 **và** P2-02, P2-05 (mục "Chặn phát hành"). Nếu ≥ 1
    app trong top 10 chặn khi có SAW: SAW thành tùy chọn ở E3, người dùng app đó đi đường heads-up + TTS, đồng thời gửi
    thư cho ngân hàng (gắn với mục tiêu LOI).
 

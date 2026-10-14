@@ -22,11 +22,19 @@ MANIFEST = ROOT / "apps/android/app/src/main/AndroidManifest.xml"
 BEGIN = "<!-- BEGIN bank_apps: sinh bởi scripts/gen-bank-apps.py, không sửa tay -->"
 END = "<!-- END bank_apps -->"
 CATEGORY = {"bank": "BANK", "wallet": "WALLET", "securities": "SECURITIES"}
+# Giá trị được chèn thẳng vào Kotlin và XML ⇒ kiểm định dạng ở đây (schema chỉ được kiểm ở test backend).
+PACKAGE = re.compile(r"[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+")
+VERSION = re.compile(r"\d{4}\.\d{2}\.\d{2}(-[a-z0-9]+)?")
 
 
 def main() -> int:
     data = json.loads(DATA.read_text(encoding="utf-8"))
     apps = sorted(data["apps"], key=lambda a: (a["category"], a["package"]))
+    if not VERSION.fullmatch(data["version"]):
+        sys.exit(f"version sai định dạng: {data['version']!r}")
+    bad = [a.get("package") for a in apps if not PACKAGE.fullmatch(a.get("package", "")) or a.get("category") not in CATEGORY]
+    if bad:
+        sys.exit(f"package/category không hợp lệ: {bad}")
     packages = [a["package"] for a in apps]
     if len(packages) != len(set(packages)):
         sys.exit("package trùng lặp trong data/bank_apps.vn.json")

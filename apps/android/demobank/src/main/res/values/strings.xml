@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Mọi số liệu đều hư cấu (CLAUDE.md luật 8: dữ liệu demo hư cấu). Số tài khoản cố ý không giống số điện thoại. -->
+<!-- Mọi số liệu đều hư cấu (CLAUDE.md luật 8). "Số tài khoản" có chữ DEMO để không thể trùng tài khoản/số điện thoại thật. -->
 <resources>
     <string name="app_name">Ngân hàng Mẫu</string>
     <string name="demo_banner">ỨNG DỤNG DEMO — không phải ngân hàng thật, không có tiền thật.</string>
@@ -8,14 +8,14 @@
     <string name="logout">Đăng xuất</string>
     <string name="balance_label">Số dư khả dụng (hư cấu)</string>
     <string name="balance_value">25.000.000 ₫</string>
-    <string name="account_label">Tài khoản thanh toán · 9999 0000 0001</string>
+    <string name="account_label">Tài khoản thanh toán · DEMO 0000 0001</string>
     <string name="transfer">Chuyển tiền</string>
     <string name="transfer_title">Chuyển tiền đến tài khoản khác</string>
     <string name="field_account">Số tài khoản nhận</string>
     <string name="field_amount">Số tiền (₫)</string>
     <string name="field_message">Nội dung chuyển tiền</string>
     <!-- Kịch bản "công an" hư cấu: kẻ gian bảo chuyển vào "tài khoản tạm giữ" để "xác minh". -->
-    <string name="prefill_account">9999 0000 1234</string>
+    <string name="prefill_account">DEMO 0000 1234</string>
     <string name="prefill_amount">20.000.000</string>
     <string name="prefill_message">Chuyen tien xac minh ho so</string>
     <string name="prefill_recipient">TÀI KHOẢN TẠM GIỮ (hư cấu)</string>

@@ -100,7 +100,7 @@ Android (`scripts/stop-other-stacks.sh`, P0-06).
 
 - **Không** tái hiện việc Xiaomi/Oppo/Vivo/Samsung diệt tác vụ nền, chế độ tiết kiệm pin riêng của hãng.
 - App ngân hàng Việt Nam thật **phải tự dừng trên máy ảo, khi bật ADB/gỡ lỗi, khi máy root** (Thông tư 77/2025/TT-NHNN,
-  từ 01/3/2026) ⇒ dùng `:demobank`; app thật chỉ thử trên máy thật cài HỏiCon qua Play, đã tắt tùy chọn nhà phát triển
+  từ 01/3/2026, theo nguồn thứ cấp, chưa đối chiếu Công báo) ⇒ dùng `:demobank`; app thật chỉ thử trên máy thật cài HỏiCon qua Play, đã tắt tùy chọn nhà phát triển
   (giao thức trong `docs/spikes/P1-S2-dung-an-toan.md` §5, ADR-008).
 - Cuộc gọi là giả lập modem: không có âm thanh thật, không có VoLTE/hai SIM.
 

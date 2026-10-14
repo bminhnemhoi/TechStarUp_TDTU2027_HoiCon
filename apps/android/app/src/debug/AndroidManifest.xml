@@ -10,8 +10,8 @@
 
     <application>
         <!--
-          Mô phỏng "vừa có số lạ gọi" cho máy không có SIM (Firebase Test Lab, :latency). Quyền DUMP chỉ shell/adb
-          có (signature|privileged|development) ⇒ app khác không gửi được dù exported.
+          Mô phỏng "vừa có số lạ gọi" cho máy không có SIM (Firebase Test Lab, :latency). Quyền DUMP
+          (signature|privileged|development) ⇒ chỉ shell/adb, root hoặc app hệ thống gửi được; app thường không.
         -->
         <receiver
             android:name=".debug.ScenarioReceiver"

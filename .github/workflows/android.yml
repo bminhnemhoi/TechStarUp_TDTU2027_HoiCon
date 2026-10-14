@@ -31,14 +31,19 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       - run: chmod +x gradlew
+      # Mã sinh từ data/bank_apps.vn.json phải khớp từng byte (bắt cả sửa tay trong khối <queries>).
+      - name: generated bank catalog is up to date
+        run: python3 ../../scripts/gen-bank-apps.py && git diff --exit-code -- .
       # :rules là JVM thuần — luật R0–R4 chạy ở đây mà không cần máy ảo.
       # BankAppCatalogTest (trong :rules:test) bắt lệch giữa data/bank_apps.vn.json và mã sinh ra.
       # :latency chỉ build ở đây; chạy trên máy thật bằng scripts/ftl-latency.sh (Firebase Test Lab).
       - run: >-
           ./gradlew --no-daemon :rules:test :app:assembleDebug :app:processReleaseMainManifest
           :demobank:assembleDebug :latency:assembleDebug :app:lintDebug :demobank:lintDebug
-      # Bản phát hành không được mang theo móc thử chỉ dành cho debug (ADR-008).
-      - name: release manifest has no debug-only hooks
+      # Bản phát hành: không móc thử chỉ dành cho debug (ADR-008), không quyền bị cấm (CLAUDE.md luật 3) — kể cả
+      # quyền do thư viện merge vào. So khớp thuộc tính, không so comment; thiếu file là lỗi (đường dẫn của AGP 9.4).
+      - name: release manifest has no debug-only hooks or forbidden permissions
         run: |
           m=app/build/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml
-          ! grep -E "USE_FULL_SCREEN_INTENT|ScenarioReceiver" "$m"
+          test -s "$m" || { echo "::error::không thấy $m"; exit 1; }
+          if grep -nE 'android:(name|permission)="(android\.permission\.(USE_FULL_SCREEN_INTENT|READ_SMS|RECEIVE_SMS|SEND_SMS|READ_CALL_LOG|WRITE_CALL_LOG|READ_CONTACTS|QUERY_ALL_PACKAGES|REQUEST_INSTALL_PACKAGES|REQUEST_IGNORE_BATTERY_OPTIMIZATIONS|BIND_ACCESSIBILITY_SERVICE|BIND_NOTIFICATION_LISTENER_SERVICE)|[^"]*\.ScenarioReceiver)"' "$m"; then exit 1; fi
