@@ -30,19 +30,62 @@
     -->
 
     <!--
-      Thay cho QUERY_ALL_PACKAGES: chỉ các gói ngân hàng/ví cần nhìn thấy trong UsageStats (khớp ĐÚNG tên gói,
-      sensing/BankApps.kt). Tập con của data/bank_apps.vn.json — danh sách đầy đủ ở P1-S2.
+      Thay cho QUERY_ALL_PACKAGES: chỉ các gói ngân hàng/ví/chứng khoán cần nhìn thấy trong UsageStats (khớp ĐÚNG
+      tên gói, rules/BankAppCatalog.kt). Nguồn: data/bank_apps.vn.json ⇒ `python scripts/gen-bank-apps.py`.
     -->
     <queries>
-        <package android:name="vn.hoicon.demobank" />
+        <!-- BEGIN bank_apps: sinh bởi scripts/gen-bank-apps.py, không sửa tay -->
         <package android:name="com.VCB" />
-        <package android:name="com.vnpay.bidv" />
+        <package android:name="com.bab.retailUAT" />
+        <package android:name="com.finx.vikki" />
+        <package android:name="com.hdbank.dihdbank" />
+        <package android:name="com.mbmobile" />
+        <package android:name="com.msb.digibank.retail" />
+        <package android:name="com.ncb.bank" />
+        <package android:name="com.ocb.liobank" />
+        <package android:name="com.pvcombank.retail" />
+        <package android:name="com.sacombank.ewallet" />
+        <package android:name="com.shinhan.global.vn.bank" />
+        <package android:name="com.sunshine.ksbank" />
+        <package android:name="com.tpb.mb.gprsandroid" />
+        <package android:name="com.vib.myvib2" />
         <package android:name="com.vietinbank.ipay" />
         <package android:name="com.vnpay.Agribank3g" />
-        <package android:name="com.mbmobile" />
+        <package android:name="com.vnpay.EximBankOmni" />
+        <package android:name="com.vnpay.SCB" />
+        <package android:name="com.vnpay.bidv" />
+        <package android:name="com.vnpay.coopbank" />
+        <package android:name="com.vnpay.hdbank" />
+        <package android:name="com.vnpay.vpbankonline" />
+        <package android:name="io.lifestyle.plus" />
+        <package android:name="mobile.acb.com.vn" />
+        <package android:name="ops.namabank.com.vn" />
+        <package android:name="src.com.sacombank" />
+        <package android:name="vn.banvietbank.mobilebanking" />
+        <package android:name="vn.com.agribank.ebanking.ru" />
+        <package android:name="vn.com.lpb.lienviet24h" />
+        <package android:name="vn.com.lpbank.digibank" />
+        <package android:name="vn.com.msb.smartBanking" />
+        <package android:name="vn.com.ocb.awe" />
+        <package android:name="vn.com.seabank.mb1" />
         <package android:name="vn.com.techcombank.bb.app" />
+        <package android:name="vn.hoicon.demobank" />
+        <package android:name="vn.shb.saha.mbanking" />
+        <package android:name="vn.tnex.consumer" />
+        <package android:name="xyz.be.cake" />
+        <package android:name="com.fss.tcbs.mobiletrading" />
+        <package android:name="org.ssi.iBoardSSI.Pro" />
+        <package android:name="vn.com.mbs.m24np" />
+        <package android:name="vn.com.vndirect.stocks" />
+        <package android:name="vn.com.vpbs.smartone" />
+        <package android:name="com.beeasy.toppay" />
+        <package android:name="com.bplus.vtpay" />
+        <package android:name="com.mobifone.mmdt" />
         <package android:name="com.mservice.momotransfer" />
         <package android:name="vn.com.vng.zalopay" />
+        <package android:name="vnpay.smartacccount" />
+        <package android:name="vnptpay.vnptmedia.vnpt.com.vnptpay" />
+        <!-- END bank_apps -->
         <!-- Bộ đọc TTS trên máy (Android 11+ phải khai báo để kết nối engine). -->
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />

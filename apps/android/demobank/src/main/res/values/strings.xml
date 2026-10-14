@@ -1,9 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Mọi số liệu đều hư cấu (CLAUDE.md luật 8: dữ liệu demo hư cấu). Số tài khoản cố ý không giống số điện thoại. -->
 <resources>
     <string name="app_name">Ngân hàng Mẫu</string>
     <string name="demo_banner">ỨNG DỤNG DEMO — không phải ngân hàng thật, không có tiền thật.</string>
     <string name="greeting">Xin chào, Khách hàng Mẫu</string>
+    <string name="login">Đăng nhập (mô phỏng)</string>
+    <string name="logout">Đăng xuất</string>
     <string name="balance_label">Số dư khả dụng (hư cấu)</string>
     <string name="balance_value">25.000.000 ₫</string>
+    <string name="account_label">Tài khoản thanh toán · 9999 0000 0001</string>
     <string name="transfer">Chuyển tiền</string>
+    <string name="transfer_title">Chuyển tiền đến tài khoản khác</string>
+    <string name="field_account">Số tài khoản nhận</string>
+    <string name="field_amount">Số tiền (₫)</string>
+    <string name="field_message">Nội dung chuyển tiền</string>
+    <!-- Kịch bản "công an" hư cấu: kẻ gian bảo chuyển vào "tài khoản tạm giữ" để "xác minh". -->
+    <string name="prefill_account">9999 0000 1234</string>
+    <string name="prefill_amount">20.000.000</string>
+    <string name="prefill_message">Chuyen tien xac minh ho so</string>
+    <string name="prefill_recipient">TÀI KHOẢN TẠM GIỮ (hư cấu)</string>
+    <string name="recipient_label">Tên người nhận: %1$s</string>
+    <string name="next">Tiếp tục</string>
+    <string name="back">Quay lại</string>
+    <string name="confirm_title">Kiểm tra lại giao dịch</string>
+    <string name="confirm_account">Đến tài khoản</string>
+    <string name="confirm_amount">Số tiền</string>
+    <string name="confirm_message">Nội dung</string>
+    <string name="confirm">Xác nhận chuyển tiền</string>
+    <string name="otp_title">Xác thực Smart OTP</string>
+    <string name="otp_body">Mã Smart OTP (mô phỏng): 246 810\nNgân hàng thật KHÔNG BAO GIỜ hỏi mã này qua điện thoại.</string>
+    <string name="otp_verify">Xác thực (mô phỏng)</string>
+    <string name="done_title">Giao dịch mô phỏng đã xong</string>
+    <string name="done_body">Không có đồng tiền thật nào được chuyển. Đây là ứng dụng để thử HỏiCon.</string>
+    <string name="home">Về trang chủ</string>
+    <string name="error_required">Vui lòng nhập đủ số tài khoản và số tiền.</string>
 </resources>

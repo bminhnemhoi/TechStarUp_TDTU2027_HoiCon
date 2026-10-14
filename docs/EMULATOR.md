@@ -85,7 +85,8 @@ Android (`scripts/stop-other-stacks.sh`, P0-06).
 | Tình huống | Cách mô phỏng |
 |---|---|
 | Cuộc gọi đến từ số lạ / số bị gắn cờ | `adb emu gsm call <số>` → `gsm accept` → `gsm cancel` (số **hư cấu** trong `data/fixtures/`) |
-| Mở app ngân hàng | `adb shell monkey -p vn.hoicon.demobank -c android.intent.category.LAUNCHER 1` |
+| Mở app ngân hàng | `adb shell monkey -p vn.hoicon.demobank -c android.intent.category.LAUNCHER 1` (hoặc `am start -n vn.hoicon.demobank/.MainActivity --es screen transfer` để vào thẳng form chuyển tiền) |
+| "Số lạ vừa gọi" không cần modem (bản debug) | `adb shell am broadcast -f 0x20 -n vn.hoicon.sentinel/.debug.ScenarioReceiver -a vn.hoicon.debug.CALL` (`…CLEAR` để đóng cửa sổ) |
 | Đo độ trễ | logcat tag `HC_TIMING` (`app_foreground`, `risk_detected`, `pause_shown`) |
 | Kiểm tra màn hình | `android layout` (cây UI) / UI Automator; `android screen capture` |
 | Cấp quyền tự động | `cmd role add-role-holder android.app.role.CALL_SCREENING <pkg>`; `appops set <pkg> GET_USAGE_STATS allow`; `appops set <pkg> SYSTEM_ALERT_WINDOW allow`; `pm grant <pkg> android.permission.POST_NOTIFICATIONS` |
@@ -98,7 +99,9 @@ Android (`scripts/stop-other-stacks.sh`, P0-06).
 ## 6. Giới hạn của máy ảo (phải nói rõ trong thuyết minh & rủi ro)
 
 - **Không** tái hiện việc Xiaomi/Oppo/Vivo/Samsung diệt tác vụ nền, chế độ tiết kiệm pin riêng của hãng.
-- App ngân hàng Việt Nam thật thường **từ chối chạy trên máy ảo/máy root** ⇒ dùng `:demobank`.
+- App ngân hàng Việt Nam thật **phải tự dừng trên máy ảo, khi bật ADB/gỡ lỗi, khi máy root** (Thông tư 77/2025/TT-NHNN,
+  từ 01/3/2026) ⇒ dùng `:demobank`; app thật chỉ thử trên máy thật cài HỏiCon qua Play, đã tắt tùy chọn nhà phát triển
+  (giao thức trong `docs/spikes/P1-S2-dung-an-toan.md` §5, ADR-008).
 - Cuộc gọi là giả lập modem: không có âm thanh thật, không có VoLTE/hai SIM.
 
 **Giảm thiểu:** (a) thiết kế phòng thủ — FGS trong cửa sổ rủi ro, heartbeat báo "mất bảo vệ", thông báo dự phòng sau

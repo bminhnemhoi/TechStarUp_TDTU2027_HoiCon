@@ -13,4 +13,4 @@
 | 08/10/2026 | AVD hc-api34 | máy ảo | ấm, View | 10 | 10/10 | 1 135 | 9 768 | ✗ (8/10) | lần đầu lô 9,8 s |
 | 08/10/2026 | AVD hc-api29 (Android 10) | máy ảo | nguội, View | 5 | 5/5 | 1 665 | 2 132 | ✓ | |
 | 08/10/2026 | AVD hc-api29 | máy ảo | ấm, View | 5 | 5/5 | 2 177 | 3 486 | ✗ (4/5) | |
-| _chờ_ | Firebase Test Lab / máy mượn | **máy thật** | nguội + ấm | ≥ 10 | | | | | cần trước G1 (08/11) |
+| _chờ_ | Firebase Test Lab / máy mượn | **máy thật** | nguội + ấm | ≥ 10 | | | | | cần trước G1 (08/11) — `bash scripts/ftl-latency.sh` (bộ đo `:latency`, cuộc gọi mô phỏng, ADR-008) |

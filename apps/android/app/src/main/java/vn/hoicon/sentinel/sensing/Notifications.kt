@@ -1,11 +1,13 @@
 package vn.hoicon.sentinel.sensing
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import vn.hoicon.rules.AppCategory
 import vn.hoicon.rules.RiskLevel
@@ -78,6 +80,17 @@ object Notifications {
             .build()
     }
 
+    /**
+     * P1-S2 experiment (ADR-008): only the debug manifest declares USE_FULL_SCREEN_INTENT (Play grants it to calling
+     * and alarm apps only on Android 14+). Even when allowed, an unlocked device gets a heads-up, not the activity.
+     */
+    private fun canUseFullScreenIntent(context: Context): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            manager(context).canUseFullScreenIntent()
+        } else {
+            context.checkSelfPermission(Manifest.permission.USE_FULL_SCREEN_INTENT) == PackageManager.PERMISSION_GRANTED
+        }
+
     /** Fallback when the background activity start was blocked (no "display over other apps"): heads-up + tap. */
     fun showPauseFallback(context: Context, level: RiskLevel, category: AppCategory, callActive: Boolean) {
         ensureChannels(context)
@@ -102,11 +115,13 @@ object Notifications {
             .setSubText(context.getString(R.string.notif_ai_subtext))
             .setCategory(Notification.CATEGORY_REMINDER)
             .setContentIntent(tap)
+            .apply { if (canUseFullScreenIntent(context)) setFullScreenIntent(tap, true) }
             .addAction(
                 Notification.Action.Builder(null, context.getString(R.string.pause_ask_child), callChild).build(),
             )
             .setAutoCancel(true)
             .build()
+        HcSpikeLog.i("fallback notification fsi=${canUseFullScreenIntent(context)}")
         try {
             manager(context).notify(ID_PAUSE_FALLBACK, notification)
         } catch (e: SecurityException) {
