@@ -1,0 +1,22 @@
+id: benign_utility_planned_outage_001
+category: benign_utility
+is_benign: true
+twin_of: fake_evn_power_cut_001
+region: south
+channel: phone_call
+script_vi: |
+  Điện lực gọi thông báo lịch cắt điện bảo trì cả khu vực vào sáng mai, không nói gì đến nợ tiền hay chuyển
+  khoản.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: lt_1m, app_category: none}
+elder_answers: {claims_authority: "yes", asks_transfer: "no"}
+expected:
+  min_risk_level: none
+  max_risk_level: low
+  notify_guardian: false
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Thông báo bảo trì chung, không đòi tiền là bình thường"
+source_ref: "Thanh Niên 25/02/2025 – Thủ đoạn giả nhân viên điện lực đòi cắt điện: https://thanhnien.vn/ro-thu-doan-gia-nhan-vien-doi-cat-dien-diem-mat-cach-lua-dao-185250225200811774.htm"
+draft: true

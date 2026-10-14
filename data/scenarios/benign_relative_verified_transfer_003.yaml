@@ -1,0 +1,22 @@
+id: benign_relative_verified_transfer_003
+category: benign_relative_new_number
+is_benign: true
+twin_of: deepfake_relative_hacked_zalo_003
+region: central
+channel: phone_call
+script_vi: |
+  Em gái gọi số mới nhờ chuyển tiền đóng học cho cháu; bác đã gọi lại số cũ của em để xác minh trước khi mở ứng
+  dụng ngân hàng.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: bank}
+elder_answers: {knows_caller: "yes", asks_transfer: "yes"}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Gọi lại số quen để xác minh trước khi chuyển là đúng cách"
+source_ref: "VietnamPlus 27/03/2026 – Bảo vệ người cao tuổi trước chiêu lừa đảo (mật khẩu gia đình, gọi lại số quen): https://www.vietnamplus.vn/bao-ve-nguoi-cao-tuoi-truoc-cac-chieu-lua-dao-tinh-vi-tren-khong-gian-mang-post1101437.vnp"
+draft: true
