@@ -13,7 +13,8 @@
 | `POST_NOTIFICATIONS` | thông báo "HỏiCon đang bảo vệ" + thông báo dự phòng khi SafePause không hiện | — | **đang dùng** |
 | `HIDE_OVERLAY_WINDOWS` (quyền thường) | ẩn lớp phủ của app khác khi SafePause hiện — chống app độc che màn/lừa bấm "tiếp tục" (tapjacking) | — | **đang dùng** (review bảo mật 09/10) |
 | `INTERNET` | đồng bộ sự kiện / cảnh báo người giám hộ (ngoài đường găng) | Data safety | từ P2-03 (bản spike không có) |
-| `<queries>` các gói tài chính | thay cho `QUERY_ALL_PACKAGES`; khớp **đúng tên gói** `data/bank_apps.vn.json` | — | **đang dùng** (9 gói ở spike; đủ danh sách ở P1-S2) |
+| `<queries>` các gói tài chính | thay cho `QUERY_ALL_PACKAGES`; khớp **đúng tên gói** `data/bank_apps.vn.json` | — | **đang dùng**: 50 gói, danh sách `2026.10.14-v1`, sinh bằng `scripts/gen-bank-apps.py` (P1-S2, ADR-008) |
+| `USE_FULL_SCREEN_INTENT` | **không khai báo ở bản phát hành** — Play chỉ cấp cho app gọi điện/báo thức (Android 14+), và khi máy mở khóa FSI chỉ là heads-up; chỉ có ở manifest debug để thử (ADR-008); CI chặn nếu lọt vào release | — | chỉ debug |
 
 **Đã kiểm (P1-S1, `aapt2 dump badging` APK debug 09/10):** chỉ có 6 quyền trên + quyền nội bộ androidx
 `vn.hoicon.sentinel.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (mức signature, không phải quyền người dùng cấp).
