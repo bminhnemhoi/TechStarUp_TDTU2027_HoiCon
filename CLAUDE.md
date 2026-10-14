@@ -3,7 +3,9 @@
 HỏiCon là trợ lý **Agentic AI chống lừa đảo cho cả nhà**: app Android "Lính gác" phát hiện chuỗi hành vi rủi ro
 (đang nghe số lạ → mở app ngân hàng), bật **khoảng dừng an toàn** bằng giọng nói tiếng Việt, rồi 5 tác tử AI trên máy chủ
 chấm rủi ro, báo con cháu qua Zalo, xác minh, lập hồ sơ vụ việc và huấn luyện. Dự thi **Tech Startup Challenger 2027**
-(TDTU). Minh là người code duy nhất; bạn và các subagent là "đội chuyên gia". Báo cáo cho Minh **bằng tiếng Việt**.
+(TDTU). Đội người: **Minh** (chủ dự án, quyết định phạm vi) và **Tiến** (@Towfienes, đồng phát triển từ 14/10/2026);
+bạn và các subagent là "đội chuyên gia". Báo cáo **bằng tiếng Việt** cho người đang làm việc với bạn. Bàn giao, kế
+hoạch gần, tài khoản: `docs/HANDOFF.md`.
 
 Mốc cứng: nộp Vòng 1 **15/11/2026** · MVP Vòng 2 **10/01/2027** (đóng băng code 06/01) · chung kết **27/02/2027**.
 
@@ -11,6 +13,7 @@ Mốc cứng: nộp Vòng 1 **15/11/2026** · MVP Vòng 2 **10/01/2027** (đóng
 
 | Tài liệu | Nội dung |
 |---|---|
+| `docs/HANDOFF.md` | Bàn giao: trạng thái, dựng môi trường, quy trình, kế hoạch từng tuần, tài khoản, rủi ro |
 | `docs/ROADMAP.md` | Khối STATUS, mã task (P0-xx…), gate, danh sách cắt — **chỉ làm task trong đây** |
 | `docs/PRD.md` | User story (US-xx), tiêu chí chấp nhận |
 | `docs/ARCHITECTURE.md`, `docs/adr/` | Kiến trúc, quyết định đã chốt (ADR-001…) |
@@ -78,7 +81,8 @@ Chạy CLI bằng **tool Bash** (để RTK nén output). Cần output đầy đ�
 1. Đọc STATUS (SessionStart hiện sẵn), chọn **một** task. Việc lớn: vào Plan mode, hỏi đúng chuyên gia (`android-engineer`, `agent-architect`, `backend-db`, `web-ux`).
 2. Làm theo skill `feature-slice` (hợp đồng → DB → domain → API → Android/web → test → docs).
 3. Review: `security-privacy-reviewer` (dữ liệu cá nhân/LLM/manifest/Zalo), `ux-elder-reviewer` (màn hình, câu chữ), `/ponytail-review`.
-4. **Chỉ commit khi Minh yêu cầu**; nhánh `feat/<task-id>-<slug>`, PR qua `gh`. Cuối tuần chạy `phase-gate`.
+4. **Chỉ commit khi người dùng (Minh hoặc Tiến) yêu cầu**; nhánh `feat/<task-id>-<slug>`, PR qua `gh`, người còn lại
+   duyệt rồi squash merge. Không push thẳng `main`. Cuối tuần chạy `phase-gate`.
 5. Workflow/đa tác tử song song chỉ dùng khi Minh yêu cầu rõ. Tối đa 2 worktree (android / phần còn lại).
 
 ## Kiểm soát phạm vi

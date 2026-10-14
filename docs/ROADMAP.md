@@ -6,9 +6,9 @@
 
 <!-- STATUS -->
 Phase 1 — Spike + hồ sơ Vòng 1 (15/10–13/11) · G0 ĐẠT 08/10 (docs/phase-reports/G0.md) · Gate G1: 08/11
-P1-S2 ◐ (ADR-008): bank_apps v1 + :demobank + bộ đo :latency xong; chờ máy ảo (RAM) + FTL (P0-08) + Play internal (P1-08)
-Việc kế tiếp: P1-S4 lõi tác tử (không cần tài khoản) · P1-S1/S2 chỉ còn số đo máy thật
-Chờ Minh: P0-08 Firebase + Play Console · dọn ổ C (còn 0,9 GB — Gradle/máy ảo sập vì hết bộ nhớ cam kết)
+Bàn giao 14/10: đọc docs/HANDOFF.md · Đội: Minh + Tiến (@Towfienes) · ◐ S1/S2 (chờ máy thật), S4 (chờ khóa API), P1-07 (chờ duyệt)
+Việc kế tiếp (HANDOFF §5): P0-08 tài khoản · khảo sát P1-02 · P1-S3 Zalo · FTL · P1-S5 · P1-01 thuyết minh · P1-03 video
+Rủi ro: hồ sơ Vòng 1 (thuyết minh/video/khảo sát) chưa bắt đầu, còn 30 ngày · máy dev Minh thiếu RAM/ổ C cho máy ảo
 Cập nhật: 14/10/2026
 <!-- /STATUS -->
 
