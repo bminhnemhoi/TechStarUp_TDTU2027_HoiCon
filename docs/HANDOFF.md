@@ -1,7 +1,8 @@
 # Bàn giao HỏiCon — đọc file này trước tiên
 
 > Cập nhật **14/10/2026** · Chủ dự án: **Ngô Bình Minh** ([@bminhnemhoi](https://github.com/bminhnemhoi)) · Đồng phát triển
-> từ 14/10/2026: **Ngô Lâm Tiến** ([@Towfienes](https://github.com/Towfienes), quyền admin repo).
+> từ 14/10/2026: **Ngô Lâm Tiến** ([@Towfienes](https://github.com/Towfienes), collaborator — lời mời gửi 14/10, chấp nhận
+> trong 7 ngày tại https://github.com/bminhnemhoi/TechStarUp_TDTU2027_HoiCon/invitations).
 > Mục đích: ai cầm repo này cũng làm tiếp được kế hoạch mà không cần hỏi lại, kể cả khi Minh tạm vắng.
 > Nguồn sự thật về "làm gì tiếp" vẫn là [`docs/ROADMAP.md`](ROADMAP.md); file này là bản đồ + hướng dẫn + kế hoạch gần.
 
@@ -218,7 +219,7 @@ Thứ tự gợi ý:
 
 | Tài khoản | Chủ | Cách chia cho người làm tiếp |
 |---|---|---|
-| GitHub repo | Minh | Tiến có quyền **admin** (mời 14/10/2026). Repo public: không commit bí mật, không đưa dữ liệu thật |
+| GitHub repo | Minh | Tiến là **collaborator** (mời 14/10/2026): push, tạo nhánh, duyệt + merge PR, issue. Repo thuộc tài khoản cá nhân nên GitHub không có vai trò admin cho người khác; cần quyền quản trị (Settings, Secrets, quy tắc nhánh) thì chuyển repo sang một **Organization** rồi cấp vai trò Admin. Repo public: không commit bí mật, không đưa dữ liệu thật |
 | Google Play Console | Minh (cá nhân) | Users and permissions → mời email của Tiến với quyền phát hành bản thử nghiệm |
 | Firebase / Google Cloud | Minh | Project settings → Users → thêm Tiến (Editor) để chạy Test Lab |
 | Anthropic API | Minh | Tạo **khóa riêng cho Tiến** trong workspace, đặt trần chi tiêu. Không chia chung một khóa, không dán khóa vào chat/issue |
