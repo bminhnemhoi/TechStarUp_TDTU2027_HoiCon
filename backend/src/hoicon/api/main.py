@@ -5,18 +5,44 @@ uv run --directory backend uvicorn hoicon.api.main:app --port 18000 --reload --l
 
 import asyncio
 import logging
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Response, status
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from hoicon import __version__
+from hoicon.config import get_settings
 from hoicon.db.session import get_engine
+from hoicon.mcp_servers import threat
 
 logger = logging.getLogger(__name__)
 READYZ_TIMEOUT_S = 6
 
-app = FastAPI(title="HỏiCon API", version=__version__)
+
+# /mcp/threat chỉ gắn ở dev: chưa có bên nào cần gọi qua HTTP (đồ thị gọi thẳng `lookup_h1`), và kiểm Host localhost
+# của MCP SDK chỉ chống DNS rebinding — KHÔNG phải xác thực (proxy đổi Host là lọt). Prod: token + giới hạn tần suất
+# (P2-11).
+MOUNT_MCP = get_settings().env == "dev"
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+    if not MOUNT_MCP:
+        yield
+        return
+    # MCP gắn bằng mount ⇒ app chủ phải chạy session manager của từng server (MCP SDK v2).
+    async with threat.mcp.session_manager.run():
+        yield
+
+
+app = FastAPI(title="HỏiCon API", version=__version__, lifespan=lifespan)
+if MOUNT_MCP:
+    app.mount(
+        "/mcp/threat",
+        threat.mcp.streamable_http_app(streamable_http_path="/", stateless_http=True, json_response=True),
+    )
 
 
 @app.get("/healthz", tags=["ops"])

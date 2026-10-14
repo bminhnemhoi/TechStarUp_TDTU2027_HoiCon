@@ -41,8 +41,8 @@
 ### Tác tử
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
-| `agent_runs` | id, incident_id, graph (`incident/coach`), status, thread_id, started_at, finished_at, cost_usd | checkpoint LangGraph nằm ở bảng của `AsyncPostgresSaver` |
-| `agent_steps` | id, run_id, node, model_profile, model, input_redacted jsonb, output jsonb, latency_ms, tokens_in/out, cost_usd, fallback_used, at | đã che PII; nguồn cho `/trace` |
+| `agent_runs` | id, incident_id, graph (`incident/coach`), status (`running/waiting/done/failed`), thread_id, started_at, finished_at, cost_usd, is_drill, is_demo | **đã có** (migration `0002`, P1-S4); FK `incident_id` thêm ở P2-03; checkpoint LangGraph nằm ở bảng của `AsyncPostgresSaver` |
+| `agent_steps` | id, run_id, node, model_profile, model, prompt_version, input_redacted jsonb, output jsonb, latency_ms, tokens_in/out, cost_usd, fallback_used, error, at | **đã có** (`0002`); đã che PII; nguồn cho `/trace` |
 
 ### Người giám hộ & tin nhắn
 | Bảng | Cột chính | Ghi chú |
@@ -67,7 +67,7 @@
 ### Vận hành & quyền dữ liệu
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
-| `jobs` | id, kind, payload jsonb, run_at, attempts, locked_at, locked_by, done_at, error | `FOR UPDATE SKIP LOCKED` |
+| `jobs` | id, kind, payload jsonb, run_at, idempotency_key (unique), attempts, locked_at, locked_by, done_at, error, created_at | **đã có** (`0002`); `FOR UPDATE SKIP LOCKED`; khóa chống trùng khi node chạy lại (ADR-009) |
 | `demo_sessions` | id, code, created_at, expires_at | dữ liệu demo tự xóa sau 24 giờ |
 | `data_requests` | id, family_id, kind (`export/delete`), status, requested_at, completed_at | quyền chủ thể dữ liệu (Luật 91/2025) |
 
@@ -114,3 +114,6 @@ detected → assessing → awaiting_guardian ──(T1 = 2' nhắc; T2 = 5' chuy
 | Dữ liệu demo | 24 giờ | `demo_sessions.expires_at` |
 | `consents` | suốt thời gian dịch vụ + 2 năm | không xóa (bằng chứng đồng ý, Nghị định 356/2025) |
 | Giọng nói | không lưu trên máy chủ | STT xử lý luồng rồi bỏ |
+| Lời kể tự do của người cao tuổi | **không lưu** | chỉ giữ cờ tất định `note_flags` (ADR-009) |
+| Checkpoint LangGraph (`checkpoints`, `checkpoint_blobs`, `checkpoint_writes`) | sự cố đóng + 7 ngày | job `retention` gọi `adelete_thread` (P2-20); `agent_steps` đủ cho trace |
+| `jobs` (gồm `payload.text` = toàn văn tin gửi người giám hộ) | 30 ngày sau `done_at` | job `retention` (P2-20) |

@@ -1,0 +1,13 @@
+{
+  "version": "2026.10.14-demo",
+  "is_demo": true,
+  "_note": "Danh sách đe dọa DEMO cho máy ảo/spike (luật 8): h1 của số hư cấu flagged_caller trong data/fixtures/phones.json (cùng giá trị LocalLists.kt bản debug). Danh sách thật lấy từ bảng threat_indicators (P2-11).",
+  "indicators": [
+    {
+      "h1": "aa1b1fcd5c51853e998738c59cffa5a4d95bd39ef7ef3b6d905c9c6c3af987e4",
+      "source": "demo",
+      "confidence": 0.9,
+      "tactic": "impersonation_authority"
+    }
+  ]
+}
