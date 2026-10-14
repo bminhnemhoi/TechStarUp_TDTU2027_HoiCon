@@ -1,0 +1,22 @@
+id: benign_official_hospital_003
+category: benign_official
+is_benign: true
+twin_of: fake_health_insurance_refund_001
+region: central
+channel: phone_call
+script_vi: |
+  Bệnh viện gọi xác nhận lịch tái khám của bác, nhắc mang thẻ bảo hiểm, không yêu cầu chuyển tiền. Sau đó bác mở
+  ứng dụng ngân hàng xem tiền lương hưu.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: bank}
+elder_answers: {claims_authority: "yes", asks_transfer: "no"}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Cuộc gọi không đòi tiền, không thúc ép"
+source_ref: "Thanh Niên 28/07/2026 – 8 chiêu trò lừa đảo nhắm vào người cao tuổi: https://thanhnien.vn/canh-bao-8-chieu-tro-lua-dao-nham-vao-nguoi-cao-tuoi-185260728154001279.htm"
+draft: true

@@ -6,10 +6,10 @@
 
 <!-- STATUS -->
 Phase 1 — Spike + hồ sơ Vòng 1 (15/10–13/11) · G0 ĐẠT 08/10 (docs/phase-reports/G0.md) · Gate G1: 08/11
-Việc kế tiếp: P1-S2 (P1-S1 xong phần cơ chế — ADR-007; độ trễ chờ máy thật)
-P0-01…P0-07 xong (PR #1, #2 đã merge) · Chờ Minh: P0-08 tài khoản — Play Console NGAY, Firebase trước 15/10
-Minh: chạy init_env · đăng ký theo docs/setup/ACCOUNTS.md · làm máy ảo ⇒ Claude hỏi trước khi dừng stack khác
-Cập nhật: 08/10/2026
+Bàn giao 14/10: đọc docs/HANDOFF.md · Đội: Minh + Tiến (@Towfienes) · ◐ S1/S2 (chờ máy thật), S4 (chờ khóa API), P1-07 (chờ duyệt)
+Việc kế tiếp (HANDOFF §5): P0-08 tài khoản · khảo sát P1-02 · P1-S3 Zalo · FTL · P1-S5 · P1-01 thuyết minh · P1-03 video
+Rủi ro: hồ sơ Vòng 1 (thuyết minh/video/khảo sát) chưa bắt đầu, còn 30 ngày · máy dev Minh thiếu RAM/ổ C cho máy ảo
+Cập nhật: 14/10/2026
 <!-- /STATUS -->
 
 ## Mốc cứng
@@ -54,9 +54,9 @@ Cập nhật: 08/10/2026
 | Mã | Việc | Thời gian | Ngưỡng đạt / sản phẩm | Trạng thái |
 |---|---|---|---|---|
 | P1-S1 | Cảm biến trên máy ảo: vai trò call screening, trạng thái cuộc gọi (`TelephonyCallback` vs `AudioManager`), FGS `specialUse` + chip "đang bảo vệ", quét UsageStats, mở SafePause qua miễn trừ "hiển thị trên app khác" | 15–24/10 | bắt 10/10 cuộc gọi; phát hiện → dừng p95 ≤ 3 s; sống sót khi app bị kill; có phương án dự phòng | ◐ cơ chế chốt (ADR-007): bắt 10/10, offline OK, không cần READ_PHONE_STATE; Android 15+ cần tắt tối ưu pin. **p95 ≤ 3 s chưa đạt trên máy ảo quá tải ⇒ đo máy thật (Firebase Test Lab) trước G1** |
-| P1-S2 | Dừng an toàn với app ngân hàng: `:demobank`, phản ứng của app ngân hàng thật (Firebase Test Lab hoặc ghi rủi ro), full-screen intent Android 14 | 20–28/10 | bảng kết quả + `data/bank_apps.vn.json` v1 | ☐ |
+| P1-S2 | Dừng an toàn với app ngân hàng: `:demobank`, phản ứng của app ngân hàng thật (Firebase Test Lab hoặc ghi rủi ro), full-screen intent Android 14 | 20–28/10 | bảng kết quả + `data/bank_apps.vn.json` v1 | ◐ ADR-008 + `docs/spikes/P1-S2-dung-an-toan.md`: danh sách v1 **50 gói** (sinh `BankAppCatalog` + `<queries>`, test chống lệch); `:demobank` có luồng chuyển tiền đầy đủ; FSI **không dùng** ở bản phát hành (máy mở khóa ⇒ heads-up; Play giới hạn); app ngân hàng thật **không thử được trên máy ảo/FTL** (TT 77/2025 ⇒ sổ rủi ro RB-1…9 + giao thức máy thật sau P1-08); bộ đo `:latency` cho FTL. Còn: ảnh demobank + `ux-elder-reviewer`, đo FSI trên AVD, chạy FTL |
 | P1-S3 | Zalo Bot: webhook qua cloudflared, `/start <mã>`, nút bấm, đo hạn mức thật, điều khoản | 22–30/10 | giao tin p95 ≤ 5 s; chốt dự phòng (trang hành động / Telegram) | ☐ |
-| P1-S4 | Lõi tác tử: đồ thị 2 interrupt + `AsyncPostgresSaver`, chạy tiếp sau `kill -9`, hẹn giờ bằng job, MCP `threat`, `agent_steps`, che PII, so Haiku 4.5 vs Flash-Lite | 26/10–04/11 | p95 một lượt ≤ 8 s; ghi chi phí | ☐ |
+| P1-S4 | Lõi tác tử: đồ thị 2 interrupt + `AsyncPostgresSaver`, chạy tiếp sau `kill -9`, hẹn giờ bằng job, MCP `threat`, `agent_steps`, che PII, so Haiku 4.5 vs Flash-Lite | 26/10–04/11 | p95 một lượt ≤ 8 s; ghi chi phí | ◐ ADR-009 + `docs/spikes/P1-S4-loi-tac-tu.md`: đồ thị 2 interrupt + T1/T2/T3, sống sót kill -9 (test), job chống trùng, MCP `threat` tại `/mcp/threat`, `agent_steps` + chi phí, che PII, không lưu lời kể thô/h1 (review bảo mật đã sửa hết); 86 test xanh. Điều phối p50 0,13 s/lượt (p95 máy dev bị swap ⇒ đo lại trên VPS). **Chờ khóa API (P0-08)** để so Haiku 4.5 / **Haiku 5.5** (rẻ hơn 10×, mặc định tạm) / Flash-Lite |
 | P1-S5 | Giọng nói tiếng Việt: STT (`SpeechRecognizer` vi-VN, FPT.AI, Gemini) trên dữ liệu công khai + 20 câu tự thu; TTS giọng người già, 5 người nghe chấm | 28/10–08/11 | chốt nút bấm là chính, giọng nói tùy chọn; chọn nhà cung cấp âm thanh thu sẵn | ☐ |
 | P1-S6 | Phát hiện cài app ngoài Play (R2) | nếu còn thời gian | | ☐ |
 | P1-01 | Cập nhật thuyết minh qua `docs/proposal/src`: đội ngũ thật (1 người + đội tác tử AI + cố vấn), thí điểm 20–30 gia đình, Play testing, Zalo Bot | 26/10–08/11 | Word + PDF mới; `pitch-sync` sạch | ☐ |
@@ -65,7 +65,7 @@ Cập nhật: 08/10/2026
 | P1-04 | `judge` chấm thử 10/11 → sửa → **nộp 13/11** | 10–13/11 | biên nhận nộp | ☐ |
 | P1-05 | Design system: ui-ux-pro-max → `docs/DESIGN-SYSTEM.md` + `design-system/hoicon/tokens.json` (Be Vietnam Pro) | 14–22/11 | | ☐ |
 | P1-06 | Văn bản đồng ý v1, DPIA rút gọn, quy trình thí điểm | 14–22/11 | `docs/legal/consent/`, `PRIVACY-DPIA.md`, `PILOT-PROTOCOL.md` | ☐ |
-| P1-07 | ~60 kịch bản lừa đảo (tác tử soạn, Minh duyệt) | 14–22/11 | `data/scenarios/*.yaml` | ☐ |
+| P1-07 | ~60 kịch bản lừa đảo (tác tử soạn, Minh duyệt) | 14–22/11 | `data/scenarios/*.yaml` | ◐ bản nháp 60 ca (40 lừa đảo / 20 hợp lệ song sinh = 33%, 10 chèn lệnh, 3 miền, nguồn báo chí đã kiểm) + schema `scenario.v1.json` + test hợp đồng — **chờ Minh duyệt** (`draft: true`) |
 | P1-08 | Kênh Play internal testing + Google Group tester | 14–22/11 | | ☐ |
 | P1-09 | VPS + tên miền + Caddy | 14–22/11 | | ☐ |
 
@@ -131,6 +131,9 @@ Cập nhật: 08/10/2026
 
 - Mua máy Android cũ 1–2 triệu trước 06/12 (rủi ro #2) — Minh quyết. Trước mắt: mượn máy người thân để xác minh Play
   Console (< 1 phút); kiểm thử máy thật qua Firebase Test Lab (5 lượt/ngày) + Device Streaming (30 phút/tháng).
+- (P1-S2) Danh mục v2: cân nhắc thêm app Smart OTP tách riêng của ngân hàng (RB-7); hỏi thí điểm về "ứng dụng kép"
+  Xiaomi (RB-6). `:demobank` chưa mô phỏng "đăng xuất khi chạy nền" — thêm nếu giao thức máy thật cho thấy app phổ
+  biến làm vậy (RB-4).
 - Đánh giá `android device remote` (Device Streaming, cần dự án Google Cloud) như nguồn máy thật bổ sung.
 - Compose BOM ≥ 2026.08 (UI 1.12) và core-ktx 1.19 đòi **compileSdk 37** ⇒ hiện ghim BOM 2026.06.01. Khi cần: cài
   `platforms;android-37`, nâng compileSdk 37 (giữ targetSdk 36) — cân nhắc trước P2 (08/10, từ P0-06).

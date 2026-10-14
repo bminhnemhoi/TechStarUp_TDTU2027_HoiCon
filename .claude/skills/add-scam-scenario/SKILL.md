@@ -31,4 +31,7 @@ draft: true                        # Minh duyệt xong mới bỏ
 1. Mỗi ca lừa đảo nên có một **ca hợp lệ song sinh** gần giống (ví dụ ngân hàng thật gọi xác minh, không đòi chuyển tiền) — giữ tỷ lệ hợp lệ ≥ 30% toàn bộ.
 2. Chỉ dùng tên, số điện thoại (dải `0900000xxx`), số tài khoản **hư cấu**; nội dung đủ để kiểm thử, không viết thành "kịch bản mẫu" chi tiết dễ lạm dụng.
 3. Bắt buộc `source_ref` từ cảnh báo chính thức/báo chí (xem `docs/research/notes/08_social_impact.md`).
-4. Sau khi thêm: chạy `uv run --directory backend hoicon-eval --validate` (kiểm schema, tỷ lệ hợp lệ, trùng id).
+4. Sau khi thêm: chạy `uv run --directory backend pytest tests/contract/test_scenarios.py` (schema
+   `docs/schemas/scenario.v1.json`, tỷ lệ hợp lệ ≥ 30%, ≥ 10 ca chèn lệnh, ca song sinh, mức ≥ sàn của luật trên máy, chỉ số
+   hư cấu, nguồn có đường dẫn). Từ P2-15: `hoicon-eval --validate`.
+5. `elder_answers` đặt giá trị trong ngoặc kép (`"yes"`) — YAML 1.1 đọc `yes`/`no` trần thành true/false.

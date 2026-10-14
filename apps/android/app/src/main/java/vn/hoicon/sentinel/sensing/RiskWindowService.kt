@@ -14,6 +14,7 @@ import android.os.SystemClock
 import android.provider.Settings
 import vn.hoicon.rules.AppCategory
 import vn.hoicon.rules.AppForeground
+import vn.hoicon.rules.BankAppCatalog
 import vn.hoicon.rules.Decision
 import vn.hoicon.rules.ForegroundTracker
 import vn.hoicon.rules.RiskEngine
@@ -107,7 +108,7 @@ class RiskWindowService : Service() {
         val started = SystemClock.uptimeMillis()
         val count = readEvents(now - SEED_LOOKBACK_MS, now)
         lastResumeTs = maxOf(lastResumeTs, foregroundTracker.current()?.second ?: 0L)
-        val category = foregroundTracker.current()?.first?.let(BankApps::categoryOf)?.wire ?: "other"
+        val category = foregroundTracker.current()?.first?.let(BankAppCatalog::categoryOf)?.wire ?: "other"
         HcSpikeLog.i("seeded $count events in ${SystemClock.uptimeMillis() - started} ms, in front: $category")
     }
 
@@ -135,7 +136,7 @@ class RiskWindowService : Service() {
         // GAP: financial app still in front from before the call, call now connected.
         val (pkg, resumedAt) = foregroundTracker.current() ?: return
         if (resumedAt <= handledForegroundAtMs) return
-        val category = BankApps.categoryOf(pkg) ?: return
+        val category = BankAppCatalog.categoryOf(pkg) ?: return
         val inFront = AppForeground(pkg, category, resumedAt)
         val decision = RiskEngine.evaluateForegroundDuringCall(signal, inFront, connected, now)
         if (decision.pausesUser) HcTiming.mark("app_in_front_on_connect", now)
@@ -167,7 +168,7 @@ class RiskWindowService : Service() {
         val (pkg, resumedAt) = foregroundTracker.current() ?: return null
         if (resumedAt <= afterTs) return null
         lastResumeTs = resumedAt
-        val category = BankApps.categoryOf(pkg) ?: return null
+        val category = BankAppCatalog.categoryOf(pkg) ?: return null
         return AppForeground(pkg, category, resumedAt)
     }
 

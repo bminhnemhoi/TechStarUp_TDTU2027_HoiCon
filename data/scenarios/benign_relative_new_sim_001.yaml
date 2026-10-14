@@ -1,0 +1,22 @@
+id: benign_relative_new_sim_001
+category: benign_relative_new_number
+is_benign: true
+twin_of: deepfake_relative_video_money_001
+region: south
+channel: phone_call
+script_vi: |
+  Cháu trai gọi bằng số mới vì đổi SIM, nói chuyện thăm hỏi, kể đúng chuyện riêng trong nhà, không nhắc gì đến
+  tiền.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 5_15m, app_category: none}
+elder_answers: {knows_caller: "yes", asks_transfer: "no"}
+expected:
+  min_risk_level: none
+  max_risk_level: low
+  notify_guardian: false
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Người thân đổi số: hỏi chuyện riêng hoặc mật khẩu gia đình để chắc chắn"
+source_ref: "VietnamPlus 27/03/2026 – Bảo vệ người cao tuổi trước chiêu lừa đảo (mật khẩu gia đình, gọi lại số quen): https://www.vietnamplus.vn/bao-ve-nguoi-cao-tuoi-truoc-cac-chieu-lua-dao-tinh-vi-tren-khong-gian-mang-post1101437.vnp"
+draft: true
