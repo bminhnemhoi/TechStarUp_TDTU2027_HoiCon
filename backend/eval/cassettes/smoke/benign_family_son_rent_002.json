@@ -1,0 +1,35 @@
+{
+  "case_id": "benign_family_son_rent_002",
+  "source": "synthetic",
+  "behavior": "honest",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "medium",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi biết người gọi"
+        ],
+        "ask_question": "q_know_caller"
+      },
+      {
+        "level": "medium",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Chuyển tiền cho người nhà"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "{alias} đang gọi cho người nhà rồi mở ứng dụng ngân hàng để chuyển tiền; có thể là chuyện gia đình, anh/chị hỏi thăm nhé.",
+        "action": "call_now"
+      }
+    ]
+  }
+}

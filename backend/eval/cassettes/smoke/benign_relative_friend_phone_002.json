@@ -1,0 +1,35 @@
+{
+  "case_id": "benign_relative_friend_phone_002",
+  "source": "synthetic",
+  "behavior": "honest",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "medium",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi biết người gọi"
+        ],
+        "ask_question": "q_know_caller"
+      },
+      {
+        "level": "low",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Không đòi chuyển tiền"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "{alias} vừa nghe điện thoại từ một người quen dùng số mới rồi mở ví điện tử; anh/chị hỏi lại để chắc chắn.",
+        "action": "call_now"
+      }
+    ]
+  }
+}

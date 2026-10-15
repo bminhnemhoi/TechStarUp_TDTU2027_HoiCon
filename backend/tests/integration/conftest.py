@@ -32,6 +32,24 @@ async def require_db() -> None:
         pytest.skip("Postgres dev chưa chạy (docker compose -f infra/compose.dev.yml up -d)")
 
 
+@pytest.fixture(scope="module")
+async def target() -> tuple[str, bool]:
+    """(URL DB eval, shared_db_ok) của spec 030; skip nếu DB eval chưa chạy/chưa migrate."""
+    from eval_support import eval_target
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    url, shared = eval_target()
+    engine = create_async_engine(url, connect_args={"connect_timeout": 5})
+    try:
+        async with asyncio.timeout(8), engine.connect() as conn:
+            await conn.exec_driver_sql("select 1")
+    except Exception:
+        pytest.skip("DB eval chưa chạy/chưa migrate (xem specs/030-eval-smoke/quickstart.md)")
+    finally:
+        await engine.dispose()
+    return url, shared
+
+
 @pytest.fixture
 async def threads(require_db: None) -> AsyncGenerator[list[str]]:
     """Thread id do test tạo; dọn job + agent_runs (+ steps) sau test để `recover()` của test khác không vướng."""

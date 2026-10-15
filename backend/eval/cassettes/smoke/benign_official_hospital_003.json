@@ -1,0 +1,35 @@
+{
+  "case_id": "benign_official_hospital_003",
+  "source": "synthetic",
+  "behavior": "honest",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "medium",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người gọi xưng bệnh viện nhưng không đòi tiền"
+        ],
+        "ask_question": "q_caller_authority"
+      },
+      {
+        "level": "low",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Không đòi chuyển tiền"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "{alias} vừa nghe cuộc gọi tự xưng là bệnh viện rồi mở ứng dụng ngân hàng; anh/chị hỏi xem có đúng lịch khám không.",
+        "action": "call_now"
+      }
+    ]
+  }
+}

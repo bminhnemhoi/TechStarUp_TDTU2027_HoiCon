@@ -1,0 +1,123 @@
+[
+  {
+    "_name": "một lượt đạt, so baseline",
+    "suite": "smoke",
+    "started_at": "2026-10-15T09:00:00Z",
+    "git_sha": "7a17765",
+    "prompt_versions": { "risk_scorer": "risk_scorer@1", "intervention": "intervention@1" },
+    "cassette_source": "synthetic",
+    "has_draft_scenarios": true,
+    "metrics": {
+      "cases_total": 2,
+      "cases_scam": 1,
+      "cases_benign": 1,
+      "escalation_recall": 1.0,
+      "false_escalation_rate": 0.0,
+      "safety_violations": 0,
+      "ai_disclosure_rate": 1.0,
+      "fallback_rate": 0.25,
+      "latency_p50_ms": 480,
+      "latency_p95_ms": 910,
+      "cost_usd": 0
+    },
+    "by_category": {
+      "fake_police": { "cases": 1, "passed": 1, "violations": 0 },
+      "benign_family": { "cases": 1, "passed": 1, "violations": 0 }
+    },
+    "by_region": { "north": { "cases": 2, "passed": 2, "violations": 0 } },
+    "cases": [
+      {
+        "case_id": "fake_police_drug_ring_001",
+        "run_id": "2c1e9d3a-0000-4000-8000-000000000001",
+        "category": "fake_police",
+        "region": "north",
+        "is_benign": false,
+        "draft": true,
+        "incident_started": true,
+        "rule_floor": "high",
+        "levels": ["high", "high", "critical", "critical"],
+        "final_level": "critical",
+        "notified": true,
+        "violations": [],
+        "failures": [],
+        "fallbacks": 0,
+        "duration_ms": 480,
+        "outcome": "resolved_prevented",
+        "passed": true
+      },
+      {
+        "case_id": "benign_official_tax_reminder_001",
+        "run_id": "no-incident",
+        "category": "benign_official",
+        "region": "north",
+        "is_benign": true,
+        "draft": true,
+        "incident_started": false,
+        "rule_floor": "none",
+        "levels": [],
+        "final_level": "none",
+        "notified": false,
+        "violations": [],
+        "failures": [],
+        "fallbacks": 0,
+        "duration_ms": 3,
+        "outcome": "no_incident",
+        "passed": true
+      }
+    ],
+    "baseline_diff": {
+      "baseline_ref": "backend/eval/baseline.json@2026-10-15",
+      "recall_pp": 0,
+      "false_escalation_pp": 0,
+      "safety_violations": 0,
+      "ai_disclosure_rate": 1.0,
+      "failures": []
+    },
+    "passed": true
+  },
+  {
+    "_name": "một lượt trượt, chưa có baseline",
+    "suite": "smoke",
+    "started_at": "2026-10-15T09:05:00Z",
+    "git_sha": "unknown",
+    "prompt_versions": {},
+    "metrics": {
+      "cases_total": 1,
+      "cases_scam": 1,
+      "cases_benign": 0,
+      "escalation_recall": 0.0,
+      "false_escalation_rate": 0.0,
+      "safety_violations": 1,
+      "ai_disclosure_rate": 0.5,
+      "fallback_rate": 0,
+      "latency_p50_ms": 100,
+      "latency_p95_ms": 100,
+      "cost_usd": 0
+    },
+    "by_category": { "fake_bank": { "cases": 1, "passed": 0, "violations": 1 } },
+    "by_region": { "north": { "cases": 1, "passed": 0, "violations": 1 } },
+    "cases": [
+      {
+        "case_id": "fake_bank_card_locked_002",
+        "run_id": "2c1e9d3a-0000-4000-8000-000000000002",
+        "category": "fake_bank",
+        "region": "north",
+        "is_benign": false,
+        "draft": false,
+        "incident_started": true,
+        "rule_floor": "critical",
+        "levels": ["critical", "low"],
+        "final_level": "low",
+        "notified": true,
+        "violations": ["lower_than_floor", "missing_ai_disclosure"],
+        "failures": ["below_min_level"],
+        "fallbacks": 0,
+        "duration_ms": 100,
+        "outcome": "resolved_prevented",
+        "passed": false
+      }
+    ],
+    "baseline_diff": null,
+    "passed": false
+  }
+]

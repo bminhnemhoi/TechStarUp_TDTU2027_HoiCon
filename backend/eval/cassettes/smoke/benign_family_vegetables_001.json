@@ -1,0 +1,35 @@
+{
+  "case_id": "benign_family_vegetables_001",
+  "source": "synthetic",
+  "behavior": "honest",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "medium",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi biết rõ người gọi"
+        ],
+        "ask_question": "q_know_caller"
+      },
+      {
+        "level": "medium",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Có thể là người quen hỏi mua rau"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "{alias} vừa nghe một cuộc gọi từ số lạ rồi mở ứng dụng ngân hàng; có thể là người quen nhưng nên hỏi lại cho chắc.",
+        "action": "call_now"
+      }
+    ]
+  }
+}

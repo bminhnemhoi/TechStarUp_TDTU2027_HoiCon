@@ -93,7 +93,7 @@ Cập nhật: 15/10/2026
 | P2-12 | W4 | Web tối thiểu: danh sách/chi tiết sự cố cho người giám hộ | ☐ |
 | P2-13 | W4 | Diễn tập v1 (E11, bảng `drills`) | ☐ |
 | P2-14 | W4 | Bộ thí điểm + Play internal v0.3 → **M2** | ☐ |
-| P2-15 | W5 21–27/12 | CLI `hoicon-eval` + ≥ 100 ca + chạy full lần đầu | ☐ |
+| P2-15 | W5 21–27/12 | CLI `hoicon-eval` + ≥ 100 ca + chạy full lần đầu | ◐ 15/10: xong CLI `hoicon-eval` + 20 ca smoke tất định (O1/B3, `specs/030-eval-smoke`, bằng chứng ở `evidence.md`; còn chờ CI xanh trên PR — SC-006); ≥ 100 ca + full ở spec 036 |
 | P2-16 | W5 | Nhánh hồ sơ vụ việc (`case_file`, interrupt duyệt) | ☐ |
 | P2-17 | W5 | Đồ thị Coach hằng tuần | ☐ |
 | P2-18 | W6 28/12–03/01 | Bộ eval injection + lặp prompt | ☐ |

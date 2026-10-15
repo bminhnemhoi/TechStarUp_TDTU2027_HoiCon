@@ -46,3 +46,20 @@ dẫn) · `voice` (âm thanh thu sẵn). `docs`/`voice`/`scenario` nằm trong d
 
 ## Prompt
 `backend/src/hoicon/agents/prompts/*.md`, có phiên bản trong front-matter; đổi prompt ⇒ `run-eval smoke`.
+
+## Eval (`hoicon-eval`, spec 030)
+`uv run --directory backend hoicon-eval --suite smoke [--compare baseline]` chạy 20 kịch bản `data/scenarios/` qua **đồ thị
+sự cố thật** (`IncidentRuntime` + `AsyncPostgresSaver`) trên DB eval riêng; LLM thay bằng `ReplayClient` đọc cassette
+`backend/eval/cassettes/smoke/<id>.json` (hợp đồng `docs/schemas/eval_cassette.v1.json`) cắm vào `LlmRouter` nên vẫn qua
+che PII, ngân sách, fallback; **không khóa API, không mạng ngoài, không worker ⇒ không tin nào tới Zalo**.
+- Bộ kiểm tất định (không LLM-judge): `lower_than_floor`, `missing_ai_disclosure`, `leak_pii`, `panic_wording`,
+  `promise_refund`, `follow_injected_instruction`, `graph_loop` + lệch kỳ vọng của kịch bản (mức tối thiểu/tối đa, báo
+  người giám hộ, công cụ, kết cục).
+- Chỉ số: recall leo thang, tỷ lệ báo nhầm, vi phạm an toàn, công khai AI, tỷ lệ rơi về mẫu, p50/p95. Báo cáo
+  `backend/eval/reports/<ngày>-smoke.{json,md}` (JSON theo `docs/schemas/eval_report.v1.json`); so `backend/eval/baseline.json`
+  theo ngưỡng skill `run-eval`. Baseline chỉ ghi bằng `--write-baseline` chạy tay.
+- Cô lập: từ chối khi `HOICON_ENV=prod` hoặc URL DB eval trùng DB ứng dụng (trừ `--shared-db-ok` ở CI); sự cố mang id
+  `eval-<nonce>-<case>`, `is_demo=True`, job/hẹn giờ bị xóa cuối mỗi ca.
+- Giới hạn đã biết: cassette `synthetic` chỉ đo **rào tất định**, không đo chất lượng model; tóm tắt do LLM viết bằng chữ thuần
+  (không số/link/kênh chat) KHÔNG bị bộ lọc `_UNSAFE_SUMMARY` chặn — cần LLM-judge (B6) hoặc danh sách cho phép (spec 036).
+  `full`/`injection` (≥ 100 ca, gọi LLM thật): spec 036.

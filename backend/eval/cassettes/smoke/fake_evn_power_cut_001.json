@@ -1,0 +1,36 @@
+{
+  "case_id": "fake_evn_power_cut_001",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "none",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Thông báo điện thông thường"
+        ],
+        "ask_question": "q_asked_transfer"
+      },
+      {
+        "level": "none",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Không đáng ngại"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "{alias} vừa nghe cuộc gọi báo cắt điện rồi mở ứng dụng ngân hàng, kẻ gian hay dọa cắt điện để ép trả tiền ngay.",
+        "action": "call_now"
+      }
+    ]
+  },
+  "notes": "LLM cố hạ mức xuống none; raise_only giữ mức sàn high."
+}

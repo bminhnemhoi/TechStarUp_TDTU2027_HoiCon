@@ -45,3 +45,10 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run alembic upgrade head
       - run: uv run pytest -q
+      # Eval smoke tất định (spec 030): 20 ca, phản hồi LLM ghi sẵn, không khóa API, không mạng ngoài. Trượt ngưỡng
+      # (recall/báo nhầm lệch > 3 điểm %, bất kỳ vi phạm an toàn, công khai AI < 100%) ⇒ job đỏ. DB service dùng chung
+      # với pytest nên cần --shared-db-ok; eval chỉ chạm id/job `eval-*` và dọn sau lượt.
+      - name: eval smoke
+        run: uv run hoicon-eval --suite smoke --compare baseline --shared-db-ok
+        env:
+          HOICON_EVAL_DATABASE_URL: ${{ env.HOICON_DATABASE_URL }}

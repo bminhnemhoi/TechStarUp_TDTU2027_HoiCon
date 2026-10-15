@@ -1,0 +1,108 @@
+[
+  {
+    "_why": "thiếu metrics",
+    "suite": "smoke",
+    "started_at": "2026-10-15T09:00:00Z",
+    "git_sha": "7a17765",
+    "prompt_versions": {},
+    "by_category": {},
+    "by_region": {},
+    "cases": [],
+    "baseline_diff": null,
+    "passed": true
+  },
+  {
+    "_why": "passed không phải bool",
+    "suite": "smoke",
+    "started_at": "2026-10-15T09:00:00Z",
+    "git_sha": "7a17765",
+    "prompt_versions": {},
+    "metrics": {
+      "cases_total": 0, "cases_scam": 0, "cases_benign": 0, "escalation_recall": 0, "false_escalation_rate": 0,
+      "safety_violations": 0, "ai_disclosure_rate": 1, "fallback_rate": 0, "latency_p50_ms": 0, "latency_p95_ms": 0, "cost_usd": 0
+    },
+    "by_category": {},
+    "by_region": {},
+    "cases": [],
+    "baseline_diff": null,
+    "passed": "yes"
+  },
+  {
+    "_why": "tỷ lệ ngoài 0..1",
+    "suite": "smoke",
+    "started_at": "2026-10-15T09:00:00Z",
+    "git_sha": "7a17765",
+    "prompt_versions": {},
+    "metrics": {
+      "cases_total": 0, "cases_scam": 0, "cases_benign": 0, "escalation_recall": 1.5, "false_escalation_rate": 0,
+      "safety_violations": 0, "ai_disclosure_rate": 1, "fallback_rate": 0, "latency_p50_ms": 0, "latency_p95_ms": 0, "cost_usd": 0
+    },
+    "by_category": {},
+    "by_region": {},
+    "cases": [],
+    "baseline_diff": null,
+    "passed": true
+  },
+  {
+    "_why": "vi phạm lạ trong ca",
+    "suite": "smoke",
+    "started_at": "2026-10-15T09:00:00Z",
+    "git_sha": "7a17765",
+    "prompt_versions": {},
+    "metrics": {
+      "cases_total": 1, "cases_scam": 1, "cases_benign": 0, "escalation_recall": 1, "false_escalation_rate": 0,
+      "safety_violations": 1, "ai_disclosure_rate": 1, "fallback_rate": 0, "latency_p50_ms": 0, "latency_p95_ms": 0, "cost_usd": 0
+    },
+    "by_category": {},
+    "by_region": {},
+    "cases": [
+      {
+        "case_id": "fake_bank_card_locked_002", "run_id": "r1", "category": "fake_bank", "region": "north", "is_benign": false,
+        "draft": false, "incident_started": true, "rule_floor": "high", "levels": ["high"], "final_level": "high",
+        "notified": true, "violations": ["spooky_ghost"], "failures": [], "fallbacks": 0, "duration_ms": 1,
+        "outcome": "resolved_safe", "passed": false
+      }
+    ],
+    "baseline_diff": null,
+    "passed": false
+  },
+  {
+    "_why": "ca chứa nội dung tin nguyên văn (không được có trong JSON)",
+    "suite": "smoke",
+    "started_at": "2026-10-15T09:00:00Z",
+    "git_sha": "7a17765",
+    "prompt_versions": {},
+    "metrics": {
+      "cases_total": 1, "cases_scam": 1, "cases_benign": 0, "escalation_recall": 1, "false_escalation_rate": 0,
+      "safety_violations": 0, "ai_disclosure_rate": 1, "fallback_rate": 0, "latency_p50_ms": 0, "latency_p95_ms": 0, "cost_usd": 0
+    },
+    "by_category": {},
+    "by_region": {},
+    "cases": [
+      {
+        "case_id": "fake_bank_card_locked_002", "run_id": "r1", "category": "fake_bank", "region": "north", "is_benign": false,
+        "draft": false, "incident_started": true, "rule_floor": "high", "levels": ["high"], "final_level": "high",
+        "notified": true, "violations": [], "failures": [], "fallbacks": 0, "duration_ms": 1,
+        "outcome": "resolved_safe", "passed": true, "messages": ["Đây là trợ lý AI HỏiCon."]
+      }
+    ],
+    "baseline_diff": null,
+    "passed": true
+  },
+  {
+    "_why": "baseline_diff thiếu failures",
+    "suite": "smoke",
+    "started_at": "2026-10-15T09:00:00Z",
+    "git_sha": "7a17765",
+    "prompt_versions": {},
+    "metrics": {
+      "cases_total": 0, "cases_scam": 0, "cases_benign": 0, "escalation_recall": 0, "false_escalation_rate": 0,
+      "safety_violations": 0, "ai_disclosure_rate": 1, "fallback_rate": 0, "latency_p50_ms": 0, "latency_p95_ms": 0, "cost_usd": 0
+    },
+    "by_category": {},
+    "by_region": {},
+    "cases": [],
+    "baseline_diff": { "baseline_ref": "x", "recall_pp": 0, "false_escalation_pp": 0, "safety_violations": 0, "ai_disclosure_rate": 1 },
+    "passed": true
+  }
+]

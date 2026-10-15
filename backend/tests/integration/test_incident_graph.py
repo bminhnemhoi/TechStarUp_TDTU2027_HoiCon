@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select
 
 from hoicon.agents.incident_graph import Deps, GuardianBrief, RiskAssessment
 from hoicon.agents.llm_router import LlmRouter
@@ -16,6 +16,7 @@ from hoicon.config import get_settings
 from hoicon.db.ids import new_id
 from hoicon.db.models import AgentRun, AgentStep, Job
 from hoicon.db.session import get_sessionmaker
+from hoicon.eval.checks import checkpoint_bytes
 from hoicon.jobs.queue import run_once
 from hoicon.jobs.worker import incident_handlers
 
@@ -54,17 +55,6 @@ async def drain(d: Deps, runtime: IncidentRuntime) -> None:
         pass
 
 
-async def checkpoint_bytes(thread: str) -> bytes:
-    """Mọi thứ LangGraph đã ghi cho thread (state, blob, giá trị resume) — để kiểm không có dữ liệu thô nào lọt vào."""
-    query = text(
-        "SELECT blob FROM checkpoint_writes WHERE thread_id = :t AND blob IS NOT NULL "
-        "UNION ALL SELECT blob FROM checkpoint_blobs WHERE thread_id = :t AND blob IS NOT NULL "
-        "UNION ALL SELECT convert_to(checkpoint::text, 'UTF8') FROM checkpoints WHERE thread_id = :t"
-    )
-    async with get_sessionmaker()() as session:
-        return b"".join(row[0] for row in await session.execute(query, {"t": thread}))
-
-
 async def jobs_for(thread: str) -> list[Job]:
     async with get_sessionmaker()() as session:
         return list(await session.scalars(select(Job).where(Job.idempotency_key.startswith(f"{thread}:"))))
@@ -97,7 +87,7 @@ async def test_full_incident_flow(threads: list[str]) -> None:
         values = (await runtime.graph.aget_state({"configurable": {"thread_id": thread}})).values
         assert values["elder_answer"]["note_flags"]["mentions_code"] is True and "note" not in values["elder_answer"]
         # Lời kể thô (OTP, số điện thoại), h1 của số gọi đến và tên gói app không nằm ở đâu trong checkpoint (ADR-006).
-        raw = await checkpoint_bytes(thread)
+        raw = await checkpoint_bytes(get_sessionmaker(), thread)
         assert raw, "không đọc được bảng checkpoint"
         for secret in ("123456", "0900000001", DEMO_H1, "vn.hoicon.demobank"):
             assert secret.encode() not in raw, secret

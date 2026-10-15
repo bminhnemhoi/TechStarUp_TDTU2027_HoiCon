@@ -1,0 +1,30 @@
+{
+  "case_id": "fake_delivery_qr_payment_003",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "high",
+        "tactic": "unknown",
+        "reasons": [
+          "Quét mã QR để trả tiền"
+        ],
+        "ask_question": "q_asked_transfer"
+      },
+      {
+        "error": "missing"
+      }
+    ],
+    "intervention": [
+      {
+        "error": "missing"
+      }
+    ]
+  },
+  "notes": "Lần chấm thứ hai và bước tóm tắt không có phản hồi; rơi về mẫu."
+}
