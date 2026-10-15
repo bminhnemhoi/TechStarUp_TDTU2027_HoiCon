@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/incident.v1.json",
+  "title": "Incident v1",
+  "description": "Sự cố (spec 021, DATA-MODEL §4). Gốc = GET /v1/incidents/{id} (có transitions); $defs/list = GET /v1/families/{id}/incidents (không có transitions). Không chứa số điện thoại, h1 hay tên thật.",
+  "$ref": "#/$defs/detail",
+  "$defs": {
+    "state": {
+      "enum": [
+        "detected",
+        "assessing",
+        "awaiting_guardian",
+        "verifying",
+        "rescore",
+        "resolved_safe",
+        "resolved_prevented",
+        "resolved_false_alarm",
+        "resolved_no_response",
+        "case_open",
+        "closed"
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "family_id",
+        "member_id",
+        "device_id",
+        "state",
+        "level",
+        "rule_floor",
+        "version",
+        "is_drill",
+        "drill_id",
+        "opened_by_event_id",
+        "outcome",
+        "opened_at",
+        "closed_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "family_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "member_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "device_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "state": {
+          "$ref": "#/$defs/state"
+        },
+        "level": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "description": "Luôn ≥ rule_floor"
+        },
+        "rule_floor": {
+          "enum": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Khóa lạc quan: tăng mỗi lần đổi"
+        },
+        "is_drill": {
+          "type": "boolean"
+        },
+        "drill_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "opened_by_event_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "outcome": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 32
+        },
+        "opened_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "closed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from_state",
+              "to_state",
+              "actor",
+              "reason",
+              "at"
+            ],
+            "properties": {
+              "from_state": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/state"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "to_state": {
+                "$ref": "#/$defs/state"
+              },
+              "actor": {
+                "enum": [
+                  "device",
+                  "agent",
+                  "guardian",
+                  "timer",
+                  "system"
+                ]
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 256
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      }
+    },
+    "detail": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/summary"
+        }
+      ],
+      "required": [
+        "transitions"
+      ]
+    },
+    "list": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "incidents"
+      ],
+      "properties": {
+        "incidents": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/summary"
+          }
+        }
+      }
+    }
+  }
+}

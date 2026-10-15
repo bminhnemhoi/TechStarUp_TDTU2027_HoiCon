@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/events_batch.v1.json",
+  "title": "EventsBatch v1",
+  "description": "Thân yêu cầu POST /v1/events (spec 021): lô 1–50 RiskEvent (risk_event.v1.json). Gửi lại cả lô an toàn: máy chủ chống trùng theo id của từng sự kiện. Thiết bị/gia đình lấy từ token, không có trong thân.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["events"],
+  "properties": {
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": { "$ref": "risk_event.v1.json" }
+    }
+  }
+}

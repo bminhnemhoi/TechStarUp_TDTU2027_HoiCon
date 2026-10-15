@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/events_result.v1.json",
+  "title": "EventsResult v1",
+  "description": "Phản hồi POST /v1/events (spec 021): đã nhận bao nhiêu sự kiện mới, bao nhiêu trùng (đã nhận từ trước), và sự cố mà lô này mở hoặc liên kết.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["accepted", "duplicates", "incident_id", "incident_opened"],
+  "properties": {
+    "accepted": { "type": "integer", "minimum": 0, "maximum": 50 },
+    "duplicates": { "type": "integer", "minimum": 0, "maximum": 50 },
+    "incident_id": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Sự cố đang mở mà sự kiện MỚI của lô được liên kết vào (null nếu không có)"
+    },
+    "incident_opened": { "type": "boolean", "description": "true nếu lô này vừa mở sự cố mới" }
+  }
+}

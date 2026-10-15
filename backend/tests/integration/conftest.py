@@ -11,7 +11,7 @@ from sqlalchemy import delete, func, select, text
 
 from hoicon.config import Settings, get_settings
 from hoicon.db.ids import new_id
-from hoicon.db.models import AgentRun, Family, Job, Member, MessageOut, PairingCode
+from hoicon.db.models import AgentRun, Family, Incident, Job, Member, MessageOut, PairingCode
 from hoicon.db.session import get_engine, get_sessionmaker
 from hoicon.domain.pii import encrypt_chat_id, hmac_h1, hmac_pairing_code, hmac_zalo
 
@@ -87,11 +87,37 @@ class ZaloWorld:
     guardians: dict[int, Member] = field(default_factory=dict)
     zalo_ids: dict[int, tuple[str, str]] = field(default_factory=dict)  # hạng → (user_id, chat_id) HƯ CẤU
     incidents: list[str] = field(default_factory=list)
+    protected_id: Any = None  # thành viên được bảo vệ, tạo khi cần cho sự cố
 
     def new_incident(self) -> str:
-        incident = str(new_id())
-        self.incidents.append(incident)
-        return incident
+        """Sự cố THẬT trong DB (spec 021: `messages_out.incident_id` có FK). Đồng bộ để giữ nguyên chỗ gọi cũ ⇒ dùng
+        engine đồng bộ riêng, không đụng vòng lặp sự kiện của test."""
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import Session
+
+        incident = new_id()
+        engine = create_engine(get_settings().database_url.get_secret_value(), pool_pre_ping=False)
+        try:
+            with Session(engine) as session, session.begin():
+                if self.protected_id is None:
+                    member = Member(family_id=self.family.id, role="protected")
+                    session.add(member)
+                    session.flush()
+                    self.protected_id = member.id
+                session.add(
+                    Incident(
+                        id=incident,
+                        family_id=self.family.id,
+                        member_id=self.protected_id,
+                        level="high",
+                        rule_floor="high",
+                        is_demo=True,
+                    )
+                )
+        finally:
+            engine.dispose()
+        self.incidents.append(str(incident))
+        return str(incident)
 
     async def add_guardian(self, rank: int) -> Member:
         user_id, chat_id = f"fixture-user-{rank}-{new_id().hex[:8]}", f"fixture-chat-{rank}-{new_id().hex[:8]}"
@@ -177,7 +203,10 @@ async def zalo_world(require_db: None, zalo_env: None) -> AsyncGenerator[ZaloWor
         await session.execute(delete(Job).where(Job.idempotency_key.startswith(f"zalo:{bot_id}:", autoescape=True)))
         for incident in world.incidents:
             await session.execute(delete(Job).where(Job.idempotency_key.startswith(f"{incident}:", autoescape=True)))
+        await session.execute(delete(Incident).where(Incident.family_id == family.id))
         await session.execute(delete(Member).where(Member.zalo_bot_id == bot_id))
+        if world.protected_id is not None:
+            await session.execute(delete(Member).where(Member.id == world.protected_id))
         await session.execute(delete(Family).where(Family.id == family.id))
 
 

@@ -1,6 +1,6 @@
 """Mô hình ORM theo docs/DATA-MODEL.md (import tại đây để Alembic thấy). Gia đình/thành viên/mã ghép/tin gửi đi:
 spec 002 (migration 0003, ADR-010). Thiết bị, sổ đồng ý, liên hệ tin cậy, action token: spec 020 (migration 0005).
-Bảng nghiệp vụ còn lại (sự cố…): spec 021."""
+Sự cố, chuyển trạng thái, sự kiện rủi ro: spec 021 (migration 0006)."""
 
 import uuid
 from datetime import datetime
@@ -180,8 +180,8 @@ class MessageOut(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
     # SET NULL (không CASCADE): xóa gia đình không được làm mất dòng đã gửi — bộ đếm hạn mức đếm trên bảng này.
     family_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("families.id", ondelete="SET NULL"))
-    # FK tới incidents thêm ở spec 021 (bảng chưa có), như agent_runs.incident_id.
-    incident_id: Mapped[uuid.UUID | None]
+    # SET NULL: xóa sự cố không được làm mất dòng đã gửi (bộ đếm hạn mức). `agent_runs.incident_id` vẫn chưa có FK.
+    incident_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     member_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("members.id", ondelete="SET NULL"))
     channel: Mapped[str] = mapped_column(String(8))
     bot_id: Mapped[str] = mapped_column(String(64))
@@ -295,7 +295,7 @@ class TrustedContact(Base):
 
 
 class ActionToken(Base):
-    """Liên kết hành động một lần (`/a/[token]`): chỉ lưu băm. `incident_id` chưa có FK (`incidents`: spec 021)."""
+    """Liên kết hành động một lần (`/a/[token]`): chỉ lưu băm. Xóa sự cố ⇒ token mất theo (vô nghĩa nếu thiếu sự cố)."""
 
     __tablename__ = "action_tokens"
     __table_args__ = (
@@ -305,13 +305,147 @@ class ActionToken(Base):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
-    incident_id: Mapped[uuid.UUID | None]
+    incident_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("incidents.id", ondelete="CASCADE"))
     member_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("members.id", ondelete="CASCADE"))
     token_hash: Mapped[str] = mapped_column(CHAR(64))
     scope: Mapped[str] = mapped_column(String(32))
     expires_at: Mapped[datetime]
     used_at: Mapped[datetime | None]
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+INCIDENT_STATES = (
+    "'detected', 'assessing', 'awaiting_guardian', 'verifying', 'rescore', 'resolved_safe', 'resolved_prevented',"
+    " 'resolved_false_alarm', 'resolved_no_response', 'case_open', 'closed'"
+)
+TERMINAL_STATES = "'resolved_safe', 'resolved_prevented', 'resolved_false_alarm', 'resolved_no_response', 'closed'"
+RISK_LEVELS = "'none', 'low', 'medium', 'high', 'critical'"
+
+
+class Incident(Base):
+    """Sự cố (spec 021, DATA-MODEL §4). Mọi đổi `state` đi qua `IncidentService.transition()`. Hai bất biến nằm ở CSDL:
+    `level >= rule_floor` (CHECK) và trạng thái cuối không quay lại, chỉ-đọc (trigger `trg_incidents_terminal`)."""
+
+    __tablename__ = "incidents"
+    __table_args__ = (
+        CheckConstraint(f"state IN ({INCIDENT_STATES})", name="state"),
+        CheckConstraint("level IN ('low', 'medium', 'high', 'critical')", name="level"),
+        CheckConstraint(f"rule_floor IN ({RISK_LEVELS})", name="rule_floor"),
+        CheckConstraint(
+            f"array_position(ARRAY[{RISK_LEVELS}], level) >= array_position(ARRAY[{RISK_LEVELS}], rule_floor)",
+            name="level_ge_floor",
+        ),
+        CheckConstraint("version >= 1", name="version"),
+        CheckConstraint("NOT is_drill OR drill_id IS NOT NULL", name="drill_has_id"),
+        CheckConstraint(f"(closed_at IS NOT NULL) = (state IN ({TERMINAL_STATES}))", name="closed_iff_terminal"),
+        Index("ix_incidents_family", "family_id", text("opened_at DESC")),
+        Index(
+            "ix_incidents_open_device",
+            "device_id",
+            postgresql_where=text(f"state NOT IN ({TERMINAL_STATES})"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    member_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("members.id", ondelete="CASCADE"))
+    device_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("devices.id", ondelete="SET NULL"))
+    state: Mapped[str] = mapped_column(String(24), server_default=text("'detected'"))
+    level: Mapped[str] = mapped_column(String(16))
+    rule_floor: Mapped[str] = mapped_column(String(16))
+    version: Mapped[int] = mapped_column(server_default=text("1"))  # khóa lạc quan
+    is_drill: Mapped[bool] = mapped_column(server_default=text("false"))
+    drill_id: Mapped[uuid.UUID | None]
+    is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
+    # SET NULL: sự kiện có hạn lưu ngắn hơn sự cố (90 ngày so với 12 tháng).
+    opened_by_event_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey(
+            "risk_events.id", ondelete="SET NULL", use_alter=True, name="fk_incidents_opened_by_event_id_risk_events"
+        )
+    )
+    outcome: Mapped[str | None] = mapped_column(String(32))
+    opened_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    closed_at: Mapped[datetime | None]
+
+
+class IncidentTransition(Base):
+    """Nhật ký mọi chuyển trạng thái của sự cố (chỉ thêm dòng; trigger chặn UPDATE)."""
+
+    __tablename__ = "incident_transitions"
+    __table_args__ = (
+        CheckConstraint(f"from_state IS NULL OR from_state IN ({INCIDENT_STATES})", name="from_state"),
+        CheckConstraint(f"to_state IN ({INCIDENT_STATES})", name="to_state"),
+        CheckConstraint("actor IN ('device', 'agent', 'guardian', 'timer', 'system')", name="actor"),
+        Index("ix_incident_transitions_incident", "incident_id", "at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    incident_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("incidents.id", ondelete="CASCADE"))
+    from_state: Mapped[str | None] = mapped_column(String(24))
+    to_state: Mapped[str] = mapped_column(String(24))
+    actor: Mapped[str] = mapped_column(String(16))
+    reason: Mapped[str | None] = mapped_column(
+        String(256)
+    )  # mã ngắn do máy chủ đặt, không văn bản tự do của người dùng
+    at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class RiskEventRecord(Base):
+    """Sự kiện rủi ro từ app Lính gác (`risk_event.v1.json`): CHỈ siêu dữ liệu. Số gọi đến chỉ có `HMAC(pepper, h1)` +
+    3 số cuối (ADR-006), KHÔNG lưu h1. `id` do máy sinh (UUIDv7) ⇒ khóa chính cũng là khóa chống trùng."""
+
+    __tablename__ = "risk_events"
+    __table_args__ = (
+        CheckConstraint(
+            "type IN ('call_started', 'call_ended', 'flagged_number_call', 'risk_window_opened', 'risk_window_closed',"
+            " 'banking_app_foreground', 'sideload_detected', 'safe_pause_shown', 'safe_pause_continued',"
+            " 'safe_pause_cancelled', 'ask_child_pressed')",
+            name="type",
+        ),
+        CheckConstraint("rule_id IS NULL OR rule_id IN ('R0', 'R1', 'R2', 'R4')", name="rule_id"),
+        CheckConstraint(f"rule_floor IN ({RISK_LEVELS})", name="rule_floor"),
+        CheckConstraint(
+            "app_category IS NULL OR app_category IN ('bank', 'wallet', 'securities', 'sideloaded', 'other')",
+            name="app_category",
+        ),
+        CheckConstraint("caller_hmac IS NULL OR caller_hmac ~ '^[0-9a-f]{64}$'", name="caller_hmac_hex"),
+        CheckConstraint("caller_last3 IS NULL OR caller_last3 ~ '^[0-9]{3}$'", name="caller_last3_digits"),
+        CheckConstraint(
+            "(caller_hmac IS NULL) = (caller_kid IS NULL) AND (caller_hmac IS NULL) = (caller_last3 IS NULL)",
+            name="caller_together",
+        ),
+        CheckConstraint("call_duration_s IS NULL OR call_duration_s >= 0", name="call_duration"),
+        CheckConstraint("timing_detect_ms IS NULL OR timing_detect_ms >= 0", name="timing_detect"),
+        CheckConstraint("timing_pause_ms IS NULL OR timing_pause_ms >= 0", name="timing_pause"),
+        CheckConstraint("NOT is_drill OR drill_id IS NOT NULL", name="drill_has_id"),
+        Index("ix_risk_events_device", "device_id", "received_at"),
+        Index("ix_risk_events_incident", "incident_id"),
+        Index("ix_risk_events_received", "received_at"),  # job `retention` (90 ngày)
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True)  # UUIDv7 do máy sinh, KHÔNG default
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    device_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("devices.id", ondelete="CASCADE"))
+    incident_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
+    type: Mapped[str] = mapped_column(String(32))
+    rule_id: Mapped[str | None] = mapped_column(String(8))
+    rule_floor: Mapped[str] = mapped_column(String(16))
+    occurred_at: Mapped[datetime]  # giờ máy (UTC)
+    received_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    caller_hmac: Mapped[str | None] = mapped_column(CHAR(64))
+    caller_kid: Mapped[int | None] = mapped_column(SmallInteger)
+    caller_last3: Mapped[str | None] = mapped_column(CHAR(3))
+    caller_in_contacts: Mapped[bool | None]
+    call_duration_s: Mapped[int | None]
+    app_category: Mapped[str | None] = mapped_column(String(16))
+    app_package: Mapped[str | None] = mapped_column(String(128))  # chỉ gói trong danh sách ngân hàng, không phải PII
+    timing_detect_ms: Mapped[int | None]
+    timing_pause_ms: Mapped[int | None]
+    is_drill: Mapped[bool] = mapped_column(server_default=text("false"))
+    drill_id: Mapped[uuid.UUID | None]
+    payload: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, server_default=text("'{}'::jsonb")
+    )  # sự kiện đã BỎ caller.h1
 
 
 __all__ = [
@@ -322,10 +456,13 @@ __all__ = [
     "Consent",
     "Device",
     "Family",
+    "Incident",
+    "IncidentTransition",
     "Job",
     "Member",
     "MessageOut",
     "PairingCode",
+    "RiskEventRecord",
     "ThreatIndicator",
     "TrustedContact",
 ]

@@ -1,0 +1,99 @@
+"""`GET /v1/incidents/{id}` và `GET /v1/families/{id}/incidents` (spec 021, FR-007).
+Khớp `docs/schemas/incident.v1.json`.
+
+Chỉ đọc, chỉ trong phạm vi GIA ĐÌNH của token thiết bị: sự cố/gia đình của nhà khác trả 404 (không phải 403) để không lộ
+sự tồn tại. Không có số điện thoại/h1/HMAC trong phản hồi. Người giám hộ đọc qua `/a/[token]` (spec 022), không qua đây.
+"""
+
+from datetime import datetime
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
+from sqlalchemy import select
+
+from hoicon.api.auth import DeviceClaims, get_current_device
+from hoicon.db.models import Incident, IncidentTransition
+from hoicon.db.session import get_sessionmaker
+
+router = APIRouter(prefix="/v1", tags=["incidents"])
+
+DEFAULT_LIMIT = 20
+MAX_LIMIT = 100
+
+
+class TransitionOut(BaseModel):
+    from_state: str | None
+    to_state: str
+    actor: str
+    reason: str | None
+    at: datetime
+
+
+class IncidentSummary(BaseModel):
+    id: UUID
+    family_id: UUID
+    member_id: UUID
+    device_id: UUID | None
+    state: str
+    level: str
+    rule_floor: str
+    version: int
+    is_drill: bool
+    drill_id: UUID | None
+    opened_by_event_id: UUID | None
+    outcome: str | None
+    opened_at: datetime
+    closed_at: datetime | None
+
+
+class IncidentDetail(IncidentSummary):
+    transitions: list[TransitionOut]
+
+
+class IncidentList(BaseModel):
+    incidents: list[IncidentSummary]
+
+
+def _not_found() -> HTTPException:
+    return HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy sự cố")
+
+
+@router.get("/incidents/{incident_id}", response_model=IncidentDetail)
+async def get_incident(
+    incident_id: UUID, claims: Annotated[DeviceClaims, Depends(get_current_device)]
+) -> IncidentDetail:
+    async with get_sessionmaker()() as session:
+        incident = await session.scalar(
+            select(Incident).where(Incident.id == incident_id, Incident.family_id == claims.family_id)
+        )
+        if incident is None:
+            raise _not_found()
+        steps = await session.scalars(
+            select(IncidentTransition)
+            .where(IncidentTransition.incident_id == incident.id)
+            .order_by(IncidentTransition.at, IncidentTransition.id)
+        )
+        return IncidentDetail(
+            **IncidentSummary.model_validate(incident, from_attributes=True).model_dump(),
+            transitions=[TransitionOut.model_validate(step, from_attributes=True) for step in steps],
+        )
+
+
+@router.get("/families/{family_id}/incidents", response_model=IncidentList)
+async def list_family_incidents(
+    family_id: UUID,
+    claims: Annotated[DeviceClaims, Depends(get_current_device)],
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = DEFAULT_LIMIT,
+) -> IncidentList:
+    if family_id != claims.family_id:
+        raise _not_found()
+    async with get_sessionmaker()() as session:
+        rows = await session.scalars(
+            select(Incident)
+            .where(Incident.family_id == family_id)
+            .order_by(Incident.opened_at.desc(), Incident.id.desc())
+            .limit(limit)
+        )
+        return IncidentList(incidents=[IncidentSummary.model_validate(row, from_attributes=True) for row in rows])

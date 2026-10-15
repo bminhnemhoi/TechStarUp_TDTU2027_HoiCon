@@ -29,14 +29,14 @@
 |---|---|---|
 | `trusted_contacts` | id, family_id, member_id, phone_hmac, phone_kid, last3, label, created_at | **đã có** (`0005`, chưa có API); R0: không cảnh báo; chỉ HMAC + 3 số cuối, CHECK 64 hex |
 | `pairing_codes` | id, family_id, code_hash, expires_at, used_at | **đã có** (`0003`); mã 6 số / QR, hết hạn 15 phút; chỉ lưu `HMAC(pepper, "hoicon:pairing:v1:"+mã)`; unique trên `code_hash` khi `used_at IS NULL` |
-| `action_tokens` | id, incident_id, member_id, token_hash, scope, expires_at, used_at, created_at | **đã có** (`0005`, chưa có API); magic link `/a/[token]`; chỉ lưu băm (unique); `scope` ∈ `incident_decision/guardian_view/drill_debrief`; `incident_id` chưa có FK (bảng `incidents`: spec 021) |
+| `action_tokens` | id, incident_id, member_id, token_hash, scope, expires_at, used_at, created_at | **đã có** (`0005`, chưa có API); magic link `/a/[token]`; chỉ lưu băm (unique); `scope` ∈ `incident_decision/guardian_view/drill_debrief`; `incident_id` FK tới `incidents` (CASCADE, từ `0006`) |
 
 ### Sự kiện & sự cố
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
-| `risk_events` | id (từ máy), family_id, device_id, type, rule_id, rule_floor, caller_hmac, caller_last3, caller_in_contacts, call_duration_s, app_category, occurred_at, received_at, is_drill | **chỉ siêu dữ liệu** — không nội dung cuộc gọi |
-| `incidents` | id, family_id, state, level, rule_floor, opened_by_event_id, outcome, version (khóa lạc quan), opened_at, closed_at, is_drill, is_demo | |
-| `incident_transitions` | id, incident_id, from_state, to_state, actor (`device/agent/guardian/timer/system`), reason, at | ghi mọi chuyển trạng thái |
+| `risk_events` | id (từ máy, khóa chính ⇒ chống trùng), family_id, device_id, incident_id (SET NULL), type, rule_id, rule_floor, occurred_at, received_at, caller_hmac, caller_kid, caller_last3, caller_in_contacts, call_duration_s, app_category, app_package, timing_detect_ms, timing_pause_ms, is_drill, drill_id, payload (JSONB, đã bỏ `caller.h1`) | **đã có** (`0006`); **chỉ siêu dữ liệu** — không nội dung cuộc gọi, không h1; CHECK enum/hex/độ dài, `caller_hmac`/`caller_kid`/`caller_last3` cùng có hoặc cùng không; index `(device_id, received_at)`, `(incident_id)`, `(received_at)` cho job `retention` |
+| `incidents` | id, family_id, member_id, device_id (SET NULL), state, level, rule_floor, version (khóa lạc quan), is_drill, drill_id, is_demo, opened_by_event_id (SET NULL), outcome, opened_at, closed_at | **đã có** (`0006`); CHECK `level >= rule_floor` (`ck_incidents_level_ge_floor`), `closed_at` có giá trị ⇔ trạng thái cuối, diễn tập phải có `drill_id`; trigger `trg_incidents_terminal` (`ENABLE ALWAYS`) chặn rời trạng thái cuối và biến sự cố đã kết thúc thành chỉ-đọc (`state/level/rule_floor/outcome/closed_at`); index `(family_id, opened_at DESC)` và partial `(device_id) WHERE chưa kết thúc` |
+| `incident_transitions` | id, incident_id (CASCADE), from_state, to_state, actor (`device/agent/guardian/timer/system`), reason (≤ 256, mã do máy chủ đặt), at | **đã có** (`0006`); ghi mọi chuyển trạng thái, chỉ thêm dòng (trigger `trg_incident_transitions_immutable` chặn UPDATE và DELETE trực tiếp; DELETE do CASCADE khi xóa sự cố/gia đình vẫn qua; `TRUNCATE` và quyền DDL chưa chặn — prod nên thu quyền của role ứng dụng, xem `consents`); index `(incident_id, at)` |
 
 ### Tác tử
 | Bảng | Cột chính | Ghi chú |
@@ -48,7 +48,7 @@
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
 | `guardian_actions` | id, incident_id, member_id, action (`called/safe/scam/details/escalate`), channel, at | |
-| `messages_out` | id, family_id (rỗng được), incident_id (chưa có FK tới `incidents`), **member_id**, channel (`zalo/push/web`), bot_id, template_id, status (`queued/sent/held_quota/failed/fallback_required`), quota_month (`YYYY-MM` giờ Việt Nam), sent_at, error, **job_key** (unique ⇒ gửi đúng một lần), created_at | **đã có** (`0003`); bộ đếm hạn mức theo bot/tháng (index `bot_id, quota_month, status`); `family_id` rỗng vì tin trả lời người chưa ghép vẫn tính hạn mức (ADR-010) |
+| `messages_out` | id, family_id (rỗng được), incident_id (FK `incidents`, SET NULL từ `0006`), **member_id**, channel (`zalo/push/web`), bot_id, template_id, status (`queued/sent/held_quota/failed/fallback_required`), quota_month (`YYYY-MM` giờ Việt Nam), sent_at, error, **job_key** (unique ⇒ gửi đúng một lần), created_at | **đã có** (`0003`); bộ đếm hạn mức theo bot/tháng (index `bot_id, quota_month, status`); `family_id` rỗng vì tin trả lời người chưa ghép vẫn tính hạn mức (ADR-010) |
 
 ### Xác minh & hồ sơ
 | Bảng | Cột chính | Ghi chú |
@@ -106,6 +106,9 @@ detected → assessing → awaiting_guardian ──(T1 = 2' nhắc; T2 = 5' chuy
   giờ không giẫm nhau.
 - **Bất biến 1:** `incidents.level >= incidents.rule_floor` ở mọi thời điểm (CHECK + test).
 - **Bất biến 2:** trạng thái cuối (`resolved_*`, `closed`) không quay lại; mở lại = sự cố mới liên kết.
+- Cạnh hợp lệ (`IncidentService.ALLOWED`): `detected→assessing`; `assessing→awaiting_guardian|resolved_*`; `awaiting_guardian→verifying|case_open|resolved_*`; `verifying→rescore`; `rescore→case_open|resolved_*`; `case_open→closed`. `resolved_*` và `closed` không có cạnh đi ra.
+- `transition(..., expected_version)`: `ConcurrencyConflictError` nếu `version` đã đổi (người giám hộ so với bộ hẹn giờ); `InvalidTransitionError` nếu cạnh không hợp lệ. Service không commit — người gọi sở hữu giao dịch.
+- **Nâng mức** (sự kiện sau có `rule_floor` cao hơn) chỉ nâng `rule_floor` + `level` và tăng `version`, không ghi `incident_transitions` (trạng thái không đổi).
 
 ## 5. Trên máy (Android)
 
