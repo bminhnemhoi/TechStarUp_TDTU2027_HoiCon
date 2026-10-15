@@ -1,0 +1,21 @@
+[
+  {
+    "_name": "quyết định an toàn không ghi chú",
+    "decision": "safe"
+  },
+  {
+    "_name": "quyết định đã ngăn chặn có ghi chú",
+    "decision": "prevented",
+    "note": "Đã gọi cho mẹ kiểm tra và tắt AnyDesk"
+  },
+  {
+    "_name": "quyết định báo nhầm",
+    "decision": "false_alarm",
+    "note": "Con tự chuyển tiền học phí"
+  },
+  {
+    "_name": "quyết định dừng khẩn cấp",
+    "decision": "emergency_pause",
+    "note": "Cần can thiệp gấp"
+  }
+]

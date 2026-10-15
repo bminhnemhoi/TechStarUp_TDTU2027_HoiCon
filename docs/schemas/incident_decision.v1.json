@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/incident_decision.v1.json",
+  "title": "IncidentDecision v1",
+  "description": "Quyết định xử lý sự cố của người giám hộ (spec 023, P2-07) qua `POST /v1/action/{token}/decision` hoặc `POST /v1/incidents/{id}/decision`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision"],
+  "properties": {
+    "decision": {
+      "type": "string",
+      "enum": ["safe", "prevented", "false_alarm", "emergency_pause"],
+      "description": "Loại quyết định ⇒ trạng thái: 'safe' ⇒ resolved_safe, 'prevented' (đã ngăn chặn được) ⇒ resolved_prevented, 'false_alarm' ⇒ resolved_false_alarm, 'emergency_pause' (nghi lừa đảo, cần theo dõi) ⇒ case_open (không kết thúc sự cố)"
+    },
+    "note": {
+      "type": ["string", "null"],
+      "maxLength": 256,
+      "description": "Ghi chú tùy chọn (≤ 256 ký tự). Máy chủ nhận nhưng KHÔNG lưu: chữ tự do có thể chứa số điện thoại/tên thật (luật 1)"
+    }
+  }
+}

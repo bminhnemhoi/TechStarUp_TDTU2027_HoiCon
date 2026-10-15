@@ -64,6 +64,25 @@ def guardian_fast_alert(alias: str, last3: str | None, app_category: str, is_dri
     )
 
 
+# Chỗ trống cho liên kết `/a/[token]`: bên gửi (`channels.guardian`) điền token sinh lúc gửi (spec 023).
+ACTION_LINK_SLOT = "{action_link}"
+
+
+def guardian_fast_alert_with_link(
+    alias: str, last3: str | None, app_category: str, is_drill: bool, action_url: str
+) -> str:
+    """Cảnh báo giai đoạn 1 kèm liên kết hành động khẩn cấp (spec 023)."""
+    caller = f"số lạ đuôi {last3}" if last3 else "một số lạ"
+    app = APP_KIND_VI.get(app_category, "tài chính")
+    return _message(
+        f"{alias} vừa nghe một cuộc gọi lạ rồi mở ứng dụng {app}. Anh/chị gọi hỏi {alias} ngay nhé.\n\n"
+        f"Thêm: cuộc gọi từ {caller}; HỏiCon đang nhắc {alias} tạm dừng.\n\n"
+        f"Kiểm tra và xử lý khẩn cấp tại:\n{action_url}\n\n"
+        f"{REPLY_GUIDE}",
+        is_drill,
+    )
+
+
 def guardian_detail(alias: str, level: RiskLevel, summary: str, action: str, is_drill: bool) -> str:
     summary = summary.strip()
     if summary and summary[-1] not in ".!?":  # tóm tắt do LLM viết có thể thiếu dấu chấm cuối

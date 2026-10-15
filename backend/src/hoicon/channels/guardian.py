@@ -23,13 +23,14 @@ from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from hoicon.agents.texts import AI_DISCLOSURE, DRILL_LABEL
+from hoicon.agents.texts import ACTION_LINK_SLOT, AI_DISCLOSURE, DRILL_LABEL
 from hoicon.channels.zalo import ZaloClient, ZaloError
 from hoicon.config import Settings
 from hoicon.db.ids import new_id
 from hoicon.db.models import Family, Member, MessageOut
 from hoicon.domain.pii import decrypt_chat_id
 from hoicon.jobs.queue import MAX_ATTEMPTS
+from hoicon.services.action_token_service import ActionTokenService
 
 logger = logging.getLogger(__name__)
 
@@ -180,6 +181,24 @@ async def deliver(deps: ChannelDeps, out: Outgoing, attempt: int = 1) -> str:
     return "sent"
 
 
+async def _fill_action_link(deps: ChannelDeps, payload: dict[str, Any], member: Member | None, job_key: str) -> str:
+    """Tin có `action_link` (spec 023): sinh token `/a/[token]` NGAY LÚC GỬI cho đúng người nhận, chỉ lưu SHA-256 ⇒
+    token thô chỉ có trong tin đi, không nằm trong `jobs.payload`. Tin đã xong (job chạy lại) hoặc không có người nhận
+    ⇒ không sinh token; mỗi lần thử lại sinh token mới (token cũ chưa ra ngoài thì vô hại, tự hết hạn sau 24 giờ)."""
+    text: str = payload["text"]
+    if not payload.get("action_link"):
+        return text
+    link = ""
+    async with deps.sessions.begin() as session:
+        done = await session.scalar(select(MessageOut.status).where(MessageOut.job_key == job_key))
+        if member is not None and done not in TERMINAL:
+            _, raw = await ActionTokenService.create_token(
+                session, incident_id=UUID(payload["incident_id"]), member_id=member.id
+            )
+            link = f"{deps.settings.web_base_url.rstrip('/')}/a/{raw}"
+    return text.replace(ACTION_LINK_SLOT, link)
+
+
 async def send_to_guardian(deps: ChannelDeps, payload: dict[str, Any], attempt: int = 1) -> str | None:
     """Handler của job `notify_guardian`: tìm người giám hộ đúng hạng của gia đình sự cố rồi `deliver`.
 
@@ -211,11 +230,12 @@ async def send_to_guardian(deps: ChannelDeps, payload: dict[str, Any], attempt: 
         block = "demo_to_real_family"
     elif family.is_demo and not is_demo:
         block = "real_to_demo_family"
+    job_key = f"{payload['incident_id']}:msg:{template}"
     out = Outgoing(
-        job_key=f"{payload['incident_id']}:msg:{template}",
+        job_key=job_key,
         bot_id=member.zalo_bot_id if member and member.zalo_bot_id else deps.settings.zalo_bot_id,
         template_id=template,
-        text=payload["text"],
+        text=await _fill_action_link(deps, payload, member, job_key),
         chat_enc=member.zalo_chat_enc if member else None,
         urgent=True,
         family_id=family.id,

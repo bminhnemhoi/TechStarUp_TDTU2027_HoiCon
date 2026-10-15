@@ -25,7 +25,7 @@ from hoicon.db.models import RiskEventRecord
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain.events import RiskEventIn
 from hoicon.domain.pii import hmac_h1
-from hoicon.services.incident_service import IncidentService
+from hoicon.services import AlertService, IncidentService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1", tags=["events"])
@@ -142,6 +142,8 @@ async def post_events(batch: EventsBatch, claims: Annotated[DeviceClaims, Depend
                 )
                 if result is not None:
                     incident_id, opened = result.incident.id, opened or result.opened
+                    if result.incident.level in ("high", "critical"):
+                        await AlertService.trigger_guardian_fast_alert(session, incident=result.incident, event=event)
             accepted = len(fresh)
     except OperationalError as exc:
         if not isinstance(exc.orig, LockNotAvailable):

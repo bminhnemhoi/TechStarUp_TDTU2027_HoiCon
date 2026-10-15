@@ -245,3 +245,34 @@ class IncidentService:
         )
         await session.flush()
         return Correlation(incident, opened)
+
+
+# Quyết định của người giám hộ (spec 023, web `/a/[token]`, JWT, Zalo 1/2) ⇒ trạng thái đích. "Nghi lừa đảo"
+# (`emergency_pause`) KHÔNG kết thúc sự cố: mở hồ sơ (`case_open`) để còn theo dõi; `prevented` chỉ khi đã chặn được.
+GUARDIAN_DECISIONS: Final[dict[str, str]] = {
+    "safe": "resolved_safe",
+    "prevented": "resolved_prevented",
+    "false_alarm": "resolved_false_alarm",
+    "emergency_pause": "case_open",
+}
+GUARDIAN_DECIDABLE: Final = frozenset({"detected", "assessing", "awaiting_guardian"})  # còn chờ người giám hộ quyết
+
+
+async def apply_guardian_decision(
+    session: AsyncSession, incident: Incident, decision: str, reason: str | None = None
+) -> Incident:
+    """Đưa sự cố tới trạng thái của quyết định, đi qua các cạnh trung gian của `ALLOWED` bằng actor `system`.
+
+    Sự cố đã kết thúc ⇒ `InvalidTransitionError`; bên khác đổi trước ⇒ `ConcurrencyConflictError`.
+    """
+    target = GUARDIAN_DECISIONS[decision]
+    if incident.state in TERMINAL:
+        raise InvalidTransitionError(f"sự cố đã kết thúc ({incident.state})")
+    steps = {"detected": "assessing", "assessing": "awaiting_guardian" if target == "case_open" else None}
+    while (step := steps.get(incident.state)) is not None:
+        incident = await IncidentService.transition(
+            session, incident.id, step, "system", f"guardian_{decision}", expected_version=incident.version
+        )
+    return await IncidentService.transition(
+        session, incident.id, target, "guardian", reason or f"guardian_{decision}", expected_version=incident.version
+    )
