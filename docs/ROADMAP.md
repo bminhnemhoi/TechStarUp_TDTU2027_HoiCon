@@ -81,10 +81,10 @@ Cập nhật: 15/10/2026
 |---|---|---|---|
 | P2-01 | W1 23–29/11 | DB v1 + migration: families, members, devices, consents (trigger chỉ ghi thêm), trusted_contacts, pairing_codes, action_tokens | ☑ spec [`020-family-pairing-consent`](../specs/020-family-pairing-consent/) (kéo sớm Đợt 4, 16/10): migration `0005`, trigger `prevent_consent_tamper` append-only |
 | P2-02 | W1 | Ghép đôi, xác thực thiết bị, API đồng ý; màn E1–E4 | ☑ spec [`020-family-pairing-consent`](../specs/020-family-pairing-consent/) (kéo sớm Đợt 4, 16/10): API `POST /v1/pair` + `/v1/consents`, luồng Android E1–E4 (E3 Prominent Disclosure Google Play) |
-| P2-03 | W1 | Nhận sự kiện theo lô (idempotent) + `IncidentService` state machine | ☐ |
+| P2-03 | W1 | Nhận sự kiện theo lô (idempotent) + `IncidentService` state machine | ◐ spec [`021-events-incident-service`](../specs/021-events-incident-service/) (kéo sớm Đợt 5, 16/10: POST /v1/events, state machine transition, optimistic lock) |
 | P2-04 | W1 | Triển khai VPS (`compose.prod.yml` + Caddy) + bot Zalo thí điểm | ☐ |
-| P2-05 | W2 30/11–06/12 | Lính gác v1: CallScreening, cửa sổ rủi ro (FGS), UsageStats, luật R1, E7 SafePause + TTS | ☐ |
-| P2-06 | W2 | E6 "Đang bảo vệ" + nút Hỏi con + hàng đợi gửi đi (Room) | ☐ |
+| P2-05 | W2 30/11–06/12 | Lính gác v1: CallScreening, cửa sổ rủi ro (FGS), UsageStats, luật R1, E7 SafePause + TTS | ◐ spec [`022-sentinel-v1`](../specs/022-sentinel-v1/) (kéo sớm Đợt 5, 16/10: cửa sổ rủi ro 600s, luật R1 & R5, E7 SafePause Compose) |
+| P2-06 | W2 | E6 "Đang bảo vệ" + nút Hỏi con + hàng đợi gửi đi (Room) | ◐ spec [`022-sentinel-v1`](../specs/022-sentinel-v1/) (kéo sớm Đợt 5, 16/10: Room + Tink outbox, E6 Đang bảo vệ, nút Hỏi con) |
 | P2-07 | W2 | Cảnh báo giai đoạn 1 qua Zalo (mẫu) + trang hành động `/a/[token]` + quyết định người giám hộ → **M1** | ☐ |
 | P2-08 | W3 07–13/12 | `risk_scorer` + ngân hàng câu hỏi + E8 qua FCM | ☐ |
 | P2-09 | W3 | Tác tử can thiệp + interrupt `await_guardian` + hẹn giờ T1/T2/T3 | ☐ |
