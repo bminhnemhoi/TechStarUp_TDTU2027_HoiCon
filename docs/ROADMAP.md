@@ -79,8 +79,8 @@ Cập nhật: 15/10/2026
 
 | Mã | Tuần | Việc | Trạng thái |
 |---|---|---|---|
-| P2-01 | W1 23–29/11 | DB v1 + migration: families, members, devices, consents (trigger chỉ ghi thêm), trusted_contacts, pairing_codes, action_tokens | ◐ spec [`020-family-pairing-consent`](../specs/020-family-pairing-consent/) (kéo sớm Đợt 4, 15/10): migration `0005`, trigger `prevent_consent_tamper` append-only |
-| P2-02 | W1 | Ghép đôi, xác thực thiết bị, API đồng ý; màn E1–E4 | ◐ spec [`020-family-pairing-consent`](../specs/020-family-pairing-consent/) (kéo sớm Đợt 4, 15/10): API `POST /v1/pair` + `/v1/consents`, luồng Android E1–E4 (E3 Prominent Disclosure Google Play) |
+| P2-01 | W1 23–29/11 | DB v1 + migration: families, members, devices, consents (trigger chỉ ghi thêm), trusted_contacts, pairing_codes, action_tokens | ☑ spec [`020-family-pairing-consent`](../specs/020-family-pairing-consent/) (kéo sớm Đợt 4, 16/10): migration `0005`, trigger `prevent_consent_tamper` append-only |
+| P2-02 | W1 | Ghép đôi, xác thực thiết bị, API đồng ý; màn E1–E4 | ☑ spec [`020-family-pairing-consent`](../specs/020-family-pairing-consent/) (kéo sớm Đợt 4, 16/10): API `POST /v1/pair` + `/v1/consents`, luồng Android E1–E4 (E3 Prominent Disclosure Google Play) |
 | P2-03 | W1 | Nhận sự kiện theo lô (idempotent) + `IncidentService` state machine | ☐ |
 | P2-04 | W1 | Triển khai VPS (`compose.prod.yml` + Caddy) + bot Zalo thí điểm | ☐ |
 | P2-05 | W2 30/11–06/12 | Lính gác v1: CallScreening, cửa sổ rủi ro (FGS), UsageStats, luật R1, E7 SafePause + TTS | ☐ |
