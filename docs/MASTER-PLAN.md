@@ -6,6 +6,10 @@
 > - `.specify/memory/constitution.md` — 9 nguyên tắc không thương lượng (tóm tắt CLAUDE.md + ADR).
 > - `specs/NNN-slug/` — đặc tả, kế hoạch, task, bằng chứng của từng tính năng (tạo theo đợt).
 > - `docs/HANDOFF.md` — bàn giao, dựng môi trường, tài khoản.
+>
+> **Phân quyền (Tiến chốt 15/10):** Tiến là kỹ sư chủ trì, **quyết định toàn bộ kỹ thuật** trên nhánh dev và các
+> worktree. Minh là **reviewer ở cổng PR cuối** (tính năng xong, `evidence.md` đủ, test xanh ⇒ mở PR để Minh merge vào
+> `main`). Không dừng giữa chừng chờ Minh duyệt từng task — xem §2.6.
 
 ## 1. Audit trạng thái (15/10/2026)
 
@@ -82,9 +86,20 @@
 | `analyze` (chỉ đọc, ≤ 50 finding) | 0 CRITICAL/HIGH | sửa spec/plan/tasks tối đa **2 vòng**; còn CRITICAL/HIGH ⇒ dừng, hỏi người. MEDIUM/LOW ghi vào plan, không chặn |
 | `implement` từng task | `Verify:` xanh | đỏ **2 lần liên tiếp** ⇒ dừng task, chẩn đoán (skill `diagnosing-bugs`); **không** sửa test cho xanh |
 | `converge` (chỉ ghi thêm, giới hạn trong phạm vi artifact) | 0 finding | tối đa **3 vòng**; vòng sau không giảm số finding ⇒ dừng, báo người |
-| Finding bị chặn bởi bên ngoài (tài khoản, máy thật, quyết định ★ của Minh) | — | **không** thêm task code: ghi `BLOCKED: <lý do>` trong `evidence.md` + ghi chú ở dòng task ROADMAP; spec chưa được ☑ |
+| Finding bị chặn bởi bên ngoài (tài khoản, máy thật, quyết định phạm vi/hồ sơ ★ chưa chốt) | — | **không** thêm task code: ghi `BLOCKED: <lý do>` trong `evidence.md` + ghi chú ở dòng task ROADMAP; spec chưa được ☑ |
 | Finding ngoài phạm vi spec | — | không làm; ghi vào "Ghi chú" ROADMAP (qua PR từ checkout chính) |
 | Checklist (`/speckit-implement` dừng hỏi khi còn mục chưa tick) | người review (Tiến/Minh hoặc reviewer agent) đã tick | không tự tick để qua cổng |
+
+### 2.6 Tự hành một mạch (run-to-completion) — áp dụng mọi spec từ 004 trở đi
+- `tasks.md` **không** có task kiểu "dừng chờ Minh duyệt" giữa chừng. Quyết định kỹ thuật (thiết kế bảng, mã hóa,
+  thư viện, nội dung ADR) chốt trong `plan.md`/`research.md` lúc lập kế hoạch, Tiến duyệt **trước** `implement`; sau đó
+  agent chạy từ task đầu tới phase **Acceptance evidence** không ngắt.
+- ADR mới viết **đầy đủ** ngay trong spec (trạng thái "Đã chấp nhận — Tiến, <ngày>"); Minh xem cùng PR cuối.
+- Thứ chỉ có từ bên ngoài (token, tài khoản, máy thật) **không** là điểm dừng: dùng mock/đường thay thế, task đó ghi
+  `BLOCKED: <lý do>` trong `evidence.md` (§2.5) rồi làm tiếp các task còn lại.
+- Điểm dừng hợp lệ duy nhất: điều kiện dừng §2.5 (analyze còn CRITICAL/HIGH sau 2 vòng, `Verify:` đỏ 2 lần, converge
+  không giảm) và nguy cơ vi phạm hiến chương/CLAUDE.md (dừng, báo Tiến).
+- Cổng người duy nhất của Minh: review + squash merge PR cuối của tính năng.
 
 ## 3. Danh mục tính năng (100% phạm vi, số spec cấp trước)
 
@@ -213,7 +228,7 @@ git worktree remove ../hoicon-wt/android && git branch -d feat/001-safe-pause-re
 4. **Mỗi worktree một phiên Claude Code** (một pane Orca), mỗi phiên đúng một spec. `.specify/feature.json` riêng từng
    checkout nên `/speckit-*` không lẫn spec.
 5. Rebase hằng ngày; PR squash merge, người còn lại duyệt; không push thẳng `main`.
-6. Minh (Windows, ít RAM) không cần worktree: nhận làn H + review PR + quyết định.
+6. Minh (Windows, ít RAM) không cần worktree: nhận làn H + review PR cuối của mỗi tính năng (cổng merge `main`).
 7. **Spec hai làn (A+B: 010, 012, 020, 024, 026, 028, 029, 037, 050):** `spec.md` + `plan.md` + `tasks.md` + schema viết
    **một lần** ở checkout chính và merge thành "PR đặc tả" trước; sau đó mỗi làn mở nhánh riêng, chỉ làm và tick task
    thuộc đường dẫn của mình. `converge` + `evidence.md` do người merge sau cùng chạy một lần trên `main`.
@@ -237,7 +252,9 @@ A = 024 (E8) → 028.
    `/speckit-analyze` (0 CRITICAL/HIGH) → `/speckit-checklist privacy|elder-ux|release-block` khi liên quan.
 4. **Làm:** `/speckit-implement` từng phase, chạy `Verify:` từng task → `/speckit-converge` tới 0 finding.
 5. **Nghiệm thu:** cổng các tầng (§2.4 bước 4) → `evidence.md` → reviewer → `python3 scripts/check-spec-trace.py`.
-6. **PR:** mẫu PR + link spec + evidence → người còn lại duyệt → squash merge → ROADMAP `☑` → dọn worktree.
+6. **PR** (khi mọi task không bị chặn đã xong, evidence đủ, test xanh): mẫu PR + link spec + evidence → Minh review →
+   squash merge → ROADMAP `☑` → dọn worktree. Bước 3–5 chạy một mạch theo §2.6, không có cổng duyệt giữa chừng. Còn task
+   `BLOCKED` bởi bên ngoài ⇒ vẫn mở PR, ROADMAP giữ `◐`, phần còn lại làm bằng PR lite nối tiếp khi gỡ chặn.
 
 Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi bằng chứng trong mô tả PR.
 
@@ -253,6 +270,13 @@ Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi
 | Spec Kit thành nghi thức tốn quota | TB | Làn lite; spec theo đợt; analyze/converge chỉ cho spec full |
 
 ## 8. Quyết định còn chờ (★ = Minh)
+**Đã xong:**
+- ☑ **D1** (spec 002, ADR-010): `chat_id` Zalo lưu mã hóa AES-256-GCM (khóa dữ liệu theo `kid`) + `zalo_user_hmac`
+  (tiền tố `hoicon:zalo:v1:`) — **Tiến duyệt 15/10/2026**.
+- ☑ **D2** (spec 002, ADR-010): migration `0003` tạo `families`, `members`, `pairing_codes`, `messages_out` —
+  **Tiến duyệt 15/10/2026**. Spec 002 chạy một mạch từ T006 tới hết (§2.6).
+
+**Còn chờ:**
 1. ★ I1, I2 vào 022/023; I3 spike sau M1; I4 gộp 032; I5 chỉ ở thuyết minh.
 2. ★ O1: eval smoke (030) trước 024.
 3. ★ B1 (tạo skill thiếu), B2 (bỏ mục cắt T2), B8 (cắt P1-S6 ngay).
