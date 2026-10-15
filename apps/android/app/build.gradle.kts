@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -35,7 +36,7 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"$url\"")
         }
         release {
-            val url = checked(apiBaseUrl.getOrElse("https://api.hoicon.vn"), listOf("http://", "https://"))
+            val url = checked(apiBaseUrl.getOrElse("https://api.hoicon.vn"), listOf("https://"))
             buildConfigField("String", "API_BASE_URL", "\"$url\"")
         }
     }
@@ -55,11 +56,21 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.tink.android)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.org.json)
+}
+
+// Room xuất lược đồ ra app/schemas để mọi thay đổi CSDL sau này có migration kiểm được (Spec 022).
+ksp {
+    arg("room.schemaLocation", layout.projectDirectory.dir("schemas").asFile.absolutePath)
 }
 
 // Contract tests (spec 020) read the shared JSON Schemas + fixtures; declare them as inputs so schema edits re-run tests.

@@ -36,15 +36,54 @@ sealed interface ConsentResult {
     data object ServerError : ConsentResult
 }
 
+sealed interface EventsResult {
+    /** The whole batch is stored (a re-sent id counts as stored: the server de-duplicates). */
+    data object Accepted : EventsResult
+
+    /** The server refuses this batch for good (400/413/422): sending it again can never succeed. */
+    data object Rejected : EventsResult
+
+    /** The device token was refused: the events stay queued. */
+    data object Unauthorized : EventsResult
+
+    /** No connection, timeout or TLS failure. */
+    data object NetworkError : EventsResult
+
+    /** 5xx, 429, or an endpoint not deployed yet: try again later. */
+    data object ServerError : EventsResult
+}
+
+/** What the heartbeat says about the phone (`POST /v1/heartbeat`): versions and which permissions are granted. */
+data class HeartbeatStatus(
+    val appVersion: String,
+    val rulesVersion: String,
+    val threatListVersion: String?,
+    val permissionState: Map<String, Boolean>,
+)
+
+sealed interface HeartbeatResult {
+    data object Ok : HeartbeatResult
+    data object Rejected : HeartbeatResult
+    data object Unauthorized : HeartbeatResult
+    data object NetworkError : HeartbeatResult
+    data object ServerError : HeartbeatResult
+}
+
+/** The part of the API the outbox needs; [PairingApiClient] implements it, tests use a fake. */
+interface EventUploader {
+    fun sendEvents(accessToken: String, events: List<JSONObject>): EventsResult
+}
+
 /**
- * `POST /v1/pair` and `POST /v1/consents` (docs/API.md; bodies follow docs/schemas/pair_*.v1.json and
- * consent_record.v1.json). Blocking: call from a background thread. Never used on the safe-pause path.
- * Nothing here is logged: codes and tokens are secrets, error bodies are server text.
+ * `POST /v1/pair`, `/v1/consents`, `/v1/events` and `/v1/heartbeat` (docs/API.md; bodies follow
+ * docs/schemas/pair_*.v1.json, consent_record.v1.json and risk_event.v1.json). Blocking: call from a background
+ * thread. Never used on the safe-pause path. Nothing here is logged: codes and tokens are secrets, error bodies
+ * are server text.
  */
 class PairingApiClient(
     baseUrl: String,
     private val timeoutMs: Int = TIMEOUT_MS,
-) {
+) : EventUploader {
     private val base = baseUrl.trimEnd('/')
 
     fun pair(code: String, appVersion: String, rulesVersion: String, deviceLabel: String?): PairResult {
@@ -90,6 +129,46 @@ class PairingApiClient(
             200, 201 -> ConsentResult.Recorded(items.size)
             401, 403 -> ConsentResult.Unauthorized
             else -> ConsentResult.ServerError
+        }
+    }
+
+    /** `POST /v1/events`: 1–[MAX_EVENTS_PER_BATCH] `risk_event.v1.json` documents, idempotent on their ids. */
+    override fun sendEvents(accessToken: String, events: List<JSONObject>): EventsResult {
+        if (events.isEmpty()) return EventsResult.Accepted
+        require(events.size <= MAX_EVENTS_PER_BATCH) { "at most $MAX_EVENTS_PER_BATCH events per batch" }
+        val body = JSONObject().put("events", JSONArray(events))
+        val reply = try {
+            post("/v1/events", body, bearer = accessToken)
+        } catch (_: IOException) {
+            return EventsResult.NetworkError
+        }
+        return when (reply.status) {
+            in 200..299 -> EventsResult.Accepted
+            400, 413, 422 -> EventsResult.Rejected
+            401, 403 -> EventsResult.Unauthorized
+            else -> EventsResult.ServerError
+        }
+    }
+
+    /** `POST /v1/heartbeat`: permission state and versions, so the family sees when protection was lost. */
+    fun sendHeartbeat(accessToken: String, status: HeartbeatStatus): HeartbeatResult {
+        val permissions = JSONObject()
+        status.permissionState.forEach { (name, granted) -> permissions.put(name, granted) }
+        val body = JSONObject()
+            .put("app_version", status.appVersion.take(MAX_VERSION))
+            .put("rules_version", status.rulesVersion.take(MAX_VERSION))
+            .put("permission_state", permissions)
+        status.threatListVersion?.let { body.put("threat_list_version", it.take(MAX_VERSION)) }
+        val reply = try {
+            post("/v1/heartbeat", body, bearer = accessToken)
+        } catch (_: IOException) {
+            return HeartbeatResult.NetworkError
+        }
+        return when (reply.status) {
+            in 200..299 -> HeartbeatResult.Ok
+            400, 413, 422 -> HeartbeatResult.Rejected
+            401, 403 -> HeartbeatResult.Unauthorized
+            else -> HeartbeatResult.ServerError
         }
     }
 
@@ -149,11 +228,13 @@ class PairingApiClient(
         )
     }
 
-    private companion object {
-        const val TIMEOUT_MS = 10_000
-        const val MAX_REPLY = 64 * 1024
-        const val MAX_VERSION = 32
-        const val MAX_LABEL = 64
-        val CODE_FORMAT = Regex("^[0-9]{6}$")
+    companion object {
+        /** Batch limit of `POST /v1/events` (spec 021). */
+        const val MAX_EVENTS_PER_BATCH = 50
+        private const val TIMEOUT_MS = 10_000
+        private const val MAX_REPLY = 64 * 1024
+        private const val MAX_VERSION = 32
+        private const val MAX_LABEL = 64
+        private val CODE_FORMAT = Regex("^[0-9]{6}$")
     }
 }

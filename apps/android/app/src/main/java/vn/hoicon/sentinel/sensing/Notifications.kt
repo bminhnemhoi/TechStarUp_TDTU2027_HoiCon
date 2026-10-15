@@ -9,10 +9,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import vn.hoicon.rules.AppCategory
-import vn.hoicon.rules.RiskLevel
 import vn.hoicon.sentinel.MainActivity
 import vn.hoicon.sentinel.R
+import vn.hoicon.sentinel.pause.PauseRequest
 import vn.hoicon.sentinel.pause.SafePauseActivity
 
 /**
@@ -92,12 +91,12 @@ object Notifications {
         }
 
     /** Fallback when the background activity start was blocked (no "display over other apps"): heads-up + tap. */
-    fun showPauseFallback(context: Context, level: RiskLevel, category: AppCategory, callActive: Boolean) {
+    fun showPauseFallback(context: Context, request: PauseRequest) {
         ensureChannels(context)
         val tap = PendingIntent.getActivity(
             context,
             1,
-            SafePauseActivity.intent(context, level, category, callActive),
+            SafePauseActivity.intent(context, request),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         // Spike: the action opens the dialer, like the E7 button. P2-06 replaces it with the "Hỏi con" flow.
@@ -117,7 +116,7 @@ object Notifications {
             .setContentIntent(tap)
             .apply { if (canUseFullScreenIntent(context)) setFullScreenIntent(tap, true) }
             .addAction(
-                Notification.Action.Builder(null, context.getString(R.string.pause_ask_child), callChild).build(),
+                Notification.Action.Builder(null, context.getString(R.string.pause_call_child), callChild).build(),
             )
             .setAutoCancel(true)
             .build()

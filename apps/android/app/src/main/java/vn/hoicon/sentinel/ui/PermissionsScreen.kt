@@ -52,6 +52,7 @@ fun PermissionsScreen(
     granted: Set<SensorPermission>,
     onOpen: (SensorPermission) -> Unit,
     modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
 ) {
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -71,6 +72,10 @@ fun PermissionsScreen(
             for ((permission, row) in rows) {
                 HorizontalDivider()
                 PermissionItem(row = row, isGranted = permission in granted, onOpen = { onOpen(permission) })
+            }
+            if (onBack != null) {
+                HorizontalDivider()
+                SecondaryButton(text = stringResource(R.string.e6_back), onClick = onBack)
             }
         }
     }

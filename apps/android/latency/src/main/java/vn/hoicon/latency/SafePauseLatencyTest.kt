@@ -26,8 +26,9 @@ import org.junit.Test
  * (process started by the broadcast, SafePause is its first UI); "warm" = process alive, as after a real call.
  *
  * Needs the debug build of :app (HC_TIMING marks) and :demobank installed. Arguments (`-e`): runs (default 10),
- * variant (default "view"; "compose" = the Compose E7, switched with the debug flag file spike_compose_pause that
- * SafePauseActivity reads — a run whose log line `safe pause ui=` disagrees is discarded, never counted),
+ * variant (default "view"; "compose" = the shipping Compose E7 of Spec 022, "view" = the spec 001 View layout, switched
+ * with the debug flag file spike_view_pause that SafePauseActivity reads — a run whose log line `safe pause ui=`
+ * disagrees is discarded, never counted),
  * compile (default "speed": full AOT — Play installs get speed-profile, so this is the best case for code
  * compilation, while the debug build (no R8) is slower than release: a pass is conclusive, a miss is not; ADR-008).
  *
@@ -65,10 +66,10 @@ class SafePauseLatencyTest {
         assertTrue("variant must be view or compose, was '$variant'", variant in UI_BY_VARIANT)
         // SafePauseActivity (debug) reads this flag file in onCreate; `files/` may not exist on a fresh install.
         sh("run-as $SENTINEL mkdir -p files")
-        sh("run-as $SENTINEL ${if (variant == "compose") "touch" else "rm -f"} files/$COMPOSE_FLAG")
+        sh("run-as $SENTINEL ${if (variant == "view") "touch" else "rm -f"} files/$VIEW_FLAG")
         // List the directory, not the file: an error message for a missing file would also contain the name.
-        val flagSet = sh("run-as $SENTINEL ls files").lines().any { it.trim() == COMPOSE_FLAG }
-        if (flagSet != (variant == "compose")) {
+        val flagSet = sh("run-as $SENTINEL ls files").lines().any { it.trim() == VIEW_FLAG }
+        if (flagSet != (variant == "view")) {
             File(instrumentation.context.getExternalFilesDir(null), "latency.json")
                 .writeText("{\"variant\": \"$variant\", \"variant_unavailable\": true}")
             Log.e(TAG, "variant_unavailable: run-as could not set $variant")
@@ -84,7 +85,7 @@ class SafePauseLatencyTest {
         if (!prepared) return
         sh("svc power stayon false")
         sh("dumpsys deviceidle whitelist -$SENTINEL")
-        sh("run-as $SENTINEL rm -f files/$COMPOSE_FLAG") // leave the app on its default E7
+        sh("run-as $SENTINEL rm -f files/$VIEW_FLAG") // leave the app on its default E7 (Compose)
         sh("am broadcast -f 0x20 -n $SENTINEL/.debug.ScenarioReceiver -a vn.hoicon.debug.CLEAR")
     }
 
@@ -179,7 +180,7 @@ class SafePauseLatencyTest {
         const val DEMOBANK = "vn.hoicon.demobank"
         const val PAUSE_WAIT_MS = 20_000L
         const val TARGET_MS = 3_000L
-        const val COMPOSE_FLAG = "spike_compose_pause"
+        const val VIEW_FLAG = "spike_view_pause"
         val UI_BY_VARIANT = mapOf("view" to "views", "compose" to "compose")
     }
 }

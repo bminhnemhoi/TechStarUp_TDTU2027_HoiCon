@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import vn.hoicon.rules.CallDirection
+import vn.hoicon.sentinel.SentinelServices
 import vn.hoicon.sentinel.sensing.CallSignalStore
 import vn.hoicon.sentinel.sensing.HcSpikeLog
 import vn.hoicon.sentinel.sensing.HcTiming
@@ -39,6 +40,9 @@ class ScenarioReceiver : BroadcastReceiver() {
                     ),
                 )
                 RiskWindowService.open(context)
+                val sentinel = SentinelServices.of(context)
+                val signal = CallSignalStore.load(context)?.toSignal(inCallNow = false)
+                if (signal != null) sentinel.launch { sentinel.riskWindow.onCallScreened(signal, now) }
             }
             // The window notices the missing call on its next tick and closes itself.
             ACTION_CLEAR -> CallSignalStore.clear(context)
