@@ -41,31 +41,75 @@
     <string name="pause_level_high">Cần cẩn thận</string>
     <string name="pause_level_critical">Rất cần cẩn thận</string>
     <string name="pause_title">Bác ơi, khoan chuyển tiền đã</string>
-    <string name="pause_body">Công an, ngân hàng không bao giờ bảo chuyển tiền hay đọc mã xác thực (OTP) qua điện thoại. Dù ai gọi, bác cũng hỏi con trước đã. Việc thật thì chờ được vài phút.</string>
+    <string name="pause_body">Công an, ngân hàng không bao giờ bảo chuyển tiền hay đọc mã xác thực (OTP) qua điện thoại. Dù ai gọi, bác cũng hỏi con trước đã. Việc thật thì chờ được một lúc.</string>
     <string name="pause_reason_active">HỏiCon nhắc vì bác đang nghe một số lạ và vừa mở %1$s.</string>
     <string name="pause_reason_ended">HỏiCon nhắc vì bác vừa nói chuyện với một số lạ rồi mở %1$s.</string>
     <string name="app_kind_bank">ứng dụng ngân hàng</string>
     <string name="app_kind_wallet">ví điện tử</string>
     <string name="app_kind_securities">ứng dụng chứng khoán</string>
     <!-- Spike: mở trình quay số. P2-06 thay bằng luồng "Hỏi con" thật. -->
-    <string name="pause_ask_child">Gọi cho con</string>
+    <string name="pause_ask_child">Hỏi con</string>
+    <string name="pause_call_child">Gọi cho con</string>
     <string name="pause_continue">Vẫn tiếp tục</string>
     <string name="pause_continue_hint">Giữ ngón tay 3 giây</string>
     <string name="pause_continue_holding">Giữ yên nhé…</string>
     <string name="pause_continue_too_short">Chưa đủ 3 giây. Bác đặt ngón tay lên nút và giữ yên đến khi thanh màu chạy hết.</string>
     <string name="pause_continue_long_click_label">giữ 3 giây để tiếp tục</string>
+    <string name="pause_continue_a11y_desc">Vẫn tiếp tục. Chạm hai lần và giữ để tiếp tục.</string>
     <string name="pause_continue_a11y_action">Tiếp tục</string>
     <!-- Đường thay thế cho TalkBack / Switch Access (SEC-2): đếm 3 giây có đọc to, rồi mới có nút xác nhận. -->
     <string name="pause_confirm_counting">HỏiCon đếm 3 giây rồi bác xác nhận nhé: %1$d</string>
     <string name="pause_confirm_ready">Nếu bác chắc chắn, bấm nút “Đúng, vẫn tiếp tục”.</string>
     <string name="pause_confirm_button">Đúng, vẫn tiếp tục</string>
 
+    <!-- E6 Đang bảo vệ (Spec 022): màn chính sau khi ghép đôi. -->
+    <string name="e6_ai">Đây là trợ lý AI HỏiCon.</string>
+    <string name="e6_title_ok">Đang bảo vệ bác</string>
+    <string name="e6_title_missing">Chưa bảo vệ đủ</string>
+    <string name="e6_body_ok">HỏiCon chỉ canh một việc: có số lạ gọi tới rồi bác mở ứng dụng ngân hàng, HỏiCon sẽ nhắc bác dừng lại. Việc khác, bác vẫn cẩn thận và hỏi con trước nhé.</string>
+    <string name="e6_body_missing">HỏiCon còn thiếu vài quyền nên chưa canh chừng được hết. Bác bấm nút bên dưới để bật thêm.</string>
+    <string name="e6_window_title">Đang canh chừng cuộc gọi lạ</string>
+    <string name="e6_window_body">Ai bảo chuyển tiền, đọc mã hay cài ứng dụng lạ, bác hỏi con trước nhé.</string>
+    <string name="e6_family_title">Gia đình của bác</string>
+    <string name="e6_family_body">Đã kết nối với %1$s.</string>
+    <string name="e6_ask_child">Hỏi con</string>
+    <string name="e6_ask_child_sent">HỏiCon đã mở bàn phím gọi điện. Bác bấm số của con để gọi nhé. Việc gấp thì bác cứ gọi ngay.</string>
+    <string name="e6_permissions_more">Bật thêm quyền</string>
+    <string name="e6_permissions_view">Xem các quyền</string>
+    <string name="e6_dialer_failed">Máy chưa mở được bàn phím gọi. Bác mở ứng dụng Điện thoại rồi gọi cho con nhé.</string>
+    <string name="e6_repair_notice">HỏiCon chưa gửi được tin cho gia đình vì kết nối đã hết hạn. Bác nhờ con gửi mã mới, rồi bấm “Kết nối lại”.</string>
+    <string name="e6_repair_button">Kết nối lại</string>
+    <string name="e6_back">Quay lại</string>
+
+    <!-- E7 chốt (Spec 022): hủy / thoát, mật khẩu gia đình (I2, không lưu mật khẩu), một phút bình tĩnh. -->
+    <string name="pause_cancel_sub">Về màn hình chính</string>
+    <string name="pause_cancel_bank">Hủy giao dịch</string>
+    <string name="pause_cancel_remote">Về màn hình chính</string>
+    <string name="pause_family_password_title">Người gọi nói là người nhà? Hỏi mật khẩu gia đình</string>
+    <string name="pause_family_password_body">Người nhà thật sẽ nói đúng ngay. Chưa đặt mật khẩu thì bác cúp máy, rồi gọi lại cho con bằng số bác đã lưu. Nếu là công an hay ngân hàng thì bác cúp máy luôn.</string>
+    <string name="pause_countdown_title">Bác nghỉ một phút cho bình tĩnh</string>
+    <string name="pause_countdown_left">Chưa cần làm gì cả. Bác hỏi con trước đã.</string>
+    <string name="pause_countdown_done">Đã đủ một phút. Bác hỏi con trước khi làm tiếp nhé.</string>
+    <string name="pause_countdown_a11y">Bác nghỉ một phút cho bình tĩnh. Chưa cần làm gì cả.</string>
+    <!-- Ứng dụng điều khiển điện thoại từ xa (luật R5, ý tưởng I1). -->
+    <string name="pause_title_remote">Bác ơi, có người lạ đang muốn điều khiển điện thoại của bác?</string>
+    <string name="pause_body_remote">Kẻ gian hay bảo bác cài ứng dụng để họ nhìn và điều khiển điện thoại của bác, rồi lấy tiền trong ngân hàng. Công an, ngân hàng không bao giờ bảo làm vậy. Bác cúp máy, đóng ứng dụng đó (như AnyDesk, TeamViewer), rồi bấm Hỏi con.</string>
+    <string name="pause_reason_remote_active">HỏiCon nhắc vì bác đang nghe một số lạ và vừa mở ứng dụng điều khiển điện thoại từ xa.</string>
+    <string name="pause_reason_remote_ended">HỏiCon nhắc vì bác vừa nói chuyện với một số lạ rồi mở ứng dụng điều khiển điện thoại từ xa.</string>
+    <string-array name="pause_speech_remote">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>Bác ơi, khoan cho người lạ điều khiển điện thoại.</item>
+        <item>Công an, ngân hàng không bao giờ bảo cài ứng dụng điều khiển từ xa.</item>
+        <item>Bác cúp máy, bấm Về màn hình chính, rồi bấm nút Hỏi con.</item>
+    </string-array>
+
     <!-- Câu đọc to: mỗi mục là một câu nói riêng, nghỉ 350 ms giữa các câu. Câu 1 luôn là câu công khai AI. -->
     <string-array name="pause_speech">
         <item>Đây là trợ lý AI HỏiCon.</item>
         <item>Bác ơi, khoan chuyển tiền đã.</item>
         <item>Công an, ngân hàng không bao giờ bảo chuyển tiền qua điện thoại.</item>
-        <item>Bác bấm nút Gọi cho con trước nhé.</item>
+        <item>Bác hỏi người gọi mật khẩu gia đình trước nhé.</item>
+        <item>Rồi bác bấm nút Hỏi con.</item>
     </string-array>
     <!-- Thêm vào cuối khi SafePause không mở được và chỉ còn thông báo dự phòng. -->
     <string name="pause_fallback_speech_extra">Bác chạm vào dòng chữ HỏiCon ở đầu màn hình nhé.</string>

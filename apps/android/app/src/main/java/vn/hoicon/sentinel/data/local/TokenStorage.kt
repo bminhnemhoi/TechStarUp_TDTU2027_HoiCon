@@ -39,6 +39,7 @@ class TokenStorage(private val prefs: SharedPreferences?) {
         putString(FAMILY_NAME, session.familyName)
         putString(ACCESS_TOKEN, session.accessToken)
         putString(REFRESH_TOKEN, session.refreshToken)
+        putBoolean(NEEDS_REPAIR, false)
     }
 
     /** The saved session, or null when the device was never paired (or any field is missing or unreadable). */
@@ -55,6 +56,17 @@ class TokenStorage(private val prefs: SharedPreferences?) {
     }
 
     fun hasValidToken(): Boolean = load() != null
+
+    /**
+     * The server refused the device token (expired after 30 days, or the family revoked the device) and there is no
+     * refresh endpoint yet: events and heartbeats cannot reach the family. E6 says so instead of "Đang bảo vệ".
+     * Cleared by [save] (a new pairing) and [clear].
+     */
+    var needsRepair: Boolean
+        get() = read { getBoolean(NEEDS_REPAIR, false) } ?: false
+        set(value) {
+            write { putBoolean(NEEDS_REPAIR, value) }
+        }
 
     /** Version of the prominent-disclosure text (E3) the user accepted, or null. */
     var acceptedDisclosureVersion: String?
@@ -97,6 +109,7 @@ class TokenStorage(private val prefs: SharedPreferences?) {
         private const val FAMILY_NAME = "family_name"
         private const val ACCESS_TOKEN = "access_token"
         private const val REFRESH_TOKEN = "refresh_token"
+        private const val NEEDS_REPAIR = "needs_repair"
         private const val DISCLOSURE_VERSION = "disclosure_version"
         private const val RECORDED_CONSENTS = "recorded_consents"
         private const val MASTER_KEY_ALIAS = "_androidx_security_master_key_"

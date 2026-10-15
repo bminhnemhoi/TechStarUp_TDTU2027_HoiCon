@@ -88,4 +88,24 @@ class TokenStorageTest {
         assertFalse(storage.save(session))
         assertFalse(storage.hasValidToken())
     }
+
+    @Test
+    fun refusedTokenFlagSurvivesUntilANewPairing() {
+        val prefs = FakePrefs()
+        val storage = TokenStorage(prefs)
+        storage.save(session)
+        assertFalse(storage.needsRepair)
+        storage.needsRepair = true
+        assertTrue(TokenStorage(prefs).needsRepair)
+        storage.save(session) // paired again
+        assertFalse(TokenStorage(prefs).needsRepair)
+        storage.needsRepair = true
+        storage.clear()
+        assertFalse(TokenStorage(prefs).needsRepair)
+    }
+
+    @Test
+    fun theFlagIsFalseWhenStorageIsBroken() {
+        assertFalse(TokenStorage(null).needsRepair)
+    }
 }

@@ -82,5 +82,12 @@ E1 Chào mừng (công khai AI) · E2 Ghép đôi · E3 Xin quyền (mỗi quy�
 E6 "Đang bảo vệ" · **E7 Dừng an toàn** · E8 Câu hỏi nhanh · E9 Chờ con · E10 Kết quả tra cứu · E11 Diễn tập ·
 E12 Cài đặt & quyền riêng tư. Chi tiết luồng: kế hoạch đã duyệt §5; mỗi màn làm bằng skill `ui-screen`.
 
+**E6 "Đang bảo vệ" và E7 chốt (spec 022, Compose):** E6 = nhãn khiên xanh + "Đang bảo vệ bác" (hoặc khung hổ phách khi thiếu quyền), thẻ gia đình,
+thẻ "đang canh chừng cuộc gọi lạ" khi cửa sổ rủi ro mở, nút chính "Hỏi con" + "Xem các quyền" (≤ 2 hành động). E7 = hai nút chính
+"Hỏi con" và "Hủy giao dịch" (bản R5: "Về màn hình chính"; chỉ đưa về màn hình chính, không đụng app khác), nút phụ "Vẫn tiếp tục"
+giữ 3 giây (không bao giờ khóa); khối "Hỏi người gọi mật khẩu gia đình" (ý tưởng I2, app không lưu mật khẩu) và "nghỉ một phút cho bình
+tĩnh" (thanh đầy dần, không hiện số giây, chỉ khuyên). Thanh nút ghim cao tối đa 55% màn hình và tự cuộn. Số liệu: ảnh 100%/200% ở
+`~/hoicon-evidence/022-sentinel-v1/shots/`.
+
 ## Zalo (Z1–Z8) & Web
 Xem kế hoạch §5; mẫu tin Zalo đặt ở `backend/src/hoicon/integrations/zalo/templates/` (mở đầu "Đây là trợ lý AI HỏiCon").
