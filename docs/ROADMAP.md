@@ -3,13 +3,16 @@
 > Nguồn sự thật cho "làm gì tiếp". Chỉ làm task có mã trong file này; ý tưởng ngoài lề ghi vào **Ghi chú** cuối file.
 > Trạng thái: `☐` chưa · `◐` đang làm · `☑` xong · `✂` đã cắt · `⏸` chờ Minh (tài khoản, quyết định).
 > Hook SessionStart đọc khối STATUS dưới đây (≤ 6 dòng) — cập nhật mỗi khi đổi task.
+> Bản đồ tính năng ↔ spec ↔ phụ thuộc + cách làm (Spec Kit, worktree): `docs/MASTER-PLAN.md`. Task có spec thì dòng
+> task ghi link `specs/NNN-slug` (kiểm bằng `python3 scripts/check-spec-trace.py`).
 
 <!-- STATUS -->
-Phase 1 — Spike + hồ sơ Vòng 1 (15/10–13/11) · G0 ĐẠT 08/10 (docs/phase-reports/G0.md) · Gate G1: 08/11
-Bàn giao 14/10: đọc docs/HANDOFF.md · Đội: Minh + Tiến (@Towfienes) · ◐ S1/S2 (chờ máy thật), S4 (chờ khóa API), P1-07 (chờ duyệt)
-Việc kế tiếp (HANDOFF §5): P0-08 tài khoản · khảo sát P1-02 · P1-S3 Zalo · FTL · P1-S5 · P1-01 thuyết minh · P1-03 video
-Rủi ro: hồ sơ Vòng 1 (thuyết minh/video/khảo sát) chưa bắt đầu, còn 30 ngày · máy dev Minh thiếu RAM/ổ C cho máy ảo
-Cập nhật: 14/10/2026
+Phase 1 — Spike + hồ sơ Vòng 1 (15/10–13/11) · G0 ĐẠT 08/10 · Gate G1: 08/11 · Đội: Minh + Tiến (@Towfienes)
+15/10: Spec Kit + Master Plan (docs/MASTER-PLAN.md) · Đợt 0: W0-1 env Linux, W0-2 Spec Kit (chờ PR) · W0-3 tài khoản ⏸ Minh
+Đợt 1 (MASTER-PLAN §3): spec 001 an toàn máy thật (làn A) · 002 Zalo (làn B) · 004 giọng nói · 003/005 lite · hồ sơ H-1
+Rủi ro: hồ sơ Vòng 1 chưa bắt đầu (còn 30 ngày) · Play Console + Firebase chưa có ⇒ chặn 001 và M2
+Chờ Minh quyết: B1–B8 + ý tưởng I1–I5 (MASTER-PLAN §1, §4, §8)
+Cập nhật: 15/10/2026
 <!-- /STATUS -->
 
 ## Mốc cứng
@@ -129,6 +132,14 @@ Cập nhật: 14/10/2026
 
 ## Ghi chú (ý tưởng ngoài phạm vi — không làm khi chưa có task)
 
+- **Ý tưởng 15/10 (chờ Minh duyệt — MASTER-PLAN §4):** I1 luật R5 app điều khiển từ xa trong cửa sổ cuộc gọi lạ ⇒
+  `critical` (vào P2-05, bổ sung ADR-001) · I2 câu nhắc "mật khẩu gia đình" ở E7/E9 (không lưu mật khẩu) · I3 nhận biết
+  cuộc gọi Zalo/Messenger (`MODE_IN_COMMUNICATION`) — spike sau khi có máy thật · I4 tin Zalo hằng tuần + báo "mất bảo
+  vệ" (gộp P2-17) · I5 giọng con thu sẵn — chỉ ghi vào thuyết minh.
+- **Điểm bất hợp lý cần quyết (MASTER-PLAN §1):** B1 skill `state-transition`/`consent-copy` + `PiiMasker` chưa có ·
+  B2 "chuyển người giám hộ thứ hai" trong danh sách cắt nhưng đã code ở P1-S4 · B3 eval smoke nên làm trước P2-08 ·
+  B4 thuyết minh hứa 50–100 gia đình, gate chỉ ≥ 20/30 · B5 đội 2 người + nhóm sinh viên · B6 provider cho `judge` ·
+  B7 Play Console là đường găng M2 · B8 cắt P1-S6 ngay.
 - Mua máy Android cũ 1–2 triệu trước 06/12 (rủi ro #2) — Minh quyết. Trước mắt: mượn máy người thân để xác minh Play
   Console (< 1 phút); kiểm thử máy thật qua Firebase Test Lab (5 lượt/ngày) + Device Streaming (30 phút/tháng).
 - (P1-S2) Danh mục v2: cân nhắc thêm app Smart OTP tách riêng của ngân hàng (RB-7); hỏi thí điểm về "ứng dụng kép"

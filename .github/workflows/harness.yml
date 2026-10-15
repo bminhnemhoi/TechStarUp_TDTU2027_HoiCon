@@ -3,9 +3,9 @@ name: harness
 on:
   push:
     branches: [main]
-    paths: [".claude/**", ".github/workflows/harness.yml"]
+    paths: [".claude/**", ".specify/**", "specs/**", "docs/ROADMAP.md", "docs/MASTER-PLAN.md", "scripts/check-spec-trace.py", "scripts/tests/**", ".github/workflows/harness.yml"]
   pull_request:
-    paths: [".claude/**", ".github/workflows/harness.yml"]
+    paths: [".claude/**", ".specify/**", "specs/**", "docs/ROADMAP.md", "docs/MASTER-PLAN.md", "scripts/check-spec-trace.py", "scripts/tests/**", ".github/workflows/harness.yml"]
 
 permissions:
   contents: read
@@ -26,3 +26,14 @@ jobs:
       - name: settings.json còn đủ 7 hook (claude plugin install từng xóa mất args)
         run: |
           node -e "const s=require('./.claude/settings.json');const n=Object.values(s.hooks).flat().flatMap(m=>m.hooks).filter(h=>/\.claude\/hooks\/.+\.mjs/.test(h.command)).length;if(n<7)process.exit(1);console.log('hooks',n)"
+
+  spec-trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Truy vết Spec Kit (docs/MASTER-PLAN.md §2.4): danh mục spec, FR ↔ task, evidence.md, ROADMAP ☑
+      - run: python3 -m unittest discover -s scripts/tests
+      - run: python3 scripts/check-spec-trace.py

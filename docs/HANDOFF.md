@@ -5,6 +5,7 @@
 > trong 7 ngày tại https://github.com/bminhnemhoi/TechStarUp_TDTU2027_HoiCon/invitations).
 > Mục đích: ai cầm repo này cũng làm tiếp được kế hoạch mà không cần hỏi lại, kể cả khi Minh tạm vắng.
 > Nguồn sự thật về "làm gì tiếp" vẫn là [`docs/ROADMAP.md`](ROADMAP.md); file này là bản đồ + hướng dẫn + kế hoạch gần.
+> Từ 15/10/2026: kế hoạch tới 100% phạm vi theo Spec Kit (danh mục spec, phụ thuộc, worktree) ở [`docs/MASTER-PLAN.md`](MASTER-PLAN.md).
 
 ## 0. Tóm tắt 1 phút
 
