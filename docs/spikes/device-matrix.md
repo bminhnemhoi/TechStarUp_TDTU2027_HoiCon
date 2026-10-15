@@ -24,3 +24,17 @@
 | 15/10/2026 | AVD hc-api36 | máy ảo | `emu-scenario.py fake_police` (ấm, `--prep none`) | 10 | 10/10 | 537 | 1 387 | ✓ | cây UI thiếu chữ "gọi cho con" 1/10 ⇒ script báo TRƯỢT; mốc `pause_shown` có đủ 10/10 |
 | 15/10/2026 | AVD hc-api34 | máy ảo | `emu-scenario.py fake_police` (ấm) | 10 | 10/10 | 670 | 1 800 | ✓ | lô đầu 0/10: script chẩn đoán "Telecom không thấy cuộc gọi đến (lỗi modem giả lập)" ⇒ boot `--cold` rồi chạy lại (lô báo ở dòng này) |
 | _BLOCKED 15/10/2026_ | Firebase Test Lab / máy mượn | **máy thật** | nguội + ấm | ≥ 10 | | | | | **BLOCKED: chưa có tài khoản Firebase (P0-08), `gcloud` chưa cài** — cần trước G1 (08/11) — `bash scripts/ftl-latency.sh --variant view|compose model=…,version=…` (bộ đo `:latency`, cuộc gọi mô phỏng, ADR-008) |
+
+## Giọng nói tiếng Việt (spec 004, spike P1-S5) — 15/10/2026
+
+> Máy ảo `-no-audio`, mạng tắt trừ khi ghi khác. Chi tiết, giới hạn và quyết định: `docs/spikes/P1-S5-giong-noi.md`.
+
+| Thiết bị | Loại | Phép đo | n | Kết quả | Ghi chú |
+|---|---|---|---|---|---|
+| AVD hc-api36 (Android 16) | máy ảo | TTS vi-VN offline: giọng / `speak→onStart` nguội · ấm p95 | 20 + 20 | 6 giọng offline · 64 ms · 3 ms | nguội + `onInit` p95 370 ms (lượt sớm: 65 / 6 / 345 ms) |
+| AVD hc-api34 (Android 14) | máy ảo | như trên | 20 + 20 | 6 giọng offline · 404 ms · 1 ms | nguội + `onInit` p95 411 ms |
+| AVD hc-api36 / hc-api34 | máy ảo | phát clip thu sẵn (`MediaPlayer`) nguội · ấm p95 | 20 + 20 mỗi máy | 42 · 35 ms / 50 · 36 ms | clip tổng hợp, không phải giọng người |
+| AVD hc-api36 | máy ảo | nhận dạng vi-VN **trên máy**, 20 câu tổng hợp | 20 | WER 7,2 % · ý định 12/12 | cận trên lạc quan |
+| AVD hc-api34 | máy ảo | vi-VN trên máy | — | **không có** (không cài được) | bộ mặc định dùng mạng: WER 8,6 % · ý định 11/12 |
+| _BLOCKED 15/10/2026_ | Firebase Test Lab / máy mượn | **máy thật**: TTS + STT | — | | **BLOCKED: chờ Firebase/máy thật (W0-3)** |
+| _BLOCKED 15/10/2026_ | bản thu giọng của đội | bộ `team`, 20 câu | — | | **BLOCKED: chờ Tiến thu âm** |

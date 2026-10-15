@@ -28,4 +28,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "hoicon-android"
 
-include(":rules", ":app", ":demobank", ":latency")
+include(":rules", ":app", ":demobank", ":latency", ":voicelab")

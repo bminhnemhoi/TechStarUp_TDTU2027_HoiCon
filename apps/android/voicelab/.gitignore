@@ -1,0 +1,14 @@
+# Audio of real people must never be committed (spec 004 FR-010); the only audio here is the synthetic clip.
+*.wav
+*.m4a
+*.mp3
+*.ogg
+*.aac
+*.flac
+!src/main/res/raw/clip_pause_0.wav
+*.3gp
+*.amr
+*.opus
+*.webm
+*.mp4
+*.caf

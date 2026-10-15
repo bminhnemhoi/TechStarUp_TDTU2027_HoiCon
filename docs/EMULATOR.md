@@ -107,6 +107,18 @@ adb emu kill                                   # tắt
 kế tiếp — chỉ cần một lần vì userdata được giữ), cỡ chữ 1.0, màn hình luôn sáng.
 **Mỗi lúc chỉ chạy 1 AVD** (RAM trống trên máy dev ~3 GB khi các stack khác đang chạy).
 
+### 3.1 Bộ đo giọng nói `:voicelab` (spec 004)
+```bash
+bash scripts/emu-start.sh hc-api36 --headless                       # MỘT AVD; --headless = -no-audio (không mở micro máy chủ)
+bash scripts/voice-lab.sh --avd hc-api36 --probe tts                # giọng vi + độ trễ nguội/ấm (mạng tắt)
+bash scripts/voice-lab.sh --avd hc-api36 --probe clip|synth         # clip thu sẵn · WAV tổng hợp (kéo về ~/hoicon-evidence/004-voice-vi)
+bash scripts/voice-lab.sh --avd hc-api36 --probe stt --set synthetic   # nhận dạng vi-VN từ tệp WAV (cần --allow-network nếu vi-VN không có trên máy)
+python3 scripts/voice-wer.py --sentences data/voice/sentences.v1.json --results <jsonl> --out <dir>
+```
+Chỉ chạy trên máy ảo/máy thử (script từ chối máy khác). Bản thu giọng người thật và điểm nghe nằm ngoài repo
+(`~/hoicon-evidence/004-voice-vi/`). Kết quả: `docs/spikes/P1-S5-giong-noi.md`. Cần ≥ 5 GB RAM khả dụng (`free -m`, cột available);
+dừng Gradle daemon (`gradlew --stop`) trước khi bật máy ảo nếu thiếu.
+
 ## 4. Smoke test đã đạt (08/10/2026)
 
 | Kiểm tra | hc-api36 | hc-api34 | Lệnh |
