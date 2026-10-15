@@ -49,6 +49,9 @@ class Settings(BaseSettings):
     mcp_threat_clients: dict[str, str] = {}
     mcp_rate_per_min: int = 30
     mcp_rate_per_day: int = 1000
+    # Khóa ký JWT thiết bị HS256 (spec 020, FR-004; ≥ 32 ký tự ngẫu nhiên, ví dụ `openssl rand -hex 32`). Thiếu/ngắn ⇒
+    # /v1/pair trả 503 và mọi token bị từ chối (đóng mặc định). Đổi khóa = mọi thiết bị phải ghép đôi lại.
+    device_jwt_secret: SecretStr | None = None
     # Khóa AES-256-GCM (hex 64 ký tự) mã hóa Zalo chat_id (spec 002 D1); kid để xoay khóa.
     data_key_kid: int = 1
     data_key_1: SecretStr | None = None

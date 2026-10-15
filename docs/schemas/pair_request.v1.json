@@ -14,14 +14,12 @@
     },
     "app_version": {
       "type": "string",
-      "minLength": 1,
-      "maxLength": 32,
+      "pattern": "^[0-9A-Za-z._+-]{1,32}$",
       "description": "Phiên bản app gửi yêu cầu (ví dụ: '0.2.0-debug')"
     },
     "rules_version": {
       "type": "string",
-      "minLength": 1,
-      "maxLength": 32,
+      "pattern": "^[0-9A-Za-z._+-]{1,32}$",
       "description": "Phiên bản luật bảo vệ đang nạp trên app"
     },
     "platform": {
@@ -30,9 +28,9 @@
       "description": "Hệ điều hành thiết bị"
     },
     "device_label": {
-      "type": "string",
+      "type": ["string", "null"],
       "maxLength": 64,
-      "description": "Bí danh thiết bị do người dùng đặt hoặc model máy (không chứa PII)"
+      "description": "Bí danh thiết bị do người dùng đặt hoặc model máy (không chứa PII; máy chủ che số/email trước khi lưu)"
     }
   }
 }

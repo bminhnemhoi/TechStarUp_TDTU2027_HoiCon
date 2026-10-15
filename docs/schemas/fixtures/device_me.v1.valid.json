@@ -1,0 +1,43 @@
+[
+  {
+    "_name": "thiết bị mới ghép, chưa có đồng ý nào",
+    "device": {
+      "device_id": "01928374-abcd-7123-89ef-0123456789ab",
+      "family_id": "01928374-abcd-7123-89ef-0123456789cd",
+      "member_id": "01928374-abcd-7123-89ef-0123456789ef",
+      "family_name": "Gia đình Bác Ba",
+      "platform": "android",
+      "label": null,
+      "app_version": "0.2.0-debug",
+      "rules_version": "2026.10.15",
+      "threat_list_version": null,
+      "created_at": "2026-10-16T08:00:00+07:00",
+      "last_heartbeat_at": "2026-10-16T08:00:00+07:00"
+    },
+    "consents": []
+  },
+  {
+    "_name": "một đồng ý được cấp rồi rút (chỉ dòng mới nhất)",
+    "device": {
+      "device_id": "01928374-abcd-7123-89ef-0123456789ab",
+      "family_id": "01928374-abcd-7123-89ef-0123456789cd",
+      "member_id": "01928374-abcd-7123-89ef-0123456789ef",
+      "family_name": "Gia đình Bác Ba",
+      "platform": "android",
+      "label": "Máy của mẹ",
+      "app_version": "0.2.0-debug",
+      "rules_version": "2026.10.15",
+      "threat_list_version": "2026-10-15",
+      "created_at": "2026-10-16T08:00:00+07:00",
+      "last_heartbeat_at": "2026-10-16T09:30:00+07:00"
+    },
+    "consents": [
+      {
+        "purpose": "voice_input",
+        "granted": false,
+        "consent_version": "v1.1",
+        "recorded_at": "2026-10-16T09:00:00+07:00"
+      }
+    ]
+  }
+]

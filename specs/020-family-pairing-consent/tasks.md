@@ -25,26 +25,26 @@ description: "Tasks list — Spec 020 Family Pairing & Consent Ledger (HỏiCon 
 
 ## Phase 2: Foundational (Làn B — Database v1 & Trigger)
 
-- [ ] T003 [B] Viết test trước `backend/tests/integration/test_schema_0005.py`: kiểm tra bảng `devices`, `consents`, `trusted_contacts`, `action_tokens` đủ cột và ràng buộc; kiểm tra không có cột PII thô; kiểm tra trigger `prevent_consent_tamper` ném exception khi gọi UPDATE hoặc DELETE — FR-001, FR-002, FR-011, SC-002 · Verify: `uv run --directory backend pytest tests/integration/test_schema_0005.py -q` (đỏ)
-- [ ] T004 [B] Viết migration `backend/migrations/versions/20261016_0005_device_pairing_consent.py` (Alembic revision 0005, down 0004) + khai báo Models SQLAlchemy trong `backend/src/hoicon/db/models.py` (`Device`, `Consent`, `TrustedContact`, `ActionToken`) + Trigger PostgreSQL `prevent_consent_tamper` — FR-001, FR-002 · Verify: `uv run --directory backend alembic upgrade head && uv run --directory backend alembic downgrade -1 && uv run --directory backend alembic upgrade head && uv run --directory backend pytest tests/integration/test_schema_0005.py -q` (xanh)
+- [x] T003 [B] Viết test trước `backend/tests/integration/test_schema_0005.py`: kiểm tra bảng `devices`, `consents`, `trusted_contacts`, `action_tokens` đủ cột và ràng buộc; kiểm tra không có cột PII thô; kiểm tra trigger `prevent_consent_tamper` ném exception khi gọi UPDATE hoặc DELETE — FR-001, FR-002, FR-011, SC-002 · Verify: `uv run --directory backend pytest tests/integration/test_schema_0005.py -q` (đỏ)
+- [x] T004 [B] Viết migration `backend/migrations/versions/20261016_0005_device_pairing_consent.py` (Alembic revision 0005, down 0004) + khai báo Models SQLAlchemy trong `backend/src/hoicon/db/models.py` (`Device`, `Consent`, `TrustedContact`, `ActionToken`) + Trigger PostgreSQL `prevent_consent_tamper` — FR-001, FR-002 · Verify: `uv run --directory backend alembic upgrade head && uv run --directory backend alembic downgrade -1 && uv run --directory backend alembic upgrade head && uv run --directory backend pytest tests/integration/test_schema_0005.py -q` (xanh)
 
 ---
 
 ## Phase 3: User Story 1 — API Ghép đôi thiết bị (Làn B)
 
-- [ ] T005 [B] [US1] Viết test trước `backend/tests/integration/test_api_pairing.py`: gọi `POST /v1/pair` với mã 6 số hợp lệ $\rightarrow$ trả 200 kèm JWT thiết bị; mã hết hạn/sai/đã dùng $\rightarrow$ trả 400; mã hợp lệ bị đánh dấu `used_at`; gọi lại mã cũ $\rightarrow$ trả 400 — FR-003, SC-001 · Verify: `uv run --directory backend pytest tests/integration/test_api_pairing.py -q` (đỏ)
-- [ ] T006 [B] [US1] Hiện thực `DeviceAuth` trong `backend/src/hoicon/api/auth.py` (tạo access token JWT 30 ngày, hàm giải mã token `get_current_device`) và cấu hình `HOICON_DEVICE_JWT_SECRET` trong `backend/src/hoicon/config.py` — FR-004 · Verify: `uv run --directory backend pytest tests/unit/test_device_auth.py -q`
-- [ ] T007 [B] [US1] Hiện thực endpoint `POST /v1/pair` trong `backend/src/hoicon/api/routers/pairing.py`: xác thực mã nguyên tử với `SELECT ... FOR UPDATE`, tạo `devices`, cập nhật `used_at`, trả `pair_response.v1.json` — FR-003, SC-001 · Verify: `uv run --directory backend pytest tests/integration/test_api_pairing.py -q` (xanh)
+- [x] T005 [B] [US1] Viết test trước `backend/tests/integration/test_api_pairing.py`: gọi `POST /v1/pair` với mã 6 số hợp lệ $\rightarrow$ trả 200 kèm JWT thiết bị; mã hết hạn/sai/đã dùng $\rightarrow$ trả 400; mã hợp lệ bị đánh dấu `used_at`; gọi lại mã cũ $\rightarrow$ trả 400 — FR-003, SC-001 · Verify: `uv run --directory backend pytest tests/integration/test_api_pairing.py -q` (đỏ)
+- [x] T006 [B] [US1] Hiện thực `DeviceAuth` trong `backend/src/hoicon/api/auth.py` (tạo access token JWT 30 ngày, hàm giải mã token `get_current_device`) và cấu hình `HOICON_DEVICE_JWT_SECRET` trong `backend/src/hoicon/config.py` — FR-004 · Verify: `uv run --directory backend pytest tests/unit/test_device_auth.py -q`
+- [x] T007 [B] [US1] Hiện thực endpoint `POST /v1/pair` trong `backend/src/hoicon/api/routers/pairing.py`: xác thực mã nguyên tử với `SELECT ... FOR UPDATE`, tạo `devices`, cập nhật `used_at`, trả `pair_response.v1.json` — FR-003, SC-001 · Verify: `uv run --directory backend pytest tests/integration/test_api_pairing.py -q` (xanh)
 
 ---
 
 ## Phase 4: User Story 2 — Sổ đồng ý bất biến (Làn B)
 
-- [ ] T008 [B] [US2] Viết test trước `backend/tests/integration/test_api_consents.py`: không có JWT $\rightarrow$ 401; có JWT hợp lệ $\rightarrow$ ghi nhận các mục đồng ý vào DB; kiểm tra không thể cập nhật/xóa dòng consent đã ghi — FR-005, SC-002 · Verify: `uv run --directory backend pytest tests/integration/test_api_consents.py -q` (đỏ)
-- [ ] T009 [B] [US2] Hiện thực endpoint `POST /v1/consents` trong `backend/src/hoicon/api/routers/consents.py`: nhận `consent_record.v1.json`, lưu vào bảng `consents` với `recorded_at = now()` — FR-005, SC-002 · Verify: `uv run --directory backend pytest tests/integration/test_api_consents.py -q` (xanh)
-- [ ] T010 [B] [US2] Thêm endpoint `GET /v1/devices/me` trả về thông tin thiết bị và trạng thái đồng ý hiện tại — FR-004 · Verify: `uv run --directory backend pytest tests/integration/test_api_devices.py -q`
-- [ ] T011 [B] [P] Cập nhật tài liệu API trong `docs/API.md` và `docs/DATA-MODEL.md` — FR-013 · Verify: review
-- [ ] T012 [B] Cổng chất lượng Làn B: `ruff check` + `ruff format --check` sạch, `pytest` toàn bộ $\ge 615$ passed, `hoicon-eval --suite smoke --compare baseline` đạt +0.0% — SC-006 · Verify: `cd backend && uv run ruff check . && uv run pytest -q`
+- [x] T008 [B] [US2] Viết test trước `backend/tests/integration/test_api_consents.py`: không có JWT $\rightarrow$ 401; có JWT hợp lệ $\rightarrow$ ghi nhận các mục đồng ý vào DB; kiểm tra không thể cập nhật/xóa dòng consent đã ghi — FR-005, SC-002 · Verify: `uv run --directory backend pytest tests/integration/test_api_consents.py -q` (đỏ)
+- [x] T009 [B] [US2] Hiện thực endpoint `POST /v1/consents` trong `backend/src/hoicon/api/routers/consents.py`: nhận `consent_record.v1.json`, lưu vào bảng `consents` với `recorded_at = now()` — FR-005, SC-002 · Verify: `uv run --directory backend pytest tests/integration/test_api_consents.py -q` (xanh)
+- [x] T010 [B] [US2] Thêm endpoint `GET /v1/devices/me` trả về thông tin thiết bị và trạng thái đồng ý hiện tại — FR-004 · Verify: `uv run --directory backend pytest tests/integration/test_api_devices.py -q`
+- [x] T011 [B] [P] Cập nhật tài liệu API trong `docs/API.md` và `docs/DATA-MODEL.md` — FR-013 · Verify: review
+- [x] T012 [B] Cổng chất lượng Làn B: `ruff check` + `ruff format --check` sạch, `pytest` toàn bộ $\ge 615$ passed, `hoicon-eval --suite smoke --compare baseline` đạt +0.0% — SC-006 · Verify: `cd backend && uv run ruff check . && uv run pytest -q`
 
 ---
 

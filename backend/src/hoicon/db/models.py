@@ -1,5 +1,6 @@
 """Mô hình ORM theo docs/DATA-MODEL.md (import tại đây để Alembic thấy). Gia đình/thành viên/mã ghép/tin gửi đi:
-spec 002 (migration 0003, ADR-010). Bảng nghiệp vụ còn lại (thiết bị, đồng ý, sự cố…): spec 020, 021."""
+spec 002 (migration 0003, ADR-010). Thiết bị, sổ đồng ý, liên hệ tin cậy, action token: spec 020 (migration 0005).
+Bảng nghiệp vụ còn lại (sự cố…): spec 021."""
 
 import uuid
 from datetime import datetime
@@ -220,14 +221,111 @@ class ThreatIndicator(Base):
     expires_at: Mapped[datetime | None]
 
 
+class Device(Base):
+    """Máy của người được bảo vệ, tạo khi ghép đôi (spec 020). Bí mật làm mới chỉ lưu băm SHA-256."""
+
+    __tablename__ = "devices"
+    __table_args__ = (
+        CheckConstraint("platform IN ('android', 'ios', 'web')", name="platform"),
+        CheckConstraint("device_secret_hash ~ '^[0-9a-f]{64}$'", name="secret_hash_hex"),
+        UniqueConstraint("device_secret_hash", name="uq_devices_secret_hash"),
+        Index("ix_devices_family", "family_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    member_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("members.id", ondelete="CASCADE"))
+    platform: Mapped[str] = mapped_column(String(16), server_default=text("'android'"))
+    label: Mapped[str | None] = mapped_column(String(64))  # bí danh máy do người dùng đặt, không chứa PII
+    app_version: Mapped[str] = mapped_column(String(32))
+    rules_version: Mapped[str] = mapped_column(String(32))
+    threat_list_version: Mapped[str | None] = mapped_column(String(32))
+    permission_state: Mapped[dict[str, Any]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    fcm_token_enc: Mapped[str | None] = mapped_column(Text)
+    device_secret_hash: Mapped[str] = mapped_column(CHAR(64))
+    last_heartbeat_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    revoked_at: Mapped[datetime | None]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class Consent(Base):
+    """Sổ đồng ý CHỈ GHI THÊM: trigger `trg_consents_immutable` chặn UPDATE/DELETE/TRUNCATE (Nghị định 356/2025).
+    Rút đồng ý = thêm dòng `granted = false`. FK dùng RESTRICT: xóa gia đình không được kéo theo xóa bằng chứng."""
+
+    __tablename__ = "consents"
+    __table_args__ = (
+        CheckConstraint(
+            "purpose IN ('core_protection', 'call_screening', 'usage_monitoring', 'overlay_pause', 'guardian_alerts',"
+            " 'llm_processing', 'voice_input', 'drills', 'pilot_research')",
+            name="purpose",
+        ),
+        CheckConstraint("channel IN ('app', 'zalo', 'web')", name="channel"),
+        CheckConstraint("text_sha256 ~ '^[0-9a-f]{64}$'", name="text_sha256_hex"),
+        Index("ix_consents_member", "member_id", "recorded_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="RESTRICT"))
+    member_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("members.id", ondelete="RESTRICT"))
+    purpose: Mapped[str] = mapped_column(String(32))
+    granted: Mapped[bool]
+    consent_version: Mapped[str] = mapped_column(String(16))
+    text_sha256: Mapped[str] = mapped_column(CHAR(64))
+    channel: Mapped[str] = mapped_column(String(16))
+    recorded_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class TrustedContact(Base):
+    """Liên hệ tin cậy (R0: không cảnh báo). CHỈ HMAC + 3 số cuối, không số thô (ADR-006)."""
+
+    __tablename__ = "trusted_contacts"
+    __table_args__ = (
+        CheckConstraint("phone_hmac ~ '^[0-9a-f]{64}$'", name="phone_hmac_hex"),
+        Index("ix_trusted_contacts_hmac", "phone_kid", "phone_hmac"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    member_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("members.id", ondelete="CASCADE"))
+    phone_hmac: Mapped[str] = mapped_column(CHAR(64))
+    phone_kid: Mapped[int] = mapped_column(SmallInteger)
+    last3: Mapped[str | None] = mapped_column(CHAR(3))
+    label: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class ActionToken(Base):
+    """Liên kết hành động một lần (`/a/[token]`): chỉ lưu băm. `incident_id` chưa có FK (`incidents`: spec 021)."""
+
+    __tablename__ = "action_tokens"
+    __table_args__ = (
+        CheckConstraint("scope IN ('incident_decision', 'guardian_view', 'drill_debrief')", name="scope"),
+        CheckConstraint("token_hash ~ '^[0-9a-f]{64}$'", name="token_hash_hex"),
+        UniqueConstraint("token_hash", name="uq_action_tokens_token_hash"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    incident_id: Mapped[uuid.UUID | None]
+    member_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("members.id", ondelete="CASCADE"))
+    token_hash: Mapped[str] = mapped_column(CHAR(64))
+    scope: Mapped[str] = mapped_column(String(32))
+    expires_at: Mapped[datetime]
+    used_at: Mapped[datetime | None]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
 __all__ = [
+    "ActionToken",
     "AgentRun",
     "AgentStep",
     "Base",
+    "Consent",
+    "Device",
     "Family",
     "Job",
     "Member",
     "MessageOut",
     "PairingCode",
     "ThreatIndicator",
+    "TrustedContact",
 ]

@@ -18,8 +18,8 @@
 |---|---|---|
 | `families` | id, display_name (bí danh do người dùng đặt), region (`bac/trung/nam`), plan, created_at, is_demo | **đã có** (`0003`, spec 002) |
 | `members` | id, family_id, role (`protected/guardian`), alias (cách xưng hô: "Mẹ", "Bố"…, rỗng được), address_form, guardian_rank (1, 2), **zalo_bot_id, zalo_user_hmac, zalo_hmac_kid, zalo_chat_enc**, locale, created_at | **đã có** (`0003`); không lưu tên thật; 4 cột Zalo cùng có hoặc cùng rỗng; unique `(family_id, guardian_rank)` cho người giám hộ, unique `(zalo_bot_id, zalo_user_hmac)`; cột Zalo theo D1 (§3b) |
-| `devices` | id, family_id, member_id, platform, app_version, rules_version, threat_list_version, permission_state jsonb, fcm_token_enc, last_heartbeat_at, revoked_at | |
-| `consents` | id, family_id, member_id, purpose, granted bool, consent_version, text_sha256, channel (`app/zalo/web`), recorded_at | **chỉ ghi thêm**: trigger chặn UPDATE/DELETE; rút đồng ý = dòng mới `granted=false` |
+| `devices` | id, family_id, member_id, platform, label, app_version, rules_version, threat_list_version, permission_state jsonb, fcm_token_enc, device_secret_hash, last_heartbeat_at, revoked_at, created_at | **đã có** (`0005`, spec 020); tạo khi ghép đôi; `device_secret_hash` = SHA-256 của refresh token (unique, không lưu token thô); `label` = bí danh máy, không PII; FK gia đình/thành viên `CASCADE` |
+| `consents` | id, family_id, member_id, purpose, granted bool, consent_version, text_sha256, channel (`app/zalo/web`), recorded_at | **đã có** (`0005`); **chỉ ghi thêm**: trigger `trg_consents_immutable` (UPDATE/DELETE, mỗi dòng) và `trg_consents_no_truncate` (TRUNCATE) cùng gọi `prevent_consent_tamper()` ⇒ ném lỗi (bật `ENABLE ALWAYS`: vẫn chạy khi `session_replication_role = replica`; chủ bảng/superuser vẫn tắt được ⇒ prod nên tách role ứng dụng chỉ có INSERT/SELECT); `downgrade` từ chối khi còn dòng; rút đồng ý = dòng mới `granted=false`; FK `RESTRICT` (xóa gia đình/thành viên không kéo theo xóa bằng chứng; muốn xóa cần thủ tục riêng có người duyệt, tắt trigger trong một giao dịch); `text_sha256` là 64 hex thường |
 
 `purpose` (enum, thêm giá trị ⇒ văn bản đồng ý mới): `core_protection`, `call_screening`, `usage_monitoring`,
 `overlay_pause`, `guardian_alerts`, `llm_processing`, `voice_input`, `drills`, `pilot_research`.
@@ -27,9 +27,9 @@
 ### Liên hệ & xác thực
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
-| `trusted_contacts` | id, family_id, member_id, phone_hmac, phone_kid, last3, label | R0: không cảnh báo |
+| `trusted_contacts` | id, family_id, member_id, phone_hmac, phone_kid, last3, label, created_at | **đã có** (`0005`, chưa có API); R0: không cảnh báo; chỉ HMAC + 3 số cuối, CHECK 64 hex |
 | `pairing_codes` | id, family_id, code_hash, expires_at, used_at | **đã có** (`0003`); mã 6 số / QR, hết hạn 15 phút; chỉ lưu `HMAC(pepper, "hoicon:pairing:v1:"+mã)`; unique trên `code_hash` khi `used_at IS NULL` |
-| `action_tokens` | id, incident_id, member_id, token_hash, scope, expires_at, used_at | magic link `/a/[token]` |
+| `action_tokens` | id, incident_id, member_id, token_hash, scope, expires_at, used_at, created_at | **đã có** (`0005`, chưa có API); magic link `/a/[token]`; chỉ lưu băm (unique); `scope` ∈ `incident_decision/guardian_view/drill_debrief`; `incident_id` chưa có FK (bảng `incidents`: spec 021) |
 
 ### Sự kiện & sự cố
 | Bảng | Cột chính | Ghi chú |
