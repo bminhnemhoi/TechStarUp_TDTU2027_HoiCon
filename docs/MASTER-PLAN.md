@@ -8,8 +8,8 @@
 > - `docs/HANDOFF.md` — bàn giao, dựng môi trường, tài khoản.
 >
 > **Phân quyền (Tiến chốt 15/10):** Tiến là kỹ sư chủ trì, **quyết định toàn bộ kỹ thuật** trên nhánh dev và các
-> worktree. Minh là **reviewer ở cổng PR cuối** (tính năng xong, `evidence.md` đủ, test xanh ⇒ mở PR để Minh merge vào
-> `main`). Không dừng giữa chừng chờ Minh duyệt từng task — xem §2.6.
+> worktree. Minh là **reviewer ở cổng PR tổng của đợt** (`tien-collab-dev` → `main`, khi đợt xong, `evidence.md` đủ, test
+> xanh). Không dừng giữa chừng chờ Minh duyệt từng task — xem §2.6. Quy trình tích hợp: §5 luật 5, §6 bước 6.
 
 ## 1. Audit trạng thái (15/10/2026)
 
@@ -94,12 +94,12 @@
 - `tasks.md` **không** có task kiểu "dừng chờ Minh duyệt" giữa chừng. Quyết định kỹ thuật (thiết kế bảng, mã hóa,
   thư viện, nội dung ADR) chốt trong `plan.md`/`research.md` lúc lập kế hoạch, Tiến duyệt **trước** `implement`; sau đó
   agent chạy từ task đầu tới phase **Acceptance evidence** không ngắt.
-- ADR mới viết **đầy đủ** ngay trong spec (trạng thái "Đã chấp nhận — Tiến, <ngày>"); Minh xem cùng PR cuối.
+- ADR mới viết **đầy đủ** ngay trong spec (trạng thái "Đã chấp nhận — Tiến, <ngày>"); Minh xem cùng PR tổng của đợt.
 - Thứ chỉ có từ bên ngoài (token, tài khoản, máy thật) **không** là điểm dừng: dùng mock/đường thay thế, task đó ghi
   `BLOCKED: <lý do>` trong `evidence.md` (§2.5) rồi làm tiếp các task còn lại.
 - Điểm dừng hợp lệ duy nhất: điều kiện dừng §2.5 (analyze còn CRITICAL/HIGH sau 2 vòng, `Verify:` đỏ 2 lần, converge
   không giảm) và nguy cơ vi phạm hiến chương/CLAUDE.md (dừng, báo Tiến).
-- Cổng người duy nhất của Minh: review + squash merge PR cuối của tính năng.
+- Cổng người duy nhất của Minh: review + merge PR tổng của đợt (`tien-collab-dev` → `main`).
 
 ## 3. Danh mục tính năng (100% phạm vi, số spec cấp trước)
 
@@ -204,38 +204,45 @@ dừng an toàn, đường cảnh báo, trace, eval ≥ 100 ca.
 
 **Tạo / dùng / dọn:**
 ```bash
-# Điều kiện: PR #9 (+ #5) đã merge vào main; nếu không, origin/main thiếu P1-S2/S4/P1-07.
+# Nhánh spec tách từ nhánh tích hợp tien-collab-dev (luật 5), không từ main.
 git fetch origin
-git worktree add -b feat/001-safe-pause-real-device ../hoicon-wt/android origin/main
-git worktree add -b feat/002-zalo-guardian-channel ../hoicon-wt/server origin/main
+git worktree add -b feat/001-safe-pause-real-device ../hoicon-wt/android origin/tien-collab-dev
+git worktree add -b feat/002-zalo-guardian-channel ../hoicon-wt/server origin/tien-collab-dev
+# worktree đã có: git -C ../hoicon-wt/<làn> switch -c feat/NNN-slug origin/tien-collab-dev
 # trong từng worktree:
 uv sync --directory backend          # .venv riêng mỗi worktree
 pnpm install                         # store pnpm dùng chung ⇒ nhanh
 # Tiến tự chép backend/.env và .claude/settings.local.json sang (Claude không đọc .env)
 git worktree list
-# sau khi PR merge:
+# sau khi PR tổng của đợt merge vào main:
 git worktree remove ../hoicon-wt/android && git branch -d feat/001-safe-pause-real-device
 ```
 
 **Luật để không giẫm chân nhau:**
 1. **Sở hữu theo đường dẫn:** làn A không sửa `backend/**`; làn B không sửa `apps/android/**`. File chung
-   (`docs/schemas/**`, `docs/ROADMAP.md`, `docs/MASTER-PLAN.md`, `CLAUDE.md`, `.specify/memory/**`) sửa bằng PR nhỏ từ
-   checkout chính và **merge trước** (hợp đồng trước); hai làn `git rebase origin/main` sau đó.
+   (`docs/schemas/**`, `docs/ROADMAP.md`, `docs/MASTER-PLAN.md`, `CLAUDE.md`, `.specify/memory/**`) sửa ở checkout chính
+   trên `tien-collab-dev` và **đẩy trước** (hợp đồng trước); hai làn `git rebase origin/tien-collab-dev` sau đó.
 2. **Chỉ làn B tạo migration Alembic** (tránh hai head). Làn A cần API thì dùng DB riêng `hoicon_android`
    (`HOICON_DATABASE_URL` trong `.env` của worktree đó) + cổng API 18001 / web 3101. Container Postgres 15432 dùng chung.
 3. **Chỉ làn A dùng máy ảo** (một emulator, 14 GB RAM). Không chạy Gradle ở hai làn cùng lúc. Trước buổi chạy máy ảo,
    hỏi Tiến trước khi dừng stack Docker khác.
 4. **Mỗi worktree một phiên Claude Code** (một pane Orca), mỗi phiên đúng một spec. `.specify/feature.json` riêng từng
    checkout nên `/speckit-*` không lẫn spec.
-5. Rebase hằng ngày; PR squash merge, người còn lại duyệt; không push thẳng `main`.
-6. Minh (Windows, ít RAM) không cần worktree: nhận làn H + review PR cuối của mỗi tính năng (cổng merge `main`).
+5. **Tích hợp trực tiếp vào `tien-collab-dev`** (Tiến chốt 15/10): không mở PR từng spec. Spec xong (§6 bước 5) ⇒ ở
+   checkout chính chạy cổng (`check-spec-trace.py`, `unittest scripts/tests`, `pytest`, Gradle khi đụng Android), quét
+   gitleaks các commit mới, rồi `git merge --no-ff feat/NNN-slug` và `git push origin tien-collab-dev`. Luôn giữ **một
+   Draft PR tổng** `tien-collab-dev` → `main` (hiện là **#12**) để CI chạy trên mỗi lần push (workflow chỉ chạy trên PR +
+   push `main`). Cuối đợt bỏ Draft ⇒ Minh nghiệm thu một lần. Rebase nhánh spec lên `origin/tien-collab-dev` hằng ngày;
+   không push thẳng `main`.
+6. Minh (Windows, ít RAM) không cần worktree: nhận làn H + review PR tổng của mỗi đợt (cổng merge `main`).
 7. **Spec hai làn (A+B: 010, 012, 020, 024, 026, 028, 029, 037, 050):** `spec.md` + `plan.md` + `tasks.md` + schema viết
-   **một lần** ở checkout chính và merge thành "PR đặc tả" trước; sau đó mỗi làn mở nhánh riêng, chỉ làm và tick task
-   thuộc đường dẫn của mình. `converge` + `evidence.md` do người merge sau cùng chạy một lần trên `main`.
+   **một lần** ở checkout chính và đẩy lên `tien-collab-dev` trước; sau đó mỗi làn mở nhánh riêng, chỉ làm và tick task
+   thuộc đường dẫn của mình. `converge` + `evidence.md` do người tích hợp sau cùng chạy một lần trên `tien-collab-dev`.
 8. **ROADMAP trong nhánh tính năng:** chỉ sửa **dòng task của mình**. Khối STATUS và "Ghi chú" chỉ sửa ở checkout chính
    sau khi merge (khối STATUS là điểm xung đột thường gặp nhất).
-9. **Sau khi một PR squash-merge:** nhánh cũ không còn là tổ tiên của `main` ⇒ `git fetch && git rebase origin/main`
-   cho nhánh còn mở; với thay đổi chưa commit: `git stash -u && git switch main && git pull --ff-only && git stash pop`.
+9. **Sau khi PR tổng squash-merge vào `main`:** `tien-collab-dev` không còn là tổ tiên của `main` ⇒ đặt lại
+   `tien-collab-dev` từ `origin/main` mới (Tiến làm, `git push --force-with-lease`) và `git rebase --onto` các nhánh spec
+   còn mở; với thay đổi chưa commit: `git stash -u` trước, `git stash pop` sau.
 10. **File sinh tự động có chủ:** `BankAppCatalog.kt` (`:rules`) + khối `<queries>` trong `AndroidManifest.xml` sinh từ
     `data/bank_apps.vn.json` (làn A, `python scripts/gen-bank-apps.py`; I1 cũng đi đường này); `apps/web/src/lib/api/schema.d.ts` sinh từ OpenAPI backend (làn B,
     `bash scripts/gen-api-client.sh`). Không sửa tay, không sinh ở làn không sở hữu.
@@ -246,17 +253,21 @@ A = 024 (E8) → 028.
 
 ## 6. Cách làm một tính năng (bảng tra nhanh cho người và coding agent)
 1. **Checkout chính:** lấy số spec ở §3; ROADMAP đổi task sang `◐`, thêm link `specs/NNN-slug` (sau khi thư mục tồn tại).
-2. **Worktree/nhánh:** `git worktree add -b feat/NNN-slug ../hoicon-wt/<làn> origin/main` (hoặc nhánh thường nếu một làn).
+2. **Worktree/nhánh:** `git worktree add -b feat/NNN-slug ../hoicon-wt/<làn> origin/tien-collab-dev` (worktree đã có:
+   `git switch -c feat/NNN-slug origin/tien-collab-dev`).
 3. **Đặc tả** (phiên Claude trong worktree): `/speckit-specify` kèm `SPECIFY_FEATURE_DIRECTORY=specs/NNN-slug`, mã ROADMAP,
    US-xx, ADR → `/speckit-clarify` (nếu còn `[NEEDS CLARIFICATION]`) → `/speckit-plan` → `/speckit-tasks` →
    `/speckit-analyze` (0 CRITICAL/HIGH) → `/speckit-checklist privacy|elder-ux|release-block` khi liên quan.
 4. **Làm:** `/speckit-implement` từng phase, chạy `Verify:` từng task → `/speckit-converge` tới 0 finding.
 5. **Nghiệm thu:** cổng các tầng (§2.4 bước 4) → `evidence.md` → reviewer → `python3 scripts/check-spec-trace.py`.
-6. **PR** (khi mọi task không bị chặn đã xong, evidence đủ, test xanh): mẫu PR + link spec + evidence → Minh review →
-   squash merge → ROADMAP `☑` → dọn worktree. Bước 3–5 chạy một mạch theo §2.6, không có cổng duyệt giữa chừng. Còn task
-   `BLOCKED` bởi bên ngoài ⇒ vẫn mở PR, ROADMAP giữ `◐`, phần còn lại làm bằng PR lite nối tiếp khi gỡ chặn.
+6. **Tích hợp** (khi mọi task không bị chặn đã xong, evidence đủ, test xanh): commit trên nhánh spec → ở checkout chính
+   `git merge --no-ff feat/NNN-slug` vào `tien-collab-dev` theo §5 luật 5 (cổng + gitleaks trước, push sau) → CI chạy trên
+   Draft PR tổng (#12) → xanh thì xong spec. Bước 3–5 chạy một mạch theo §2.6, không có cổng duyệt giữa chừng. Còn task
+   `BLOCKED` bởi bên ngoài ⇒ vẫn tích hợp, ROADMAP giữ `◐`, phần còn lại làm bằng nhánh lite nối tiếp khi gỡ chặn.
+   **Cuối đợt:** bỏ Draft PR tổng (mô tả: link spec + evidence từng spec) → Minh review → merge `main` → ROADMAP `☑` cho
+   spec đủ evidence → dọn worktree/nhánh.
 
-Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi bằng chứng trong mô tả PR.
+Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi bằng chứng (trong `evidence.md` hoặc thông điệp commit).
 
 ## 7. Rủi ro chính
 | Rủi ro | Mức | Giảm thiểu |
@@ -275,9 +286,12 @@ Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi
   (tiền tố `hoicon:zalo:v1:`) — **Tiến duyệt 15/10/2026**.
 - ☑ **D2** (spec 002, ADR-010): migration `0003` tạo `families`, `members`, `pairing_codes`, `messages_out` —
   **Tiến duyệt 15/10/2026**. Spec 002 chạy một mạch từ T006 tới hết (§2.6).
+- ☑ **O1** (+ B3): eval smoke làm trước 024 — **Tiến duyệt 15/10/2026, hoàn thành ở spec 030** (`hoicon-eval --suite smoke`,
+  20 ca tất định, baseline `backend/eval/baseline.json`, bước CI trong `backend.yml`).
+- ☑ **Quy trình tích hợp** — **Tiến chốt 15/10/2026**: spec merge thẳng vào `tien-collab-dev`, một Draft PR tổng (#12) lên
+  `main` chạy CI liên tục, Minh nghiệm thu cuối đợt (§5 luật 5, §6 bước 6).
 
 **Còn chờ:**
 1. ★ I1, I2 vào 022/023; I3 spike sau M1; I4 gộp 032; I5 chỉ ở thuyết minh.
-2. ★ O1: eval smoke (030) trước 024.
-3. ★ B1 (tạo skill thiếu), B2 (bỏ mục cắt T2), B8 (cắt P1-S6 ngay).
-4. ★ B4: hạ cam kết 50–100 gia đình hay nâng gate. ★ B6: cách chấm eval.
+2. ★ B1 (tạo skill thiếu), B2 (bỏ mục cắt T2), B8 (cắt P1-S6 ngay).
+3. ★ B4: hạ cam kết 50–100 gia đình hay nâng gate. ★ B6: cách chấm eval.
