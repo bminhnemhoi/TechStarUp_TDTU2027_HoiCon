@@ -5,8 +5,8 @@
     "family_id": "01928374-abcd-7123-89ef-0123456789cd",
     "member_id": "01928374-abcd-7123-89ef-0123456789ef",
     "family_name": "Gia đình Bác Ba",
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy",
-    "refresh_token": "r_dummysecret1234567890",
+    "access_token": "sample-device-access-token",
+    "refresh_token": "sample-device-refresh-token",
     "token_type": "bearer",
     "expires_in": 2592000
   }
