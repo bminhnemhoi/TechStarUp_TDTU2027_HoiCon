@@ -1,0 +1,141 @@
+"""Xác thực thiết bị (spec 020, FR-004, plan T2): JWT HS256 sống 30 ngày + refresh token chỉ lưu băm.
+
+`access_token` mang `device_id` (sub), `family_id`, `member_id`, `role = "protected"`. Máy người cao tuổi chạy nền liên
+tục nên không bắt đăng nhập lại hằng ngày; đổi lại, `get_current_device` luôn đối chiếu DB (thiết bị còn tồn tại, chưa
+`revoked_at`) nên thu hồi có hiệu lực ngay. `refresh_token` là 32 byte ngẫu nhiên, DB chỉ giữ SHA-256
+(`devices.device_secret_hash`).
+"""
+
+import hashlib
+import logging
+import secrets
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from typing import Annotated
+from uuid import UUID
+
+import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
+
+from hoicon.config import get_settings
+from hoicon.db.models import Device
+from hoicon.db.session import get_sessionmaker
+
+logger = logging.getLogger(__name__)
+
+ALGORITHM = "HS256"
+ISSUER = "hoicon"
+AUDIENCE = "hoicon-device"
+ROLE = "protected"
+ACCESS_TTL = timedelta(days=30)
+ACCESS_TTL_S = int(ACCESS_TTL.total_seconds())
+MIN_KEY_LEN = 32  # ký tự; HS256 cần khóa ≥ 256 bit
+
+_bearer = HTTPBearer(auto_error=False)
+
+
+class DeviceTokenError(Exception):
+    """Token thiết bị sai, hết hạn hoặc thiếu trường bắt buộc (không nêu lý do chi tiết ra ngoài)."""
+
+
+class DeviceAuthNotConfiguredError(RuntimeError):
+    """Thiếu `HOICON_DEVICE_JWT_SECRET` hoặc quá ngắn: lỗi của ta, không phải của người gọi."""
+
+
+@dataclass(frozen=True)
+class DeviceClaims:
+    device_id: UUID
+    family_id: UUID
+    member_id: UUID
+
+
+def _key() -> str:
+    secret = get_settings().device_jwt_secret
+    value = secret.get_secret_value() if secret is not None else ""
+    if len(value) < MIN_KEY_LEN:
+        raise DeviceAuthNotConfiguredError(f"HOICON_DEVICE_JWT_SECRET thiếu hoặc ngắn hơn {MIN_KEY_LEN} ký tự")
+    return value
+
+
+def ensure_configured() -> None:
+    """Ném `DeviceAuthNotConfiguredError` nếu chưa ký được token; gọi TRƯỚC khi tiêu thụ mã ghép."""
+    try:
+        issue_access_token(UUID(int=0), UUID(int=0), UUID(int=0))  # ký thử: khóa sai định dạng cũng bị bắt ở đây
+    except (jwt.PyJWTError, ValueError, TypeError) as exc:
+        raise DeviceAuthNotConfiguredError(f"không ký được token thử ({type(exc).__name__})") from None
+
+
+def issue_access_token(device_id: UUID, family_id: UUID, member_id: UUID, *, now: datetime | None = None) -> str:
+    issued = now or datetime.now(UTC)
+    payload = {
+        "sub": str(device_id),
+        "family_id": str(family_id),
+        "member_id": str(member_id),
+        "role": ROLE,
+        "iss": ISSUER,
+        "aud": AUDIENCE,
+        "iat": issued,
+        "exp": issued + ACCESS_TTL,
+    }
+    return jwt.encode(payload, _key(), algorithm=ALGORITHM)
+
+
+def decode_access_token(token: str) -> DeviceClaims:
+    key = _key()  # thiếu khóa là lỗi cấu hình, không bị nuốt thành "token sai"
+    try:
+        raw = jwt.decode(
+            token,
+            key,
+            algorithms=[ALGORITHM],  # cố định: chặn `alg: none` và nhầm thuật toán
+            audience=AUDIENCE,
+            issuer=ISSUER,
+            options={"require": ["exp", "iat", "sub", "aud", "iss"]},
+        )
+        if raw.get("role") != ROLE:
+            raise DeviceTokenError("role")
+        return DeviceClaims(UUID(raw["sub"]), UUID(raw["family_id"]), UUID(raw["member_id"]))
+    except (jwt.PyJWTError, KeyError, ValueError, TypeError) as exc:
+        raise DeviceTokenError(type(exc).__name__) from None
+
+
+def new_refresh_token() -> tuple[str, str]:
+    """⇒ (token gửi cho thiết bị, SHA-256 hex để lưu). 256 bit ngẫu nhiên nên băm không cần muối."""
+    token = secrets.token_urlsafe(32)
+    return token, hashlib.sha256(token.encode()).hexdigest()
+
+
+def _unauthorized() -> HTTPException:
+    return HTTPException(
+        status.HTTP_401_UNAUTHORIZED,
+        detail="Chưa xác thực thiết bị",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+async def get_current_device(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+) -> DeviceClaims:
+    """Dependency cho mọi route của thiết bị: token hợp lệ VÀ thiết bị còn hiệu lực trong DB."""
+    if credentials is None:
+        raise _unauthorized()
+    try:
+        claims = decode_access_token(credentials.credentials)
+    except DeviceAuthNotConfiguredError:
+        logger.error("xác thực thiết bị: HOICON_DEVICE_JWT_SECRET thiếu hoặc quá ngắn ⇒ từ chối mọi token")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Dịch vụ chưa sẵn sàng") from None
+    except DeviceTokenError:
+        raise _unauthorized() from None
+    async with get_sessionmaker()() as session:
+        alive = await session.scalar(
+            select(Device.id).where(
+                Device.id == claims.device_id,
+                Device.family_id == claims.family_id,
+                Device.member_id == claims.member_id,
+                Device.revoked_at.is_(None),
+            )
+        )
+    if alive is None:
+        raise _unauthorized()
+    return claims

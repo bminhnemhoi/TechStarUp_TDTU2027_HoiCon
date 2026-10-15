@@ -215,3 +215,44 @@ async def seeded_threat(require_db: None, fake_pepper: None) -> AsyncGenerator[d
             await session.execute(
                 delete(ThreatIndicator).where(ThreatIndicator.value_kid == kid, ThreatIndicator.value_hmac == digest)
             )
+
+
+# --- Ghép đôi thiết bị & sổ đồng ý (spec 020) -----------------------------------------------------------------------
+
+
+@dataclass
+class DeviceWorld:
+    """Một gia đình demo + một mã ghép còn hạn, trên Postgres thật; khóa JWT/pepper GIẢ; dọn sạch sau test."""
+
+    family_id: Any
+    display_name: str
+    code: str
+
+    async def new_code(self) -> str:
+        from hoicon.ops.pairing_code import create_pairing_code
+
+        return await create_pairing_code(get_sessionmaker(), self.family_id)
+
+
+@pytest.fixture
+async def device_world(require_db: None, monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[DeviceWorld]:
+    from consent_support import purge_family
+
+    from hoicon.api.routers import pairing
+    from hoicon.ops.pairing_code import create_pairing_code
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("HOICON_PHONE_PEPPER_1", "11" * 32)
+    monkeypatch.setenv("HOICON_DEVICE_JWT_SECRET", "integration-test-key-" + "k" * 32)  # gitleaks:allow
+    pairing.reset_limits()
+    name = f"test-020-{secrets.token_hex(4)}"
+    async with get_sessionmaker().begin() as session:
+        family = Family(display_name=name, region="nam", is_demo=True)
+        session.add(family)
+        await session.flush()
+        family_id = family.id
+    code = await create_pairing_code(get_sessionmaker(), family_id)
+    yield DeviceWorld(family_id, name, code)
+    await purge_family(family_id)
+    pairing.reset_limits()
+    get_settings.cache_clear()
