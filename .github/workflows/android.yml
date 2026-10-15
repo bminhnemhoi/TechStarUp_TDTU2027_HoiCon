@@ -41,7 +41,7 @@ jobs:
       # BankAppCatalogTest (trong :rules:test) bắt lệch giữa data/bank_apps.vn.json và mã sinh ra.
       # :latency chỉ build ở đây; chạy trên máy thật bằng scripts/ftl-latency.sh (Firebase Test Lab).
       - run: >-
-          ./gradlew --no-daemon :rules:test :app:assembleDebug :app:processReleaseMainManifest
+          ./gradlew --no-daemon -Dorg.gradle.jvmargs="-Xmx3072m -Dfile.encoding=UTF-8" :rules:test :app:assembleDebug :app:processReleaseMainManifest
           :demobank:assembleDebug :latency:assembleDebug :app:lintDebug :demobank:lintDebug
       # Bản phát hành: không móc thử chỉ dành cho debug (ADR-008), không quyền bị cấm (CLAUDE.md luật 3) — kể cả
       # quyền do thư viện merge vào. So khớp thuộc tính, không so comment; thiếu file là lỗi (đường dẫn của AGP 9.4).
