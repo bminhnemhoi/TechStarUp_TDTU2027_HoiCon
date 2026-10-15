@@ -1,6 +1,7 @@
 """Đồ thị sự cố trên Postgres thật: 2 interrupt, bộ hẹn giờ bằng job, LLM chỉ nâng mức, công khai AI, che PII."""
 
 import asyncio
+import json
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any
@@ -60,7 +61,7 @@ async def jobs_for(thread: str) -> list[Job]:
         return list(await session.scalars(select(Job).where(Job.idempotency_key.startswith(f"{thread}:"))))
 
 
-async def test_full_incident_flow(threads: list[str]) -> None:
+async def test_full_incident_flow(threads: list[str], seeded_threat: dict[str, Any]) -> None:
     d = deps(timer_t1_s=1, timer_t2_s=2)
     thread = str(new_id())
     threads.append(thread)
@@ -113,6 +114,11 @@ async def test_full_incident_flow(threads: list[str]) -> None:
         nodes = list(await session.scalars(select(AgentStep.node).where(AgentStep.run_id == run.id)))
     assert run.status == "done" and run.finished_at is not None
     assert run.cost_usd == llm_cost > 0
+    # SC-001 (spec 003): h1 của số gọi đến (kể cả khi số nằm trong danh sách đe dọa) cũng không nằm ở `agent_steps`.
+    async with get_sessionmaker()() as session:
+        steps = (await session.scalars(select(AgentStep).where(AgentStep.run_id == run.id))).all()
+    steps_dump = json.dumps([[s.input_redacted, s.output] for s in steps], ensure_ascii=False)
+    assert steps and DEMO_H1 not in steps_dump and "vn.hoicon.demobank" not in steps_dump
     assert nodes.count("risk_scorer") == 2 and nodes.count("fast_alert") == 1
 
 
@@ -130,6 +136,30 @@ async def test_guardian_silence_ends_as_no_response(threads: list[str]) -> None:
     assert status.status == "done" and status.outcome == "resolved_no_response"
     texts = [j.payload["text"] for j in await jobs_for(thread) if j.kind == "notify_guardian"]
     assert texts and all("[DIỄN TẬP]" in t for t in texts)  # luật 8
+
+
+async def test_threat_lookup_failure_does_not_block_the_incident(
+    threads: list[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """FR-004 / T6: danh sách đe dọa lỗi ⇒ `threat = unknown` + tên lớp lỗi; sự cố vẫn chạy, mức ≥ mức sàn của máy."""
+    from sqlalchemy.exc import OperationalError
+
+    async def broken(*_: Any, **__: Any) -> None:
+        raise OperationalError("SELECT secret-connection-string", {}, Exception("password=hunter2"))
+
+    monkeypatch.setattr("hoicon.agents.runtime.lookup_h1", broken)
+    thread = str(new_id())
+    threads.append(thread)
+    async with IncidentRuntime.open(deps()) as runtime:
+        status = await runtime.start(demo_event(), incident_id=thread, elder_alias="Mẹ", is_demo=True)
+        values = (await runtime.graph.aget_state({"configurable": {"thread_id": thread}})).values
+        raw = await checkpoint_bytes(get_sessionmaker(), thread)
+        await runtime.graph.checkpointer.adelete_thread(thread)
+    assert values["threat"] == {"verdict": "unknown", "error": "OperationalError"}
+    assert status.waiting_for == "ask_elder"  # đường cảnh báo không bị chặn
+    assert status.level in ("high", "critical")  # không thấp hơn mức sàn `high` của luật máy (luật 5)
+    for secret in (DEMO_H1, "vn.hoicon.demobank", "hunter2", "secret-connection-string"):
+        assert secret.encode() not in raw, secret
 
 
 async def test_full_name_alias_is_rejected(threads: list[str]) -> None:

@@ -3,6 +3,7 @@
     uv run --directory backend python -m hoicon.agents.spike demo            # một sự cố, hẹn giờ rút ngắn
     uv run --directory backend python -m hoicon.agents.spike demo --family <tên>   # gửi tin tới gia đình dev (spec 002)
     uv run --directory backend python -m hoicon.agents.spike bench --n 20    # p50/p95 từng lượt + chi phí
+    uv run --directory backend python -m hoicon.agents.spike bench --n 20 --model claude-haiku-4-5 --json out.json
     uv run --directory backend python -m hoicon.agents.spike recover         # chạy tiếp các lần chạy dở dang
 
 Không có HOICON_ANTHROPIC_API_KEY ⇒ mọi node LLM rơi về mẫu (đo phần điều phối: checkpoint, job, trace).
@@ -13,18 +14,21 @@ import argparse
 import asyncio
 import json
 import math
+import os
+import platform
 import statistics
 import sys
 import time
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
 
 from hoicon.agents.incident_graph import Deps
-from hoicon.agents.llm_router import LlmRouter
+from hoicon.agents.llm_router import MODELS, LlmRouter
 from hoicon.agents.runtime import IncidentRuntime
 from hoicon.config import get_settings
 from hoicon.db.ids import new_id
@@ -58,7 +62,11 @@ def demo_event(is_drill: bool = False) -> RiskEvent:
 
 def deps(router: LlmRouter | None = None, **timers: int) -> Deps:
     settings = get_settings().model_copy(update=timers)
-    return Deps(router=router or LlmRouter.from_settings(), sessions=get_sessionmaker(), settings=settings)
+    return Deps(
+        router=router or LlmRouter.from_settings(sessions=get_sessionmaker()),
+        sessions=get_sessionmaker(),
+        settings=settings,
+    )
 
 
 async def family_id_by_name(sessions: Any, name: str) -> str:
@@ -133,12 +141,33 @@ def percentile(values: list[float], q: float) -> float:
     return ordered[max(0, math.ceil(q * len(ordered)) - 1)]
 
 
-async def bench(n: int) -> None:
-    d = deps()
+def host_description() -> str:
+    """Mô tả máy đo (hệ điều hành, kiến trúc, số lõi) — không hostname, không tên người dùng."""
+    return f"{platform.system()} {platform.machine()} · {os.cpu_count()} lõi"
+
+
+async def bench(n: int, model: str | None = None, json_path: Path | None = None) -> dict[str, Any]:
+    """Đo `n` sự cố đầu–cuối. `model` ghi đè `llm_fast_model` (phải có trong bảng giá) CHỈ cho lần đo này.
+
+    Trả (và ghi ra `json_path` nếu có) báo cáo theo `docs/schemas/bench_report.v1.json`. Không có khóa API ⇒
+    `llm_mode = "fallback"`: số đo chỉ là điều phối (checkpoint, job, trace), KHÔNG phải số của model."""
+    settings = get_settings()
+    if model is not None:
+        if model not in MODELS:
+            print(
+                f"Model chưa có giá trong bảng giá (llm_router.MODELS): {model}. Có: {', '.join(MODELS)}",
+                file=sys.stderr,
+            )
+            raise SystemExit(2)
+        settings = settings.model_copy(update={"llm_fast_model": model})
+    router = LlmRouter.from_settings(settings, get_sessionmaker())
+    d = Deps(router=router, sessions=get_sessionmaker(), settings=settings)
     turns: dict[str, list[float]] = {"start→ask_elder": [], "answer→await_guardian": [], "decision→done": []}
+    threads: list[str] = []
     async with IncidentRuntime.open(d) as runtime:
         for _ in range(n):
             thread = str(new_id())
+            threads.append(thread)
             t = time.monotonic()
             status = await runtime.start(demo_event(), incident_id=thread, elder_alias="Mẹ", is_demo=True)
             turns["start→ask_elder"].append(time.monotonic() - t)
@@ -153,16 +182,47 @@ async def bench(n: int) -> None:
             await cancel_prefix(d.sessions, f"{thread}:")
             await runtime.graph.checkpointer.adelete_thread(thread)
     async with d.sessions() as session:
-        runs = (await session.scalars(select(AgentRun).order_by(AgentRun.started_at.desc()).limit(n))).all()
-    cost = sum((r.cost_usd for r in runs), Decimal(0))
-    print(f"n={n} · model={d.router.fast_model} · có khóa API={d.settings.anthropic_api_key is not None}")
-    for name, values in turns.items():
-        if values:
-            print(
-                f"  {name:<24} p50 {statistics.median(values):.3f}s · p95 {percentile(values, 0.95):.3f}s · "
-                f"max {max(values):.3f}s"
+        # Chỉ run do lần đo này tạo (thread_id đã biết): run khác chạy cùng lúc không lẫn vào chi phí/tỷ lệ rơi về mẫu.
+        runs = (await session.scalars(select(AgentRun).where(AgentRun.thread_id.in_(threads)))).all()
+        llm_steps = (
+            await session.scalars(
+                select(AgentStep.fallback_used).where(
+                    AgentStep.run_id.in_([r.id for r in runs]), AgentStep.model_profile.is_not(None)
+                )
             )
-    print(f"  chi phí trung bình/sự cố: {cost / n:.6f} USD")
+        ).all()
+    cost = sum((r.cost_usd for r in runs), Decimal(0))
+    fallback_rate = sum(llm_steps) / len(llm_steps) if llm_steps else 1.0
+    has_key = bool(d.settings.anthropic_api_key)  # cùng phép thử với LlmRouter.from_settings: khóa RỖNG = không có khóa
+    report: dict[str, Any] = {
+        "model": d.router.fast_model,
+        "llm_mode": "live" if has_key and fallback_rate < 1 else "fallback",
+        "n": n,
+        "turns": {
+            name: {
+                "p50_s": round(statistics.median(values), 4),
+                "p95_s": round(percentile(values, 0.95), 4),
+                "max_s": round(max(values), 4),
+            }
+            for name, values in turns.items()
+            if values
+        },
+        "fallback_rate": round(fallback_rate, 4),
+        "cost_usd_avg": float(round(cost / n, 6)),
+        "measured_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "host": host_description(),
+    }
+    print(f"n={n} · model={report['model']} · có khóa API={has_key} · chế độ LLM={report['llm_mode']}")
+    for name, stats in report["turns"].items():
+        print(f"  {name:<24} p50 {stats['p50_s']:.3f}s · p95 {stats['p95_s']:.3f}s · max {stats['max_s']:.3f}s")
+    print(f"  tỷ lệ rơi về mẫu: {report['fallback_rate']:.0%} · chi phí trung bình/sự cố: {cost / n:.6f} USD")
+    if report["llm_mode"] == "fallback":
+        print("  ⚠ không có lời gọi LLM thật: số đo chỉ là điều phối, KHÔNG phải số của model.")
+    if json_path is not None:
+        text = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
+        await asyncio.to_thread(json_path.write_text, text, encoding="utf-8")
+        print(f"  báo cáo: {json_path}")
+    return report
 
 
 class _BlockingClient:
@@ -193,17 +253,33 @@ async def recover() -> None:
             print(f"{status.thread_id}: {status.status} @ {status.waiting_for}")
 
 
-def main() -> None:
+def _positive(value: str) -> int:
+    number = int(value)
+    if number < 1:
+        raise argparse.ArgumentTypeError("phải ≥ 1")
+    return number
+
+
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="hoicon.agents.spike")
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("demo").add_argument("--family", help="tên gia đình dev để gửi tin thật qua kênh Zalo")
-    sub.add_parser("bench").add_argument("--n", type=int, default=20)
+    bench_cmd = sub.add_parser("bench")
+    bench_cmd.add_argument("--n", type=_positive, default=20)
+    bench_cmd.add_argument(
+        "--model", help="model của hồ sơ fast (phải có trong llm_router.MODELS); mặc định theo cấu hình"
+    )
+    bench_cmd.add_argument("--json", type=Path, help="ghi báo cáo theo docs/schemas/bench_report.v1.json")
     sub.add_parser("crash").add_argument("--thread", required=True)
     sub.add_parser("recover")
-    args = parser.parse_args()
+    return parser
+
+
+def main() -> None:
+    args = build_parser().parse_args()
     coro = {
         "demo": lambda: demo(args.family),
-        "bench": lambda: bench(args.n),
+        "bench": lambda: bench(args.n, args.model, args.json),
         "crash": lambda: crash(args.thread),
         "recover": recover,
     }[args.cmd]()

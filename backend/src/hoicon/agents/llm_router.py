@@ -12,20 +12,26 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Protocol
+from zoneinfo import ZoneInfo
 
 import anthropic
 from pydantic import BaseModel
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from hoicon.config import get_settings
+from hoicon.config import Settings, get_settings
+from hoicon.db.models import AgentStep
 from hoicon.domain.pii import mask_text
 
 logger = logging.getLogger(__name__)
 
 TIMEOUT_S = 4.0
+BUDGET_READ_TIMEOUT_S = 1.0  # quá hạn ⇒ `budget_unknown` (rơi về mẫu), không chờ DB nghẽn
+VN = ZoneInfo("Asia/Ho_Chi_Minh")  # "ngày" của trần chi tiêu theo giờ người dùng và đội
 PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 
@@ -92,22 +98,38 @@ class MessagesClient(Protocol):
 
 
 class LlmRouter:
-    def __init__(self, client: MessagesClient | None, fast_model: str, daily_budget_usd: Decimal) -> None:
+    def __init__(
+        self,
+        client: MessagesClient | None,
+        fast_model: str,
+        daily_budget_usd: Decimal,
+        sessions: async_sessionmaker | None = None,
+    ) -> None:
         if fast_model not in MODELS:
             raise ValueError(f"model chưa có trong bảng giá: {fast_model}")
         self._client = client
         self.fast_model = fast_model
         self._budget = daily_budget_usd
-        # ponytail: đếm chi tiêu trong bộ nhớ tiến trình (reset theo ngày); chuyển sang SUM(agent_steps.cost_usd) khi
-        # chạy nhiều tiến trình (P2-04).
+        self._sessions = sessions
+        # Không `sessions` (test đơn vị): đếm chi tiêu trong bộ nhớ tiến trình, reset theo ngày.
         self._spent: dict[date, Decimal] = {}
+        # Có `sessions` (spec 003, FR-011): chi tiêu đã ghi = SUM(agent_steps.cost_usd) của ngày giờ Việt Nam (bền qua
+        # khởi động lại) + phần đang giữ chỗ cho các lời gọi còn bay trong tiến trình này.
+        self._in_flight = Decimal(0)
 
     @classmethod
-    def from_settings(cls) -> "LlmRouter":
-        settings = get_settings()
+    def from_settings(cls, settings: Settings | None = None, sessions: async_sessionmaker | None = None) -> "LlmRouter":
+        settings = settings or get_settings()
         key = settings.anthropic_api_key
         client = anthropic.AsyncAnthropic(api_key=key.get_secret_value()) if key else None
-        return cls(client, settings.llm_fast_model, Decimal(str(settings.llm_daily_budget_usd)))
+        return cls(client, settings.llm_fast_model, Decimal(str(settings.llm_daily_budget_usd)), sessions)
+
+    async def _recorded_spend(self) -> Decimal:
+        """Chi tiêu đã ghi trong `agent_steps` từ 00:00 hôm nay giờ Việt Nam (chi phí vào bảng khi node ghi bước)."""
+        start = datetime.now(VN).replace(hour=0, minute=0, second=0, microsecond=0)
+        query = select(func.coalesce(func.sum(AgentStep.cost_usd), 0)).where(AgentStep.at >= start)
+        async with self._sessions() as session:
+            return Decimal(await session.scalar(query))
 
     async def structured[T: BaseModel](
         self,
@@ -139,10 +161,43 @@ class LlmRouter:
         # Giữ chỗ ngân sách TRƯỚC khi gọi (lời gọi song song không cùng lọt; quá hạn vẫn có thể bị tính tiền).
         reserved = (len(prompt.text) + len(content)) // 3 * spec.input_per_mtok / 10**6
         reserved += max_tokens * spec.output_per_mtok / 10**6
-        if self._spent.get(today, Decimal(0)) + reserved > self._budget:
+        if self._sessions is None:
+            spent = self._spent.get(today, Decimal(0))
+        else:
+            try:
+                async with asyncio.timeout(
+                    BUDGET_READ_TIMEOUT_S
+                ):  # đọc chi tiêu không được làm đường LLM vượt luật 5 (≤ 4 s)
+                    spent = await self._recorded_spend() + self._in_flight
+            except Exception as exc:  # đóng mặc định về chi phí: không đọc được chi tiêu ⇒ không gọi LLM
+                logger.warning("llm budget unreadable: %s", type(exc).__name__)  # không ghi thông điệp (chuỗi kết nối)
+                return self._fallback(result, "budget_unknown")
+        # Từ đây tới lúc giữ chỗ không có `await` ⇒ hai lời gọi song song không cùng lọt qua một khoảng trần.
+        if spent + reserved > self._budget:
             return self._fallback(result, "budget_exhausted")
-        self._spent[today] = self._spent.get(today, Decimal(0)) + reserved
+        if self._sessions is None:
+            self._spent[today] = spent + reserved
+        else:
+            self._in_flight += reserved
+        try:
+            return await self._call(prompt, content, output, max_tokens, spec, reserved, today, result)
+        finally:
+            if self._sessions is not None:
+                # Chi phí thật vào `agent_steps` khi node ghi bước. Trần là ngân sách MỀM: các lời gọi vừa xong nhưng
+                # chưa được ghi (và tiến trình khác) không được tính ⇒ sai số tối đa bằng số lời gọi đồng thời.
+                self._in_flight -= reserved
 
+    async def _call[T: BaseModel](
+        self,
+        prompt: Prompt,
+        content: str,
+        output: type[T],
+        max_tokens: int,
+        spec: ModelSpec,
+        reserved: Decimal,
+        today: date,
+        result: LlmResult[T],
+    ) -> LlmResult[T]:
         started = time.monotonic()
         try:
             async with asyncio.timeout(TIMEOUT_S):  # trần cứng, kể cả khi socket trả từng byte một
@@ -157,6 +212,10 @@ class LlmRouter:
         except Exception as exc:  # hứa "không bao giờ ném lỗi" (CancelledError là BaseException, vẫn lan ra)
             # Chỉ ghi tên lớp lỗi: thông điệp lỗi có thể lặp lại nội dung đã gửi.
             result.latency_ms = int((time.monotonic() - started) * 1000)
+            if self._sessions is not None and isinstance(exc, TimeoutError | anthropic.APITimeoutError):
+                # Quá hạn: nhà cung cấp vẫn có thể đã xử lý và tính tiền ⇒ ghi phần giữ chỗ để `agent_steps` (nguồn của
+                # trần) có nó. Lỗi chắc chắn không bị tính (hết kết nối, khóa sai) thì không ghi, kẻo tắt LLM cả ngày.
+                result.cost_usd = reserved
             return self._fallback(result, type(exc).__name__)
         result.latency_ms = int((time.monotonic() - started) * 1000)
 
@@ -165,7 +224,8 @@ class LlmRouter:
         result.cost_usd = (
             usage.input_tokens * spec.input_per_mtok + usage.output_tokens * spec.output_per_mtok
         ) / 10**6
-        self._spent[today] += result.cost_usd - reserved  # quyết toán theo usage thật
+        if self._sessions is None:
+            self._spent[today] += result.cost_usd - reserved  # quyết toán theo usage thật
         if response.stop_reason in ("refusal", "max_tokens") or response.parsed_output is None:
             return self._fallback(result, f"stop_{response.stop_reason}")
         result.output = response.parsed_output

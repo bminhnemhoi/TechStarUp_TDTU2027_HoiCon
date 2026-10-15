@@ -1,0 +1,57 @@
+[
+  {
+    "_why": "llm_mode lạ",
+    "model": "claude-haiku-5-5",
+    "llm_mode": "mock",
+    "n": 3,
+    "turns": { "start→ask_elder": { "p50_s": 0.1, "p95_s": 0.2, "max_s": 0.3 } },
+    "fallback_rate": 1,
+    "cost_usd_avg": 0,
+    "measured_at": "2026-10-15T09:00:00Z",
+    "host": "Linux x86_64 · 8 lõi"
+  },
+  {
+    "_why": "thiếu model",
+    "llm_mode": "fallback",
+    "n": 3,
+    "turns": { "start→ask_elder": { "p50_s": 0.1, "p95_s": 0.2, "max_s": 0.3 } },
+    "fallback_rate": 1,
+    "cost_usd_avg": 0,
+    "measured_at": "2026-10-15T09:00:00Z",
+    "host": "Linux x86_64 · 8 lõi"
+  },
+  {
+    "_why": "fallback_rate = 2",
+    "model": "claude-haiku-5-5",
+    "llm_mode": "fallback",
+    "n": 3,
+    "turns": { "start→ask_elder": { "p50_s": 0.1, "p95_s": 0.2, "max_s": 0.3 } },
+    "fallback_rate": 2,
+    "cost_usd_avg": 0,
+    "measured_at": "2026-10-15T09:00:00Z",
+    "host": "Linux x86_64 · 8 lõi"
+  },
+  {
+    "_why": "n = 0",
+    "model": "claude-haiku-5-5",
+    "llm_mode": "fallback",
+    "n": 0,
+    "turns": { "start→ask_elder": { "p50_s": 0.1, "p95_s": 0.2, "max_s": 0.3 } },
+    "fallback_rate": 0,
+    "cost_usd_avg": 0,
+    "measured_at": "2026-10-15T09:00:00Z",
+    "host": "Linux x86_64 · 8 lõi"
+  },
+  {
+    "_why": "thuộc tính lạ (hostname)",
+    "model": "claude-haiku-5-5",
+    "llm_mode": "fallback",
+    "n": 3,
+    "turns": { "start→ask_elder": { "p50_s": 0.1, "p95_s": 0.2, "max_s": 0.3 } },
+    "fallback_rate": 1,
+    "cost_usd_avg": 0,
+    "measured_at": "2026-10-15T09:00:00Z",
+    "host": "Linux x86_64 · 8 lõi",
+    "hostname": "may-cua-ai-do"
+  }
+]

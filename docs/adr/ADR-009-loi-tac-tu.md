@@ -33,11 +33,19 @@ hộ phản hồi (có thể vài phút), nhắc lại và chuyển người th�
    do của người cao tuổi không bao giờ được lưu hay gửi LLM** — chỉ còn cờ tất định (`note_flags`). Tắt cứng LangSmith.
 7. **Mức rủi ro chỉ nâng**: `raise_only(rule_floor, hiện tại, đề xuất LLM)` ở mọi node.
 8. **`fast_alert` không dùng LLM**: tin mẫu cho người giám hộ đi ngay khi có sự cố, nên đường cảnh báo không phụ thuộc LLM.
-9. **MCP Python SDK v2 (`MCPServer`)** cho `threat`, gắn tại `/mcp/threat` (stateless, JSON) **chỉ ở dev**. Kiểm Host
-   localhost của SDK chỉ chống DNS rebinding, không phải xác thực ⇒ trước khi gắn ở prod phải có token + giới hạn tần
-   suất (P2-11). Đồ thị gọi thẳng hàm miền (`lookup_h1`), không đi qua HTTP trong cùng tiến trình.
+9. **MCP Python SDK v2 (`MCPServer`)** cho `threat`, gắn tại `/mcp/threat` (stateless, JSON). Kiểm Host localhost của SDK
+   chỉ chống DNS rebinding, không phải xác thực. **Cập nhật 15/10/2026 (spec 003):** `/mcp/threat` có middleware ASGI
+   (`mcp_servers/auth.py`) đòi `Authorization: Bearer <token>` (máy chủ chỉ giữ SHA-256 theo tên client; chưa cấu hình
+   client nào ⇒ 401) và giới hạn tần suất theo client (30/phút, 1.000/ngày, đếm trong bộ nhớ ⇒ một tiến trình, ADR-002;
+   vượt ⇒ 429 + `Retry-After`) nên gắn ở mọi môi trường. Không dùng `token_verifier`/`AuthSettings` của SDK (bắt khai máy
+   chủ OAuth không có, không trả được 429). **Vẫn chưa mở ra Internet** tới khi spec 012 quyết Caddy. Danh sách đe dọa nằm
+   trong bảng `threat_indicators` chỉ lưu HMAC (ADR-006). Đồ thị gọi thẳng hàm miền (`lookup_h1`, async), không đi qua
+   HTTP trong cùng tiến trình; tra cứu lỗi ⇒ `threat = unknown` + mã lỗi, sự cố vẫn chạy.
 10. **Model hồ sơ `fast`**: cấu hình bằng `HOICON_LLM_FAST_MODEL`. Mặc định tạm thời là **Claude Haiku 5.5** (rẻ hơn Haiku
    4.5 mười lần, là thế hệ hiện tại). Chốt sau khi đo Haiku 4.5 với 5.5 (và Gemini Flash-Lite nếu cần) trên bộ eval.
+   **Cập nhật 15/10/2026:** công cụ so model đã sẵn (`spike bench --model <id> --json <tệp>`, hợp đồng
+   `docs/schemas/bench_report.v1.json`); **số đo model vẫn chờ khóa API (P0-08)** — không đổi quyết định mặc định. Trần
+   chi tiêu/ngày nay cộng `agent_steps.cost_usd` của ngày giờ Việt Nam nên bền qua khởi động lại.
 
 ## Hệ quả
 - Ba bảng mới (`jobs`, `agent_runs`, `agent_steps`, migration `0002`) cùng các bảng checkpoint của LangGraph (tạo bằng

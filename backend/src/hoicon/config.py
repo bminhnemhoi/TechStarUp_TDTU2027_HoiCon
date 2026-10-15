@@ -43,6 +43,12 @@ class Settings(BaseSettings):
     zalo_quota_hold_pct: int = 95
     phone_pepper_kid: int = 1
     phone_pepper_1: SecretStr | None = None
+    phone_pepper_2: SecretStr | None = None  # xoay pepper: kid cũ vẫn tra được (`candidate_hmacs`)
+    # MCP `threat` (spec 003): tên client → SHA-256 hex của token (`python -m hoicon.ops.mcp_token new --client <tên>`).
+    # Máy chủ không giữ token thô; rỗng ⇒ mọi yêu cầu bị 401 (đóng mặc định). Hạn mức đếm trong bộ nhớ (ADR-002).
+    mcp_threat_clients: dict[str, str] = {}
+    mcp_rate_per_min: int = 30
+    mcp_rate_per_day: int = 1000
     # Khóa AES-256-GCM (hex 64 ký tự) mã hóa Zalo chat_id (spec 002 D1); kid để xoay khóa.
     data_key_kid: int = 1
     data_key_1: SecretStr | None = None

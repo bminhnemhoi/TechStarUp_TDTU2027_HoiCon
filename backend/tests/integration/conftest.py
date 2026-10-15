@@ -3,6 +3,7 @@ import secrets
 from collections.abc import AsyncGenerator, Iterator
 from dataclasses import dataclass, field
 from datetime import timedelta
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -12,7 +13,7 @@ from hoicon.config import Settings, get_settings
 from hoicon.db.ids import new_id
 from hoicon.db.models import AgentRun, Family, Job, Member, MessageOut, PairingCode
 from hoicon.db.session import get_engine, get_sessionmaker
-from hoicon.domain.pii import encrypt_chat_id, hmac_pairing_code, hmac_zalo
+from hoicon.domain.pii import encrypt_chat_id, hmac_h1, hmac_pairing_code, hmac_zalo
 
 
 async def db_up() -> bool:
@@ -178,3 +179,39 @@ async def zalo_world(require_db: None, zalo_env: None) -> AsyncGenerator[ZaloWor
             await session.execute(delete(Job).where(Job.idempotency_key.startswith(f"{incident}:", autoescape=True)))
         await session.execute(delete(Member).where(Member.zalo_bot_id == bot_id))
         await session.execute(delete(Family).where(Family.id == family.id))
+
+
+# --- Danh sách đe dọa (spec 003) ------------------------------------------------------------------------------------
+
+
+DEMO_SEED = Path(__file__).resolve().parents[3] / "data" / "threat_seed.demo.json"
+
+
+@pytest.fixture
+def fake_pepper(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Khóa băm GIẢ cho test (không phụ thuộc tệp bí mật của máy); xóa cache cấu hình quanh test."""
+    get_settings.cache_clear()
+    monkeypatch.setenv("HOICON_PHONE_PEPPER_1", "11" * 32)
+    monkeypatch.setenv("HOICON_PHONE_PEPPER_KID", "1")
+    yield
+    get_settings.cache_clear()
+
+
+@pytest.fixture
+async def seeded_threat(require_db: None, fake_pepper: None) -> AsyncGenerator[dict[str, Any]]:
+    """Danh sách đe dọa DEMO (số hư cấu) trong DB ứng dụng, băm bằng khóa GIẢ; xóa đúng các dòng đó khi xong."""
+    import json
+
+    from hoicon.db.models import ThreatIndicator
+    from hoicon.ops.threat_list import load_seed
+
+    doc = json.loads(await asyncio.to_thread(DEMO_SEED.read_text, "utf-8"))
+    await load_seed(get_sessionmaker(), doc, env="dev")
+    # Chỉ xóa đúng các dòng HMAC theo khóa GIẢ: dòng demo nạp bằng khóa thật của máy dev (cùng list_version) phải còn.
+    mine = [hmac_h1(item["h1"]) for item in doc["indicators"]]
+    yield doc
+    async with get_sessionmaker().begin() as session:
+        for kid, digest in mine:
+            await session.execute(
+                delete(ThreatIndicator).where(ThreatIndicator.value_kid == kid, ThreatIndicator.value_hmac == digest)
+            )

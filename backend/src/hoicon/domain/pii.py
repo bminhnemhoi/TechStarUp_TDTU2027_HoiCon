@@ -29,7 +29,7 @@ _MONEY_UNIT = re.compile(
     r"\s*(?:đ|₫|đồng|dong|vnd|vnđ|k|nghìn|nghin|ngàn|ngan|triệu|trieu|tr|tỷ|tỉ|ty)(?!\w)", re.IGNORECASE
 )
 _VN_MOBILE = re.compile(r"^(?:0|84)[35789]\d{8}$")
-_H1 = re.compile(r"^[0-9a-f]{64}$")
+_H1 = re.compile(r"[0-9a-f]{64}")  # `fullmatch`: `$` của `re` cho lọt "\n" ở cuối
 
 
 def mask_text(text: str) -> str:
@@ -88,10 +88,17 @@ def _pepper(kid: int | None) -> tuple[int, bytes]:
 
 def hmac_h1(h1: str, kid: int | None = None) -> tuple[int, str]:
     """`HMAC-SHA256(pepper[kid], h1)` (ADR-006) ⇒ (kid, hex). Pepper nằm ngoài DB (biến môi trường)."""
-    if not _H1.match(h1):
+    if not _H1.fullmatch(h1):
         raise ValueError("h1 phải là SHA-256 hex chữ thường (64 ký tự)")
     kid, pepper = _pepper(kid)
     return kid, hmac.new(pepper, h1.encode(), hashlib.sha256).hexdigest()
+
+
+def candidate_hmacs(h1: str) -> list[tuple[int, str]]:
+    """HMAC của h1 theo MỌI kid đã cấu hình pepper (kid hiện hành đứng đầu): xoay pepper rồi vẫn tra được dòng cũ."""
+    current = get_settings().phone_pepper_kid
+    kids = [current] + [kid for kid in (1, 2) if kid != current and getattr(get_settings(), f"phone_pepper_{kid}")]
+    return [hmac_h1(h1, kid) for kid in kids]
 
 
 def hmac_zalo(bot_id: str, user_id: str, kid: int | None = None) -> tuple[int, str]:

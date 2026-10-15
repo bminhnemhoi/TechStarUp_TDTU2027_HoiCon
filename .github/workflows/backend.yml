@@ -52,3 +52,6 @@ jobs:
         run: uv run hoicon-eval --suite smoke --compare baseline --shared-db-ok
         env:
           HOICON_EVAL_DATABASE_URL: ${{ env.HOICON_DATABASE_URL }}
+          # Spec 003: danh sách đe dọa trong DB là HMAC ⇒ runner cần khóa băm để nạp seed demo. Chuỗi cố định, CÔNG KHAI
+          # (như khóa giả của tests/integration/conftest.py) — KHÔNG phải bí mật; CI không bao giờ có khóa thật.
+          HOICON_PHONE_PEPPER_1: "1111111111111111111111111111111111111111111111111111111111111111"

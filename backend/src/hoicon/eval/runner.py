@@ -27,8 +27,10 @@ from hoicon.eval.cases import EVAL_DIR, Case, build_event, case_secrets, elder_r
 from hoicon.eval.checks import MAX_ASK_ELDER, CaseResult, checkpoint_bytes, evaluate
 from hoicon.eval.replay import ReplayClient
 from hoicon.jobs.queue import cancel_prefix
+from hoicon.ops.threat_list import SeedError, load_seed
 
 CONNECT_TIMEOUT_S = 5
+THREAT_SEED = Path(__file__).resolve().parents[4] / "data" / "threat_seed.demo.json"
 ELDER_ALIAS = "Mẹ"
 PRODUCTION_ENVS = ("prod", "production")
 LONG_TIMER_S = 3600  # hẹn giờ của đồ thị chỉ để có job; không worker nào chạy, và cuối ca job bị xóa
@@ -79,7 +81,9 @@ def check_isolation(database_url: str, shared_db_ok: bool, settings: Settings | 
 
 
 def make_sessionmaker(url: str) -> tuple[async_sessionmaker, AsyncEngine]:
-    engine = create_async_engine(url, pool_size=5, connect_args={"connect_timeout": CONNECT_TIMEOUT_S})
+    engine = create_async_engine(
+        url, pool_size=5, connect_args={"connect_timeout": CONNECT_TIMEOUT_S}, hide_parameters=True
+    )
     return async_sessionmaker(engine, expire_on_commit=False), engine
 
 
@@ -213,6 +217,18 @@ async def _fail_unfinished_runs(sessions: async_sessionmaker, nonce: str) -> Non
         await session.execute(stmt)
 
 
+async def _seed_threat_list(sessions: async_sessionmaker, settings: Settings) -> None:
+    """Danh sách đe dọa nằm trong DB (spec 003) ⇒ DB eval phải có số demo để ca `flagged` ra `flagged` (idempotent)."""
+    try:
+        await load_seed(sessions, json.loads(THREAT_SEED.read_text(encoding="utf-8")), env=settings.env)
+    except SeedError as exc:  # vd. HOICON_ENV ngoài dev/test/ci: thông điệp không chứa giá trị
+        raise IsolationError(str(exc)) from None
+    except RuntimeError as exc:  # thiếu khóa băm; thông điệp chỉ nêu TÊN biến môi trường
+        raise IsolationError(
+            f"{exc}: eval cần khóa băm số điện thoại để nạp danh sách đe dọa demo (dùng khóa GIẢ)"
+        ) from None
+
+
 async def run_suite(
     cases: list[Case],
     *,
@@ -252,6 +268,7 @@ async def run_suite(
     router = LlmRouter(client, eval_settings.llm_fast_model, Decimal(1000))
     outcomes: list[CaseOutcome] = []
     try:
+        await _seed_threat_list(sessions, settings)
         async with IncidentRuntime.open(Deps(router, sessions, eval_settings)) as runtime:
             for case in cases:  # thứ tự cố định ⇒ chạy lại cho kết quả giống hệt
                 outcomes.append(await _run_case(case, runtime, client, sessions, nonce, cassettes[case.id], drill))
