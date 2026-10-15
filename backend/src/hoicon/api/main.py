@@ -8,13 +8,15 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Response, status
+from fastapi import FastAPI, Request, Response, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from hoicon import __version__
 from hoicon.api import webhooks
-from hoicon.api.routers import consents, devices, pairing
+from hoicon.api.routers import consents, devices, events, incidents, pairing
 from hoicon.config import get_settings
 from hoicon.db.session import get_engine
 from hoicon.mcp_servers import threat
@@ -32,9 +34,21 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(title="HỏiCon API", version=__version__, lifespan=lifespan)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
+    """422 chỉ nêu VỊ TRÍ và loại lỗi, không lặp lại giá trị đã gửi (FastAPI mặc định có `input`): thân yêu cầu có thể
+    mang số điện thoại thô/mã ghép bị gửi nhầm, và phản hồi có thể bị log ở proxy (CLAUDE.md luật 1)."""
+    errors = [{"loc": e["loc"], "msg": e["msg"], "type": e["type"]} for e in exc.errors()]
+    return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, content={"detail": errors})
+
+
 app.include_router(pairing.router)
 app.include_router(consents.router)
 app.include_router(devices.router)
+app.include_router(events.router)
+app.include_router(incidents.router)
 app.include_router(webhooks.router)  # cùng route với ứng dụng con `hoicon.api.webhooks:app` (chỉ nó ra đường hầm)
 # /mcp/threat gắn ở MỌI môi trường nhưng đóng mặc định: `McpGuard` đòi token Bearer (chưa cấu hình client nào ⇒ 401)
 # và giới hạn tần suất theo client (spec 003, ADR-009 §9). Kiểm Host localhost của MCP SDK chỉ chống DNS rebinding,

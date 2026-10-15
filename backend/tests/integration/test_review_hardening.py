@@ -2,6 +2,7 @@
 
 import dataclasses
 import logging
+import uuid
 from typing import Any
 
 import pytest
@@ -203,7 +204,13 @@ async def test_repeatable_replies_are_not_urgent_so_a_guardian_cannot_burn_the_i
             )  # fmt: skip
     payload = world.update_payload(world.zalo_ids[1][0], kind="choice", value="3")
     status = await _reply(
-        world.deps, payload, "detail_resend", texts.detail_pending(False), 1, member=member, incident_id=member.id
+        world.deps,
+        payload,
+        "detail_resend",
+        texts.detail_pending(False),
+        1,
+        member=member,
+        incident_id=uuid.UUID(world.new_incident()),
     )
     assert status == "held_quota"  # tin lặp lại bị giữ ở ngưỡng 95%, dù có gắn sự cố
     ack = world.update_payload(world.zalo_ids[1][0], kind="choice", value="1")

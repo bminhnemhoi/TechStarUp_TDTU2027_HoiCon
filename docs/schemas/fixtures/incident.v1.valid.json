@@ -1,0 +1,98 @@
+[
+  {
+    "_name": "chi tiết có lịch sử",
+    "_as": "detail",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e80",
+    "family_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e81",
+    "member_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e82",
+    "device_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e83",
+    "state": "resolved_safe",
+    "level": "high",
+    "rule_floor": "high",
+    "version": 3,
+    "is_drill": false,
+    "drill_id": null,
+    "opened_by_event_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+    "outcome": "safe",
+    "opened_at": "2026-12-01T02:15:31.000Z",
+    "closed_at": "2026-12-01T02:30:00Z",
+    "transitions": [
+      {
+        "from_state": null,
+        "to_state": "detected",
+        "actor": "device",
+        "reason": "risk_event",
+        "at": "2026-12-01T02:15:31Z"
+      },
+      {
+        "from_state": "detected",
+        "to_state": "assessing",
+        "actor": "agent",
+        "reason": null,
+        "at": "2026-12-01T02:15:32Z"
+      }
+    ]
+  },
+  {
+    "_name": "chi tiết mới mở",
+    "_as": "detail",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e80",
+    "family_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e81",
+    "member_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e82",
+    "device_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e83",
+    "state": "detected",
+    "level": "high",
+    "rule_floor": "high",
+    "version": 1,
+    "is_drill": false,
+    "drill_id": null,
+    "opened_by_event_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+    "outcome": null,
+    "opened_at": "2026-12-01T02:15:31.000Z",
+    "closed_at": null,
+    "transitions": []
+  },
+  {
+    "_name": "danh sách",
+    "_as": "list",
+    "incidents": [
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e80",
+        "family_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e81",
+        "member_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e82",
+        "device_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e83",
+        "state": "detected",
+        "level": "high",
+        "rule_floor": "high",
+        "version": 1,
+        "is_drill": false,
+        "drill_id": null,
+        "opened_by_event_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "outcome": null,
+        "opened_at": "2026-12-01T02:15:31.000Z",
+        "closed_at": null
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e80",
+        "family_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e81",
+        "member_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e82",
+        "device_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e83",
+        "state": "detected",
+        "level": "high",
+        "rule_floor": "high",
+        "version": 1,
+        "is_drill": true,
+        "drill_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e80",
+        "opened_by_event_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "outcome": null,
+        "opened_at": "2026-12-01T02:15:31.000Z",
+        "closed_at": null
+      }
+    ]
+  },
+  {
+    "_name": "danh sách rỗng",
+    "_as": "list",
+    "incidents": []
+  }
+]

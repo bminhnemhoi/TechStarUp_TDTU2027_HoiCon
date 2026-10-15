@@ -32,7 +32,7 @@ from hoicon.agents.llm_router import MODELS, LlmRouter
 from hoicon.agents.runtime import IncidentRuntime
 from hoicon.config import get_settings
 from hoicon.db.ids import new_id
-from hoicon.db.models import AgentRun, AgentStep, Family, Job, MessageOut
+from hoicon.db.models import AgentRun, AgentStep, Family, Incident, Job, Member, MessageOut
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain.events import RiskEvent
 from hoicon.jobs.queue import cancel_prefix
@@ -78,6 +78,29 @@ async def family_id_by_name(sessions: Any, name: str) -> str:
     return str(found)
 
 
+async def ensure_demo_incident(sessions: Any, family_id: str, incident: str) -> None:
+    """Sự cố demo gửi tin cho người giám hộ cần hàng `incidents` thật (spec 021: `messages_out.incident_id` có FK)."""
+    async with sessions.begin() as session:
+        member_id = await session.scalar(
+            select(Member.id).where(Member.family_id == UUID(family_id), Member.role == "protected").limit(1)
+        )
+        if member_id is None:
+            member = Member(family_id=UUID(family_id), role="protected")
+            session.add(member)
+            await session.flush()
+            member_id = member.id
+        session.add(
+            Incident(
+                id=UUID(incident),
+                family_id=UUID(family_id),
+                member_id=member_id,
+                level="high",
+                rule_floor="high",
+                is_demo=True,
+            )
+        )
+
+
 async def report_messages(sessions: Any, incident: str) -> None:
     """Tin đã gửi cho sự cố + độ trễ `jobs.created_at → messages_out.sent_at` (nguồn số đo SC-001, spec 002 R4)."""
     query = (
@@ -110,6 +133,8 @@ async def demo(family: str | None = None) -> None:
                 f" · level={status.level}"
             )
 
+        if family_id:
+            await ensure_demo_incident(d.sessions, family_id, thread)
         status = await runtime.start(
             demo_event(), incident_id=thread, elder_alias="Mẹ", is_demo=True, family_id=family_id
         )

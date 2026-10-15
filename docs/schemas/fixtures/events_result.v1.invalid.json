@@ -1,0 +1,30 @@
+[
+  {
+    "_why": "thiếu duplicates",
+    "accepted": 1,
+    "incident_id": null,
+    "incident_opened": false
+  },
+  {
+    "_why": "accepted âm",
+    "accepted": -1,
+    "duplicates": 0,
+    "incident_id": null,
+    "incident_opened": false
+  },
+  {
+    "_why": "incident_id không phải uuid",
+    "accepted": 1,
+    "duplicates": 0,
+    "incident_id": "abc",
+    "incident_opened": false
+  },
+  {
+    "_why": "trường lạ",
+    "accepted": 1,
+    "duplicates": 0,
+    "incident_id": null,
+    "incident_opened": false,
+    "phone": "x"
+  }
+]
