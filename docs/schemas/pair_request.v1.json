@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/pair_request.v1.json",
+  "title": "PairRequest v1",
+  "description": "Yêu cầu ghép đôi thiết bị mới vào gia đình (spec 020, P2-02) qua `POST /v1/pair`. Mã ghép đôi 6 số do người giám hộ sinh ra qua Zalo bot / web.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["code", "app_version", "rules_version", "platform"],
+  "properties": {
+    "code": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$",
+      "description": "Mã ghép đôi 6 chữ số thập phân"
+    },
+    "app_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "description": "Phiên bản app gửi yêu cầu (ví dụ: '0.2.0-debug')"
+    },
+    "rules_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "description": "Phiên bản luật bảo vệ đang nạp trên app"
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["android", "ios", "web"],
+      "description": "Hệ điều hành thiết bị"
+    },
+    "device_label": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Bí danh thiết bị do người dùng đặt hoặc model máy (không chứa PII)"
+    }
+  }
+}
