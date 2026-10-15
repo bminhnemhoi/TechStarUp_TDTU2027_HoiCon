@@ -60,6 +60,28 @@ có cửa sổ `host`, `--headless` `auto`; đổi bằng `HC_GPU=…`. Pane "Mo
 `-no-window` + scrcpy ⇒ cần `hw.gpu.mode=auto`. Lỗi "emulator-5554 is not a running device" = emulator đã chết.
 Sau `adb emu kill` phải chờ tiến trình qemu tắt hẳn mới chạy lại `emu-start.sh`.
 
+**Giọng đọc (`tts_unavailable` / `tts error`, spec 001 US4):** trên AVD mới tạo (đo ở hc-api34, 15/10/2026), Google TTS liệt
+kê giọng `vi-vn-x-vic-seanet-embedded` là "có sẵn" nên `Speaker` chọn nó, nhưng khi đọc logcat báo
+`Failed to load pipeline definitions! … status code: -4` ⇒ không có `tts_started`. Nguyên nhân: gói dữ liệu giọng vi-VN
+có trong ảnh hệ thống bị hỏng/thiếu, không phải lỗi app (luật chỉ-giọng-offline trong `Speaker.kt` giữ nguyên). Cách sửa
+(cần mạng **một lần**, AVD có Internet qua máy chủ; sau đó chạy offline):
+```bash
+$ADB shell am start -a android.speech.tts.engine.INSTALL_TTS_DATA     # mở "Dữ liệu giọng nói"
+# cuộn tới "Tiếng Việt (Việt Nam)" → biểu tượng thùng rác → "Gỡ cài đặt" → biểu tượng tải xuống (~8,8 MB) → đợi
+# hiện lại "Giọng nói I…V". Dữ liệu nằm trong userdata nên bền qua `emu-start.sh --cold`, mất khi tạo lại AVD.
+python scripts/emu-scenario.py --avd hc-api34 --scenario fake_police --runs 10   # "câu nói đầu" phải có ở ≥ 9/10 lần
+```
+Kiểm: `adb logcat -d | grep -E "GoogleTTS|tts_"`. Máy `-no-window -no-audio` không có tiếng ⇒ chỉ kiểm bằng mốc
+`tts_started` trong log, không bằng tai.
+
+**Chỉ chạy `:latency:connectedDebugAndroidTest` trên AVD hoặc Firebase Test Lab** — bộ đo tự bỏ qua trên máy thật khác, nhưng Gradle vẫn cài rồi gỡ bản debug của Lính gác trên mọi thiết bị đang cắm (đừng cắm máy có bản HỏiCon thật).
+
+**Hai bẫy khi dùng `:latency:connectedDebugAndroidTest` trên AVD:** (1) lỗi `UiAutomationService … already registered`
+là do `android layout`/`screen capture` của Android CLI để lại tiến trình `com.android.cli.interact.instrumentation` ⇒
+`adb shell am force-stop com.android.cli.interact.instrumentation` rồi chạy lại; (2) sau khi chạy, Gradle gỡ APK `:app`
+nên mất vai trò sàng lọc cuộc gọi/miễn tối ưu pin — cài lại và cấp quyền theo skill `android-emulator-test` §2 trước
+khi chạy `emu-scenario.py`.
+
 ## 2. Ma trận AVD
 
 | AVD | Android (API) | Thiết bị | Màn hình | RAM | Vai trò |

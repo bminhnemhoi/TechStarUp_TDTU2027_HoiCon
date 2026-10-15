@@ -211,12 +211,13 @@ private fun Title(text: String) = Text(
     text = text,
     color = BankTeal,
     fontSize = 30.sp,
+    lineHeight = 38.sp, // Material's default style fixes 24.sp: two-line titles overlap at 200% text size
     fontWeight = FontWeight.Bold,
     modifier = Modifier.semantics { heading() },
 )
 
 @Composable
-private fun Body(text: String) = Text(text = text, color = Ink, fontSize = 22.sp)
+private fun Body(text: String) = Text(text = text, color = Ink, fontSize = 22.sp, lineHeight = 30.sp)
 
 @Composable
 private fun Card(content: @Composable ColumnScope.() -> Unit) = Surface(shape = RoundedCornerShape(16.dp), color = CardTint) {
@@ -240,7 +241,7 @@ private fun Primary(text: String, onClick: () -> Unit) = Button(
     colors = ButtonDefaults.buttonColors(containerColor = BankTeal, contentColor = Color.White),
     modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
 ) {
-    Text(text = text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    Text(text = text, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold)
 }
 
 @Composable
@@ -248,5 +249,5 @@ private fun Secondary(text: String, onClick: () -> Unit) = OutlinedButton(
     onClick = onClick,
     modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
 ) {
-    Text(text = text, color = BankTeal, fontSize = 22.sp)
+    Text(text = text, color = BankTeal, fontSize = 22.sp, lineHeight = 30.sp)
 }

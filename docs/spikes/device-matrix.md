@@ -13,4 +13,14 @@
 | 08/10/2026 | AVD hc-api34 | máy ảo | ấm, View | 10 | 10/10 | 1 135 | 9 768 | ✗ (8/10) | lần đầu lô 9,8 s |
 | 08/10/2026 | AVD hc-api29 (Android 10) | máy ảo | nguội, View | 5 | 5/5 | 1 665 | 2 132 | ✓ | |
 | 08/10/2026 | AVD hc-api29 | máy ảo | ấm, View | 5 | 5/5 | 2 177 | 3 486 | ✗ (4/5) | |
-| _chờ_ | Firebase Test Lab / máy mượn | **máy thật** | nguội + ấm | ≥ 10 | | | | | cần trước G1 (08/11) — `bash scripts/ftl-latency.sh` (bộ đo `:latency`, cuộc gọi mô phỏng, ADR-008) |
+| 15/10/2026 | AVD hc-api36 (Android 16) | máy ảo | `:latency`, E7 View, nguội | 10 | 10/10 | 1 244 | 1 487 | ✓ | Linux headless, `compile=speed`, bản debug; RAM máy dev chưa đo lại nên không so được với lô 08/10 |
+| 15/10/2026 | AVD hc-api36 | máy ảo | `:latency`, E7 View, ấm | 10 | 10/10 | 1 215 | 1 370 | ✓ | như trên |
+| 15/10/2026 | AVD hc-api36 | máy ảo | `:latency`, E7 Compose, nguội | 10 | 10/10 | 1 408 | 1 601 | ✓ | như trên |
+| 15/10/2026 | AVD hc-api36 | máy ảo | `:latency`, E7 Compose, ấm | 10 | 10/10 | 1 271 | 1 404 | ✓ | như trên |
+| 15/10/2026 | AVD hc-api34 (Android 14) | máy ảo | `:latency`, E7 View, nguội | 10 | 10/10 | 1 577 | 1 755 | ✓ | khởi động `--cold` (tránh lỗi modem giả lập) |
+| 15/10/2026 | AVD hc-api34 | máy ảo | `:latency`, E7 View, ấm | 10 | 10/10 | 1 468 | 1 688 | ✓ | như trên |
+| 15/10/2026 | AVD hc-api34 | máy ảo | `:latency`, E7 Compose, nguội | 10 | 10/10 | 1 592 | 1 758 | ✓ | như trên |
+| 15/10/2026 | AVD hc-api34 | máy ảo | `:latency`, E7 Compose, ấm | 10 | 10/10 | 1 525 | 1 790 | ✓ | như trên |
+| 15/10/2026 | AVD hc-api36 | máy ảo | `emu-scenario.py fake_police` (ấm, `--prep none`) | 10 | 10/10 | 537 | 1 387 | ✓ | cây UI thiếu chữ "gọi cho con" 1/10 ⇒ script báo TRƯỢT; mốc `pause_shown` có đủ 10/10 |
+| 15/10/2026 | AVD hc-api34 | máy ảo | `emu-scenario.py fake_police` (ấm) | 10 | 10/10 | 670 | 1 800 | ✓ | lô đầu 0/10: script chẩn đoán "Telecom không thấy cuộc gọi đến (lỗi modem giả lập)" ⇒ boot `--cold` rồi chạy lại (lô báo ở dòng này) |
+| _BLOCKED 15/10/2026_ | Firebase Test Lab / máy mượn | **máy thật** | nguội + ấm | ≥ 10 | | | | | **BLOCKED: chưa có tài khoản Firebase (P0-08), `gcloud` chưa cài** — cần trước G1 (08/11) — `bash scripts/ftl-latency.sh --variant view|compose model=…,version=…` (bộ đo `:latency`, cuộc gọi mô phỏng, ADR-008) |
