@@ -3,9 +3,9 @@ name: harness
 on:
   push:
     branches: [main]
-    paths: [".claude/**", ".specify/**", "specs/**", "docs/ROADMAP.md", "docs/MASTER-PLAN.md", "scripts/check-spec-trace.py", "scripts/tests/**", ".github/workflows/harness.yml"]
+    paths: [".claude/**", ".specify/**", "specs/**", "docs/ROADMAP.md", "docs/MASTER-PLAN.md", "scripts/check-spec-trace.py", "scripts/gen-design-tokens.py", "design-system/**", "scripts/tests/**", ".github/workflows/harness.yml"]
   pull_request:
-    paths: [".claude/**", ".specify/**", "specs/**", "docs/ROADMAP.md", "docs/MASTER-PLAN.md", "scripts/check-spec-trace.py", "scripts/tests/**", ".github/workflows/harness.yml"]
+    paths: [".claude/**", ".specify/**", "specs/**", "docs/ROADMAP.md", "docs/MASTER-PLAN.md", "scripts/check-spec-trace.py", "scripts/gen-design-tokens.py", "design-system/**", "scripts/tests/**", ".github/workflows/harness.yml"]
 
 permissions:
   contents: read
