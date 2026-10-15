@@ -74,7 +74,7 @@ Thuyết minh đã nộp: [`docs/proposal/`](proposal/). Mọi cam kết trong �
 | Docker Desktop | mới nhất | Postgres 17 + pgvector chạy trong container `hoicon-db` |
 | Python | 3.12 qua **uv** | `pip install uv` hoặc xem astral.sh/uv |
 | Node.js + **pnpm** | Node ≥ 22, pnpm 12 | `corepack enable` |
-| JDK 21 + Android SDK (compileSdk 36) | | Windows: `bash scripts/setup-android.sh` (mặc định cài vào `D:/Android`, đổi bằng biến `ANDROID_ROOT`). Có thể dùng Android Studio |
+| JDK 21 + Android SDK (compileSdk 36) | | `bash scripts/setup-android.sh` (Windows: `D:/Android`; Linux/macOS: `~/Android`; đổi bằng `ANDROID_ROOT`) — xem `EMULATOR.md` §1. Có thể dùng Android Studio |
 | (tùy chọn) Claude Code | mới nhất | §4.3 |
 
 **Cổng cố định** (máy Minh có dự án khác chiếm 5432/6379/8000/3000): Postgres **15432**, API **18000**, web **3100**.

@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
 import statistics
 import subprocess
@@ -23,9 +24,15 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SDK = Path("D:/Android/Sdk")
-ADB = str(SDK / "platform-tools" / "adb.exe")
-ACLI = str(SDK / "cmdline-tools" / "latest" / "bin" / "android.exe")
+# SDK: biến môi trường trước, rồi mặc định theo hệ điều hành (Windows D:/Android, Linux ~/Android).
+SDK = Path(
+    os.environ.get("ANDROID_HOME")
+    or os.environ.get("ANDROID_SDK_ROOT")
+    or ("D:/Android/Sdk" if os.name == "nt" else str(Path.home() / "Android" / "Sdk"))
+)
+EXE = ".exe" if os.name == "nt" else ""
+ADB = str(SDK / "platform-tools" / f"adb{EXE}")
+ACLI = str(SDK / "cmdline-tools" / "latest" / "bin" / f"android{EXE}")
 SENTINEL = "vn.hoicon.sentinel"
 DEMOBANK = "vn.hoicon.demobank"
 PAUSE_WAIT_S = 30

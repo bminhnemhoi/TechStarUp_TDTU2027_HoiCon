@@ -3,7 +3,12 @@
 > Minh chưa có điện thoại Android ⇒ phát triển và kiểm thử trên máy ảo (AVD). File này ghi cách dựng lại môi trường,
 > kịch bản mô phỏng và **giới hạn** của máy ảo. Quy trình kiểm thử từng bước: skill `android-emulator-test`.
 
-## 1. Toolchain (tất cả trên D:, ổ C: gần đầy)
+## 1. Toolchain
+
+Đường dẫn do `scripts/android-env.sh` quyết định (biến môi trường có sẵn thắng). Các script `setup-android.sh`,
+`avd-create.sh`, `emu-start.sh`, `emu-scenario.py` chạy được trên cả Windows (Git Bash) và Linux.
+
+### 1.1 Windows (máy Minh — tất cả trên D:, ổ C: gần đầy)
 
 | Thành phần | Vị trí | Ghi chú |
 |---|---|---|
@@ -30,6 +35,30 @@ bash scripts/avd-create.sh             # 3 AVD (idempotent; --recreate để t�
 - `android emulator start|list` **không đọc `ANDROID_AVD_HOME`** ⇒ dùng `scripts/emu-start.sh` (gọi `emulator.exe`).
 - Emulator tự lấy múi giờ máy chủ (Windows "SE Asia Standard Time" ⇒ `Asia/Bangkok`) ⇒ `emu-start.sh` truyền
   `-timezone Asia/Ho_Chi_Minh`.
+
+### 1.2 Linux (máy Tiến — CachyOS, KVM; đo 15/10/2026)
+
+| Thành phần | Vị trí | Ghi chú |
+|---|---|---|
+| JDK 21 (Temurin) | `~/Android/jdk-21` | `JAVA_HOME` cho Gradle |
+| Android SDK | `~/Android/Sdk` | cùng bộ gói như Windows |
+| AVD | `~/.android/avd` | `ANDROID_AVD_HOME` |
+| Gradle cache | `~/.gradle` | |
+| Tăng tốc | KVM (`/dev/kvm` đọc ghi được) | `emulator -accel-check` |
+
+```bash
+bash scripts/setup-android.sh && bash scripts/avd-create.sh
+# thêm vào ~/.profile (bash) — fish: set -gx … trong ~/.config/fish/config.fish
+export ANDROID_HOME=$HOME/Android/Sdk ANDROID_AVD_HOME=$HOME/.android/avd JAVA_HOME=$HOME/Android/jdk-21
+export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH
+bash scripts/emu-start.sh hc-api36 --headless
+```
+
+**Đồ họa (đã đo trên RTX 4060 + Radeon 780M):** `-gpu host` mượt nhất khi có cửa sổ nhưng **sập (SIGSEGV gfxstream) khi
+`-no-window`** sau ~10 lần mở app ⇒ AVD đặt `hw.gpu.mode=auto` (SwiftShader, giật ~4%); `emu-start.sh` mặc định Linux:
+có cửa sổ `host`, `--headless` `auto`; đổi bằng `HC_GPU=…`. Pane "Mobile Emulator" của Orca chạy AVD bằng
+`-no-window` + scrcpy ⇒ cần `hw.gpu.mode=auto`. Lỗi "emulator-5554 is not a running device" = emulator đã chết.
+Sau `adb emu kill` phải chờ tiến trình qemu tắt hẳn mới chạy lại `emu-start.sh`.
 
 ## 2. Ma trận AVD
 

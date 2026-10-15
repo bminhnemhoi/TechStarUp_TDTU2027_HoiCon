@@ -16,17 +16,18 @@ Spike P1-S1/P1-S2: chuỗi cảm biến tối thiểu để đo (cuộc gọi s�
 Phiên bản: Gradle 9.8.1 (wrapper) · AGP 9.4.1 (Kotlin tích hợp sẵn) · Kotlin 2.4.20 · Compose BOM 2026.06.01 ·
 minSdk 29 · compile/targetSdk 36 — xem `gradle/libs.versions.toml`.
 
-## Lệnh (Git Bash, từ gốc repo)
+## Lệnh (Windows: Git Bash · Linux: bash — từ gốc repo)
 
 ```bash
-export GRADLE_USER_HOME=D:/.gradle ANDROID_HOME=D:/Android/Sdk   # JDK 21 cho Gradle khai báo trong D:/.gradle/gradle.properties
+# Windows: export GRADLE_USER_HOME=D:/.gradle ANDROID_HOME=D:/Android/Sdk  (JDK 21 khai báo trong D:/.gradle/gradle.properties)
+# Linux:   export ANDROID_HOME=~/Android/Sdk JAVA_HOME=~/Android/jdk-21    (docs/EMULATOR.md §1.2)
+. scripts/android-env.sh                                                       # đặt $ADB/$EMU/$ACLI theo hệ điều hành
 
 apps/android/gradlew -p apps/android :rules:test                               # unit test luật (không cần máy ảo)
 apps/android/gradlew -p apps/android :app:assembleDebug :demobank:assembleDebug  # build APK debug
 
 bash scripts/emu-start.sh hc-api36 --headless                                  # 1 máy ảo mỗi lúc (RAM)
 apps/android/gradlew -p apps/android --stop                                    # nhả RAM trước khi cài
-ADB=D:/Android/Sdk/platform-tools/adb.exe
 $ADB install -r apps/android/app/build/outputs/apk/debug/app-debug.apk
 $ADB install -r apps/android/demobank/build/outputs/apk/debug/demobank-debug.apk
 $ADB shell cmd role add-role-holder android.app.role.CALL_SCREENING vn.hoicon.sentinel

@@ -26,7 +26,7 @@ Mốc cứng: nộp Vòng 1 **15/11/2026** · MVP Vòng 2 **10/01/2027** (đóng
 
 ## Stack
 
-- **Android** (`apps/android`): Kotlin 2.4, Compose + Material 3, AGP 9.4, minSdk 29, target/compileSdk 36. Module `:app`, `:rules` (JVM thuần, luật tất định), `:demobank` (app ngân hàng giả để thử/demo). Gradle chạy bằng JDK 21 (`D:/Android/jdk-21`), SDK ở `D:/Android/Sdk`.
+- **Android** (`apps/android`): Kotlin 2.4, Compose + Material 3, AGP 9.4, minSdk 29, target/compileSdk 36. Module `:app`, `:rules` (JVM thuần, luật tất định), `:demobank` (app ngân hàng giả để thử/demo). Gradle chạy bằng JDK 21, SDK theo `scripts/android-env.sh` (Windows `D:/Android/{jdk-21,Sdk}`, Linux `~/Android/{jdk-21,Sdk}`).
 - **Backend** (`backend/`, một dự án `uv`, Python 3.12): FastAPI, Pydantic v2, SQLAlchemy 2 + Alembic, psycopg 3, LangGraph (`AsyncPostgresSaver`), FastMCP gắn tại `/mcp/*`, hàng đợi job bằng Postgres. **Đọc skill `claude-api` trước khi viết code gọi Claude/Anthropic SDK.**
 - **Web** (`apps/web`): Next.js, Tailwind v4, shadcn/ui, client TS sinh từ OpenAPI.
 - **Hạ tầng**: `infra/compose.dev.yml` — Postgres pgvector **cổng 15432**; API **18000**; web **3100** (các cổng 5432/6379/8000/3000 thuộc dự án khác).
