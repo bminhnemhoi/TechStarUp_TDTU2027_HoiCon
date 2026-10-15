@@ -12,7 +12,7 @@
     <string name="notif_ai_subtext">Trợ lý AI HỏiCon</string>
 
     <!-- Màn quyền dành cho nhà phát triển (spike P1-S1), chưa phải màn E3 cho người cao tuổi. -->
-    <string name="perm_screen_intro">Bản thử nghiệm kỹ thuật. Để HỏiCon nhận ra lúc có số lạ gọi rồi mở ứng dụng ngân hàng, cần bật các mục dưới đây.</string>
+    <string name="perm_screen_intro">Các mục dưới đây giúp HỏiCon nhận ra lúc có số lạ gọi rồi mở ứng dụng ngân hàng. Mục nào chưa bật, bác bấm để bật.</string>
     <string name="perm_status_on">✓ Đã bật</string>
     <string name="perm_status_off">✗ Chưa bật</string>
     <string name="perm_open_settings">Mở cài đặt</string>
@@ -74,4 +74,73 @@
     <string name="fallback_title">Khoan chuyển tiền đã — HỏiCon nhắc bác</string>
     <string name="fallback_text">Hỏi con trước nhé. Chạm vào đây để xem.</string>
     <string name="fallback_big_text">Công an, ngân hàng không bao giờ bảo chuyển tiền qua điện thoại. Chạm vào đây để hỏi con.</string>
+
+    <!-- Onboarding E1–E4 (spec 020). Xưng "bác"; HỏiCon tự xưng "HỏiCon". Giọng ấm, không dọa, luôn có việc cụ thể để làm. -->
+    <string name="welcome_title">Bảo vệ bình an cho gia đình</string>
+    <string name="welcome_body">Khi có số lạ gọi tới rồi bác mở ứng dụng ngân hàng, HỏiCon sẽ nhắc bác khoan chuyển tiền và hỏi con trước. Con bác sẽ gửi cho bác một mã 6 số qua Zalo. Chưa có mã thì bác nhờ con gửi trước nhé.</string>
+    <string name="welcome_start">Kết nối với con</string>
+    <string name="onboarding_listen_again">Nghe lại</string>
+    <string-array name="welcome_speech">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>HỏiCon giúp bác tránh bị lừa qua điện thoại.</item>
+        <item>Bác bấm nút Kết nối với con để bắt đầu nhé.</item>
+    </string-array>
+
+    <string name="pairing_title">Nhập mã kết nối từ con</string>
+    <string name="pairing_body">Con bác gửi cho bác một mã 6 số qua Zalo. Bác nhập mã đó vào ô bên dưới nhé.</string>
+    <string name="pairing_code_label">Mã 6 số</string>
+    <string name="pairing_connect">Kết nối gia đình</string>
+    <string name="pairing_connecting">Đang kết nối…</string>
+    <string name="pairing_retry">Thử lại</string>
+    <string name="pairing_back">Quay lại</string>
+    <string name="pairing_error_incomplete">Bác nhập đủ 6 số nhé.</string>
+    <string name="pairing_error_invalid">Mã này chưa khớp. Bác xem lại 6 số con gửi qua Zalo, hoặc nhờ con gửi mã mới nhé.</string>
+    <string name="pairing_error_rate_limited">HỏiCon tạm nghỉ để giữ an toàn cho bác. Bác chờ vài phút rồi nhập lại nhé.</string>
+    <string name="pairing_error_network">Điện thoại chưa kết nối được mạng. Bác kiểm tra Wi-Fi hoặc dữ liệu di động, rồi bấm nút Kết nối gia đình nhé.</string>
+    <string name="pairing_error_server">HỏiCon đang bận một chút. Bác thử lại sau ít phút nhé.</string>
+
+    <!-- E3: công bố nổi bật (Google Play). Văn bản này được băm (SHA-256) vào sổ đồng ý: đổi chữ ⇒ đổi ConsentLedger.VERSION. -->
+    <string name="disclosure_connected">Đã kết nối với %1$s.</string>
+    <string name="disclosure_title">Trước khi bật quyền, HỏiCon xin nói rõ</string>
+    <string name="disclosure_1_title">Chỉ để ý khi có số lạ gọi tới</string>
+    <string name="disclosure_1_body">Khi có số không có trong danh bạ gọi tới, HỏiCon xem trong 10 phút sau cuộc gọi đó bác có mở ứng dụng ngân hàng, ví điện tử hay chứng khoán không. Lúc khác HỏiCon không theo dõi gì.</string>
+    <string name="disclosure_2_title">HỏiCon không nghe cuộc gọi của bác</string>
+    <string name="disclosure_2_body">HỏiCon không nghe và không ghi âm cuộc gọi, không đọc tin nhắn, không đọc danh bạ. HỏiCon không xem được bên trong ứng dụng ngân hàng, không biết số dư, giao dịch hay mã xác thực (OTP) của bác.</string>
+    <string name="disclosure_3_title">Chỉ gửi đi những gì cần để báo cho con</string>
+    <string name="disclosure_3_body">Khi cần báo cho con bác, HỏiCon chỉ gửi: một dãy ký tự đại diện cho số lạ (HỏiCon không gửi và không lưu số điện thoại đầy đủ, chỉ giữ 3 số cuối), loại ứng dụng vừa mở (như “ngân hàng”) và thời điểm.</string>
+    <string name="disclosure_4_title">Không bán dữ liệu, bác tắt được bất cứ lúc nào</string>
+    <string name="disclosure_4_body">HỏiCon không bán dữ liệu của bác và không đưa cho bên quảng cáo. Chỉ con bác nhận được cảnh báo. Bác có thể tắt từng quyền trong Cài đặt của điện thoại bất cứ lúc nào.</string>
+    <string name="disclosure_decline">Chưa đồng ý</string>
+    <string name="decline_title">Không sao bác ạ</string>
+    <string name="decline_body">HỏiCon sẽ chưa bật bảo vệ và chưa làm gì thêm. Khi nào bác muốn, bác mở lại HỏiCon và đọc lại các cam kết.</string>
+    <string name="decline_review">Xem lại cam kết</string>
+    <string name="decline_close">Đóng ứng dụng</string>
+    <string name="disclosure_next">Ở bước sau, điện thoại sẽ mở từng trang cài đặt để bác bật quyền. Bác bật hay không là do bác quyết định.</string>
+    <string name="disclosure_accept">Đồng ý, tiếp tục</string>
+    <string-array name="disclosure_speech">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>HỏiCon chỉ để ý khi có số lạ gọi tới.</item>
+        <item>HỏiCon không nghe lén, không ghi âm cuộc gọi.</item>
+        <item>HỏiCon chỉ gửi cho con bác những gì cần để báo cho con.</item>
+        <item>HỏiCon không bán dữ liệu của bác. Bác tắt được bất cứ lúc nào.</item>
+        <item>Phần còn lại bác đọc trên màn hình nhé.</item>
+        <item>Bác bấm Đồng ý, tiếp tục khi bác đã nghe rõ, hoặc bấm Chưa đồng ý.</item>
+    </string-array>
+
+    <!-- E4: mỗi quyền một bước. Tên và lý do từng quyền dùng lại perm_*_title / perm_*_why ở trên. -->
+    <string name="perm_step_counter">Bước %1$d trên %2$d</string>
+    <!-- Mỗi quyền một cách làm khác nhau (hộp thoại hay trang cài đặt), nên mỗi quyền một câu hướng dẫn. -->
+    <string name="perm_how_role">Điện thoại sẽ hiện một hộp hỏi. Bác chọn HỏiCon rồi bấm nút đồng ý. Nếu bác đang dùng ứng dụng nhận diện số khác, HỏiCon sẽ thay nó, bác đổi lại được trong Cài đặt.</string>
+    <string name="perm_how_notif">Điện thoại sẽ hỏi có cho HỏiCon gửi thông báo không. Bác bấm Cho phép.</string>
+    <string name="perm_how_settings">Điện thoại sẽ mở một danh sách. Bác tìm HỏiCon, bấm vào, bật công tắc lên, rồi bấm mũi tên quay lại.</string>
+    <string name="perm_how_battery">Điện thoại sẽ mở danh sách ứng dụng. Bác chọn HỏiCon rồi chọn “Không tối ưu hóa”, sau đó bấm mũi tên quay lại.</string>
+    <string name="perm_step_enable">Bật ngay</string>
+    <string name="perm_step_later">Để sau</string>
+    <string name="perm_done_title">Xong rồi bác ạ</string>
+    <string name="perm_done_body">HỏiCon đã sẵn sàng. Mục nào chưa bật, bác bật sau trong màn hình chính cũng được.</string>
+    <string name="perm_missing_title">Còn thiếu một bước, bác ạ</string>
+    <string name="perm_missing_body">HỏiCon chưa bảo vệ đầy đủ vì còn thiếu các mục có dấu ✗ bên dưới.</string>
+    <string name="perm_missing_enable">Bật mục còn thiếu</string>
+    <string name="perm_done_button">Hoàn tất</string>
+    <string name="perm_consent_pending">Mạng đang yếu nên HỏiCon chưa báo được là bác đã đồng ý. Bác cứ dùng bình thường, HỏiCon sẽ thử lại lần sau khi bác mở ứng dụng.</string>
 </resources>

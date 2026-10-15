@@ -7,6 +7,10 @@ activityCompose = "1.13.0"
 # :latency only (instrumentation on Firebase Test Lab / emulator).
 androidxTestRunner = "1.7.0"
 junit = "4.13.2"
+# EncryptedSharedPreferences cho token thiết bị (spec 020); P2-05 chuyển sang DataStore + Tink.
+securityCrypto = "1.1.0"
+# Chỉ cho test JVM: android.jar chỉ có bản stub của org.json.
+orgJson = "20250517"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -16,6 +20,9 @@ androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 junit = { module = "junit:junit", version.ref = "junit" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
+org-json = { module = "org.json:json", version.ref = "orgJson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
