@@ -8,7 +8,7 @@
     -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
-    <application>
+    <application android:networkSecurityConfig="@xml/network_security_config">
         <!--
           Mô phỏng "vừa có số lạ gọi" cho máy không có SIM (Firebase Test Lab, :latency). Quyền DUMP
           (signature|privileged|development) ⇒ chỉ shell/adb, root hoặc app hệ thống gửi được; app thường không.

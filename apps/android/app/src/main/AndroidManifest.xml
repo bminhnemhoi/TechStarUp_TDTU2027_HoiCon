@@ -3,12 +3,15 @@
   Spike P1-S1: chuỗi cảm biến "cuộc gọi số lạ → app ngân hàng → dừng an toàn". Mọi quyền phải khớp docs/PLAY-POLICY.md.
   CẤM (không bao giờ khai báo): SMS, nhật ký cuộc gọi, danh bạ, QUERY_ALL_PACKAGES, REQUEST_INSTALL_PACKAGES,
   REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Accessibility, Notification Listener, ghi âm cuộc gọi.
-  Không có INTERNET: đường găng không dùng mạng (H6) — outbox/đồng bộ thêm sau.
+  INTERNET chỉ để ghép đôi + ghi sổ đồng ý (spec 020, ngoài đường găng): đường dừng an toàn KHÔNG dùng mạng (H6)
+  nên SafePause vẫn hiện khi offline. Outbox/đồng bộ sự kiện thêm sau (P2-03).
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Cửa sổ rủi ro ≤ 10 phút sau cuộc gọi số lạ (RiskWindowService). -->
+    <!-- Ghép đôi (POST /v1/pair) và ghi sổ đồng ý (POST /v1/consents). Bản phát hành chỉ HTTPS (cleartext bị chặn). -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- Thông báo "HỏiCon đang bảo vệ" + thông báo dự phòng khi không mở được SafePause. -->
@@ -107,6 +110,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Lần đầu: E1 Chào mừng → E2 Ghép đôi → E3 Công bố nổi bật → E4 Cấp quyền; MainActivity chuyển tới đây khi chưa xong. -->
+        <activity
+            android:name=".OnboardingActivity"
+            android:exported="false" />
 
         <!-- Task riêng (taskAffinity rỗng): nằm trên task của app ngân hàng, không chen vào task đó. -->
         <activity
