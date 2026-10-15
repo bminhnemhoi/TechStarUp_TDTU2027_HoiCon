@@ -22,6 +22,14 @@
 Postgres đồng bộ, khóa theo thread, `recover()` sau sập); hẹn giờ là job `graph_resume`; tin gửi đi là job
 `notify_guardian` có khóa chống trùng. Thử: `uv run --directory backend python -m hoicon.agents.spike demo`.
 
+**Gửi thật tới người giám hộ (spec 002, ADR-010):** `IncidentRuntime.start(..., family_id=)` đưa `family_id` vào state và payload
+`notify_guardian` (vắng ⇒ chỉ log như cũ). Handler `notify_guardian` → `channels/guardian.py::send_to_guardian` → cổng duy nhất
+`deliver`: dòng `messages_out` (gửi đúng một lần), từ chối tin không mở đầu bằng câu công khai AI, chặn sự cố demo tới gia đình
+thật, hạn mức tin/tháng (giữ tin không khẩn ≥ 95%, tin gắn sự cố luôn đi), lỗi vĩnh viễn/hết lần thử ⇒ `fallback_required`.
+Job `zalo_update` (do webhook xếp) ghép người giám hộ `/start <mã>` và nhận phản hồi **1** (an toàn) / **2** (nghi lừa đảo) /
+**3** (xem chi tiết) ⇒ `runtime.resume(incident, {"decision": …}, expect="await_guardian")`. Zalo không có nút bấm.
+`ZaloClient` có hai bản: `LiveZaloClient` và `MockZaloClient` (mặc định, `HOICON_ZALO_MODE=mock`). Chưa có MCP `zalo`.
+
 ## `llm_router`
 | Hồ sơ | Mô hình | Dùng cho |
 |---|---|---|

@@ -23,9 +23,12 @@ EXAMPLE = BACKEND / ".env.example"
 TARGET = BACKEND / ".env"
 
 PEPPER = "HOICON_PHONE_PEPPER_1"
+DATA_KEY = "HOICON_DATA_KEY_1"
 GENERATED = {
     "HOICON_PHONE_PEPPER_KID": lambda: "1",
     PEPPER: lambda: secrets.token_hex(32),
+    "HOICON_DATA_KEY_KID": lambda: "1",
+    DATA_KEY: lambda: secrets.token_hex(32),
     "HOICON_ZALO_WEBHOOK_SECRET": lambda: secrets.token_urlsafe(32),
 }
 MANUAL = ("HOICON_ANTHROPIC_API_KEY", "HOICON_GEMINI_API_KEY", "HOICON_ZALO_BOT_TOKEN")
@@ -56,6 +59,11 @@ def _fresh_text() -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--new-pepper", action="store_true", help="cho phép sinh pepper mới cho .env đã tồn tại")
+    parser.add_argument(
+        "--new-data-key",
+        action="store_true",
+        help="cho phép sinh khóa mã hóa Zalo mới cho .env đã tồn tại (lần đầu, hoặc chấp nhận ghép lại mọi người)",
+    )
     args = parser.parse_args(argv)
 
     if not TARGET.exists():
@@ -72,6 +80,14 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 2
+        if DATA_KEY in missing and not args.new_data_key:
+            print(
+                f"Từ chối: backend/.env đã có nhưng thiếu {DATA_KEY}. Nếu có bản sao lưu khóa hãy dán lại — khóa mới"
+                " làm mọi chat_id Zalo đã ghép không giải mã được (phải ghép lại). Chỉ chạy lại với --new-data-key"
+                " khi chưa ghép Zalo nào (lần đầu) hoặc chấp nhận ghép lại.",
+                file=sys.stderr,
+            )
+            return 2
         text = TARGET.read_text(encoding="utf-8")
         if missing:
             appended = "".join(f"{name}={GENERATED[name]()}\n" for name in missing)
@@ -85,6 +101,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Còn phải dán tay: {', '.join(still_manual) or 'không có'} (docs/setup/ACCOUNTS.md)")
     if PEPPER in added:
         print(f"Sao lưu {PEPPER} sang D:\\secrets\\hoicon-pepper.txt — mất pepper là mất liên kết số đã băm (ADR-006).")
+    if DATA_KEY in added:
+        print(f"Sao lưu {DATA_KEY} cùng chỗ với pepper — mất khóa là không giải mã được chat_id Zalo đã ghép.")
     if os.name == "nt":
         print('Khóa quyền file (khuyên làm): icacls backend\\.env /inheritance:r /grant:r "%USERNAME%:F"')
     print("Kiểm tra: uv run --directory backend python -m hoicon.ops.check_keys")

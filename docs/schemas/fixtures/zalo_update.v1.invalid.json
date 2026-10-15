@@ -1,0 +1,76 @@
+[
+  {
+    "_why": "ok không phải true",
+    "ok": false,
+    "result": { "event_name": "message.unsupported.received" }
+  },
+  {
+    "_why": "thiếu result",
+    "ok": true
+  },
+  {
+    "_why": "thiếu event_name",
+    "ok": true,
+    "result": {}
+  },
+  {
+    "_why": "event_name lạ",
+    "ok": true,
+    "result": { "event_name": "message.video.received" }
+  },
+  {
+    "_why": "tin chữ thiếu message",
+    "ok": true,
+    "result": { "event_name": "message.text.received" }
+  },
+  {
+    "_why": "tin chữ thiếu message_id (không chống trùng được)",
+    "ok": true,
+    "result": {
+      "event_name": "message.text.received",
+      "message": {
+        "from": { "id": "fixture-user-0001", "is_bot": false },
+        "chat": { "id": "fixture-chat-0001", "chat_type": "PRIVATE" },
+        "text": "1"
+      }
+    }
+  },
+  {
+    "_why": "tin chữ thiếu text",
+    "ok": true,
+    "result": {
+      "event_name": "message.text.received",
+      "message": {
+        "from": { "id": "fixture-user-0001", "is_bot": false },
+        "chat": { "id": "fixture-chat-0001", "chat_type": "PRIVATE" },
+        "message_id": "fixture-msg-0004"
+      }
+    }
+  },
+  {
+    "_why": "chat_type không hợp lệ",
+    "ok": true,
+    "result": {
+      "event_name": "message.text.received",
+      "message": {
+        "from": { "id": "fixture-user-0001", "is_bot": false },
+        "chat": { "id": "fixture-chat-0001", "chat_type": "CHANNEL" },
+        "text": "1",
+        "message_id": "fixture-msg-0005"
+      }
+    }
+  },
+  {
+    "_why": "from.id là số thay vì chuỗi",
+    "ok": true,
+    "result": {
+      "event_name": "message.text.received",
+      "message": {
+        "from": { "id": 12345, "is_bot": false },
+        "chat": { "id": "fixture-chat-0001", "chat_type": "PRIVATE" },
+        "text": "1",
+        "message_id": "fixture-msg-0006"
+      }
+    }
+  }
+]

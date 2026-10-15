@@ -5,7 +5,8 @@
 
 ## Xác thực
 - Thiết bị: JWT ngắn hạn + refresh token (cấp khi ghép đôi). Người giám hộ: magic link / action token một lần.
-- Webhook Zalo: secret theo bot trong header; chống trùng theo message id.
+- Webhook Zalo: secret trong header `X-Bot-Api-Secret-Token` (so sánh hằng thời gian); chống trùng theo `message_id`
+  (Zalo không có `update_id`).
 
 ## Thiết bị (app Lính gác)
 | Method | Path | Ghi chú |
@@ -31,3 +32,19 @@
 
 ## Webhook & khác
 `POST /webhooks/zalo/{bot_id}` · `/demo/*` · `/admin/*` · `/mcp/*` (FastMCP) · `GET /healthz`
+
+### `POST /webhooks/zalo/{bot_id}` (spec 002 — đã có)
+Hợp đồng thân: `docs/schemas/zalo_update.v1.json` (fixture `fixtures/zalo_update.v1.*.json`). Không thuộc `/v1`, không sinh client TS.
+
+| Mã | Khi nào | Job được xếp? |
+|---|---|---|
+| 200 `{"ok": true}` | secret đúng; kể cả cập nhật không dùng được (ảnh, nhóm, tin của bot, thiếu `message_id`, thân thử của Zalo) | chỉ khi là tin chữ riêng tư dùng được: job `zalo_update`, khóa `zalo:{bot_id}:{message_id}` ⇒ gửi lại vẫn một job |
+| 400 | thân không phải JSON | không |
+| 401 | secret sai/thiếu | không |
+| 404 | `bot_id` không phải bot đã cấu hình (chỉ trả lời sau khi xác thực) | không |
+| 413 | thân > 64 KB | không |
+| 503 | chưa cấu hình secret, thiếu khóa mã hóa, hoặc DB lỗi — **Zalo nên gửi lại**; không trả 200 rồi mất cập nhật | không |
+
+Job KHÔNG mang Zalo ID thô, tên hiển thị hay chữ người gõ (DATA-MODEL §3b). Chạy riêng cho đường hầm (chỉ route này, không
+`/docs`, `/openapi.json`, `/mcp`): `uvicorn hoicon.api.webhooks:app --port 18080 --loop asyncio:SelectorEventLoop`.
+Đặt/xem/xóa webhook: `python -m hoicon.ops.zalo_webhook set|info|delete` (docs/setup/ACCOUNTS.md §3).

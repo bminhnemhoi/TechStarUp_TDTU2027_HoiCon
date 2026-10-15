@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -32,8 +33,19 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr | None = None
     zalo_bot_token: SecretStr | None = None
     zalo_webhook_secret: SecretStr | None = None
+    # `mock` (mặc định, CI/không token) | `live` (gọi Zalo thật; thiếu token ⇒ lỗi khi khởi động, không rơi về mock).
+    zalo_mode: Literal["mock", "live"] = "mock"
+    # Bot nhận webhook (một bot dev ở spike; 3 bot thí điểm sau: thêm khóa + token theo bot_id).
+    zalo_bot_id: str = "hoicon-dev"
+    # Hạn mức tin/tháng của gói Basic (bot.zapps.me, tra 15/10/2026) và ngưỡng cảnh báo/giữ tin không khẩn (% hạn mức).
+    zalo_monthly_quota: int = 3000
+    zalo_quota_warn_pct: int = 80
+    zalo_quota_hold_pct: int = 95
     phone_pepper_kid: int = 1
     phone_pepper_1: SecretStr | None = None
+    # Khóa AES-256-GCM (hex 64 ký tự) mã hóa Zalo chat_id (spec 002 D1); kid để xoay khóa.
+    data_key_kid: int = 1
+    data_key_1: SecretStr | None = None
 
 
 @lru_cache

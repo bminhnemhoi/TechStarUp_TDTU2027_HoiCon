@@ -146,3 +146,40 @@ async def test_full_name_alias_is_rejected(threads: list[str]) -> None:
     async with IncidentRuntime.open(deps()) as runtime:
         with pytest.raises(ValueError):
             await runtime.start(demo_event(), incident_id=str(new_id()), elder_alias="Bà Nguyễn Thị Lan 1955")
+
+
+async def test_family_id_reaches_every_guardian_message(threads: list[str]) -> None:
+    family_id = str(new_id())
+    thread = str(new_id())
+    threads.append(thread)
+    async with IncidentRuntime.open(deps()) as runtime:
+        await runtime.start(demo_event(), incident_id=thread, elder_alias="Mẹ", is_demo=True, family_id=family_id)
+        await runtime.resume(thread, {"answer": "no"}, expect="ask_elder")
+        values = (await runtime.graph.aget_state({"configurable": {"thread_id": thread}})).values
+        await runtime.graph.checkpointer.adelete_thread(thread)
+    assert values["family_id"] == family_id
+    payloads = [j.payload for j in await jobs_for(thread) if j.kind == "notify_guardian"]
+    assert len(payloads) >= 2 and {p["family_id"] for p in payloads} == {family_id}
+
+
+async def test_family_id_is_optional_and_payload_stays_backward_compatible(threads: list[str]) -> None:
+    thread = str(new_id())
+    threads.append(thread)
+    async with IncidentRuntime.open(deps()) as runtime:
+        await runtime.start(demo_event(), incident_id=thread, elder_alias="Mẹ", is_demo=True)
+        values = (await runtime.graph.aget_state({"configurable": {"thread_id": thread}})).values
+        await runtime.graph.checkpointer.adelete_thread(thread)
+    assert "family_id" not in values  # checkpoint cũ/không gia đình: trạng thái không đổi
+    (payload,) = [j.payload for j in await jobs_for(thread) if j.kind == "notify_guardian"]
+    assert payload["family_id"] is None
+    # các khóa cũ còn nguyên, người đọc cũ (worker hiện tại) không bị ảnh hưởng
+    assert {"incident_id", "template", "text", "guardian_rank", "is_drill", "is_demo"} <= payload.keys()
+
+
+@pytest.mark.parametrize("bad", ["", "not-a-uuid", "0900000001", "x" * 40])
+async def test_invalid_family_id_is_rejected_before_any_write(bad: str, threads: list[str]) -> None:
+    thread = str(new_id())
+    async with IncidentRuntime.open(deps()) as runtime:
+        with pytest.raises(ValueError):
+            await runtime.start(demo_event(), incident_id=thread, elder_alias="Mẹ", family_id=bad)
+        assert await jobs_for(thread) == []
