@@ -66,7 +66,7 @@ Cập nhật: 15/10/2026
 | P1-02 | Khảo sát Google Form ≥ 300 phản hồi (tác tử soạn bảng hỏi, Minh phát tán) | 20/10–08/11 | báo cáo số liệu — bảng hỏi v1: `docs/research/survey/P1-02-bang-hoi.md` (Minh dựng Google Form + phát tán) | ◐ |
 | P1-03 | Video 3 phút trên máy ảo: cuộc gọi lạ → demobank → dừng an toàn có giọng nói → cảnh báo Zalo | quay 05–08/11 | file video | ☐ |
 | P1-04 | `judge` chấm thử 10/11 → sửa → **nộp 13/11** | 10–13/11 | biên nhận nộp | ☐ |
-| P1-05 | Design system: ui-ux-pro-max → `docs/DESIGN-SYSTEM.md` + `design-system/hoicon/tokens.json` (Be Vietnam Pro) | 14–22/11 | | ☐ |
+| P1-05 | Design system: ui-ux-pro-max → `docs/DESIGN-SYSTEM.md` + `design-system/hoicon/tokens.json` (Be Vietnam Pro) | 14–22/11 | | ◐ spec [`specs/010-design-system/`](../specs/010-design-system/) (kéo sớm 15/10): **đã làm** `tokens.json` → `Tokens.kt` + `colors.xml` + `tokens.css` (26 cặp ≥ 7:1/3:1 có test), font đóng gói trong APK, E7 vẫn 10/10 trên máy ảo; **còn** FR-013 (`ux-elder-reviewer` còn 2 High về E7 ở 200% màn nhỏ ⇒ P2-05, xem Ghi chú) — chưa hoàn tất |
 | P1-06 | Văn bản đồng ý v1, DPIA rút gọn, quy trình thí điểm | 14–22/11 | `docs/legal/consent/`, `PRIVACY-DPIA.md`, `PILOT-PROTOCOL.md` | ☐ |
 | P1-07 | ~60 kịch bản lừa đảo (tác tử soạn, Minh duyệt) | 14–22/11 | `data/scenarios/*.yaml` | ◐ bản nháp 60 ca (40 lừa đảo / 20 hợp lệ song sinh = 33%, 10 chèn lệnh, 3 miền, nguồn báo chí đã kiểm) + schema `scenario.v1.json` + test hợp đồng — **chờ Minh duyệt** (`draft: true`) |
 | P1-08 | Kênh Play internal testing + Google Group tester | 14–22/11 | | ☐ |
@@ -132,6 +132,13 @@ Cập nhật: 15/10/2026
 
 ## Ghi chú (ý tưởng ngoài phạm vi — không làm khi chưa có task)
 
+- **E7 ở cỡ chữ 200% trên màn nhỏ (từ spec 010, 15/10 — vào P2-05, E7 SafePause; `ux-elder-reviewer`):** (High)
+  hàng "Đây là trợ lý AI HỏiCon" + nút "Nghe lại" ép câu công khai AI thành 3 dòng hẹp; vùng cuộn chỉ còn ~2 dòng thân (~1 dòng
+  khi đang giữ nút) trên AVD API 34 vì thanh nút ghim cao ~37% màn hình ⇒ cần bố cục riêng cho `fontScale ≥ 1,5` (xếp dọc không
+  đủ vì "Nghe lại" cao ≥ 64dp; cân nhắc rút gọn dòng trạng thái/để trạng thái cuộn cùng nội dung). (Medium/Low, cần quyết định
+  thiết kế) khoảng cách từ hẹp ở Be Vietnam Pro 400 ("như một"), cân nhắc đóng gói thêm Medium 500 hoặc `letterSpacing`; nhắc
+  "vuốt lên để đọc tiếp"; tên mục "Quyền truy cập dữ liệu sử dụng" thành 2 dòng; chụp thêm trạng thái "✗ Chưa bật" của màn quyền;
+  nút "Gọi cho con" hiện ≈ 60dp vì inset MaterialButton (đã có từ spec 001). Ảnh: `~/hoicon-evidence/010-design-system/shots/`.
 - **Ý tưởng 15/10 (chờ Minh duyệt — MASTER-PLAN §4):** I1 luật R5 app điều khiển từ xa trong cửa sổ cuộc gọi lạ ⇒
   `critical` (vào P2-05, bổ sung ADR-001) · I2 câu nhắc "mật khẩu gia đình" ở E7/E9 (không lưu mật khẩu) · I3 nhận biết
   cuộc gọi Zalo/Messenger (`MODE_IN_COMMUNICATION`) — spike sau khi có máy thật · I4 tin Zalo hằng tuần + báo "mất bảo

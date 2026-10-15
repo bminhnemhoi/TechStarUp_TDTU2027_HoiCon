@@ -3,9 +3,9 @@ name: android
 on:
   push:
     branches: [main]
-    paths: ["apps/android/**", "docs/schemas/**", "data/bank_apps.vn.json", ".github/workflows/android.yml"]
+    paths: ["apps/android/**", "docs/schemas/**", "data/bank_apps.vn.json", "design-system/**", "scripts/gen-design-tokens.py", ".github/workflows/android.yml"]
   pull_request:
-    paths: ["apps/android/**", "docs/schemas/**", "data/bank_apps.vn.json", ".github/workflows/android.yml"]
+    paths: ["apps/android/**", "docs/schemas/**", "data/bank_apps.vn.json", "design-system/**", "scripts/gen-design-tokens.py", ".github/workflows/android.yml"]
 
 permissions:
   contents: read
@@ -34,6 +34,9 @@ jobs:
       # Mã sinh từ data/bank_apps.vn.json phải khớp từng byte (bắt cả sửa tay trong khối <queries>).
       - name: generated bank catalog is up to date
         run: python3 ../../scripts/gen-bank-apps.py && git diff --exit-code -- .
+      # Tokens.kt và khối màu trong colors.xml sinh từ design-system/hoicon/tokens.json (spec 010); --check không ghi.
+      - name: generated design tokens are up to date
+        run: python3 ../../scripts/gen-design-tokens.py --check
       # :rules là JVM thuần — luật R0–R4 chạy ở đây mà không cần máy ảo.
       # BankAppCatalogTest (trong :rules:test) bắt lệch giữa data/bank_apps.vn.json và mã sinh ra.
       # :latency chỉ build ở đây; chạy trên máy thật bằng scripts/ftl-latency.sh (Firebase Test Lab).

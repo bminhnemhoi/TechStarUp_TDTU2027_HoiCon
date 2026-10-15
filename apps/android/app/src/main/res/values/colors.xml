@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Brand tokens (docs/DESIGN-SYSTEM.md), same values as ui/theme/Color.kt; P1-05 generates both from tokens.json. -->
+<!-- Giá trị màu sinh từ design-system/hoicon/tokens.json (scripts/gen-design-tokens.py); tên giữ nguyên cho themes/manifest. -->
 <resources>
+    <!-- BEGIN design_tokens: sinh bởi scripts/gen-design-tokens.py, không sửa tay -->
     <color name="brand_navy">#1F3A5F</color>
     <color name="brand_orange">#C4561D</color>
     <color name="surface_white">#FFFFFF</color>
-    <!-- navy 40%: dividers / outlineVariant -->
     <color name="navy_40">#661F3A5F</color>
+    <!-- END design_tokens -->
 </resources>
