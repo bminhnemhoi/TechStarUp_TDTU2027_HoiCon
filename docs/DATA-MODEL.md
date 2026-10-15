@@ -16,8 +16,8 @@
 ### Gia đình & đồng ý
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
-| `families` | id, display_name (bí danh do người dùng đặt), region (`bac/trung/nam`), plan, created_at, is_demo | |
-| `members` | id, family_id, role (`protected/guardian`), alias (cách xưng hô: "Mẹ", "Bố"…), address_form, guardian_rank (1, 2), zalo_user_ref (HMAC), locale, created_at | không lưu tên thật |
+| `families` | id, display_name (bí danh do người dùng đặt), region (`bac/trung/nam`), plan, created_at, is_demo | **đã có** (`0003`, spec 002) |
+| `members` | id, family_id, role (`protected/guardian`), alias (cách xưng hô: "Mẹ", "Bố"…, rỗng được), address_form, guardian_rank (1, 2), **zalo_bot_id, zalo_user_hmac, zalo_hmac_kid, zalo_chat_enc**, locale, created_at | **đã có** (`0003`); không lưu tên thật; 4 cột Zalo cùng có hoặc cùng rỗng; unique `(family_id, guardian_rank)` cho người giám hộ, unique `(zalo_bot_id, zalo_user_hmac)`; cột Zalo theo D1 (§3b) |
 | `devices` | id, family_id, member_id, platform, app_version, rules_version, threat_list_version, permission_state jsonb, fcm_token_enc, last_heartbeat_at, revoked_at | |
 | `consents` | id, family_id, member_id, purpose, granted bool, consent_version, text_sha256, channel (`app/zalo/web`), recorded_at | **chỉ ghi thêm**: trigger chặn UPDATE/DELETE; rút đồng ý = dòng mới `granted=false` |
 
@@ -28,7 +28,7 @@
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
 | `trusted_contacts` | id, family_id, member_id, phone_hmac, phone_kid, last3, label | R0: không cảnh báo |
-| `pairing_codes` | id, family_id, code_hash, expires_at, used_at | mã 6 số / QR, hết hạn 15 phút |
+| `pairing_codes` | id, family_id, code_hash, expires_at, used_at | **đã có** (`0003`); mã 6 số / QR, hết hạn 15 phút; chỉ lưu `HMAC(pepper, "hoicon:pairing:v1:"+mã)`; unique trên `code_hash` khi `used_at IS NULL` |
 | `action_tokens` | id, incident_id, member_id, token_hash, scope, expires_at, used_at | magic link `/a/[token]` |
 
 ### Sự kiện & sự cố
@@ -48,7 +48,7 @@
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
 | `guardian_actions` | id, incident_id, member_id, action (`called/safe/scam/details/escalate`), channel, at | |
-| `messages_out` | id, family_id, incident_id, channel (`zalo/push/web`), bot_id, template_id, status, quota_month, sent_at, error | bộ đếm hạn mức theo bot/tháng |
+| `messages_out` | id, family_id (rỗng được), incident_id (chưa có FK tới `incidents`), **member_id**, channel (`zalo/push/web`), bot_id, template_id, status (`queued/sent/held_quota/failed/fallback_required`), quota_month (`YYYY-MM` giờ Việt Nam), sent_at, error, **job_key** (unique ⇒ gửi đúng một lần), created_at | **đã có** (`0003`); bộ đếm hạn mức theo bot/tháng (index `bot_id, quota_month, status`); `family_id` rỗng vì tin trả lời người chưa ghép vẫn tính hạn mức (ADR-010) |
 
 ### Xác minh & hồ sơ
 | Bảng | Cột chính | Ghi chú |
@@ -81,6 +81,16 @@ Máy chủ:   phone_hmac = HMAC-SHA256(pepper[kid], h1);  lưu phone_hmac, phone
 - `pepper[kid]` nằm ngoài DB (biến môi trường / `D:\secrets`), có `kid` để xoay vòng.
 - Danh sách đe dọa gửi xuống máy dạng tập `h1` (máy so khớp cục bộ) — máy chủ không biết máy đang so khớp số nào.
 - Số tài khoản ngân hàng: cùng cách, tiền tố `"hoicon:acct:v1:"`.
+
+## 3b. Định danh Zalo của người giám hộ (ADR-010 D1)
+
+```
+user_hmac = HMAC-SHA256(pepper[kid], "hoicon:zalo:v1:" + bot_id + ":" + user_id)    # members.zalo_user_hmac (+ zalo_hmac_kid)
+chat_enc  = "<kid>." + base64url(nonce12 ‖ AES-256-GCM(chat_id, key[kid], aad="hoicon:zalo:chat:v1:<kid>"))   # members.zalo_chat_enc
+```
+- Không có cột Zalo ID thô, tên hiển thị hay văn bản người giám hộ gõ. `chat_enc` chỉ giải mã lúc gọi Zalo.
+- Khóa `HOICON_DATA_KEY_<kid>` (hex 64 ký tự) nằm ngoài DB, sinh bằng `init_env`; **mất khóa ⇒ phải ghép lại** mọi người giám hộ.
+- Job `zalo_update` (webhook xếp) chỉ mang `user_hmac`, `chat_enc`, loại lệnh và băm mã/lựa chọn đã phân loại.
 
 ## 4. Máy trạng thái sự cố
 

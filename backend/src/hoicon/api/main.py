@@ -13,6 +13,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from hoicon import __version__
+from hoicon.api import webhooks
 from hoicon.config import get_settings
 from hoicon.db.session import get_engine
 from hoicon.mcp_servers import threat
@@ -38,6 +39,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(title="HỏiCon API", version=__version__, lifespan=lifespan)
+app.include_router(webhooks.router)  # cùng route với ứng dụng con `hoicon.api.webhooks:app` (chỉ nó ra đường hầm)
 if MOUNT_MCP:
     app.mount(
         "/mcp/threat",
@@ -62,4 +64,5 @@ async def readyz(response: Response) -> dict[str, str]:
         logger.warning("readyz: database unreachable (%s)", type(exc).__name__)
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"status": "unavailable", "db": "down"}
-    return {"status": "ok", "db": "up"}
+    # Chế độ gửi Zalo để ops thấy ngay nếu prod lỡ chạy mock (tin "gửi" bằng mock không tới người nhận).
+    return {"status": "ok", "db": "up", "zalo_mode": get_settings().zalo_mode}

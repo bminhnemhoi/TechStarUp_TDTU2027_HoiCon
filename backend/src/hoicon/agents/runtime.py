@@ -14,6 +14,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any
+from uuid import UUID
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph.state import CompiledStateGraph
@@ -102,9 +103,20 @@ class IncidentRuntime:
                 await session.execute(text("SELECT pg_advisory_unlock(:k)").bindparams(k=lock_id))
                 await session.commit()
 
-    async def start(self, event: RiskEvent, *, incident_id: str, elder_alias: str, is_demo: bool = False) -> RunStatus:
+    async def start(
+        self,
+        event: RiskEvent,
+        *,
+        incident_id: str,
+        elder_alias: str,
+        is_demo: bool = False,
+        family_id: str | None = None,
+    ) -> RunStatus:
+        """`family_id` (UUID, tùy chọn): gia đình nhận tin; có thì vào state và payload `notify_guardian` (spec 002)."""
         if not _ALIAS.match(elder_alias):
             raise ValueError("elder_alias là cách xưng hô ngắn (≤ 20 ký tự, không chữ số), không phải họ tên đầy đủ")
+        if family_id is not None:
+            family_id = str(UUID(family_id))  # ValueError nếu không phải UUID; chuẩn hóa dạng chữ thường có gạch ngang
         # ADR-006: máy chủ không lưu h1 (dò ngược được ra số điện thoại của người gọi) ⇒ tra danh sách đe dọa NGAY,
         # chỉ đưa kết quả + 3 số cuối vào state/checkpoint. Tên gói app ngân hàng cũng không lưu.
         threat = lookup_h1(event.caller.h1).model_dump() if event.caller else {"verdict": "unknown"}
@@ -122,6 +134,8 @@ class IncidentRuntime:
             "threat": threat,
             "rule_floor": event.rule_floor.value,
         }
+        if family_id is not None:  # không đặt khóa khi không có ⇒ state/checkpoint của sự cố không gia đình không đổi
+            state["family_id"] = family_id
         async with self._thread_lock(incident_id):
             await self.graph.ainvoke(state, self._config(incident_id), durability="sync")
             return await self._record(incident_id)

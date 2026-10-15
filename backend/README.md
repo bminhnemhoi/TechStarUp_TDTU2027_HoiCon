@@ -17,6 +17,15 @@ uv run python -m hoicon.agents.spike demo              # một sự cố đầu�
 uv run python -m hoicon.agents.spike bench --n 20      # p50/p95 từng lượt + chi phí
 ```
 
+- **Eval tất định** (spec 030): cần DB riêng để eval không chạm dữ liệu dev. Tạo một lần (tên user/DB theo
+  `infra/compose.dev.yml`):
+  ```bash
+  docker compose -f infra/compose.dev.yml exec db createdb -U hoicon hoicon_eval      # từ gốc repo
+  export HOICON_EVAL_DATABASE_URL=postgresql+psycopg://hoicon:<mật khẩu dev>@127.0.0.1:15432/hoicon_eval
+  HOICON_DATABASE_URL=$HOICON_EVAL_DATABASE_URL uv run alembic upgrade head
+  uv run hoicon-eval --suite smoke --compare baseline    # < 60 s, không khóa API, exit 0/1/2
+  ```
+  Báo cáo ở `backend/eval/reports/` (git bỏ qua). CI dùng DB service và `--shared-db-ok`. Chi tiết: `docs/AGENTS.md` mục Eval.
 - `--loop asyncio:SelectorEventLoop`: psycopg async không chạy trên `ProactorEventLoop` mặc định của Windows (Linux
   không ảnh hưởng). Test dùng hook `pytest_asyncio_loop_factories` trong `tests/conftest.py`; Alembic xử lý trong
   `migrations/env.py`.

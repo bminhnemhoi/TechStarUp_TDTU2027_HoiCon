@@ -80,3 +80,37 @@ async def test_cancel_prefix_only_removes_pending(threads: list[str]) -> None:
     await complete(sessions, done)
     assert await cancel_prefix(sessions, f"{prefix}:timer:") == 1
     assert [j.idempotency_key for j in await mine(prefix)] == [f"{prefix}:timer:a"]
+
+
+async def test_run_once_tells_the_handler_which_attempt_it_is_without_touching_stored_payload(
+    threads: list[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from hoicon.jobs import queue
+    from hoicon.jobs.queue import ATTEMPT_KEY, run_once
+
+    prefix = str(new_id())
+    threads.append(prefix)
+    sessions = get_sessionmaker()
+    kind = f"attempt-probe-{prefix}"
+    await enqueue(sessions, kind, {"x": 1}, key=f"{prefix}:probe")
+    real_claim = queue.claim_due
+
+    async def only_mine(sessions_: object, worker_id: str, limit: int = 10) -> list[Job]:
+        """DB dev có thể còn job của test khác: chỉ nhận job của mình, nhả khóa phần còn lại (không để `no_handler`)."""
+        jobs = await real_claim(sessions_, worker_id, 50)  # type: ignore[arg-type]
+        foreign = [j.id for j in jobs if j.kind != kind]
+        async with sessions.begin() as session:
+            await session.execute(update(Job).where(Job.id.in_(foreign)).values(locked_at=None, locked_by=None))
+        return [j for j in jobs if j.kind == kind]
+
+    monkeypatch.setattr(queue, "claim_due", only_mine)
+    seen: list[dict] = []
+
+    async def fail_once(payload: dict) -> None:
+        seen.append(payload)
+        raise RuntimeError("thử lại")
+
+    await run_once(sessions, {kind: fail_once}, "w-probe")
+    assert seen == [{"x": 1, ATTEMPT_KEY: 1}]
+    (job,) = await mine(prefix)
+    assert job.payload == {"x": 1} and job.attempts == 1 and job.error == "RuntimeError"

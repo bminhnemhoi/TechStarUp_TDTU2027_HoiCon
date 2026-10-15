@@ -1,0 +1,25 @@
+{
+  "case_id": "recovery_scam_bank_refund_003",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "error": "refusal"
+      },
+      {
+        "error": "timeout"
+      }
+    ],
+    "intervention": [
+      {
+        "error": "malformed"
+      }
+    ]
+  },
+  "notes": "LLM từ chối, rồi quá hạn, rồi trả output sai cấu trúc; mọi node rơi về mẫu."
+}

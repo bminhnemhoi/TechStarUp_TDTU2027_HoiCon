@@ -22,6 +22,14 @@
 Postgres đồng bộ, khóa theo thread, `recover()` sau sập); hẹn giờ là job `graph_resume`; tin gửi đi là job
 `notify_guardian` có khóa chống trùng. Thử: `uv run --directory backend python -m hoicon.agents.spike demo`.
 
+**Gửi thật tới người giám hộ (spec 002, ADR-010):** `IncidentRuntime.start(..., family_id=)` đưa `family_id` vào state và payload
+`notify_guardian` (vắng ⇒ chỉ log như cũ). Handler `notify_guardian` → `channels/guardian.py::send_to_guardian` → cổng duy nhất
+`deliver`: dòng `messages_out` (gửi đúng một lần), từ chối tin không mở đầu bằng câu công khai AI, chặn sự cố demo tới gia đình
+thật, hạn mức tin/tháng (giữ tin không khẩn ≥ 95%, tin gắn sự cố luôn đi), lỗi vĩnh viễn/hết lần thử ⇒ `fallback_required`.
+Job `zalo_update` (do webhook xếp) ghép người giám hộ `/start <mã>` và nhận phản hồi **1** (an toàn) / **2** (nghi lừa đảo) /
+**3** (xem chi tiết) ⇒ `runtime.resume(incident, {"decision": …}, expect="await_guardian")`. Zalo không có nút bấm.
+`ZaloClient` có hai bản: `LiveZaloClient` và `MockZaloClient` (mặc định, `HOICON_ZALO_MODE=mock`). Chưa có MCP `zalo`.
+
 ## `llm_router`
 | Hồ sơ | Mô hình | Dùng cho |
 |---|---|---|
@@ -38,3 +46,20 @@ dẫn) · `voice` (âm thanh thu sẵn). `docs`/`voice`/`scenario` nằm trong d
 
 ## Prompt
 `backend/src/hoicon/agents/prompts/*.md`, có phiên bản trong front-matter; đổi prompt ⇒ `run-eval smoke`.
+
+## Eval (`hoicon-eval`, spec 030)
+`uv run --directory backend hoicon-eval --suite smoke [--compare baseline]` chạy 20 kịch bản `data/scenarios/` qua **đồ thị
+sự cố thật** (`IncidentRuntime` + `AsyncPostgresSaver`) trên DB eval riêng; LLM thay bằng `ReplayClient` đọc cassette
+`backend/eval/cassettes/smoke/<id>.json` (hợp đồng `docs/schemas/eval_cassette.v1.json`) cắm vào `LlmRouter` nên vẫn qua
+che PII, ngân sách, fallback; **không khóa API, không mạng ngoài, không worker ⇒ không tin nào tới Zalo**.
+- Bộ kiểm tất định (không LLM-judge): `lower_than_floor`, `missing_ai_disclosure`, `leak_pii`, `panic_wording`,
+  `promise_refund`, `follow_injected_instruction`, `graph_loop` + lệch kỳ vọng của kịch bản (mức tối thiểu/tối đa, báo
+  người giám hộ, công cụ, kết cục).
+- Chỉ số: recall leo thang, tỷ lệ báo nhầm, vi phạm an toàn, công khai AI, tỷ lệ rơi về mẫu, p50/p95. Báo cáo
+  `backend/eval/reports/<ngày>-smoke.{json,md}` (JSON theo `docs/schemas/eval_report.v1.json`); so `backend/eval/baseline.json`
+  theo ngưỡng skill `run-eval`. Baseline chỉ ghi bằng `--write-baseline` chạy tay.
+- Cô lập: từ chối khi `HOICON_ENV=prod` hoặc URL DB eval trùng DB ứng dụng (trừ `--shared-db-ok` ở CI); sự cố mang id
+  `eval-<nonce>-<case>`, `is_demo=True`, job/hẹn giờ bị xóa cuối mỗi ca.
+- Giới hạn đã biết: cassette `synthetic` chỉ đo **rào tất định**, không đo chất lượng model; tóm tắt do LLM viết bằng chữ thuần
+  (không số/link/kênh chat) KHÔNG bị bộ lọc `_UNSAFE_SUMMARY` chặn — cần LLM-judge (B6) hoặc danh sách cho phép (spec 036).
+  `full`/`injection` (≥ 100 ca, gọi LLM thật): spec 036.

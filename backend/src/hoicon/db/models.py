@@ -1,11 +1,23 @@
-"""Mô hình ORM theo docs/DATA-MODEL.md (import tại đây để Alembic thấy). Bảng nghiệp vụ gia đình/sự cố: P2-01, P2-03."""
+"""Mô hình ORM theo docs/DATA-MODEL.md (import tại đây để Alembic thấy). Gia đình/thành viên/mã ghép/tin gửi đi:
+spec 002 (migration 0003, ADR-010). Bảng nghiệp vụ còn lại (thiết bị, đồng ý, sự cố…): spec 020, 021."""
 
 import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, Numeric, String, Text, func, text
+from sqlalchemy import (
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    Numeric,
+    SmallInteger,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -17,7 +29,11 @@ class Job(Base):
     """Hàng đợi job trong Postgres (ADR-004): bộ hẹn giờ T1/T2/T3, gửi tin, xóa theo hạn lưu. Lấy bằng SKIP LOCKED."""
 
     __tablename__ = "jobs"
-    __table_args__ = (Index("ix_jobs_due", "run_at", postgresql_where=text("done_at IS NULL")),)
+    __table_args__ = (
+        Index("ix_jobs_due", "run_at", postgresql_where=text("done_at IS NULL")),
+        # Đếm lần thử ghép Zalo và tin chữ theo thời gian (spec 002, migration 0003) không phải quét cả bảng.
+        Index("ix_jobs_kind_created", "kind", "created_at"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
     kind: Mapped[str] = mapped_column(String(64))
@@ -78,4 +94,102 @@ class AgentStep(Base):
     at: Mapped[datetime] = mapped_column(server_default=func.now())
 
 
-__all__ = ["AgentRun", "AgentStep", "Base", "Job"]
+class Family(Base):
+    __tablename__ = "families"
+    __table_args__ = (CheckConstraint("region IN ('bac', 'trung', 'nam')", name="region"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    display_name: Mapped[str] = mapped_column(String(64))  # bí danh do người dùng đặt, không phải tên thật
+    region: Mapped[str] = mapped_column(String(8))
+    plan: Mapped[str] = mapped_column(String(16), server_default=text("'free'"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
+
+
+class Member(Base):
+    """Người được bảo vệ hoặc người giám hộ. Zalo ID KHÔNG lưu thô (ADR-010 D1): `zalo_user_hmac` để tra cứu,
+    `zalo_chat_enc` (AES-256-GCM) để gửi tin. Bốn cột Zalo cùng có hoặc cùng rỗng."""
+
+    __tablename__ = "members"
+    __table_args__ = (
+        CheckConstraint("role IN ('protected', 'guardian')", name="role"),
+        CheckConstraint(
+            # IS NOT NULL tường minh: `NULL IN (1, 2)` là NULL và CHECK coi NULL là đạt
+            "(role = 'guardian' AND guardian_rank IS NOT NULL AND guardian_rank IN (1, 2))"
+            " OR (role = 'protected' AND guardian_rank IS NULL)",
+            name="guardian_rank",
+        ),
+        CheckConstraint(
+            "(zalo_bot_id IS NULL AND zalo_user_hmac IS NULL AND zalo_hmac_kid IS NULL AND zalo_chat_enc IS NULL)"
+            " OR (zalo_bot_id IS NOT NULL AND zalo_user_hmac IS NOT NULL AND zalo_hmac_kid IS NOT NULL"
+            " AND zalo_chat_enc IS NOT NULL)",
+            name="zalo_all_or_none",
+        ),
+        UniqueConstraint("zalo_bot_id", "zalo_user_hmac", name="uq_members_zalo_account"),
+        Index(
+            "uq_members_guardian_rank",
+            "family_id",
+            "guardian_rank",
+            unique=True,
+            postgresql_where=text("role = 'guardian'"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    role: Mapped[str] = mapped_column(String(16))
+    alias: Mapped[str | None] = mapped_column(String(20))  # cách xưng hô ("Mẹ", "Bố"); không lưu tên thật
+    address_form: Mapped[str | None] = mapped_column(String(32))
+    guardian_rank: Mapped[int | None] = mapped_column(SmallInteger)
+    zalo_bot_id: Mapped[str | None] = mapped_column(String(64))
+    zalo_user_hmac: Mapped[str | None] = mapped_column(String(64))
+    zalo_hmac_kid: Mapped[int | None] = mapped_column(SmallInteger)
+    zalo_chat_enc: Mapped[str | None] = mapped_column(Text)
+    locale: Mapped[str] = mapped_column(String(8), server_default=text("'vi'"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class PairingCode(Base):
+    """Mã ghép Zalo 6 số: chỉ lưu băm, hết hạn 15 phút, dùng một lần (FR-003)."""
+
+    __tablename__ = "pairing_codes"
+    __table_args__ = (
+        Index("uq_pairing_codes_unused", "code_hash", unique=True, postgresql_where=text("used_at IS NULL")),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    code_hash: Mapped[str] = mapped_column(String(64))
+    expires_at: Mapped[datetime]
+    used_at: Mapped[datetime | None]
+
+
+class MessageOut(Base):
+    """Mỗi tin gửi đi: nguồn của bộ đếm hạn mức theo bot/tháng và của việc gửi đúng một lần (`job_key` unique).
+    `family_id` rỗng được: tin trả lời người chưa ghép vẫn tính vào hạn mức (ADR-010, điều chỉnh khi hiện thực)."""
+
+    __tablename__ = "messages_out"
+    __table_args__ = (
+        CheckConstraint("channel IN ('zalo', 'push', 'web')", name="channel"),
+        CheckConstraint("status IN ('queued', 'sent', 'held_quota', 'failed', 'fallback_required')", name="status"),
+        Index("ix_messages_out_quota", "bot_id", "quota_month", "status"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    # SET NULL (không CASCADE): xóa gia đình không được làm mất dòng đã gửi — bộ đếm hạn mức đếm trên bảng này.
+    family_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("families.id", ondelete="SET NULL"))
+    # FK tới incidents thêm ở spec 021 (bảng chưa có), như agent_runs.incident_id.
+    incident_id: Mapped[uuid.UUID | None]
+    member_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("members.id", ondelete="SET NULL"))
+    channel: Mapped[str] = mapped_column(String(8))
+    bot_id: Mapped[str] = mapped_column(String(64))
+    template_id: Mapped[str] = mapped_column(String(32))
+    status: Mapped[str] = mapped_column(String(24))
+    quota_month: Mapped[str] = mapped_column(String(7))  # "YYYY-MM" theo giờ Việt Nam
+    sent_at: Mapped[datetime | None]
+    error: Mapped[str | None] = mapped_column(String(64))
+    job_key: Mapped[str | None] = mapped_column(String(200), unique=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+__all__ = ["AgentRun", "AgentStep", "Base", "Family", "Job", "Member", "MessageOut", "PairingCode"]

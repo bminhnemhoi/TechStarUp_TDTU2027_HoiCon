@@ -1,0 +1,36 @@
+{
+  "case_id": "task_scam_recruit_group_003",
+  "source": "synthetic",
+  "behavior": "honest",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "high",
+        "tactic": "investment_job",
+        "reasons": [
+          "Tuyển người làm nhiệm vụ online",
+          "Mở ví điện tử"
+        ],
+        "ask_question": "q_asked_transfer"
+      },
+      {
+        "level": "critical",
+        "tactic": "investment_job",
+        "reasons": [
+          "Bị đòi chuyển tiền để nhận việc"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "{alias} đang bị mời làm nhiệm vụ online kiếm tiền và được bảo chuyển tiền trước, đây là chiêu lừa việc làm quen thuộc.",
+        "action": "call_and_stay_on_line"
+      }
+    ]
+  }
+}

@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 STALE_LOCK = timedelta(minutes=5)
 MAX_ATTEMPTS = 5
+# Handler biết đây là lần thử thứ mấy (để quyết định "hết số lần thử ⇒ cần dự phòng" thay vì raise nữa): `run_once` thêm
+# khóa này vào BẢN SAO payload; payload lưu trong DB không đổi.
+ATTEMPT_KEY = "_attempt"
 
 Handler = Callable[[dict[str, Any]], Awaitable[None]]
 
@@ -95,7 +98,7 @@ async def run_once(sessions: async_sessionmaker, handlers: dict[str, Handler], w
             await complete(sessions, job, error=f"no_handler:{job.kind}")
             continue
         try:
-            await handler(job.payload)
+            await handler({**job.payload, ATTEMPT_KEY: job.attempts})
         except Exception as exc:  # job lỗi không được làm chết worker; giữ tên lớp lỗi để chẩn đoán
             logger.exception("job %s (%s) failed", job.id, job.kind)
             await complete(sessions, job, error=type(exc).__name__)

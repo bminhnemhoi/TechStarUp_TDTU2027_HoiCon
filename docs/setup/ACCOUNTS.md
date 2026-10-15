@@ -73,12 +73,28 @@ GitHub Pro (3.000 phút Actions/tháng cho repo private).
 3. Sau khi tạo, Zalo **gửi Bot Token qua tin nhắn** cho tài khoản Zalo của Minh → dán vào `backend/.env`:
    `HOICON_ZALO_BOT_TOKEN=...` rồi **xóa tin nhắn chứa token** trong Zalo (tin được đồng bộ sang Zalo PC/máy khác).
 4. Bí mật webhook (8–256 ký tự) `HOICON_ZALO_WEBHOOK_SECRET` đã được `init_env` sinh sẵn — không cần làm gì.
-5. Phần còn lại làm ở P1-S3 **mà không ai phải cầm token trong lệnh**: script `hoicon.ops.zalo_webhook` (theo mẫu
-   `check_keys`: đọc token từ `.env`, gọi `setWebhook` với `url` + `secret_token`, chỉ in Đạt/Lỗi). Đường hầm
-   `cloudflared tunnel --url …` (URL HTTPS tạm, không cần tài khoản Cloudflare) chỉ trỏ tới **app con chứa riêng route
+5. Phần còn lại làm **mà không ai phải cầm token trong lệnh** (spec 002 — đã có code):
+   ```bash
+   uv run --directory backend python -m hoicon.ops.check_keys                    # Zalo Bot token: Đạt
+   uv run --directory backend uvicorn hoicon.api.webhooks:app --port 18080 --loop asyncio:SelectorEventLoop
+   cloudflared tunnel --url http://127.0.0.1:18080                               # lấy URL https tạm
+   uv run --directory backend python -m hoicon.ops.zalo_webhook set --url https://<tên>.trycloudflare.com
+   uv run --directory backend python -m hoicon.ops.zalo_webhook info             # đã đặt chưa
+   uv run --directory backend python -m hoicon.ops.pairing_code --family dev-gia-dinh   # mã ghép 6 số
+   # rồi nhắn cho bot từ Zalo của đội:  /start <mã>
+   ```
+   `zalo_webhook` đọc token từ `.env`, gọi `setWebhook` và **chỉ in Đạt/Lỗi** (không in token, secret hay URL); tự nối
+   `/webhooks/zalo/<bot_id>` và từ chối URL không phải HTTPS công khai. Đường hầm chỉ trỏ tới **app con chứa riêng route
    webhook** — không mở `/docs`, `/openapi.json`, `/mcp/*` ra Internet. Zalo gửi lại bí mật trong header
    `X-Bot-Api-Secret-Token` ở mọi webhook. Token Zalo nằm trên **đường dẫn URL** (thiết kế của Zalo) ⇒ yêu cầu bắt buộc
-   cho code P1-S3 ghi ở ADR-003.
+   cho code Zalo ghi ở ADR-003. Không có token: dùng mock — `python -m hoicon.ops.zalo_simulate "/start <mã>"`.
+6. Khóa mã hóa Zalo `HOICON_DATA_KEY_1` (hex 64 ký tự) do `init_env` sinh — **sao lưu cùng pepper**: mất khóa thì mọi người
+   giám hộ đã ghép phải ghép lại (ADR-010 D1). `.env` đã có từ trước spec 002 chưa có khóa này: chạy **một lần**
+   `uv run --directory backend python -m hoicon.ops.init_env --new-data-key` (chỉ nối thêm khóa, không đụng dòng cũ). Cờ này
+   là chốt chặn như `--new-pepper`: thiếu khóa mà không có cờ thì `init_env` từ chối, để khỏi tự sinh khóa mới đè lên
+   khóa đã mất và làm mọi người giám hộ đã ghép không nhận được tin.
+7. Triển khai thật (VPS, spec 012) **bắt buộc** đặt `HOICON_ENV=prod` và `HOICON_ZALO_MODE=live`: ở `prod`, chế độ mock bị từ
+   chối khi khởi động (mock không gửi tin thật; tin "gửi" bằng mock ghi `messages_out.error='mock'`).
 
 **Giới hạn miễn phí:** tối đa **3 bot**, mỗi bot **50 người dùng** và **3.000 tin/tháng** (ADR-003, bộ kiểm hạn mức
 `messages_out`). Bot gắn với tài khoản Zalo cá nhân của Minh.

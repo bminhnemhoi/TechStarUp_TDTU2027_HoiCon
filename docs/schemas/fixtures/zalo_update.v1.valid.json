@@ -1,0 +1,62 @@
+[
+  {
+    "_name": "text_reply_1",
+    "ok": true,
+    "result": {
+      "event_name": "message.text.received",
+      "message": {
+        "from": { "id": "fixture-user-0001", "display_name": "Người giám hộ mẫu A", "is_bot": false },
+        "chat": { "id": "fixture-chat-0001", "chat_type": "PRIVATE" },
+        "text": "1",
+        "message_id": "fixture-msg-0001",
+        "date": 1750316131602
+      }
+    }
+  },
+  {
+    "_name": "text_start_pairing",
+    "ok": true,
+    "result": {
+      "event_name": "message.text.received",
+      "message": {
+        "from": { "id": "fixture-user-0002", "display_name": "Người giám hộ mẫu B", "is_bot": false },
+        "chat": { "id": "fixture-chat-0002", "chat_type": "PRIVATE" },
+        "text": "/start 482913",
+        "message_id": "fixture-msg-0002",
+        "date": 1750316191602
+      }
+    }
+  },
+  {
+    "_name": "text_free_form_and_unknown_field",
+    "ok": true,
+    "result": {
+      "event_name": "message.text.received",
+      "message": {
+        "from": { "id": "fixture-user-0001", "display_name": "Người giám hộ mẫu A", "is_bot": false },
+        "chat": { "id": "fixture-chat-0001", "chat_type": "PRIVATE" },
+        "text": "Cho con xem chi tiết với",
+        "message_id": "fixture-msg-0003",
+        "extra_field_added_by_zalo": true
+      }
+    }
+  },
+  {
+    "_name": "text_without_optional_is_bot_and_date",
+    "ok": true,
+    "result": {
+      "event_name": "message.text.received",
+      "message": {
+        "from": { "id": "fixture-user-0001" },
+        "chat": { "id": "fixture-chat-0001", "chat_type": "PRIVATE" },
+        "text": "2",
+        "message_id": "fixture-msg-0007"
+      }
+    }
+  },
+  {
+    "_name": "unsupported_event_without_message",
+    "ok": true,
+    "result": { "event_name": "message.unsupported.received" }
+  }
+]

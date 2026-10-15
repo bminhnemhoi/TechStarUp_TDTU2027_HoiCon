@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select
 
 from hoicon.agents.incident_graph import Deps, GuardianBrief, RiskAssessment
 from hoicon.agents.llm_router import LlmRouter
@@ -16,6 +16,7 @@ from hoicon.config import get_settings
 from hoicon.db.ids import new_id
 from hoicon.db.models import AgentRun, AgentStep, Job
 from hoicon.db.session import get_sessionmaker
+from hoicon.eval.checks import checkpoint_bytes
 from hoicon.jobs.queue import run_once
 from hoicon.jobs.worker import incident_handlers
 
@@ -54,17 +55,6 @@ async def drain(d: Deps, runtime: IncidentRuntime) -> None:
         pass
 
 
-async def checkpoint_bytes(thread: str) -> bytes:
-    """Mọi thứ LangGraph đã ghi cho thread (state, blob, giá trị resume) — để kiểm không có dữ liệu thô nào lọt vào."""
-    query = text(
-        "SELECT blob FROM checkpoint_writes WHERE thread_id = :t AND blob IS NOT NULL "
-        "UNION ALL SELECT blob FROM checkpoint_blobs WHERE thread_id = :t AND blob IS NOT NULL "
-        "UNION ALL SELECT convert_to(checkpoint::text, 'UTF8') FROM checkpoints WHERE thread_id = :t"
-    )
-    async with get_sessionmaker()() as session:
-        return b"".join(row[0] for row in await session.execute(query, {"t": thread}))
-
-
 async def jobs_for(thread: str) -> list[Job]:
     async with get_sessionmaker()() as session:
         return list(await session.scalars(select(Job).where(Job.idempotency_key.startswith(f"{thread}:"))))
@@ -97,7 +87,7 @@ async def test_full_incident_flow(threads: list[str]) -> None:
         values = (await runtime.graph.aget_state({"configurable": {"thread_id": thread}})).values
         assert values["elder_answer"]["note_flags"]["mentions_code"] is True and "note" not in values["elder_answer"]
         # Lời kể thô (OTP, số điện thoại), h1 của số gọi đến và tên gói app không nằm ở đâu trong checkpoint (ADR-006).
-        raw = await checkpoint_bytes(thread)
+        raw = await checkpoint_bytes(get_sessionmaker(), thread)
         assert raw, "không đọc được bảng checkpoint"
         for secret in ("123456", "0900000001", DEMO_H1, "vn.hoicon.demobank"):
             assert secret.encode() not in raw, secret
@@ -146,3 +136,40 @@ async def test_full_name_alias_is_rejected(threads: list[str]) -> None:
     async with IncidentRuntime.open(deps()) as runtime:
         with pytest.raises(ValueError):
             await runtime.start(demo_event(), incident_id=str(new_id()), elder_alias="Bà Nguyễn Thị Lan 1955")
+
+
+async def test_family_id_reaches_every_guardian_message(threads: list[str]) -> None:
+    family_id = str(new_id())
+    thread = str(new_id())
+    threads.append(thread)
+    async with IncidentRuntime.open(deps()) as runtime:
+        await runtime.start(demo_event(), incident_id=thread, elder_alias="Mẹ", is_demo=True, family_id=family_id)
+        await runtime.resume(thread, {"answer": "no"}, expect="ask_elder")
+        values = (await runtime.graph.aget_state({"configurable": {"thread_id": thread}})).values
+        await runtime.graph.checkpointer.adelete_thread(thread)
+    assert values["family_id"] == family_id
+    payloads = [j.payload for j in await jobs_for(thread) if j.kind == "notify_guardian"]
+    assert len(payloads) >= 2 and {p["family_id"] for p in payloads} == {family_id}
+
+
+async def test_family_id_is_optional_and_payload_stays_backward_compatible(threads: list[str]) -> None:
+    thread = str(new_id())
+    threads.append(thread)
+    async with IncidentRuntime.open(deps()) as runtime:
+        await runtime.start(demo_event(), incident_id=thread, elder_alias="Mẹ", is_demo=True)
+        values = (await runtime.graph.aget_state({"configurable": {"thread_id": thread}})).values
+        await runtime.graph.checkpointer.adelete_thread(thread)
+    assert "family_id" not in values  # checkpoint cũ/không gia đình: trạng thái không đổi
+    (payload,) = [j.payload for j in await jobs_for(thread) if j.kind == "notify_guardian"]
+    assert payload["family_id"] is None
+    # các khóa cũ còn nguyên, người đọc cũ (worker hiện tại) không bị ảnh hưởng
+    assert {"incident_id", "template", "text", "guardian_rank", "is_drill", "is_demo"} <= payload.keys()
+
+
+@pytest.mark.parametrize("bad", ["", "not-a-uuid", "0900000001", "x" * 40])
+async def test_invalid_family_id_is_rejected_before_any_write(bad: str, threads: list[str]) -> None:
+    thread = str(new_id())
+    async with IncidentRuntime.open(deps()) as runtime:
+        with pytest.raises(ValueError):
+            await runtime.start(demo_event(), incident_id=thread, elder_alias="Mẹ", family_id=bad)
+        assert await jobs_for(thread) == []

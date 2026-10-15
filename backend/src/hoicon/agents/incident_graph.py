@@ -63,6 +63,7 @@ def _append(left: list[str], right: list[str]) -> list[str]:
 class IncidentState(TypedDict, total=False):
     incident_id: str
     run_id: str
+    family_id: str  # UUID gia đình nhận tin; vắng khi sự cố không gắn gia đình (spec 002)
     is_drill: bool
     is_demo: bool
     elder_alias: str
@@ -138,6 +139,7 @@ def build_graph(deps: Deps) -> StateGraph:
         key = f"{state['incident_id']}:msg:{template}"
         payload = {
             "incident_id": state["incident_id"],
+            "family_id": state.get("family_id"),  # None khi chưa gắn gia đình (checkpoint cũ cũng đọc được)
             "template": template,
             "text": text,
             "guardian_rank": guardian_rank,

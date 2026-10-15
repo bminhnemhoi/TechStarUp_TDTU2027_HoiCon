@@ -15,6 +15,9 @@ gửi/nhận tin với người đã tương tác, có webhook và nút bấm; g
   được ưu tiên. Chia gia đình thí điểm qua 3 bot.
 - Dự phòng: magic link `/a/[token]` (web, web push) có cùng các hành động; Telegram nếu P1-S3 thất bại.
 
+> **Cập nhật 15/10/2026 (ADR-010, sau khi tra tài liệu chính thức):** Zalo không có nút bấm và không gửi `update_id` — chống
+> trùng theo `message_id`, người giám hộ trả lời chữ 1/2/3. Các câu "nút [Gọi Mẹ]…" và "message id" ở trên đọc theo đó.
+
 ## Yêu cầu bảo mật bắt buộc cho code Zalo (review 08/10/2026)
 Zalo Bot API đặt **token trên đường dẫn URL** (`https://bot-api.zaloplatforms.com/bot<TOKEN>/<method>`), nên:
 - Mọi lời gọi đi qua **một** `ZaloClient`; logger `httpx` đặt mức WARNING; thêm `logging.Filter` thay `/bot[^/]+/`

@@ -1,6 +1,7 @@
 """CLI spike P1-S4 — chạy đồ thị sự cố đầu–cuối, đo độ trễ từng lượt, thử chạy tiếp sau kill -9.
 
     uv run --directory backend python -m hoicon.agents.spike demo            # một sự cố, hẹn giờ rút ngắn
+    uv run --directory backend python -m hoicon.agents.spike demo --family <tên>   # gửi tin tới gia đình dev (spec 002)
     uv run --directory backend python -m hoicon.agents.spike bench --n 20    # p50/p95 từng lượt + chi phí
     uv run --directory backend python -m hoicon.agents.spike recover         # chạy tiếp các lần chạy dở dang
 
@@ -18,6 +19,7 @@ import time
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import select
 
@@ -26,7 +28,7 @@ from hoicon.agents.llm_router import LlmRouter
 from hoicon.agents.runtime import IncidentRuntime
 from hoicon.config import get_settings
 from hoicon.db.ids import new_id
-from hoicon.db.models import AgentRun, AgentStep
+from hoicon.db.models import AgentRun, AgentStep, Family, Job, MessageOut
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain.events import RiskEvent
 from hoicon.jobs.queue import cancel_prefix
@@ -59,8 +61,35 @@ def deps(router: LlmRouter | None = None, **timers: int) -> Deps:
     return Deps(router=router or LlmRouter.from_settings(), sessions=get_sessionmaker(), settings=settings)
 
 
-async def demo() -> None:
+async def family_id_by_name(sessions: Any, name: str) -> str:
+    """Gia đình dev tạo bằng `python -m hoicon.ops.pairing_code --family <tên>` (sự cố demo chỉ tới gia đình demo)."""
+    async with sessions() as session:
+        found = (await session.scalars(select(Family.id).where(Family.display_name == name))).first()
+    if found is None:
+        raise SystemExit(f"Không thấy gia đình dev '{name}'. Tạo: python -m hoicon.ops.pairing_code --family {name}")
+    return str(found)
+
+
+async def report_messages(sessions: Any, incident: str) -> None:
+    """Tin đã gửi cho sự cố + độ trễ `jobs.created_at → messages_out.sent_at` (nguồn số đo SC-001, spec 002 R4)."""
+    query = (
+        select(MessageOut, Job.created_at)
+        .join(Job, Job.idempotency_key == MessageOut.job_key)
+        .where(MessageOut.incident_id == UUID(incident))
+        .order_by(Job.created_at)
+    )
+    async with sessions() as session:
+        rows = (await session.execute(query)).all()
+    print(f"\ntin gửi người giám hộ ({len(rows)}):")
+    for message, queued_at in rows:
+        latency = f"{(message.sent_at - queued_at).total_seconds() * 1000:7.0f} ms" if message.sent_at else "      –"
+        print(f"  {message.template_id:<12} {message.status:<18} {latency}  {message.error or ''}")
+
+
+async def demo(family: str | None = None) -> None:
     d = deps(timer_ask_elder_s=30, timer_t1_s=2, timer_t2_s=4, timer_t3_s=30)
+    family_id = await family_id_by_name(d.sessions, family) if family else None
+    print(f"gửi tin: {d.settings.zalo_mode} · gia đình: {family or '(không — chỉ log)'}")
     stop = asyncio.Event()
     async with IncidentRuntime.open(d) as runtime:
         worker = asyncio.create_task(run_worker(d.sessions, incident_handlers(runtime), stop, poll_s=0.2))
@@ -73,7 +102,9 @@ async def demo() -> None:
                 f" · level={status.level}"
             )
 
-        status = await runtime.start(demo_event(), incident_id=thread, elder_alias="Mẹ", is_demo=True)
+        status = await runtime.start(
+            demo_event(), incident_id=thread, elder_alias="Mẹ", is_demo=True, family_id=family_id
+        )
         show("start", status)
         if status.waiting_for == "ask_elder":
             print(f"         E8 hỏi: {status.interrupt['text']}")
@@ -84,6 +115,8 @@ async def demo() -> None:
         show("guardian: scam", status)
         stop.set()
         await worker
+        if family_id:
+            await report_messages(d.sessions, thread)
         async with d.sessions() as session:
             run = (await session.scalars(select(AgentRun).where(AgentRun.thread_id == thread))).one()
             steps = (
@@ -163,13 +196,13 @@ async def recover() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(prog="hoicon.agents.spike")
     sub = parser.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("demo")
+    sub.add_parser("demo").add_argument("--family", help="tên gia đình dev để gửi tin thật qua kênh Zalo")
     sub.add_parser("bench").add_argument("--n", type=int, default=20)
     sub.add_parser("crash").add_argument("--thread", required=True)
     sub.add_parser("recover")
     args = parser.parse_args()
     coro = {
-        "demo": demo,
+        "demo": lambda: demo(args.family),
         "bench": lambda: bench(args.n),
         "crash": lambda: crash(args.thread),
         "recover": recover,
