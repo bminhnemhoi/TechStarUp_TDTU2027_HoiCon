@@ -44,6 +44,12 @@ Mọi lời gọi: che PII → `<untrusted>` cho nội dung kẻ gian → timeou
 `threat` (tra cứu/gắn cờ) · `zalo` (gửi qua bộ kiểm hạn mức) · `scenario` (kịch bản diễn tập) · `docs` (tài liệu hướng
 dẫn) · `voice` (âm thanh thu sẵn). `docs`/`voice`/`scenario` nằm trong danh sách cắt (có thể thành tool nội bộ).
 
+`threat` (đã dựng, spec 003) tại `/mcp/threat/`: tool `lookup_phone(h1)` tra bảng `threat_indicators` (chỉ HMAC). **Đóng
+mặc định**: mọi yêu cầu cần `Authorization: Bearer <token>` (cấu hình `HOICON_MCP_THREAT_CLIENTS` = tên client → SHA-256
+token; sinh bằng `python -m hoicon.ops.mcp_token new --client <tên>`), giới hạn tần suất theo client (429 + `Retry-After`),
+mỗi yêu cầu một dòng log (client, mã, tool, verdict — không h1/token/IP). Cùng middleware (`mcp_servers/auth.py`) dùng
+cho các MCP server sau.
+
 ## Prompt
 `backend/src/hoicon/agents/prompts/*.md`, có phiên bản trong front-matter; đổi prompt ⇒ `run-eval smoke`.
 

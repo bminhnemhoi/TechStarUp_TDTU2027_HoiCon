@@ -119,7 +119,7 @@ Làn: **A** = Android · **B** = backend/AI/web · **H** = hồ sơ, vận hành
 |---|---|---|---|---|---|
 | **001-safe-pause-real-device** | P1-S1/S2 còn lại: `:latency` trên FTL ≥ 2 máy (Samsung A + Pixel), kiểm FSI khi từ chối SAW (AVD 34/36), sửa tiêu đề demobank chồng dòng, sửa `tts_unavailable` trên AVD, ảnh → `ux-elder-reviewer`, đóng phần mở của ADR-007/008 | A | Firebase | p95 `app_foreground→pause_shown` ≤ 3 s **máy thật**, hoặc ghi rõ không đạt + phương án (View thuần, R8/baseline profile) | `device-matrix.md`, ảnh 100/200%, báo cáo reviewer |
 | **002-zalo-guardian-channel** | P1-S3: webhook `POST /webhooks/zalo/{bot_id}` (kiểm secret, chống trùng, trả 200 ngay, xử lý bằng job), `/start <mã>`, nút Đã gọi/Lừa đảo/An toàn, `notify_guardian` gửi thật qua `messages_out`, chế độ **mock** cho test/CI, ADR-010 | B | token Zalo; dùng lại `jobs/queue.py`, `agents/texts.py` | giao tin p95 ≤ 5 s (n ≥ 20); tin mở đầu "Đây là trợ lý AI HỏiCon"; hết hạn mức ⇒ rơi về `/a/[token]` | `docs/spikes/P1-S3-zalo.md` |
-| 003 (lite) | P1-S4 còn lại: bench Haiku 4.5 vs 5.5 (`spike bench --n 20`) | B | khóa Anthropic | số đo vào ADR-009 §10 | bảng số |
+| **003-agent-core-mcp-threat** | P1-S4 còn lại (Tiến nâng từ lite thành spec đầy đủ 15/10): `threat_indicators` chỉ HMAC + lệnh nạp, MCP `threat` có token + giới hạn tần suất (kéo sớm từ 026), `spike bench --model --json`, trần chi tiêu bền | B | 002, 030; khóa Anthropic chỉ chặn phần so model | MCP không token ⇒ 401, vượt hạn mức ⇒ 429; 0 h1 trên đĩa máy chủ; eval smoke +0 | `evidence.md`; số model BLOCKED tới P0-08 |
 | **004-voice-vi** | P1-S5 thu nhỏ: TTS trên máy (giọng có sẵn vs âm thanh thu sẵn); STT `SpeechRecognizer` vi-VN 20 câu tự thu; chốt "nút bấm là chính" | A | — | quyết định có số; TTS chạy offline trên AVD + máy thật | `P1-S5-giong-noi.md` |
 | 005 (lite) | P1-07: Minh duyệt 60 kịch bản ⇒ `draft: false` | Minh | — | `test_scenarios.py` xanh | — |
 | H-1 | P1-01 thuyết minh (xử lý B4, B5; số đo spike có nguồn; đội 2 người) · P1-03 video 3' (`:demobank`, máy ảo) · P1-04 `judge` 10/11 → nộp 13/11 | H | 001, 002 cho cảnh demo | `pitch-sync` sạch; video ≤ 3' | biên nhận nộp |
@@ -149,7 +149,7 @@ Làn: **A** = Android · **B** = backend/AI/web · **H** = hồ sơ, vận hành
 | **030-eval-smoke** (kéo lên sớm — O1) | CLI `hoicon-eval` + 20 ca smoke chạy bằng phản hồi LLM ghi sẵn (tất định, chạy được trong CI) | B | 005 | < 1 phút; đo recall leo thang, báo nhầm, vi phạm an toàn, công khai AI |
 | **024-risk-and-intervention** | P2-08 + P2-09: `risk_scorer` + ngân hàng câu hỏi, E8 qua FCM, `intervention`, T1/T2/T3 nối Zalo thật | A+B | 021, 023, 030 | US-05 tóm tắt ≤ 15 s; LLM quá hạn ⇒ mẫu; eval smoke không tụt so với baseline |
 | **025-trace-sse** | P2-10: `agent_steps` + SSE `/v1/runs/{id}/stream` | B | 021 | trace đủ node, đã che PII |
-| **026-verification-threat** | P2-11: tác tử xác minh + `rescore`, MCP `threat` có token + giới hạn tần suất, `/v1/lookups`, E10 | A+B | 024 | US-06 có nguồn dẫn; MCP không token ⇒ 401 |
+| **026-verification-threat** | P2-11: tác tử xác minh + `rescore`, `/v1/lookups`, E10, đồng bộ danh sách đe dọa xuống máy (MCP token + hạn mức + `threat_indicators` đã làm ở 003) | A+B | 024, 003 | US-06 có nguồn dẫn |
 | **027-guardian-web** | P2-12: danh sách/chi tiết sự cố cho người giám hộ | B | 023 | Playwright + ảnh chụp |
 | **028-drills** | P2-13: diễn tập v1 (E11, bảng `drills`, nhãn `[DIỄN TẬP]`, màu riêng, debrief) | A+B | 022, 024 | US-08; `is_drill` ở mọi nơi (test) |
 | **034-hardening-core** | Phần P2-20 cần **trước** người thật: `privacy-audit`, review bảo mật, job retention, backup | B | 012 | 0 lỗi bảo mật High |
@@ -247,7 +247,7 @@ git worktree remove ../hoicon-wt/android && git branch -d feat/001-safe-pause-re
     `data/bank_apps.vn.json` (làn A, `python scripts/gen-bank-apps.py`; I1 cũng đi đường này); `apps/web/src/lib/api/schema.d.ts` sinh từ OpenAPI backend (làn B,
     `bash scripts/gen-api-client.sh`). Không sửa tay, không sinh ở làn không sở hữu.
 
-**Ghép cặp theo đợt:** Đợt 1: A = 001 → 004 · B = 002 (+ 003 lite). Đợt 2: A = 012 (phần Android) · B = 011 → 012 (VPS).
+**Ghép cặp theo đợt:** Đợt 1: A = 001 → 004 · B = 002 (+ 003 lite). **Đang chạy (Tiến giao 15/10/2026, gọi là "Đợt 3" của lịch tích hợp):** A = 010 · B = 003 (đầy đủ). Đợt 2: A = 012 (phần Android) · B = 011 → 012 (VPS).
 Đợt 3: B = 020 (API) → 021 → 023 · A = 020 (màn E1–E4, sau khi hợp đồng merge) → 022. Đợt 4: B = 030 → 024 → 025/026/027 ·
 A = 024 (E8) → 028.
 

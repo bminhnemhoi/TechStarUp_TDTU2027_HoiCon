@@ -54,7 +54,7 @@
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
 | `verifications` | id, incident_id, kind (`phone/url/qr/account`), subject_hmac, verdict, sources jsonb, at | |
-| `threat_indicators` | id, kind, value_hmac, value_kid, last3, source, confidence, first_seen, last_seen, expires_at | đồng bộ xuống máy dạng danh sách hash |
+| `threat_indicators` | id, kind (`phone`), value_hmac (char 64, CHECK hex), value_kid, last3 (char 3, rỗng được), source, confidence (0–1), tactic, list_version, is_demo, first_seen, last_seen, expires_at | **đã có** (`0004`, spec 003); chỉ HMAC (ADR-006), không cột h1; `UNIQUE (kind, value_kid, value_hmac)` cũng là chỉ mục tra cứu; nạp bằng `ops/threat_list`. **Chưa đồng bộ xuống máy được**: máy so **h1** mà bảng chỉ có HMAC ⇒ 022/026 phải chọn (cột `value_enc` AES-GCM hoặc danh sách h1 tách khỏi DB) |
 | `case_files` | id, incident_id, status (`draft/approved/sent`), content jsonb, approved_by, approved_at | hồ sơ gửi cơ quan sau khi người giám hộ duyệt |
 
 ### Diễn tập & đánh giá

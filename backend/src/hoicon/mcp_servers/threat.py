@@ -1,23 +1,29 @@
 """MCP server `threat` (gắn tại /mcp/threat): tra số điện thoại đã băm (h1) trong danh sách đe dọa của HỏiCon.
 
-Chỉ nhận h1, không bao giờ nhận số thô. Đồ thị sự cố gọi thẳng `lookup_h1` (cùng tiến trình, ADR-002); MCP để tác tử
-bên ngoài (Claude qua MCP connector, công cụ đội) dùng chung đúng một nguồn.
+Chỉ nhận h1, không bao giờ nhận số thô. Danh sách nằm trong bảng `threat_indicators` (spec 003): chỉ
+`HMAC(pepper[kid], h1)`, không lưu h1 (ADR-006); nạp bằng `python -m hoicon.ops.threat_list load <tệp>`. Đồ thị
+sự cố gọi thẳng `lookup_h1` (cùng tiến trình, ADR-002); MCP để tác tử bên ngoài (Claude qua MCP connector, công cụ
+đội) dùng chung đúng một nguồn.
 
-ponytail: danh sách nạp từ `data/threat_seed.demo.json` (chỉ số hư cấu); bảng `threat_indicators` + HMAC ở P2-11.
-Trước khi mở ra Internet phải có xác thực + giới hạn tần suất: h1 không có muối nên tra được bằng cách thử hết số VN.
+Xác thực Bearer + giới hạn tần suất của `/mcp/threat` nằm ở `mcp_servers/auth.py` (h1 không có muối nên ai gọi được
+MCP cũng dò được danh sách bằng cách thử hết số VN).
 """
 
-import json
 import re
-from functools import lru_cache
-from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 from mcp.server.mcpserver import MCPServer
 from pydantic import BaseModel
+from sqlalchemy import func, or_, select, tuple_
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
-SEED = Path(__file__).resolve().parents[4] / "data" / "threat_seed.demo.json"
-_H1 = re.compile(r"^[0-9a-f]{64}$")
+from hoicon.db.models import ThreatIndicator
+from hoicon.db.session import get_sessionmaker
+from hoicon.domain.pii import candidate_hmacs
+from hoicon.mcp_servers import auth
+
+_H1 = re.compile(r"[0-9a-f]{64}")  # dùng `fullmatch`: `$` của `re` cho lọt "\n" ở cuối
+NO_LIST_VERSION = "none"
 
 
 class ThreatVerdict(BaseModel):
@@ -28,25 +34,34 @@ class ThreatVerdict(BaseModel):
     list_version: str
 
 
-@lru_cache
-def _seed() -> dict[str, Any]:
-    return json.loads(SEED.read_text(encoding="utf-8"))
-
-
-def lookup_h1(h1: str) -> ThreatVerdict:
-    if not _H1.match(h1):
+async def lookup_h1(sessions: async_sessionmaker, h1: str) -> ThreatVerdict:
+    """Tra theo HMAC với mọi kid pepper đã cấu hình; dòng quá hạn ⇒ `unknown`. h1 sai định dạng ⇒ `ValueError`."""
+    if not _H1.fullmatch(h1):
         raise ValueError("h1 phải là SHA-256 hex chữ thường (64 ký tự) — không gửi số điện thoại thô")
-    seed = _seed()
-    hit = next((i for i in seed["indicators"] if i["h1"] == h1), None)
-    if hit is None:
-        return ThreatVerdict(verdict="unknown", list_version=seed["version"])
-    return ThreatVerdict(
-        verdict="flagged",
-        source=hit["source"],
-        confidence=hit["confidence"],
-        tactic=hit.get("tactic"),
-        list_version=seed["version"],
-    )
+    keys = candidate_hmacs(h1)
+    async with sessions() as session:
+        hit = (
+            await session.scalars(
+                select(ThreatIndicator)
+                .where(
+                    ThreatIndicator.kind == "phone",
+                    tuple_(ThreatIndicator.value_kid, ThreatIndicator.value_hmac).in_(keys),
+                    or_(ThreatIndicator.expires_at.is_(None), ThreatIndicator.expires_at > func.now()),
+                )
+                .order_by(ThreatIndicator.confidence.desc())
+                .limit(1)
+            )
+        ).first()
+        if hit is not None:
+            return ThreatVerdict(
+                verdict="flagged",
+                source=hit.source,
+                confidence=float(hit.confidence),
+                tactic=hit.tactic,
+                list_version=hit.list_version,
+            )
+        latest = await session.scalar(select(func.max(ThreatIndicator.list_version)))
+    return ThreatVerdict(verdict="unknown", list_version=latest or NO_LIST_VERSION)
 
 
 mcp = MCPServer(
@@ -57,6 +72,8 @@ mcp = MCPServer(
 
 
 @mcp.tool()
-def lookup_phone(h1: str) -> ThreatVerdict:
+async def lookup_phone(h1: str) -> ThreatVerdict:
     """Tra một số điện thoại đã băm. Trả `flagged` (kèm nguồn, độ tin cậy, thủ đoạn) hoặc `unknown`."""
-    return lookup_h1(h1)
+    verdict = await lookup_h1(get_sessionmaker(), h1)
+    auth.note(tool="lookup_phone", verdict=verdict.verdict)  # dòng log của guard: chỉ tên tool + kết luận, không h1
+    return verdict

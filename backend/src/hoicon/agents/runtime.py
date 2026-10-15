@@ -119,7 +119,15 @@ class IncidentRuntime:
             family_id = str(UUID(family_id))  # ValueError nếu không phải UUID; chuẩn hóa dạng chữ thường có gạch ngang
         # ADR-006: máy chủ không lưu h1 (dò ngược được ra số điện thoại của người gọi) ⇒ tra danh sách đe dọa NGAY,
         # chỉ đưa kết quả + 3 số cuối vào state/checkpoint. Tên gói app ngân hàng cũng không lưu.
-        threat = lookup_h1(event.caller.h1).model_dump() if event.caller else {"verdict": "unknown"}
+        threat: dict[str, Any] = {"verdict": "unknown"}
+        if event.caller:
+            try:
+                threat = (await lookup_h1(self._sessions, event.caller.h1)).model_dump()
+            except (
+                Exception
+            ) as exc:  # danh sách lỗi KHÔNG được chặn đường cảnh báo: mức sàn của máy vẫn áp dụng (luật 5)
+                logger.warning("threat lookup failed: %s", type(exc).__name__)  # không ghi thông điệp (chuỗi kết nối)
+                threat = {"verdict": "unknown", "error": type(exc).__name__}
         event_data = event.model_dump(mode="json", exclude_none=True, exclude={"caller": {"h1"}, "app": {"package"}})
         async with self._sessions.begin() as session:
             run = AgentRun(graph="incident", thread_id=incident_id, is_drill=event.is_drill, is_demo=is_demo)

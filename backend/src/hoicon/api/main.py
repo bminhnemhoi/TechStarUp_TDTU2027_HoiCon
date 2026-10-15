@@ -17,22 +17,14 @@ from hoicon.api import webhooks
 from hoicon.config import get_settings
 from hoicon.db.session import get_engine
 from hoicon.mcp_servers import threat
+from hoicon.mcp_servers.auth import McpGuard
 
 logger = logging.getLogger(__name__)
 READYZ_TIMEOUT_S = 6
 
 
-# /mcp/threat chỉ gắn ở dev: chưa có bên nào cần gọi qua HTTP (đồ thị gọi thẳng `lookup_h1`), và kiểm Host localhost
-# của MCP SDK chỉ chống DNS rebinding — KHÔNG phải xác thực (proxy đổi Host là lọt). Prod: token + giới hạn tần suất
-# (P2-11).
-MOUNT_MCP = get_settings().env == "dev"
-
-
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
-    if not MOUNT_MCP:
-        yield
-        return
     # MCP gắn bằng mount ⇒ app chủ phải chạy session manager của từng server (MCP SDK v2).
     async with threat.mcp.session_manager.run():
         yield
@@ -40,11 +32,14 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(title="HỏiCon API", version=__version__, lifespan=lifespan)
 app.include_router(webhooks.router)  # cùng route với ứng dụng con `hoicon.api.webhooks:app` (chỉ nó ra đường hầm)
-if MOUNT_MCP:
-    app.mount(
-        "/mcp/threat",
-        threat.mcp.streamable_http_app(streamable_http_path="/", stateless_http=True, json_response=True),
-    )
+# /mcp/threat gắn ở MỌI môi trường nhưng đóng mặc định: `McpGuard` đòi token Bearer (chưa cấu hình client nào ⇒ 401)
+# và giới hạn tần suất theo client (spec 003, ADR-009 §9). Kiểm Host localhost của MCP SDK chỉ chống DNS rebinding,
+# KHÔNG phải xác thực. Có mở ra Internet hay không do Caddy/012 quyết; hạn mức đếm trong bộ nhớ ⇒ chỉ đúng với một
+# tiến trình (ADR-002).
+app.mount(
+    "/mcp/threat",
+    McpGuard(threat.mcp.streamable_http_app(streamable_http_path="/", stateless_http=True, json_response=True)),
+)
 
 
 @app.get("/healthz", tags=["ops"])

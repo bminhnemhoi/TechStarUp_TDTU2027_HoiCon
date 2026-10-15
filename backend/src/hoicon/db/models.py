@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import (
+    CHAR,
     CheckConstraint,
     ForeignKey,
     Index,
@@ -192,4 +193,41 @@ class MessageOut(Base):
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
 
-__all__ = ["AgentRun", "AgentStep", "Base", "Family", "Job", "Member", "MessageOut", "PairingCode"]
+class ThreatIndicator(Base):
+    """Số điện thoại bị gắn cờ (spec 003, ADR-006): CHỈ `HMAC(pepper[kid], h1)` + 3 số cuối, không bao giờ lưu h1.
+    Khóa duy nhất cũng là chỉ mục tra cứu (`lookup_h1`)."""
+
+    __tablename__ = "threat_indicators"
+    __table_args__ = (
+        CheckConstraint("kind IN ('phone')", name="kind"),
+        CheckConstraint("confidence >= 0 AND confidence <= 1", name="confidence"),
+        CheckConstraint("value_hmac ~ '^[0-9a-f]{64}$'", name="hmac_hex"),
+        UniqueConstraint("kind", "value_kid", "value_hmac", name="uq_threat_indicators_value"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    kind: Mapped[str] = mapped_column(String(16))
+    value_hmac: Mapped[str] = mapped_column(CHAR(64))
+    value_kid: Mapped[int] = mapped_column(SmallInteger)
+    last3: Mapped[str | None] = mapped_column(CHAR(3))
+    source: Mapped[str] = mapped_column(String(64))
+    confidence: Mapped[Decimal] = mapped_column(Numeric(3, 2))
+    tactic: Mapped[str | None] = mapped_column(String(64))
+    list_version: Mapped[str] = mapped_column(String(32))
+    is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
+    first_seen: Mapped[datetime] = mapped_column(server_default=func.now())
+    last_seen: Mapped[datetime] = mapped_column(server_default=func.now())
+    expires_at: Mapped[datetime | None]
+
+
+__all__ = [
+    "AgentRun",
+    "AgentStep",
+    "Base",
+    "Family",
+    "Job",
+    "Member",
+    "MessageOut",
+    "PairingCode",
+    "ThreatIndicator",
+]

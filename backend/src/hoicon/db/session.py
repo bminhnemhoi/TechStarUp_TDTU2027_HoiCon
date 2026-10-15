@@ -17,6 +17,7 @@ def get_engine() -> AsyncEngine:
         pool_pre_ping=True,
         pool_size=5,
         connect_args={"connect_timeout": CONNECT_TIMEOUT_S},
+        hide_parameters=True,  # thông điệp lỗi SQLAlchemy không kèm tham số (có thể là HMAC của số điện thoại)
     )
 
 

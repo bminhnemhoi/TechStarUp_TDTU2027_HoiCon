@@ -12,12 +12,19 @@ from pydantic import SecretStr
 from sqlalchemy import func, select
 
 from hoicon.config import get_settings
-from hoicon.db.models import Job
+from hoicon.db.models import Job, ThreatIndicator
 from hoicon.eval.cases import load_case, load_suite
 from hoicon.eval.runner import CaseOutcome, IsolationError, check_isolation, run_suite
 
 pytestmark = pytest.mark.integration
 
+
+@pytest.fixture(autouse=True)
+def _fake_pepper(fake_pepper: None) -> None:
+    """Runner nạp danh sách đe dọa demo (HMAC) vào DB eval ⇒ cần khóa băm; test dùng khóa GIẢ."""
+
+
+FLAGGED_CASE = "fake_bank_card_locked_002"  # số gọi nằm trong danh sách đe dọa demo
 THREE = ["fake_police_drug_ring_001", "benign_family_vegetables_001", "benign_official_tax_reminder_001"]
 
 
@@ -39,6 +46,37 @@ def fingerprint(outcome: CaseOutcome) -> dict[str, Any]:
         "fallbacks": r.fallbacks,
         "llm_calls": r.llm_calls,
     }
+
+
+async def test_runner_seeds_the_demo_threat_list_and_is_idempotent(target: tuple[str, bool]) -> None:
+    """FR-012: DB eval trống vẫn cho `flagged` (runner nạp `data/threat_seed.demo.json`); chạy lại không thêm dòng."""
+    from sqlalchemy import delete, text
+
+    from hoicon.eval.runner import make_sessionmaker
+
+    sessions, engine = make_sessionmaker(target[0])
+    try:
+        async with sessions.begin() as session:
+            await session.execute(delete(ThreatIndicator).where(ThreatIndicator.is_demo))
+        for _ in range(2):
+            got = by_id(await run(target, [load_case(FLAGGED_CASE)]))
+            assert got[FLAGGED_CASE].result.steps[0]["output"]["threat"] == "flagged"
+        async with sessions() as session:
+            assert await session.scalar(select(func.count()).select_from(ThreatIndicator)) == 1
+            dump = "\n".join(await session.scalars(text("select t::text from threat_indicators t")))
+        assert "aa1b1fcd5c51853e998738c59cffa5a4d95bd39ef7ef3b6d905c9c6c3af987e4" not in dump
+    finally:
+        await engine.dispose()
+
+
+async def test_missing_pepper_is_an_isolation_error_not_a_traceback(
+    target: tuple[str, bool], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    get_settings.cache_clear()
+    monkeypatch.setattr(get_settings(), "phone_pepper_1", None)  # kể cả khi máy có khóa thật trong tệp cấu hình
+    with pytest.raises(IsolationError, match="PEPPER"):
+        await run(target, [load_case(THREE[0])])
+    get_settings.cache_clear()
 
 
 async def test_three_representative_cases(target: tuple[str, bool]) -> None:
@@ -234,3 +272,13 @@ async def test_a_case_that_crashes_leaves_no_running_agent_run(
     finally:
         await engine.dispose()
     assert status == "failed"  # không để `recover()` của app nhặt lại thread eval
+
+
+async def test_seed_refused_by_env_is_an_isolation_error_not_a_traceback(
+    target: tuple[str, bool], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    get_settings.cache_clear()
+    monkeypatch.setattr(get_settings(), "env", "staging")  # không thuộc dev/test/ci ⇒ seed demo bị từ chối
+    with pytest.raises(IsolationError, match="demo"):
+        await run(target, [load_case(THREE[0])])
+    get_settings.cache_clear()

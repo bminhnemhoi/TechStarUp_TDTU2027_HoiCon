@@ -74,11 +74,12 @@ p95 điều phối < 4 s; p50 đo được là 0,13 s.
 Ước tính chi phí một sự cố, **chưa đo**: 3 lời gọi (`risk_scorer` ×2 + `intervention`), mỗi lời gọi ~1,2K token vào và
 ~150 token ra ⇒ Haiku 4.5 ≈ 0,006 USD, Haiku 5.5 ≈ 0,0006 USD.
 
-Cách chạy khi có khóa:
+Cách chạy khi có khóa (công cụ đã sẵn từ spec 003; JSON theo `docs/schemas/bench_report.v1.json`, có `llm_mode` để không
+nhầm số điều phối với số của model):
 
 ```
-HOICON_LLM_FAST_MODEL=claude-haiku-4-5 uv run --directory backend python -m hoicon.agents.spike bench --n 20
-HOICON_LLM_FAST_MODEL=claude-haiku-5-5 uv run --directory backend python -m hoicon.agents.spike bench --n 20
+uv run --directory backend python -m hoicon.agents.spike bench --n 20 --model claude-haiku-4-5 --json haiku-4-5.json
+uv run --directory backend python -m hoicon.agents.spike bench --n 20 --model claude-haiku-5-5 --json haiku-5-5.json
 ```
 
 So sánh độ trễ, chi phí, tỷ lệ rơi về mẫu, và đầu ra trên bộ eval smoke. Bộ eval chưa có (P1-07 kịch bản, P2-15
@@ -92,9 +93,9 @@ So sánh độ trễ, chi phí, tỷ lệ rơi về mẫu, và đầu ra trên b
 | Đo lại p95 trên VPS | P1-09 |
 | `IncidentService.transition` + bảng `incidents`; nối đồ thị vào `POST /v1/events` (khởi động runtime + worker trong lifespan) | P2-03 |
 | Gửi tin thật qua Zalo, có bộ kiểm hạn mức `messages_out` (handler `notify_guardian` hiện chỉ ghi log) | P1-S3 / P2-07 |
-| Danh sách đe dọa thật (`threat_indicators`, HMAC); token + giới hạn tần suất cho `/mcp/threat` trước khi gắn ngoài dev (h1 không có muối nên dò được bằng cách thử hết số) | P2-11 |
+| ✅ (spec 003, 15/10) `threat_indicators` chỉ HMAC + lệnh nạp; token + giới hạn tần suất cho `/mcp/threat` (đã đóng lỗ hổng dò danh sách bằng cách thử hết số). **Còn:** nguồn danh sách thật + quy trình gắn cờ (P3); mở `/mcp/threat` ra Internet khi spec 012 chốt Caddy | P3 · 012 |
 | Lưu `phone_hmac` của số gọi đến (cần pepper) cùng sự cố cho bước xác minh | P2-03 |
 | Nhận dạng tên riêng (NER) + đồng ý `llm_processing` trước khi cân nhắc gửi lời kể (đã che) cho LLM | sau P1-06 |
 | `run-eval smoke` cho prompt (chưa có bộ eval) | P2-15 |
-| Trần chi tiêu đang đếm trong bộ nhớ tiến trình ⇒ chuyển sang `SUM(agent_steps.cost_usd)` khi chạy nhiều tiến trình | P2-04 |
+| ✅ (spec 003) Trần chi tiêu/ngày đọc `SUM(agent_steps.cost_usd)` (giờ Việt Nam) + giữ chỗ trong tiến trình. **Còn:** chi phí lời gọi quá hạn mà vẫn bị tính tiền không vào `agent_steps` (sai số ≤ một lời gọi) | P2-04 |
 | Job hạn lưu: `agent_steps` 30 ngày (DATA-MODEL §6); checkpoint LangGraph theo hạn của sự cố | P2-20 |

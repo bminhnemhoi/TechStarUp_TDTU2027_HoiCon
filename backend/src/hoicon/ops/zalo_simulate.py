@@ -67,7 +67,7 @@ async def run(
     async with contextlib.AsyncExitStack() as stack:
         runtime = None
         if payload["kind"] == "choice":  # trả lời 1/2/3 cần đồ thị sự cố để chạy tiếp
-            runtime_deps = Deps(LlmRouter.from_settings(), deps.sessions, settings)
+            runtime_deps = Deps(LlmRouter.from_settings(sessions=deps.sessions), deps.sessions, settings)
             runtime = await stack.enter_async_context(IncidentRuntime.open(runtime_deps))
         before = len(getattr(client, "sent", []))
         status = await handle_update(deps, runtime, payload)

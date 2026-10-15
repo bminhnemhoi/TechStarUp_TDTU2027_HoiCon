@@ -15,6 +15,12 @@ from hoicon.eval.runner import CaseOutcome, run_suite
 
 pytestmark = pytest.mark.integration
 
+
+@pytest.fixture(autouse=True)
+def _fake_pepper(fake_pepper: None) -> None:
+    """Runner nạp danh sách đe dọa demo (HMAC) vào DB eval ⇒ cần khóa băm; test dùng khóa GIẢ."""
+
+
 # LLM trung thực (critical), tóm tắt sạch ⇒ không đột biến nào ảnh hưởng
 CONTROL = "fake_health_insurance_refund_001"
 QUIET = "benign_official_tax_reminder_001"  # không sự cố
