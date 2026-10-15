@@ -12,6 +12,7 @@ import kotlin.math.ceil
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
@@ -25,6 +26,8 @@ import org.junit.Test
  * (process started by the broadcast, SafePause is its first UI); "warm" = process alive, as after a real call.
  *
  * Needs the debug build of :app (HC_TIMING marks) and :demobank installed. Arguments (`-e`): runs (default 10),
+ * variant (default "view"; "compose" = the Compose E7, switched with the debug flag file spike_compose_pause that
+ * SafePauseActivity reads — a run whose log line `safe pause ui=` disagrees is discarded, never counted),
  * compile (default "speed": full AOT — Play installs get speed-profile, so this is the best case for code
  * compilation, while the debug build (no R8) is slower than release: a pass is conclusive, a miss is not; ADR-008).
  *
@@ -37,6 +40,7 @@ class SafePauseLatencyTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val args: Bundle = InstrumentationRegistry.getArguments()
     private val runs = args.getString("runs")?.toIntOrNull() ?: 10
+    private val variant = args.getString("variant") ?: "view"
     private var prepared = false // JUnit 4 runs @After even when @Before was skipped by assume
 
     private fun sh(command: String): String =
@@ -56,11 +60,23 @@ class SafePauseLatencyTest {
         if (Build.VERSION.SDK_INT >= 33) sh("pm grant $SENTINEL android.permission.POST_NOTIFICATIONS")
         // Android 15+: the FGS can't start from the screening callback without this (ADR-007).
         sh("dumpsys deviceidle whitelist +$SENTINEL")
+        prepared = true
         if ((args.getString("compile") ?: "speed") == "speed") sh("cmd package compile -m speed -f $SENTINEL")
+        assertTrue("variant must be view or compose, was '$variant'", variant in UI_BY_VARIANT)
+        // SafePauseActivity (debug) reads this flag file in onCreate; `files/` may not exist on a fresh install.
+        sh("run-as $SENTINEL mkdir -p files")
+        sh("run-as $SENTINEL ${if (variant == "compose") "touch" else "rm -f"} files/$COMPOSE_FLAG")
+        // List the directory, not the file: an error message for a missing file would also contain the name.
+        val flagSet = sh("run-as $SENTINEL ls files").lines().any { it.trim() == COMPOSE_FLAG }
+        if (flagSet != (variant == "compose")) {
+            File(instrumentation.context.getExternalFilesDir(null), "latency.json")
+                .writeText("{\"variant\": \"$variant\", \"variant_unavailable\": true}")
+            Log.e(TAG, "variant_unavailable: run-as could not set $variant")
+            fail("variant_unavailable: run-as could not set $variant")
+        }
         sh("input keyevent KEYCODE_WAKEUP")
         sh("wm dismiss-keyguard")
         sh("svc power stayon true")
-        prepared = true
     }
 
     @After
@@ -68,6 +84,7 @@ class SafePauseLatencyTest {
         if (!prepared) return
         sh("svc power stayon false")
         sh("dumpsys deviceidle whitelist -$SENTINEL")
+        sh("run-as $SENTINEL rm -f files/$COMPOSE_FLAG") // leave the app on its default E7
         sh("am broadcast -f 0x20 -n $SENTINEL/.debug.ScenarioReceiver -a vn.hoicon.debug.CLEAR")
     }
 
@@ -104,6 +121,12 @@ class SafePauseLatencyTest {
         sh("am broadcast -f 0x20 -n $SENTINEL/.debug.ScenarioReceiver -a vn.hoicon.debug.CLEAR")
         waitFor(5_000) { "window_closed" in marks() }
 
+        val ui = Regex("""safe pause ui=(\w+)""")
+            .findAll(sh("logcat -d -s HC_SPIKE:I")).lastOrNull()?.groupValues?.get(1)
+        if (ui != UI_BY_VARIANT[variant]) {
+            Log.w(TAG, "run discarded (cold=$cold): ui=$ui does not match variant=$variant")
+            return null
+        }
         val foreground = marks["app_foreground"]
         val shown = marks["pause_shown"]
         if (foreground == null || shown == null) {
@@ -141,7 +164,7 @@ class SafePauseLatencyTest {
                 "\"fallback\": ${list.count { "fallback" in it }}, $metrics}"
         }
         return "{\n  \"device\": \"${Build.MANUFACTURER} ${Build.MODEL}\", \"sdk\": ${Build.VERSION.SDK_INT}, " +
-            "\"compile\": \"${args.getString("compile") ?: "speed"}\",\n  \"modes\": {\n$modes\n  }\n}"
+            "\"variant\": \"$variant\", \"compile\": \"${args.getString("compile") ?: "speed"}\",\n  \"modes\": {\n$modes\n  }\n}"
     }
 
     /** Nearest rank: with n = 10, p95 is the maximum (same as scripts/emu-scenario.py). */
@@ -156,5 +179,7 @@ class SafePauseLatencyTest {
         const val DEMOBANK = "vn.hoicon.demobank"
         const val PAUSE_WAIT_MS = 20_000L
         const val TARGET_MS = 3_000L
+        const val COMPOSE_FLAG = "spike_compose_pause"
+        val UI_BY_VARIANT = mapOf("view" to "views", "compose" to "compose")
     }
 }

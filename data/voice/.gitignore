@@ -1,0 +1,13 @@
+# Recordings of real people live outside the repo (~/hoicon-evidence/004-voice-vi/); keep audio out of data/ too.
+*.wav
+*.m4a
+*.mp3
+*.ogg
+*.aac
+*.flac
+*.3gp
+*.amr
+*.opus
+*.webm
+*.mp4
+*.caf

@@ -7,11 +7,19 @@
 # Cần: gcloud đã đăng nhập + dự án Firebase (P0-08). Gói Spark: 5 lượt máy thật/ngày.
 #   gcloud firebase test android models list --filter="form=PHYSICAL"      # chọn model/version
 #   bash scripts/ftl-latency.sh model=a15,version=34 model=oriole,version=33
+# Biến thể màn dừng E7 (spec 001): --variant view (mặc định, View thuần) | compose. Một lượt Spark = 1 máy × 1 biến thể:
+#   bash scripts/ftl-latency.sh --variant view    model=a15,version=34
+#   bash scripts/ftl-latency.sh --variant compose model=a15,version=34
 # Kết quả: logcat tag HC_LATENCY + latency.json trong thư mục kết quả trên Cloud Storage (in ra cuối lệnh).
 set -euo pipefail
 
-if [[ $# -eq 0 ]]; then
-  echo "Dùng: $0 model=<id>,version=<api> [model=...,version=...]" >&2
+variant=view
+if [[ "${1:-}" == "--variant" ]]; then
+  variant="${2:-}"
+  shift 2 || true
+fi
+if [[ $# -eq 0 || ! "$variant" =~ ^(view|compose)$ ]]; then
+  echo "Dùng: $0 [--variant view|compose] model=<id>,version=<api> [model=...,version=...]" >&2
   exit 2
 fi
 
@@ -27,7 +35,7 @@ gcloud firebase test android run \
   --app "$OUT/app/build/outputs/apk/debug/app-debug.apk" \
   --test "$OUT/latency/build/outputs/apk/debug/latency-debug.apk" \
   --additional-apks "$OUT/demobank/build/outputs/apk/debug/demobank-debug.apk" \
-  --environment-variables runs=10,compile=speed \
+  --environment-variables runs=10,compile=speed,variant=$variant \
   --directories-to-pull /sdcard/Android/data/vn.hoicon.latency/files \
   --timeout 30m \
   "${devices[@]}"

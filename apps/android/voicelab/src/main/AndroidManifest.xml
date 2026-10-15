@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Voice lab: debug-only measurement tool (spec 004). No INTERNET permission, no UI.
+     RECORD_AUDIO: the SpeechRecognizer API requires it from its caller (R1 in specs/004-voice-vi/research.md); the lab
+     feeds recognition from files (EXTRA_AUDIO_SOURCE) and only runs on emulators / test devices. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Package visibility (API 30+): needed to bind to a TTS engine and to find a recognition service. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:label="HoiCon VoiceLab" />
+</manifest>

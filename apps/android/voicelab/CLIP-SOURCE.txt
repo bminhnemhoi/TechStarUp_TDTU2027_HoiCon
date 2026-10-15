@@ -1,0 +1,5 @@
+clip_pause_0.wav — SYNTHETIC speech (not a human voice), generated 15/10/2026 on AVD hc-api36 by SynthesizeTest with the
+on-device Google TTS vi-VN voice reading the first SafePause sentence ("Đây là trợ lý AI HỏiCon."), 24 kHz mono 16-bit,
+~2.3 s, 112 KB. Used only to measure MediaPlayer start-up latency (spec 004, FR-004); it measures the playback mechanism,
+not the quality of a recorded voice. Real recorded voice for P2-05 is out of scope here and must stay out of the repo
+until chosen. Regenerate: scripts/voice-lab.sh --avd hc-api36 --probe synth, then copy wav/pause_0.wav here.
