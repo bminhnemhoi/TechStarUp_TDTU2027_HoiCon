@@ -20,7 +20,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 
 from hoicon.config import get_settings
-from hoicon.db.models import Device
+from hoicon.db.models import Device, Member
 from hoicon.db.session import get_sessionmaker
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 ALGORITHM = "HS256"
 ISSUER = "hoicon"
 AUDIENCE = "hoicon-device"
+GUARDIAN_AUDIENCE = "hoicon-guardian"
 ROLE = "protected"
+GUARDIAN_ROLE = "guardian"
 ACCESS_TTL = timedelta(days=30)
 ACCESS_TTL_S = int(ACCESS_TTL.total_seconds())
 MIN_KEY_LEN = 32  # ký tự; HS256 cần khóa ≥ 256 bit
@@ -138,4 +140,71 @@ async def get_current_device(
         )
     if alive is None:
         raise _unauthorized()
+    return claims
+
+
+@dataclass(frozen=True)
+class GuardianClaims:
+    member_id: UUID
+    family_id: UUID
+    role: str = GUARDIAN_ROLE
+
+
+def issue_guardian_access_token(member_id: UUID, family_id: UUID, *, now: datetime | None = None) -> str:
+    issued = now or datetime.now(UTC)
+    payload = {
+        "sub": str(member_id),
+        "family_id": str(family_id),
+        "role": GUARDIAN_ROLE,
+        "iss": ISSUER,
+        "aud": GUARDIAN_AUDIENCE,
+        "iat": issued,
+        "exp": issued + ACCESS_TTL,
+    }
+    return jwt.encode(payload, _key(), algorithm=ALGORITHM)
+
+
+def decode_guardian_access_token(token: str) -> GuardianClaims:
+    key = _key()
+    try:
+        raw = jwt.decode(
+            token,
+            key,
+            algorithms=[ALGORITHM],
+            audience=GUARDIAN_AUDIENCE,
+            issuer=ISSUER,
+            options={"require": ["exp", "iat", "sub", "aud", "iss"]},
+        )
+        if raw.get("role") != GUARDIAN_ROLE:
+            raise DeviceTokenError("role")
+        return GuardianClaims(UUID(raw["sub"]), UUID(raw["family_id"]))
+    except (jwt.PyJWTError, KeyError, ValueError, TypeError) as exc:
+        raise DeviceTokenError(type(exc).__name__) from None
+
+
+def _unauthorized_guardian() -> HTTPException:
+    return HTTPException(
+        status.HTTP_401_UNAUTHORIZED,
+        detail="Chưa xác thực người giám hộ",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+async def get_current_guardian(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+) -> GuardianClaims:
+    """Dependency xác thực người giám hộ: token hợp lệ VÀ thành viên tồn tại với role='guardian'."""
+    if credentials is None:
+        raise _unauthorized_guardian()
+    try:
+        claims = decode_guardian_access_token(credentials.credentials)
+    except DeviceAuthNotConfiguredError:
+        logger.error("xác thực người giám hộ: HOICON_DEVICE_JWT_SECRET thiếu hoặc quá ngắn")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Dịch vụ chưa sẵn sàng") from None
+    except DeviceTokenError:
+        raise _unauthorized_guardian() from None
+    async with get_sessionmaker()() as session:
+        member = await session.get(Member, claims.member_id)
+    if member is None or member.family_id != claims.family_id or member.role != GUARDIAN_ROLE:
+        raise _unauthorized_guardian()
     return claims

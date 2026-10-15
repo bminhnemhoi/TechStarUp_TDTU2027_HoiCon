@@ -13,9 +13,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy import select
 
-from hoicon.api.auth import DeviceClaims, get_current_device
+from hoicon.api.auth import DeviceClaims, GuardianClaims, get_current_device, get_current_guardian
+from hoicon.api.routers.actions import ALREADY_HANDLED, IncidentDecisionIn, IncidentDecisionResult
 from hoicon.db.models import Incident, IncidentTransition
 from hoicon.db.session import get_sessionmaker
+from hoicon.services.incident_service import (
+    ConcurrencyConflictError,
+    InvalidTransitionError,
+    apply_guardian_decision,
+)
 
 router = APIRouter(prefix="/v1", tags=["incidents"])
 
@@ -97,3 +103,37 @@ async def list_family_incidents(
             .limit(limit)
         )
         return IncidentList(incidents=[IncidentSummary.model_validate(row, from_attributes=True) for row in rows])
+
+
+@router.post("/incidents/{incident_id}/decision", response_model=IncidentDecisionResult)
+async def post_incident_decision(
+    incident_id: UUID,
+    body: IncidentDecisionIn,
+    claims: Annotated[GuardianClaims, Depends(get_current_guardian)],
+) -> IncidentDecisionResult:
+    """Người giám hộ đã đăng nhập JWT gửi quyết định xử lý sự cố (spec 023, FR-006).
+
+    Chỉ cho phép người giám hộ thuộc cùng gia đình thao tác; sự cố gia đình khác trả 404.
+    """
+    async with get_sessionmaker().begin() as session:
+        incident = await session.scalar(
+            select(Incident).where(Incident.id == incident_id, Incident.family_id == claims.family_id)
+        )
+        if incident is None:
+            raise _not_found()
+
+        try:
+            incident = await apply_guardian_decision(session, incident, body.decision, "guardian_jwt")
+        except ConcurrencyConflictError:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, detail="Sự cố đã được cập nhật bởi thao tác khác, vui lòng thử lại"
+            ) from None
+        except InvalidTransitionError:
+            raise HTTPException(status.HTTP_409_CONFLICT, detail=ALREADY_HANDLED) from None
+
+        return IncidentDecisionResult(
+            success=True,
+            incident_id=incident.id,
+            state=incident.state,
+            outcome=incident.outcome,
+        )

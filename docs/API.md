@@ -67,8 +67,25 @@ Mở/liên kết sự cố (FR-008): sự kiện loại `banking_app_foreground`
 **`GET /v1/incidents/{id}`** — cần token thiết bị; chỉ sự cố của gia đình mình, sự cố nhà khác trả 404 (không lộ sự tồn tại). Trả `incident.v1.json` kèm `transitions` (cũ → mới).
 **`GET /v1/families/{id}/incidents?limit=`** — `id` phải là gia đình của token (nhà khác ⇒ 404); mới nhất trước, `limit` 1–100 (mặc định 20), bản tóm tắt không có `transitions`. Người giám hộ đọc qua `/a/{token}` (spec 022), không qua các route này.
 
-## Người giám hộ
-`/v1/families`, `/v1/incidents`, `POST /v1/incidents/{id}/decision`, `/v1/case-files`, `/v1/drills`, `/a/{token}` (web).
+## Người giám hộ (spec 023 — đã có)
+
+Hợp đồng: `action_view.v1.json`, `incident_decision.v1.json` (fixture `fixtures/*.v1.*.json`).
+
+Cảnh báo giai đoạn 1: lô sự kiện mở/nâng sự cố lên `high`/`critical` ⇒ xếp job `notify_guardian` (khóa `{incident}:msg:fast_alert`, một lần mỗi sự cố) cho người giám hộ hạng đầu. Job chỉ mang chỗ trống liên kết; token `/a/{token}` (32 byte ngẫu nhiên) sinh **lúc gửi**, chỉ lưu SHA-256 trong `action_tokens`, hạn 24 giờ, dùng một lần. Log truy cập che token (`/v1/action/***`).
+
+**`GET /v1/action/{token}`** — không cần đăng nhập (token trong URL là chứng thực). Trả `action_view.v1.json`: `token_valid`, `scope`, `expires_at`, `used_at`, `incident` (id, state, level, rule_floor, is_drill, summary_text, protected_member_label, device_label) — không có số điện thoại hay PII.
+- 200 kể cả khi token đã dùng/hết hạn/sự cố đã được xử lý qua kênh khác (`token_valid=false`) để trang báo đúng trạng thái.
+- 404: token không tồn tại.
+
+**`POST /v1/action/{token}/decision`** — không cần đăng nhập. Thân `incident_decision.v1.json`: `{"decision": "safe" | "prevented" | "false_alarm" | "emergency_pause", "note"?}`. `note` được nhận nhưng **không lưu** (chữ tự do có thể chứa PII).
+- `safe`/`prevented`/`false_alarm` ⇒ `resolved_*` (kết thúc); `emergency_pause` ("nghi lừa đảo") ⇒ `case_open` (sự cố còn mở để theo dõi). Đi qua `IncidentService.transition()`; token bị khóa dòng và đánh dấu `used_at` cùng giao dịch.
+- 200: `{"success": true, "incident_id", "state", "outcome"}` · 404: không có token/sự cố · 409: token đã dùng, sự cố đã được xử lý hoặc xung đột phiên bản · 410: token hết hạn · 422: `decision` sai.
+
+**`POST /v1/incidents/{id}/decision`** — cần JWT người giám hộ (`aud=hoicon-guardian`, `role=guardian`, thành viên còn tồn tại). Thân và ánh xạ như trên. 401: thiếu/sai token · 404: sự cố không có hoặc thuộc gia đình khác · 409: đã xử lý/xung đột. Chưa có route cấp JWT người giám hộ (đăng nhập web — spec 027).
+
+**Trả lời Zalo** (ADR-010): "1" ⇒ `resolved_safe`; "2 - vẫn thấy đáng ngờ" ⇒ `case_open`; "3" gửi lại chi tiết.
+
+`/v1/families`, `/v1/case-files`, `/v1/drills` (người giám hộ) — chưa có.
 
 ## Luồng SSE
 `/v1/runs/{id}/stream` · `/v1/families/{id}/stream` · `/v1/demo/stream`

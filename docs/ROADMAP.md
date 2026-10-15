@@ -85,7 +85,7 @@ Cập nhật: 15/10/2026
 | P2-04 | W1 | Triển khai VPS (`compose.prod.yml` + Caddy) + bot Zalo thí điểm | ☐ |
 | P2-05 | W2 30/11–06/12 | Lính gác v1: CallScreening, cửa sổ rủi ro (FGS), UsageStats, luật R1, E7 SafePause + TTS | ☑ spec [`022-sentinel-v1`](../specs/022-sentinel-v1/) (kéo sớm Đợt 5, 16/10): cửa sổ rủi ro 600s, luật R1 (ngân hàng) & R5 (remote control), E7 SafePause Compose + TTS offline (còn FTL máy thật) |
 | P2-06 | W2 | E6 "Đang bảo vệ" + nút Hỏi con + hàng đợi gửi đi (Room) | ☑ spec [`022-sentinel-v1`](../specs/022-sentinel-v1/) (kéo sớm Đợt 5, 16/10): Room DB + Tink AEAD outbox, E6 Đang bảo vệ, nút Hỏi con, kết nối POST /v1/events |
-| P2-07 | W2 | Cảnh báo giai đoạn 1 qua Zalo (mẫu) + trang hành động `/a/[token]` + quyết định người giám hộ → **M1** | ◐ spec [`023-guardian-alert`](../specs/023-guardian-alert/) (kéo sớm Đợt 6, 16/10: Zalo alert, magic link /a/[token], POST /v1/incidents/{id}/decision) |
+| P2-07 | W2 | Cảnh báo giai đoạn 1 qua Zalo (mẫu) + trang hành động `/a/[token]` + quyết định người giám hộ → **M1** | ☑ spec [`023-guardian-alert`](../specs/023-guardian-alert/) (kéo sớm Đợt 6, 16/10): cảnh báo mẫu qua Zalo (token `/a/` sinh lúc gửi, chỉ lưu SHA-256), trang `/a/[token]`, quyết định qua liên kết/JWT/Zalo 1-2 (nghi lừa đảo ⇒ `case_open`), `scripts/e2e-m1.sh` phần máy chủ (còn: p95 Zalo thật, chặng Android ↔ máy chủ) |
 | P2-08 | W3 07–13/12 | `risk_scorer` + ngân hàng câu hỏi + E8 qua FCM | ☐ |
 | P2-09 | W3 | Tác tử can thiệp + interrupt `await_guardian` + hẹn giờ T1/T2/T3 | ☐ |
 | P2-10 | W3 | `agent_steps` + luồng SSE trace | ☐ |

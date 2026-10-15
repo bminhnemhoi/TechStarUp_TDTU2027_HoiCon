@@ -19,7 +19,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from hoicon.agents import texts
 from hoicon.channels.guardian import ChannelDeps, Outgoing, deliver
-from hoicon.db.models import AgentRun, Job, Member, MessageOut, PairingCode
+from hoicon.db.models import AgentRun, Incident, Job, Member, MessageOut, PairingCode
+from hoicon.services.incident_service import (
+    GUARDIAN_DECIDABLE,
+    ConcurrencyConflictError,
+    InvalidTransitionError,
+    apply_guardian_decision,
+)
 
 if TYPE_CHECKING:
     from hoicon.agents.runtime import IncidentRuntime
@@ -188,7 +194,7 @@ async def handle_update(
     member = await _find_member(deps, payload["bot_id"], payload["user_hmac"])
     if member is None:  # chưa ghép: không ai ngoài người đã ghép được chạm vào sự cố
         return await _reply(deps, payload, "pairing_help", texts.pairing_help(), attempt)
-    if kind == "choice" and runtime is not None:
+    if kind == "choice":
         return await _answer(deps, runtime, payload, member, attempt)
     return await _reply(
         deps, payload, "reply_help", texts.reply_help(), attempt, member=member, family_id=member.family_id
@@ -221,7 +227,7 @@ async def _is_drill(deps: ChannelDeps, incident: str) -> bool:
 
 
 async def _answer(
-    deps: ChannelDeps, runtime: "IncidentRuntime", payload: dict[str, Any], member: Member, attempt: int
+    deps: ChannelDeps, runtime: "IncidentRuntime | None", payload: dict[str, Any], member: Member, attempt: int
 ) -> str | None:
     """Phản hồi 1/2/3 áp vào sự cố của tin cảnh báo GẦN NHẤT đã gửi tới chính người này (ADR-010): 1 ⇒ an toàn,
     2 ⇒ nghi lừa đảo (resume `await_guardian`), 3 ⇒ gửi lại chi tiết, không đổi trạng thái chờ."""
@@ -255,7 +261,19 @@ async def _answer(
         return await _reply(deps, payload, "detail_resend", detail["text"], attempt, **reply)
 
     decision = "safe" if choice == "1" else "scam"
-    if await runtime.resume(incident, {"decision": decision}, expect="await_guardian") is None:
+    # Spec 023 FR-007: ghi quyết định vào sự cố qua IncidentService. "2 - vẫn thấy đáng ngờ" KHÔNG đóng sự cố mà mở hồ
+    # sơ (`case_open`) để còn theo dõi; chỉ "1 - an toàn" mới kết thúc.
+    async with deps.sessions.begin() as session:
+        inc = await session.get(Incident, incident_id)
+        if inc is not None and inc.state in GUARDIAN_DECIDABLE:
+            try:
+                await apply_guardian_decision(
+                    session, inc, "safe" if choice == "1" else "emergency_pause", f"zalo_reply_{choice}"
+                )
+            except (ConcurrencyConflictError, InvalidTransitionError) as exc:
+                logger.warning("zalo: không ghi được quyết định cho sự cố %s (%s)", incident_id, type(exc).__name__)
+
+    if runtime is not None and await runtime.resume(incident, {"decision": decision}, expect="await_guardian") is None:
         text = texts.reply_incident_closed(is_drill)  # đồ thị không còn chờ: đến muộn hoặc đã có quyết định
         return await _reply(deps, payload, "incident_closed", text, attempt, **reply)
     return await _reply(deps, payload, f"ack_{decision}", texts.guardian_ack(decision, is_drill), attempt, **reply)
