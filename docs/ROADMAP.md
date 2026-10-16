@@ -89,7 +89,7 @@ Cập nhật: 15/10/2026
 | P2-08 | W3 07–13/12 | `risk_scorer` + ngân hàng câu hỏi + E8 qua FCM | ◐ spec [`024-risk-and-intervention`](../specs/024-risk-and-intervention/) (kéo sớm Đợt 7, 16/10): ngân hàng câu hỏi E8 (công khai AI), API pending-question/answers, E8 Compose + WorkManager, câu trả lời nâng mức tất định; còn: FCM thật (P0-08) + đường mở E8 trên máy |
 | P2-09 | W3 | Tác tử can thiệp + interrupt `await_guardian` + hẹn giờ T1/T2/T3 | ◐ spec [`024-risk-and-intervention`](../specs/024-risk-and-intervention/) (kéo sớm Đợt 7, 16/10): đồ thị tự chạy từ `/v1/events` (worker trong API), T1/T2/T3 tôn trọng quyết định ngoài đồ thị, kết quả ghi qua IncidentService; còn: tóm tắt p95 với LLM thật |
 | P2-10 | W3 | `agent_steps` + luồng SSE trace | ◐ spec [`025-trace-sse`](../specs/025-trace-sse/) (16/10): **đã làm** `GET /v1/runs/{id}/steps`, `/v1/runs/{id}/stream` (SSE), `/v1/incidents/{id}/run` (JWT người giám hộ), `redact_json` + danh sách trắng cột (không `input_redacted`), trần 20 luồng/3 mỗi người, client TS sinh lại; SC-001 p95 ≈ 0,30 s trên uvicorn thật (localhost); **còn** giao diện tiêu thụ (027/033) và đo `: ping` qua Caddy (012) — giữ ◐ |
-| P2-11 | W4 14–20/12 | Tác tử xác minh + MCP `threat` + E10 | ☐ |
+| P2-11 | W4 14–20/12 | Tác tử xác minh + MCP `threat` + E10 | ◐ spec [`026-verification-threat`](../specs/026-verification-threat/) (16/10): đã có spec/plan/tasks (`/v1/lookups`, node `verification` tất định, danh sách trên máy dạng bucket k-ẩn danh — ADR-011 **đề xuất**, E10); **chưa code** |
 | P2-12 | W4 | Web tối thiểu: danh sách/chi tiết sự cố cho người giám hộ | ☐ |
 | P2-13 | W4 | Diễn tập v1 (E11, bảng `drills`) | ☐ |
 | P2-14 | W4 | Bộ thí điểm + Play internal v0.3 → **M2** | ☐ |
