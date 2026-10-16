@@ -20,10 +20,7 @@ import vn.hoicon.sentinel.data.consent.ConsentSync
 import vn.hoicon.sentinel.data.consent.consentTexts
 import vn.hoicon.sentinel.data.local.TokenStorage
 import vn.hoicon.sentinel.data.remote.PairingApiClient
-import vn.hoicon.sentinel.domain.events.RiskEventType
 import vn.hoicon.sentinel.domain.rules.RiskWindowManager
-import vn.hoicon.sentinel.pause.Dialer
-import vn.hoicon.sentinel.sensing.CallSignalStore
 import vn.hoicon.sentinel.sensing.SensorPermission
 import vn.hoicon.sentinel.sensing.SensorPermissions
 import vn.hoicon.sentinel.ui.PermissionsScreen
@@ -32,6 +29,7 @@ import vn.hoicon.sentinel.ui.ProtectionUiState
 import vn.hoicon.sentinel.ui.theme.HoiConTheme
 import vn.hoicon.sentinel.work.HeartbeatScheduler
 import vn.hoicon.sentinel.work.OutboxScheduler
+import vn.hoicon.sentinel.work.ThreatSyncScheduler
 
 /**
  * Home = E6 "Đang bảo vệ" (Spec 022). A device that is not paired yet, or has not accepted the current disclosure, is
@@ -63,6 +61,7 @@ class MainActivity : ComponentActivity() {
         familyName = session.familyName
         consents = ConsentSync(tokens, PairingApiClient(BuildConfig.API_BASE_URL))
         HeartbeatScheduler.schedule(this)
+        ThreatSyncScheduler.schedule(this)
         OutboxScheduler.schedulePeriodic(this)
         OutboxScheduler.kick(this) // events queued while the phone was not paired (or offline) go out now
         watchRiskWindow()
@@ -85,6 +84,7 @@ class MainActivity : ComponentActivity() {
                         onAskChild = ::askChild,
                         onPermissions = { showPermissions = true },
                         onReconnect = ::reconnect,
+                        onLookup = { startActivity(Intent(this, LookupActivity::class.java)) },
                     )
                 }
             }
@@ -133,10 +133,7 @@ class MainActivity : ComponentActivity() {
 
     /** "Hỏi con": queue `ask_child_pressed` for the family and open the dialer so the person can call at once. */
     private fun askChild() {
-        val services = SentinelServices.of(this)
-        val call = CallSignalStore.load(this)?.toSignal(inCallNow = false)
-        services.record(services.events.build(RiskEventType.ASK_CHILD_PRESSED, System.currentTimeMillis(), call = call))
-        dialerFailed = !Dialer.open(this)
+        dialerFailed = !SentinelServices.of(this).askChild(this)
         askChildSent = true
     }
 }

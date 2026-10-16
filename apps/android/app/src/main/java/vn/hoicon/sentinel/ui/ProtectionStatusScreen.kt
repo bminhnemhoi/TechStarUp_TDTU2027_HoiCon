@@ -63,6 +63,7 @@ fun ProtectionStatusScreen(
     onPermissions: () -> Unit,
     modifier: Modifier = Modifier,
     onReconnect: () -> Unit = {},
+    onLookup: () -> Unit = {},
 ) {
     OnboardingScaffold(
         modifier = modifier,
@@ -102,6 +103,8 @@ fun ProtectionStatusScreen(
             title = stringResource(R.string.e6_family_title),
             body = stringResource(R.string.e6_family_body, state.familyName),
         )
+        // A small inline control, not a third action-bar button: E6 keeps its two main actions (Spec 026 FR-011).
+        ListenButton(text = stringResource(R.string.e6_lookup), onClick = onLookup)
     }
 }
 

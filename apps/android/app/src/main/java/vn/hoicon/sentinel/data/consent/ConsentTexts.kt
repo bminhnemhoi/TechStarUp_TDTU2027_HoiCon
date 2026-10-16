@@ -32,6 +32,15 @@ fun consentTexts(res: Resources): Map<String, String> {
             ConsentLedger.GUARDIAN_ALERTS,
             join(R.string.disclosure_3_title, R.string.disclosure_3_body, R.string.disclosure_4_title, R.string.disclosure_4_body),
         )
+        put(
+            ConsentLedger.LOOKUPS,
+            join(
+                R.string.lookups_consent_ai, R.string.lookups_consent_title, R.string.lookups_consent_summary,
+                R.string.lookups_consent_1_title, R.string.lookups_consent_1_body,
+                R.string.lookups_consent_2_title, R.string.lookups_consent_2_body,
+                R.string.lookups_consent_3_title, R.string.lookups_consent_3_body,
+            ),
+        )
         for ((permission, text) in permissionTexts) ConsentLedger.purposeOf(permission)?.let { put(it, text) }
     }
 }

@@ -29,6 +29,13 @@ object ConsentLedger {
      */
     const val GUARDIAN_ALERTS = "guardian_alerts"
 
+    /**
+     * Checking a number or a link the person typed (Spec 026, E10). Asked just in time, on first use, not at onboarding,
+     * and recorded under the SAME [VERSION]: a new purpose does not reword any existing text, so nobody has to agree
+     * to the others again ([mayShareWithFamily] does not look at it).
+     */
+    const val LOOKUPS = "lookups"
+
     /** Android's own permission pages (E4) that map to a consent purpose; notification/battery settings do not. */
     fun purposeOf(permission: SensorPermission): String? = when (permission) {
         SensorPermission.CALL_SCREENING_ROLE -> "call_screening"

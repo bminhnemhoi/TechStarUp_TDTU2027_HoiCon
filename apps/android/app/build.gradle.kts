@@ -14,7 +14,11 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    // MigrationTestHelper reads the exported Room schemas (app/schemas) as test assets.
+    sourceSets.getByName("androidTest").assets.directories.add(layout.projectDirectory.dir("schemas").asFile.absolutePath)
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -61,11 +65,29 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.tink.android)
+    implementation(libs.play.services.code.scanner)
+    implementation(libs.androidx.fragment)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.org.json)
+
+    // Spec 026: the Room v1→v2 migration is checked against the exported schemas on an emulator (no Robolectric here).
+    androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+}
+
+// room-testing (androidTest) needs kotlinx-serialization 1.8.x, but AGP's own classpath pins 1.7.3, which fails at run time
+// with AbstractMethodError in MigrationTestHelper. Only the instrumentation classpath is raised; the app is untouched.
+configurations.matching { it.name.contains("AndroidTest", ignoreCase = true) }.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlinx" && requested.name.startsWith("kotlinx-serialization-")) {
+            useVersion("1.8.1")
+            because("room-testing's MigrationTestHelper needs serialization >= 1.8")
+        }
+    }
 }
 
 // Room xuất lược đồ ra app/schemas để mọi thay đổi CSDL sau này có migration kiểm được (Spec 022).

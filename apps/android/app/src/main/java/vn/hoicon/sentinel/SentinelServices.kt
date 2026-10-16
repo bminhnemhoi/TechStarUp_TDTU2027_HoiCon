@@ -19,11 +19,17 @@ import vn.hoicon.sentinel.data.outbox.FlushOutcome
 import vn.hoicon.sentinel.data.outbox.OutboxRepository
 import vn.hoicon.sentinel.data.outbox.OutboxSender
 import vn.hoicon.sentinel.data.remote.PairingApiClient
+import vn.hoicon.sentinel.data.remote.ThreatListApiClient
+import vn.hoicon.sentinel.data.threat.ThreatIndexes
+import vn.hoicon.sentinel.data.threat.ThreatSyncer
 import vn.hoicon.sentinel.domain.events.EventFactory
 import vn.hoicon.sentinel.domain.events.RiskEvent
+import vn.hoicon.sentinel.domain.events.RiskEventType
 import vn.hoicon.sentinel.domain.events.Uuid7
 import vn.hoicon.sentinel.domain.rules.LocalRulesEvaluator
 import vn.hoicon.sentinel.domain.rules.RiskWindowManager
+import vn.hoicon.sentinel.pause.Dialer
+import vn.hoicon.sentinel.sensing.CallSignalStore
 import vn.hoicon.sentinel.sensing.HcSpikeLog
 import vn.hoicon.sentinel.work.OutboxScheduler
 
@@ -42,9 +48,16 @@ class SentinelServices private constructor(private val app: Context) {
     val database: SentinelDatabase by lazy { SentinelDatabase.open(app) }
     val outbox: OutboxRepository by lazy { OutboxRepository(database.outbox(), TinkCryptoHelper.create(app)) }
 
+    /** Threat-list sync (Spec 026). Declared before `init`, which already uses it from the background thread. */
+    val threatSyncer: ThreatSyncer by lazy {
+        ThreatSyncer(database.threats(), ThreatListApiClient(BuildConfig.API_BASE_URL), ThreatIndexes.shared)
+    }
+
     init {
         // Warm up the id generator's random source now, in the background, not on the first pause.
         launch { Uuid7.generate() }
+        // Load the stored threat list into memory, off the main thread, so onScreenCall only reads a volatile field.
+        launch { threatSyncer.loadFromDisk() }
     }
 
     val events = EventFactory(appVersion = BuildConfig.VERSION_NAME, rulesVersion = RiskEngine.VERSION)
@@ -62,6 +75,16 @@ class SentinelServices private constructor(private val app: Context) {
         val tokens = TokenStorage.create(app)
         return tokens.load() != null &&
             ConsentLedger.mayShareWithFamily(tokens.acceptedDisclosureVersion, tokens.recordedConsents, consentTexts(app.resources))
+    }
+
+    /**
+     * "Hỏi con": queues `ask_child_pressed` for the family and opens the dialer, empty, so the person can call at once
+     * (no contacts permission: they dial the child themselves). Returns false when the phone has no dialer that opens.
+     */
+    fun askChild(context: Context): Boolean {
+        val call = CallSignalStore.load(app)?.toSignal(inCallNow = false)
+        record(events.build(RiskEventType.ASK_CHILD_PRESSED, System.currentTimeMillis(), call = call))
+        return Dialer.open(context)
     }
 
     /** Forgets every queued event (pairing ended): they belonged to the family that was just left. */

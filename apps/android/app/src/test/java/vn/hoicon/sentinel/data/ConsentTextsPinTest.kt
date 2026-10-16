@@ -37,5 +37,14 @@ class ConsentTextsPinTest {
         assertEquals("49c0fca401f2de07993d3015209da49f6aa26f2bf02907cfddf5a4a091f26674", hash("perm_role_title", "perm_role_why"))
         assertEquals("fe1bf2596999014aedaf23acfd9b86a144ef761b2e2a394cc1983702aad0dc40", hash("perm_usage_title", "perm_usage_why"))
         assertEquals("cf2a3ab7c4984c2150e63ef2b7e4736860ec7017827df3299fe94e6513f35a4c", hash("perm_overlay_title", "perm_overlay_why"))
+        // Added by Spec 026 without touching the texts above: a new purpose, so VERSION stays and nobody agrees again.
+        assertEquals(
+            "0f4621ceff8256a4e1f110e1c294c22a955f348544955aa9424df8b0e84392eb",
+            hash(
+                "lookups_consent_ai", "lookups_consent_title", "lookups_consent_summary",
+                "lookups_consent_1_title", "lookups_consent_1_body", "lookups_consent_2_title", "lookups_consent_2_body",
+                "lookups_consent_3_title", "lookups_consent_3_body",
+            ),
+        )
     }
 }

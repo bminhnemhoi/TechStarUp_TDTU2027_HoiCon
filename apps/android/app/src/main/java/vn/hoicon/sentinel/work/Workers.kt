@@ -24,6 +24,7 @@ import vn.hoicon.sentinel.data.remote.ElderApiClient
 import vn.hoicon.sentinel.data.remote.HeartbeatResult
 import vn.hoicon.sentinel.data.remote.HeartbeatStatus
 import vn.hoicon.sentinel.data.remote.PairingApiClient
+import vn.hoicon.sentinel.data.threat.ThreatSyncOutcome
 import vn.hoicon.sentinel.sensing.SensorPermission
 import vn.hoicon.sentinel.sensing.SensorPermissions
 
@@ -125,6 +126,55 @@ object HeartbeatScheduler {
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 60, TimeUnit.SECONDS)
             .build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(NAME, ExistingPeriodicWorkPolicy.KEEP, request)
+    }
+}
+
+/**
+ * Keeps the on-device threat list fresh (Spec 026 FR-010): `GET /v1/threat-list?since=`, `304` when unchanged, and a bad
+ * download leaves the list in force. Only needs a paired device; carries nothing about the person. Never part of the
+ * safe pause.
+ */
+class ThreatSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result = try {
+        val session = TokenStorage.create(applicationContext).load()
+        if (session == null) {
+            Result.success()
+        } else {
+            when (SentinelServices.of(applicationContext).threatSyncer.sync(session.accessToken)) {
+                ThreatSyncOutcome.RETRY -> Result.retry()
+                ThreatSyncOutcome.UNAUTHORIZED -> {
+                    TokenStorage.create(applicationContext).needsRepair = true
+                    Result.success()
+                }
+                // Updated, unchanged, a download that failed validation (the old list stays) or rate-limited today:
+                // nothing a retry can fix; the next period tries again.
+                ThreatSyncOutcome.UPDATED, ThreatSyncOutcome.NOT_MODIFIED, ThreatSyncOutcome.KEPT_OLD, ThreatSyncOutcome.LATER -> Result.success()
+            }
+        }
+    } catch (e: Exception) {
+        if (e is kotlin.coroutines.cancellation.CancellationException) throw e
+        Result.retry()
+    }
+}
+
+object ThreatSyncScheduler {
+    private const val PERIODIC = "hoicon-threat-sync-periodic"
+    private const val NOW = "hoicon-threat-sync-now"
+    private const val BACKOFF_SECONDS = 60L
+
+    /** Every 12 hours, plus one pass now (opening the app, finishing pairing). KEEP: idempotent, never piles up. */
+    fun schedule(context: Context) {
+        val manager = WorkManager.getInstance(context)
+        val periodic = PeriodicWorkRequestBuilder<ThreatSyncWorker>(12, TimeUnit.HOURS)
+            .setConstraints(needsNetwork)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .build()
+        manager.enqueueUniquePeriodicWork(PERIODIC, ExistingPeriodicWorkPolicy.KEEP, periodic)
+        val now = OneTimeWorkRequestBuilder<ThreatSyncWorker>()
+            .setConstraints(needsNetwork)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .build()
+        manager.enqueueUniqueWork(NOW, ExistingWorkPolicy.KEEP, now)
     }
 }
 
