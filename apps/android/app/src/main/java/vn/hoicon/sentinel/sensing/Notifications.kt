@@ -9,10 +9,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.compose.ui.graphics.toArgb
+import vn.hoicon.sentinel.DrillActivity
 import vn.hoicon.sentinel.MainActivity
 import vn.hoicon.sentinel.R
 import vn.hoicon.sentinel.pause.PauseRequest
 import vn.hoicon.sentinel.pause.SafePauseActivity
+import vn.hoicon.sentinel.ui.theme.HoiConTokens
 
 /**
  * Channels: "đang để ý giúp bác" for the risk-window FGS (default importance but silent ⇒ status-bar icon, UX-8),
@@ -22,11 +25,13 @@ import vn.hoicon.sentinel.pause.SafePauseActivity
 object Notifications {
     const val ID_PROTECTING = 1
     private const val ID_PAUSE_FALLBACK = 2
+    private const val ID_DRILL = 3
 
     // Channel importance can't be raised after creation: the LOW channel of the first spike build is replaced.
     private const val OLD_CHANNEL_PROTECTING = "protecting"
     private const val CHANNEL_PROTECTING = "protecting_v2"
     private const val CHANNEL_PAUSE = "safe_pause"
+    private const val CHANNEL_DRILLS = "drills"
 
     private fun manager(context: Context) = context.getSystemService(NotificationManager::class.java)
 
@@ -48,7 +53,13 @@ object Notifications {
             context.getString(R.string.channel_pause),
             NotificationManager.IMPORTANCE_HIGH,
         )
-        manager.createNotificationChannels(listOf(protecting, pause))
+        // Spec 028: a plain invitation. Default importance (never a heads-up, never urgent), no full-screen intent anywhere.
+        val drills = NotificationChannel(
+            CHANNEL_DRILLS,
+            context.getString(R.string.channel_drills),
+            NotificationManager.IMPORTANCE_DEFAULT,
+        )
+        manager.createNotificationChannels(listOf(protecting, pause, drills))
     }
 
     /** Ongoing notification of the risk-window FGS: shown at once, not after the 10 s FGS delay. */
@@ -127,4 +138,43 @@ object Notifications {
             HcSpikeLog.w("fallback notification refused (POST_NOTIFICATIONS?)", e)
         }
     }
+
+    /**
+     * The invitation to a practice drill (Spec 028 FR-008): an ordinary notification, labelled `[DIỄN TẬP]` in its title,
+     * with no sound of its own beyond the channel default and no full-screen intent. Tapping it opens E11. True when it
+     * could really be shown (notifications allowed), so the caller only then counts it as "notified".
+     */
+    fun showDrillInvitation(context: Context, timeoutMs: Long? = null): Boolean {
+        ensureChannels(context)
+        val open = PendingIntent.getActivity(
+            context,
+            3,
+            DrillActivity.intent(context),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val text = context.getString(R.string.drill_notif_text)
+        val notification = Notification.Builder(context, CHANNEL_DRILLS)
+            // Its own icon and colour (never the shield of a real warning): a practice drill must not look like a real alert.
+            .setSmallIcon(R.drawable.ic_drill_school)
+            .setColor(HoiConTokens.Colors.DrillFg.toArgb())
+            .setContentTitle(context.getString(R.string.drill_notif_title))
+            .setContentText(text)
+            .setStyle(Notification.BigTextStyle().bigText(text))
+            .setSubText(context.getString(R.string.notif_ai_subtext))
+            .setCategory(Notification.CATEGORY_REMINDER)
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            // The invitation is only good until the drill's window ends.
+            .apply { if (timeoutMs != null && timeoutMs > 0) setTimeoutAfter(timeoutMs) }
+            .build()
+        return try {
+            manager(context).notify(ID_DRILL, notification)
+            manager(context).areNotificationsEnabled()
+        } catch (e: SecurityException) {
+            HcSpikeLog.w("drill invitation refused (POST_NOTIFICATIONS?)", e)
+            false
+        }
+    }
+
+    fun cancelDrillInvitation(context: Context) = manager(context).cancel(ID_DRILL)
 }

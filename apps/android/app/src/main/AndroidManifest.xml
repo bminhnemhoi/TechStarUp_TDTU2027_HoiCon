@@ -127,6 +127,11 @@
             android:name=".OnboardingActivity"
             android:exported="false" />
 
+        <!-- E11 Luyện tập nhận biết lừa đảo (spec 028): chỉ mở bằng cách chạm thông báo mời luyện tập, không nhận intent ngoài, không full-screen. -->
+        <activity
+            android:name=".DrillActivity"
+            android:exported="false" />
+
         <!-- E10 Kiểm tra số hay đường link (spec 026): chỉ mở từ E6 trong app, không nhận intent ngoài. -->
         <activity
             android:name=".LookupActivity"

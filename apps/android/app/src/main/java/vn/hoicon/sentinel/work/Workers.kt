@@ -18,6 +18,12 @@ import vn.hoicon.sentinel.BuildConfig
 import vn.hoicon.sentinel.SentinelServices
 import vn.hoicon.sentinel.data.local.TokenStorage
 import vn.hoicon.sentinel.data.outbox.FlushOutcome
+import vn.hoicon.sentinel.data.drill.DrillCheck
+import vn.hoicon.sentinel.data.drill.DrillInvitation
+import vn.hoicon.sentinel.data.drill.PrefsDrillStore
+import vn.hoicon.sentinel.data.remote.DrillApiClient
+import vn.hoicon.sentinel.data.remote.DrillResultOutcome
+import vn.hoicon.sentinel.data.remote.DrillStatus
 import vn.hoicon.sentinel.data.remote.ElderAnswer
 import vn.hoicon.sentinel.data.remote.ElderAnswerResult
 import vn.hoicon.sentinel.data.remote.ElderApiClient
@@ -25,6 +31,11 @@ import vn.hoicon.sentinel.data.remote.HeartbeatResult
 import vn.hoicon.sentinel.data.remote.HeartbeatStatus
 import vn.hoicon.sentinel.data.remote.PairingApiClient
 import vn.hoicon.sentinel.data.threat.ThreatSyncOutcome
+import vn.hoicon.sentinel.domain.drill.DrillAnswer
+import vn.hoicon.sentinel.domain.drill.DrillAnswers
+import vn.hoicon.sentinel.domain.drill.DrillTiming
+import vn.hoicon.sentinel.domain.rules.RiskWindowManager
+import vn.hoicon.sentinel.sensing.Notifications
 import vn.hoicon.sentinel.sensing.SensorPermission
 import vn.hoicon.sentinel.sensing.SensorPermissions
 
@@ -107,12 +118,41 @@ class HeartbeatWorker(context: Context, params: WorkerParameters) : CoroutineWor
                     Result.success()
                 }
                 // Refused body: a retry cannot fix it; the next period tries again.
-                HeartbeatResult.Ok, HeartbeatResult.Rejected -> Result.success()
+                HeartbeatResult.Ok, HeartbeatResult.Rejected -> {
+                    askForDrill(session.accessToken)
+                    Result.success()
+                }
             }
         }
     } catch (e: Exception) {
         if (e is kotlin.coroutines.cancellation.CancellationException) throw e
         Result.retry()
+    }
+}
+
+/**
+ * Spec 028 FR-008: after a good heartbeat, ask whether the family scheduled a practice drill. Whatever happens here (no
+ * network, a server error, a script that does not parse) never changes the heartbeat's own result: the next beat asks again.
+ */
+private suspend fun HeartbeatWorker.askForDrill(accessToken: String) {
+    try {
+        val services = SentinelServices.of(applicationContext)
+        val store = PrefsDrillStore(applicationContext)
+        val windowOpen: suspend () -> Boolean = { RiskWindowManager.isOpen(services.database.riskWindow().get(), System.currentTimeMillis()) }
+        val invitation = DrillInvitation(DrillApiClient(BuildConfig.API_BASE_URL), store, services::mayShare, windowOpen)
+        when (val check = invitation.check(accessToken)) {
+            is DrillCheck.Invite -> {
+                // The risk window may have opened while the server was answering: look again right before showing anything.
+                if (check.firstTime && !windowOpen()) {
+                    val shown = Notifications.showDrillInvitation(applicationContext, DrillTiming.millisUntil(check.offer.windowEnd))
+                    if (shown) store.notifiedDrillId = check.offer.drillId
+                }
+            }
+            DrillCheck.Unauthorized -> TokenStorage.create(applicationContext).needsRepair = true
+            DrillCheck.NotAllowed, DrillCheck.Deferred, DrillCheck.Nothing, DrillCheck.Failed -> Unit
+        }
+    } catch (e: Exception) {
+        if (e is kotlin.coroutines.cancellation.CancellationException) throw e
     }
 }
 
@@ -232,4 +272,90 @@ object ElderAnswerScheduler {
     }
 
     private const val BACKOFF_SECONDS = 10L
+}
+
+/** What to do with the answer to one drill-result upload. */
+enum class DrillResultAction { DONE, RETRY, DROP }
+
+/**
+ * `2xx` and `409` are done (the server holds a result for this drill); only transport trouble and 5xx are worth another
+ * try. Everything else is final: the server understood the request and said no (or the token is gone: E6 asks to reconnect).
+ */
+fun drillResultAction(outcome: DrillResultOutcome): DrillResultAction = when (outcome) {
+    DrillResultOutcome.Accepted -> DrillResultAction.DONE
+    DrillResultOutcome.NetworkError, DrillResultOutcome.ServerError -> DrillResultAction.RETRY
+    DrillResultOutcome.Unauthorized, DrillResultOutcome.NotFound, DrillResultOutcome.Rejected -> DrillResultAction.DROP
+}
+
+/**
+ * Sends how a drill ended (Spec 028 FR-009). The screen closes at once; this worker retries with backoff until the
+ * server has it, and gives up only when the server says it never will. Only the status and the letters of the choices
+ * travel, never text (SC-006).
+ */
+class DrillResultWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result = try {
+        val drillId = inputData.getString(DRILL_ID)
+        val status = DrillStatus.entries.firstOrNull { it.wire == inputData.getString(STATUS) }
+        val session = TokenStorage.create(applicationContext).load()
+        // Consent withdrawn (or never given) since the drill was played: nothing about it leaves the phone.
+        if (drillId == null || status == null || session == null || !SentinelServices.of(applicationContext).mayShare()) {
+            Result.success()
+        } else {
+            val outcome = DrillApiClient(BuildConfig.API_BASE_URL).sendResult(
+                session.accessToken,
+                drillId,
+                status,
+                DrillAnswers.decode(inputData.getString(ANSWERS)),
+                inputData.getString(STARTED_AT),
+                inputData.getString(COMPLETED_AT),
+            )
+            if (outcome is DrillResultOutcome.Unauthorized) TokenStorage.create(applicationContext).needsRepair = true
+            when (drillResultAction(outcome)) {
+                DrillResultAction.DONE -> Result.success()
+                DrillResultAction.RETRY -> Result.retry()
+                DrillResultAction.DROP -> Result.failure()
+            }
+        }
+    } catch (e: Exception) {
+        if (e is kotlin.coroutines.cancellation.CancellationException) throw e
+        Result.retry()
+    }
+
+    companion object {
+        const val DRILL_ID = "drill_id"
+        const val STATUS = "status"
+        const val ANSWERS = "answers"
+        const val STARTED_AT = "started_at"
+        const val COMPLETED_AT = "completed_at"
+    }
+}
+
+object DrillResultScheduler {
+    /** KEEP: the first result for a drill wins; a second tap or a restarted screen does not queue another. */
+    fun submit(
+        context: Context,
+        drillId: String,
+        status: DrillStatus,
+        answers: List<DrillAnswer>,
+        startedAt: String? = null,
+        completedAt: String? = null,
+    ) {
+        val request = OneTimeWorkRequestBuilder<DrillResultWorker>()
+            .setInputData(
+                workDataOf(
+                    DrillResultWorker.DRILL_ID to drillId,
+                    DrillResultWorker.STATUS to status.wire,
+                    DrillResultWorker.ANSWERS to DrillAnswers.encode(answers),
+                    DrillResultWorker.STARTED_AT to startedAt,
+                    DrillResultWorker.COMPLETED_AT to completedAt,
+                ),
+            )
+            .setConstraints(needsNetwork)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .build()
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork("hoicon-drill-result-$drillId", ExistingWorkPolicy.KEEP, request)
+    }
+
+    private const val BACKOFF_SECONDS = 30L
 }
