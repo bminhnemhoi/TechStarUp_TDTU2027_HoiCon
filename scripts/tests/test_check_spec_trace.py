@@ -54,6 +54,15 @@ class CheckSpecTraceTest(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("FR-002", errors[0])
 
+    def test_parenthesised_ids_are_checked_too(self) -> None:
+        (self.spec / "spec.md").write_text(
+            "- **(FR-001)**: a\n- **(FR-002)**: b\n- **(SC-001)**: c\n", encoding="utf-8"
+        )
+        self.write_tasks("- [ ] T001 [FR-001] a")
+        errors = cst.check(self.root)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("FR-002", errors[0])
+
     def test_all_tasks_done_requires_real_evidence(self) -> None:
         self.write_tasks("- [x] T001 a — FR-001", "- [X] T002 b — FR-002")
         self.assertTrue(any("evidence.md" in e for e in cst.check(self.root)))

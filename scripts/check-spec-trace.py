@@ -22,8 +22,9 @@ from pathlib import Path
 SPEC_DIR = re.compile(r"^\d{3}-[a-z0-9-]+$")
 CATALOG_ENTRY = re.compile(r"\*\*(\d{3}-[a-z0-9-]+)\*\*")
 ROADMAP_LINK = re.compile(r"specs/(\d{3}-[a-z0-9-]+)")
-FR_DEF = re.compile(r"\*\*(FR-\d{3})\*\*")
-SC_DEF = re.compile(r"\*\*(SC-\d{3})\*\*")
+# `**FR-001**` (mẫu Spec Kit) hoặc `**(FR-001)**` (spec 021–025): bỏ sót dạng có ngoặc ⇒ luật 3/4 chạy rỗng.
+FR_DEF = re.compile(r"\*\*\(?(FR-\d{3})\)?\*\*")
+SC_DEF = re.compile(r"\*\*\(?(SC-\d{3})\)?\*\*")
 TASK = re.compile(r"^\s*- \[([ xX])\] T\d+", re.M)
 EVIDENCE_PLACEHOLDERS = ("[FEATURE NAME]", "[DATE]", "[P2-xx]")
 
