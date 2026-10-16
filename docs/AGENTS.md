@@ -22,6 +22,17 @@
 Postgres đồng bộ, khóa theo thread, `recover()` sau sập); hẹn giờ là job `graph_resume`; tin gửi đi là job
 `notify_guardian` có khóa chống trùng. Thử: `uv run --directory backend python -m hoicon.agents.spike demo`.
 
+**Xác minh (spec 026):** node `verification` chèn giữa `risk_scorer` (khi không còn câu hỏi) và `intervention`, **không dùng
+LLM** (lệch bảng hồ sơ `strong` ở trên có chủ ý: "nguồn dẫn" phải là dữ kiện có thật — tên danh sách, phiên bản, mã quy tắc —
+mà LLM chỉ có thể bịa thêm). Nó đọc các dòng `verifications` của sự cố (do `POST /v1/lookups` và `POST /v1/events` ghi), nâng
+`level = max(state.level, sàn)` (`dangerous` ⇒ `critical`, `warning` ⇒ `high`), ghi xuyên `incidents.level` qua
+`IncidentService.raise_level` (gồm cả mức `risk_scorer` đã nâng) và ghi `agent_steps.node = "verify"` với
+`{checked, dangerous, warning, level_before, level_after}` (không HMAC). Lượt eval/demo không có sự cố thật bỏ qua DB. Trạng
+thái `verifying`/`rescore` của máy trạng thái chưa dùng. `await_guardian` nhận thêm resume `{"evidence": <verification_id>}`
+(người cao tuổi tự tra ra số/link nguy hiểm lúc sự cố còn chờ): nếu người giám hộ chưa quyết và dòng xác minh là `dangerous`
+của đúng sự cố này thì gửi MỘT tin mẫu `evidence` (`texts.guardian_evidence`, mở đầu công khai AI, nhãn `[DIỄN TẬP]` khi diễn
+tập, chỉ "số đuôi …" hoặc "một đường link"), khóa `{incident}:msg:evidence`, rồi quay lại chờ; hẹn giờ T1/T2/T3 không dời.
+
 **Gửi thật tới người giám hộ (spec 002, ADR-010):** `IncidentRuntime.start(..., family_id=)` đưa `family_id` vào state và payload
 `notify_guardian` (vắng ⇒ chỉ log như cũ). Handler `notify_guardian` → `channels/guardian.py::send_to_guardian` → cổng duy nhất
 `deliver`: dòng `messages_out` (gửi đúng một lần), từ chối tin không mở đầu bằng câu công khai AI, chặn sự cố demo tới gia đình

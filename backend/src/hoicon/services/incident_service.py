@@ -9,6 +9,7 @@ Hai bất biến còn được CSDL giữ độc lập với mã này: `level >=
 (trigger `trg_incidents_terminal`).
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Final
@@ -20,6 +21,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from hoicon.db.models import Family, Incident, IncidentTransition, RiskEventRecord
 from hoicon.domain.events import RiskEvent
 from hoicon.domain.risk import RiskLevel, raise_only
+
+logger = logging.getLogger(__name__)
 
 STATES: Final = frozenset(
     {
@@ -178,6 +181,35 @@ class IncidentService:
             )
         )
         await session.flush()
+        return incident
+
+    @staticmethod
+    async def raise_level(session: AsyncSession, incident_id: UUID, level: RiskLevel | str, reason: str) -> Incident:
+        """CHỈ NÂNG `incident.level` (spec 026 FR-006, luật 5); không đổi trạng thái, không ghi `incident_transitions`.
+
+        Dùng cho kết quả xác minh/tra cứu chen vào lúc sự cố còn chờ người giám hộ. Giữ khóa sự cố như `transition`.
+        Mỗi lần nâng THẬT tăng `version` (người giám hộ cầm version cũ nhận `ConcurrencyConflictError` thay vì quyết
+        trên mức đã cũ); `level` không cao hơn mức hiện tại ⇒ không làm gì. Sự cố đã qua `GUARDIAN_DECIDABLE` ⇒ trả về
+        nguyên trạng. `reason` là mã ngắn do máy chủ đặt, không lưu (chỉ để log), không chép văn bản người dùng.
+        """
+        try:
+            target = RiskLevel(level)
+        except ValueError:
+            raise ValueError("level không hợp lệ") from None
+        if target is RiskLevel.NONE:
+            raise ValueError("level không hợp lệ")
+        if len(reason) > MAX_REASON:
+            raise ValueError("reason quá dài")
+        await _lock(session, str(incident_id))
+        incident = await session.get(Incident, incident_id, populate_existing=True)
+        if incident is None:
+            raise IncidentNotFoundError(str(incident_id))
+        current = RiskLevel(incident.level)
+        if incident.state in GUARDIAN_DECIDABLE and target.rank > current.rank:
+            incident.level = raise_only(current, target).value
+            incident.version += 1
+            await session.flush()
+            logger.info("incident level raised %s→%s (%s)", current.value, incident.level, reason)
         return incident
 
     @staticmethod

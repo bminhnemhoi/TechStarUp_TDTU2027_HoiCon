@@ -11,10 +11,10 @@ from uuid import UUID
 import pytest
 from consent_support import call, pair_device
 from jsonschema import Draft202012Validator, FormatChecker
-from sqlalchemy import func, select, text
+from sqlalchemy import delete, func, select, text
 
 from hoicon.db.ids import new_id
-from hoicon.db.models import Incident, IncidentTransition, RiskEventRecord
+from hoicon.db.models import Incident, IncidentTransition, RiskEventRecord, Verification
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain.pii import hmac_h1
 
@@ -466,3 +466,103 @@ async def test_the_device_table_is_capped_even_when_nothing_expires(monkeypatch:
     for _ in range(50):
         assert events._retry_after(uuid4(), now) is None
     assert len(events._batches) <= 5
+
+
+# --- Spec 026 FR-008: ghi xác minh số gọi đến khi đồ thị khởi động ------------------------------------------------
+
+
+LIST_VERSION = "test-spec026-events"
+
+
+async def call_verifications(family_id: Any) -> list[Verification]:
+    async with get_sessionmaker()() as session:
+        return list((await session.scalars(select(Verification).where(Verification.family_id == family_id))).all())
+
+
+@pytest.fixture
+async def flagged_caller(device_world: Any) -> Any:
+    """Đưa số hư cấu `FAKE_H1` vào danh sách đe dọa (độ tin cậy 0,9) cho test này; dọn theo `list_version`."""
+    from hoicon.db.models import ThreatIndicator
+    from hoicon.ops import threat_list
+
+    doc = {
+        "version": LIST_VERSION,
+        "is_demo": True,
+        "indicators": [{"h1": FAKE_H1, "source": "Nguồn thử nghiệm", "confidence": 0.9, "last3": "000"}],
+    }
+    await threat_list.load_seed(get_sessionmaker(), doc, env="dev", with_bucket=False)
+    yield
+    async with get_sessionmaker().begin() as session:
+        await session.execute(delete(ThreatIndicator).where(ThreatIndicator.list_version == LIST_VERSION))
+
+
+async def test_high_event_records_one_system_verification_for_the_caller(device_world: Any, token: str) -> None:
+    body = (await post(token, make_event())).json()
+    (row,) = await call_verifications(device_world.family_id)
+    assert (row.actor, row.actor_id, row.kind, row.via, row.last3) == ("system", None, "phone", "call", "000")
+    assert (row.subject_kid, row.subject_hmac) == hmac_h1(FAKE_H1)
+    assert (row.verdict, float(row.confidence), row.is_demo) == ("unknown", 0.0, False)
+    assert str(row.incident_id) == body["incident_id"]
+
+
+async def test_flagged_caller_is_recorded_as_dangerous_with_its_source(
+    device_world: Any, token: str, flagged_caller: None
+) -> None:
+    await post(token, make_event())
+    (row,) = await call_verifications(device_world.family_id)
+    assert (row.verdict, float(row.confidence), row.list_version, row.is_demo) == ("dangerous", 0.9, LIST_VERSION, True)
+    assert row.sources == [{"name": "Nguồn thử nghiệm", "type": "threat_list", "list_version": LIST_VERSION}]
+
+
+async def test_the_same_caller_in_later_events_does_not_add_a_second_row(
+    device_world: Any, token: str, flagged_caller: None
+) -> None:
+    first = make_event()
+    await post(token, first)
+    await post(token, make_event(), first)  # sự kiện mới cùng số gọi + gửi lại sự kiện cũ
+    assert len(await call_verifications(device_world.family_id)) == 1
+
+
+async def test_event_without_a_caller_records_nothing(device_world: Any, token: str) -> None:
+    no_caller = make_event()
+    del no_caller["caller"]
+    assert (await post(token, no_caller)).json()["incident_opened"] is True
+    assert await call_verifications(device_world.family_id) == []
+
+
+async def test_event_that_opens_no_incident_records_nothing(device_world: Any, token: str) -> None:
+    assert (await post(token, harmless())).json()["incident_id"] is None
+    assert await call_verifications(device_world.family_id) == []
+
+
+async def test_failed_lookup_records_nothing_and_does_not_block_the_alert(
+    device_world: Any, token: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def broken(*_: Any, **__: Any) -> Any:
+        raise RuntimeError("lỗi mô phỏng 0900000001")
+
+    monkeypatch.setattr("hoicon.agents.runtime.lookup_h1", broken)
+    resp = await post(token, make_event())
+    assert resp.status_code == 200
+    assert resp.json()["incident_opened"] is True
+    assert await call_verifications(device_world.family_id) == []  # không ghi "chưa có trong danh sách" khi tra lỗi
+
+
+async def test_verification_and_start_graph_job_hold_no_h1(
+    device_world: Any, token: str, flagged_caller: None, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.DEBUG)
+    body = (await post(token, make_event())).json()
+    async with get_sessionmaker()() as session:
+        dump = await session.scalar(
+            text("select string_agg(t::text, ' ') from verifications t where family_id = :f"),
+            {"f": device_world.family_id},
+        )
+        job = await session.scalar(
+            text("select payload::text from jobs where idempotency_key = :k"),
+            {"k": f"{body['incident_id']}:graph:start"},
+        )
+    assert FAKE_H1 not in dump and FAKE_H1 not in job
+    assert FAKE_H1 not in caplog.text
+    assert hmac_h1(FAKE_H1)[1] not in (job or "")
+    assert hmac_h1(FAKE_H1)[1] not in caplog.text

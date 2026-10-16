@@ -1,0 +1,30 @@
+[
+  {
+    "_name": "số điện thoại gõ tay",
+    "kind": "phone",
+    "via": "typed",
+    "h1": "a3f1000000000000000000000000000000000000000000000000000000000000",
+    "last3": "123"
+  },
+  {
+    "_name": "số điện thoại từ mã QR kèm sự cố",
+    "kind": "phone",
+    "via": "qr",
+    "h1": "5d11111111111111111111111111111111111111111111111111111111111111",
+    "last3": "456",
+    "incident_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60"
+  },
+  {
+    "_name": "đường link gõ tay",
+    "kind": "url",
+    "via": "typed",
+    "url": "https://vn-thue-hoan-tien.example/nhan"
+  },
+  {
+    "_name": "đường link quét QR kèm sự cố",
+    "kind": "url",
+    "via": "qr",
+    "url": "http://bit.ly/abc123",
+    "incident_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60"
+  }
+]

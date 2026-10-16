@@ -28,7 +28,9 @@ from hoicon.db.session import get_sessionmaker
 from hoicon.domain.events import RiskEventIn
 from hoicon.domain.pii import hmac_h1
 from hoicon.jobs.queue import enqueue
+from hoicon.mcp_servers.threat import ThreatVerdict
 from hoicon.services import AlertService, IncidentService
+from hoicon.services import verification_service as vs
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1", tags=["events"])
@@ -111,11 +113,36 @@ def _row(event: RiskEventIn, claims: DeviceClaims) -> dict[str, Any]:
     return row
 
 
+async def _record_call_verification(
+    session: AsyncSession, incident: Incident, event: RiskEventIn, threat: dict[str, Any]
+) -> None:
+    """Spec 026 FR-008: ghi kết quả tra số gọi đến (`actor=system`, `via=call`) NGAY ở đây vì request còn h1; trạng thái
+    đồ thị không mang h1 nên không băm lại được. Chỉ HMAC + 3 số cuối vào bảng. Một dòng mỗi (sự cố, số) nhờ UNIQUE một
+    phần + ON CONFLICT DO NOTHING. Tra lỗi (`error`) ⇒ không ghi: "chưa có trong danh sách" khi chưa tra được là sai."""
+    if event.caller is None or "error" in threat:
+        return
+    outcome = vs.Outcome(
+        decision=vs.decide_phone(ThreatVerdict.model_validate(threat)),
+        subject=hmac_h1(event.caller.h1),
+        last3=event.caller.last3,
+    )
+    await vs.record(
+        session,
+        family_id=incident.family_id,
+        incident_id=incident.id,
+        actor="system",
+        actor_id=None,
+        via="call",
+        outcome=outcome,
+    )
+
+
 async def _start_graph(session: AsyncSession, incident: Incident, event: RiskEventIn) -> None:
     """Spec 024 FR-006: sự cố đạt mức cảnh báo (cùng ngưỡng với cảnh báo nhanh) ⇒ xếp job chạy đồ thị tác tử, cùng
     giao dịch với lô. Khóa theo sự cố ⇒ một sự cố một lượt dù nhiều sự kiện liên kết vào. Payload đã bỏ h1 + tên gói
     (ADR-006): bảng `jobs` giữ dòng đã chạy xong."""
     threat, event_data = await prepare_event(session, event)
+    await _record_call_verification(session, incident, event, threat)
     member = await session.get(Member, incident.member_id)
     payload = {
         "event": event_data,

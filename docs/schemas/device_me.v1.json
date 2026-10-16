@@ -54,7 +54,8 @@
               "llm_processing",
               "voice_input",
               "drills",
-              "pilot_research"
+              "pilot_research",
+              "lookups"
             ]
           },
           "granted": { "type": "boolean" },

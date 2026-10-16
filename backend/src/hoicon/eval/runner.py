@@ -220,7 +220,10 @@ async def _fail_unfinished_runs(sessions: async_sessionmaker, nonce: str) -> Non
 async def _seed_threat_list(sessions: async_sessionmaker, settings: Settings) -> None:
     """Danh sách đe dọa nằm trong DB (spec 003) ⇒ DB eval phải có số demo để ca `flagged` ra `flagged` (idempotent)."""
     try:
-        await load_seed(sessions, json.loads(THREAT_SEED.read_text(encoding="utf-8")), env=settings.env)
+        # with_bucket=False: eval không dùng ảnh chụp bucket, nên không cần (và không đòi) khóa mã hóa dữ liệu.
+        await load_seed(
+            sessions, json.loads(THREAT_SEED.read_text(encoding="utf-8")), env=settings.env, with_bucket=False
+        )
     except SeedError as exc:  # vd. HOICON_ENV ngoài dev/test/ci: thông điệp không chứa giá trị
         raise IsolationError(str(exc)) from None
     except RuntimeError as exc:  # thiếu khóa băm; thông điệp chỉ nêu TÊN biến môi trường

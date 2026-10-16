@@ -1,6 +1,14 @@
 # Bằng chứng nghiệm thu Spec 026: Tác tử xác minh, tra cứu E10 & danh sách đe dọa trên máy
 
-- **Trạng thái**: chưa triển khai. Đã có spec, plan và tasks từ 16/10/2026; chưa có số đo nào.
+- **Trạng thái (16/10/2026)**: Làn B (server, T001–T019) đã triển khai, chưa commit. Làn A (Android T020–T027) và giai
+  đoạn Z (T028–T031) CHƯA làm; các dòng SC-001/004/005 phần máy ảo vẫn CHƯA ĐO.
+- **Số đo Làn B (máy dev, Postgres 15432, không phải máy thật)**:
+  - `pytest` toàn bộ 1501 passed; `ruff check` và `ruff format --check` sạch; `check-spec-trace` 17 spec, 0 lỗi.
+  - `hoicon-eval --suite smoke --compare baseline --shared-db-ok`: 20 ca, recall 100%, báo nhầm 0%, vi phạm 0, công khai
+    AI 100%, lệch baseline +0,0 điểm %.
+  - `POST /v1/lookups` p95 ≈ 14 ms (n = 50, trong tiến trình, `test_lookup_latency_p95`); 25 request đồng thời ⇒ đúng 20
+    lọt; `GET /v1/threat-list` 24 lượt/ngày/thiết bị rồi 429.
+  - Migration `0007` lên/xuống/lên ổn trên DB dev (kể cả khi sổ đồng ý đã có dòng `lookups`).
 - **ADR-011** (bucket k-ẩn danh): Đề xuất, chờ Tiến chấp nhận.
 - **Môi trường dự kiến**:
   - Linux CachyOS, Postgres dev trên Docker (cổng 15432), uvicorn trên localhost.
@@ -28,8 +36,20 @@
 
 ## Review độc lập
 
-Chưa chạy. Theo T026 và T030 sẽ gồm `ux-elder-reviewer` cho E10 và `security-privacy-reviewer` cho PII, manifest, đồng
-ý, `bucket_enc` và hạn mức.
+`security-privacy-reviewer` (server, 16/10/2026): 0 Critical, 0 High, 6 Medium, 8 Low. Đã sửa (test đỏ trước):
+- #1 parser URL lệch trình duyệt (`\`, userinfo, `.apk` trong truy vấn); #2 khóa job `evidence` giờ theo `verification_id`;
+- #4 dựng ảnh chụp: single-flight + giải mã ngoài event loop; #8 thiết bị chỉ gắn tra cứu vào sự cố CỦA mình;
+- #10 lỗi 5xx của `threat-list` không tốn lượt ngày; #11 node `verification` không gọi `raise_level` với mức `none`.
+
+Để lại, cần Tiến quyết (đã ghi ở ADR-011 / DATA-MODEL / API):
+- #3 job xóa theo hạn + xóa khi rút đồng ý `lookups` (nợ P2-20); #5/#6 k-ẩn danh chỉ là ước tính, khóa `bucket_enc` dùng
+  chung `HOICON_DATA_KEY` với `chat_id` (cân nhắc khóa riêng/HKDF); #7 người giám hộ chưa có đường ghi đồng ý `lookups`
+  (403, spec 023/027); #9 `HOICON_ENV` mặc định `dev`; #12–#14 (last3 do client khai, thiếu `is_drill`/vết kiểm toán
+  `raise_level`, vài CHECK/chỉ mục `(family_id, at)`).
+- Lỗ hổng còn lại của #2: lần tra `dangerous` ĐẦU TIÊN rơi vào lúc đồ thị chưa tới `await_guardian` vẫn có thể không
+  sinh tin `evidence` nếu không có lần tra nguy hiểm sau đó.
+
+Chưa chạy: `ux-elder-reviewer` cho E10 (thuộc Làn A, T026) và lượt đọc lại của reviewer sau các sửa trên.
 
 ## Còn mở (không đánh ☑)
 

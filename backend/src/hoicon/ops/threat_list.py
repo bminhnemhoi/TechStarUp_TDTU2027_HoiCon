@@ -1,11 +1,13 @@
 """Nạp danh sách đe dọa vào Postgres (spec 003, ADR-006): máy chủ CHỈ lưu `HMAC(pepper[kid], h1)` + 3 số cuối.
+Spec 026 (ADR-011): mỗi chỉ báo còn có `bucket_enc` = bucket 24 bit của h1 đã MÃ HÓA (khóa dữ liệu theo `kid`), để
+dựng ảnh chụp bucket cho máy mà không lưu bucket dạng rõ. Dòng thiếu `bucket_enc` không xuống máy; nạp lại tệp là bù.
 
     uv run --directory backend python -m hoicon.ops.threat_list load data/threat_seed.demo.json
 
 Tệp theo `docs/schemas/threat_seed.v1.json` (đầu vào có h1 — với tệp demo là số hư cấu). Nạp lặp lại là cập nhật
 (`ON CONFLICT`), không thêm dòng. Cả lô được kiểm trước khi ghi và ghi trong MỘT giao dịch: một dòng hỏng ⇒ không
 ghi gì. Tệp `is_demo` CHỈ nạp được khi `HOICON_ENV` là dev/test/ci (danh sách trắng: quên đặt `prod` vẫn không
-lọt). Chỉ in số dòng thêm/cập nhật — không in h1, không in HMAC.
+lọt). Chỉ in số dòng thêm/cập nhật và số dòng còn thiếu `bucket_enc` — không in h1, HMAC hay bucket.
 """
 
 import argparse
@@ -17,7 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import literal_column
+from sqlalchemy import func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -26,6 +28,7 @@ from hoicon.config import get_settings
 from hoicon.db.models import ThreatIndicator
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain.pii import hmac_h1
+from hoicon.domain.threat_bucket import bucket24, encrypt_bucket
 
 DEMO_ALLOWED_ENVS = ("dev", "test", "ci")
 _H1 = re.compile(r"[0-9a-f]{64}")  # dùng `fullmatch`: `$` của `re` cho lọt "\n" ở cuối
@@ -93,8 +96,12 @@ def _validate(doc: object, env: str) -> tuple[str, bool, list[dict[str, Any]]]:
     return version, is_demo, clean
 
 
-async def load_seed(sessions: async_sessionmaker, doc: object, *, env: str) -> tuple[int, int]:
+async def load_seed(
+    sessions: async_sessionmaker, doc: object, *, env: str, with_bucket: bool = True
+) -> tuple[int, int]:
     """Nạp `doc` ⇒ (số dòng thêm, số dòng cập nhật). Dùng chung với `hoicon-eval` (nạp danh sách demo vào DB eval).
+
+    `with_bucket=False` (eval, không có khóa dữ liệu): không ghi và không đụng `bucket_enc` đã có.
 
     ponytail: một câu lệnh mỗi dòng — đủ cho danh sách thí điểm (≤ 100.000 dòng, nạp thủ công); gộp lô khi cần.
     """
@@ -116,6 +123,8 @@ async def load_seed(sessions: async_sessionmaker, doc: object, *, env: str) -> t
                 "expires_at": item["expires_at"],
             }
             update = {key: values[key] for key in ("source", "confidence", "tactic", "list_version", "last3")}
+            if with_bucket:  # nonce ngẫu nhiên ⇒ mỗi lần nạp lại ra bản mã mới (cùng bucket)
+                values["bucket_enc"] = update["bucket_enc"] = encrypt_bucket(bucket24(item["h1"]), digest)
             statement = (
                 insert(ThreatIndicator)
                 .values(**values)
@@ -137,6 +146,13 @@ async def load_seed(sessions: async_sessionmaker, doc: object, *, env: str) -> t
     return added, updated
 
 
+async def count_missing_bucket(sessions: async_sessionmaker) -> int:
+    """Số chỉ báo chưa có `bucket_enc` (chưa xuống máy được cho tới khi nạp lại tệp có h1)."""
+    query = select(func.count()).select_from(ThreatIndicator).where(ThreatIndicator.bucket_enc.is_(None))
+    async with sessions() as session:
+        return await session.scalar(query) or 0
+
+
 async def run(path: Path) -> int:
     try:
         doc = json.loads(await asyncio.to_thread(path.read_text, encoding="utf-8"))
@@ -155,6 +171,12 @@ async def run(path: Path) -> int:
         print(f"Lỗi cơ sở dữ liệu ({type(exc).__name__}) — kiểm tra Postgres và `alembic upgrade head`.")
         return 2
     print(f"Danh sách đe dọa: thêm {added} · cập nhật {updated}")
+    try:
+        missing = await count_missing_bucket(get_sessionmaker())
+    except SQLAlchemyError as exc:  # không in thông điệp: có thể chứa chuỗi kết nối DB
+        print(f"Lỗi cơ sở dữ liệu ({type(exc).__name__}) khi đếm dòng thiếu bucket_enc.")
+        return 2
+    print(f"Dòng thiếu bucket_enc: {missing}" + (" (nạp lại tệp có h1 để bù)" if missing else ""))
     return 0
 
 

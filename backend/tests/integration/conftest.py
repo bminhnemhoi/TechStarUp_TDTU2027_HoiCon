@@ -227,6 +227,16 @@ def fake_pepper(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 
 @pytest.fixture
+def fake_data_key(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Khóa mã hóa dữ liệu GIẢ (`bucket_enc`, `zalo_chat_enc`) cho test; xóa cache cấu hình quanh test."""
+    get_settings.cache_clear()
+    monkeypatch.setenv("HOICON_DATA_KEY_KID", "1")
+    monkeypatch.setenv("HOICON_DATA_KEY_1", "aa" * 32)
+    yield
+    get_settings.cache_clear()
+
+
+@pytest.fixture
 async def seeded_threat(require_db: None, fake_pepper: None) -> AsyncGenerator[dict[str, Any]]:
     """Danh sách đe dọa DEMO (số hư cấu) trong DB ứng dụng, băm bằng khóa GIẢ; xóa đúng các dòng đó khi xong."""
     import json

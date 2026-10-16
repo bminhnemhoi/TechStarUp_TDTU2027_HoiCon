@@ -28,6 +28,7 @@ Purpose = Literal[
     "voice_input",
     "drills",
     "pilot_research",
+    "lookups",
 ]
 MAX_ITEMS = 32
 
