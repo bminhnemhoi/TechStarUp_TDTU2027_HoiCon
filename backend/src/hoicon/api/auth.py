@@ -235,6 +235,12 @@ async def get_current_guardian(
         raise _unauthorized_guardian() from None
     async with get_sessionmaker()() as session:
         member = await session.get(Member, claims.member_id)
-    if member is None or member.family_id != claims.family_id or member.role != GUARDIAN_ROLE:
+    # `deleted_at`: thành viên đã bị ẩn danh sau yêu cầu xóa dữ liệu (spec 034) ⇒ token cũ hết hiệu lực ngay.
+    if (
+        member is None
+        or member.family_id != claims.family_id
+        or member.role != GUARDIAN_ROLE
+        or member.deleted_at is not None
+    ):
         raise _unauthorized_guardian()
     return claims

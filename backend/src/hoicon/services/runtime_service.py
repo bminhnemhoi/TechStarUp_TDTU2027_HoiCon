@@ -82,7 +82,12 @@ async def _worker_loop(stop: asyncio.Event) -> None:
             delay = min(delay * 2, RETRY_MAX_S)
     else:
         return
-    await run_worker(get_sessionmaker(), incident_handlers(runtime), stop)
+    try:
+        handlers = incident_handlers(runtime)
+    except Exception as exc:  # cấu hình sai (vd. Zalo mock ngoài dev): kêu to, `/readyz` cũng báo 503 — không chết im
+        logger.error("worker: KHÔNG chạy được, cấu hình kênh gửi sai (%s): %s", type(exc).__name__, exc)
+        return
+    await run_worker(get_sessionmaker(), handlers, stop)
 
 
 @contextlib.asynccontextmanager

@@ -31,12 +31,24 @@ async def call(
         return await client.request(method, path, json=json, headers=merged)
 
 
-async def pair_device(code: str, **changes: Any) -> dict[str, Any]:
-    """Ghép một thiết bị bằng `POST /v1/pair` thật; ⇒ phản hồi JSON (có `access_token`)."""
+async def pair_device(code: str, *, consent: bool = True, **changes: Any) -> dict[str, Any]:
+    """Ghép một thiết bị bằng `POST /v1/pair` thật; ⇒ phản hồi JSON (có `access_token`).
+
+    `consent=True` (mặc định): ghi `core_protection` + `guardian_alerts` qua `POST /v1/consents` thật, như app làm sau
+    khi ghép đôi. Spec 034: máy chủ từ chối `POST /v1/events` của người chưa đồng ý `core_protection`."""
     payload = {"code": code, "app_version": "0.2.0", "rules_version": "r1", "platform": "android", **changes}
     resp = await call("POST", "/v1/pair", json=payload)
     assert resp.status_code == 200, resp.text
-    return resp.json()
+    paired = resp.json()
+    if consent:
+        recorded = await call(
+            "POST",
+            "/v1/consents",
+            token=paired["access_token"],
+            json={"items": [item("core_protection"), item("guardian_alerts")]},
+        )
+        assert recorded.status_code == 200, recorded.text
+    return paired
 
 
 def item(purpose: str = "core_protection", granted: bool = True, **changes: Any) -> dict[str, Any]:

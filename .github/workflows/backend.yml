@@ -29,6 +29,8 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U hoicon -d hoicon" --health-interval 5s --health-timeout 3s --health-retries 20
     env:
+      # Spec 034: mặc định của ứng dụng là `prod`; CI chạy `test` tường minh (Zalo mock chỉ cho dev/test).
+      HOICON_ENV: test
       HOICON_DATABASE_URL: postgresql+psycopg://hoicon:hoicon_ci@localhost:5432/hoicon
     defaults:
       run:

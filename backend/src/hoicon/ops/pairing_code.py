@@ -42,7 +42,7 @@ async def create_pairing_code(sessions: async_sessionmaker, family_id: object) -
 
 
 async def run(name: str) -> int:
-    if get_settings().env != "dev":
+    if not get_settings().is_dev_env:
         print("Từ chối: lệnh này chỉ chạy khi HOICON_ENV=dev (mã ghép cho gia đình thật sinh từ app, spec 020).")
         return 2
     sessions = get_sessionmaker()

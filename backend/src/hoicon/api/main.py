@@ -16,6 +16,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from hoicon import __version__
 from hoicon.api import webhooks
+from hoicon.api.auth import MIN_KEY_LEN
+from hoicon.api.body_limit import BodyLimitMiddleware
 from hoicon.api.routers import (
     actions,
     consents,
@@ -29,6 +31,7 @@ from hoicon.api.routers import (
     pairing,
     runs,
 )
+from hoicon.channels.zalo import mock_allowed
 from hoicon.config import get_settings
 from hoicon.db.session import get_engine
 from hoicon.mcp_servers import threat
@@ -56,6 +59,8 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(title="HỏiCon API", version=__version__, lifespan=lifespan)
+# Spec 034: thân yêu cầu tối đa 256 KB cho mọi route (kiểm trước khi router phân tích).
+app.add_middleware(BodyLimitMiddleware)
 
 
 @app.exception_handler(RequestValidationError)
@@ -94,9 +99,26 @@ async def healthz() -> dict[str, str]:
     return {"status": "ok", "version": __version__}
 
 
+def missing_keys() -> list[str]:
+    """Tên (không bao giờ giá trị) các khóa bắt buộc đang thiếu: pepper `kid` hiện hành, khóa dữ liệu `kid` hiện hành,
+    khóa JWT thiết bị đủ dài. Thiếu chúng ⇒ băm số, mã hóa Zalo ID hoặc ký token hỏng âm thầm (spec 034 FR-006)."""
+    settings = get_settings()
+    missing: list[str] = []
+    pepper = getattr(settings, f"phone_pepper_{settings.phone_pepper_kid}", None)
+    if pepper is None or not pepper.get_secret_value():
+        missing.append("phone_pepper")
+    data_key = getattr(settings, f"data_key_{settings.data_key_kid}", None)
+    if data_key is None or not data_key.get_secret_value():
+        missing.append("data_key")
+    signing = settings.device_jwt_secret
+    if signing is None or len(signing.get_secret_value()) < MIN_KEY_LEN:
+        missing.append("device_jwt_secret")
+    return missing
+
+
 @app.get("/readyz", tags=["ops"])
-async def readyz(response: Response) -> dict[str, str]:
-    """Readiness: kết nối được Postgres (trả lời trong ≤ READYZ_TIMEOUT_S kể cả khi DB treo)."""
+async def readyz(response: Response) -> dict[str, object]:
+    """Readiness: kết nối được Postgres (trả lời trong ≤ READYZ_TIMEOUT_S kể cả khi DB treo) và đủ khóa bắt buộc."""
     try:
         async with asyncio.timeout(READYZ_TIMEOUT_S):
             async with get_engine().connect() as conn:
@@ -105,5 +127,16 @@ async def readyz(response: Response) -> dict[str, str]:
         logger.warning("readyz: database unreachable (%s)", type(exc).__name__)
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"status": "unavailable", "db": "down"}
+    missing = missing_keys()
+    if missing:
+        logger.error("readyz: thiếu khóa bắt buộc: %s", ", ".join(missing))  # chỉ tên, không giá trị
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": "unavailable", "db": "up", "missing": missing}
+    settings = get_settings()
+    if settings.zalo_mode == "mock" and not mock_allowed(settings):
+        # Worker không dựng được kênh gửi ⇒ cảnh báo, xóa dữ liệu, hạn lưu đều đứng: phải thấy ngay ở /readyz.
+        logger.error("readyz: HOICON_ENV=%s nhưng HOICON_ZALO_MODE=mock", settings.env)
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": "unavailable", "db": "up", "misconfigured": ["zalo_mode"]}
     # Chế độ gửi Zalo để ops thấy ngay nếu prod lỡ chạy mock (tin "gửi" bằng mock không tới người nhận).
-    return {"status": "ok", "db": "up", "zalo_mode": get_settings().zalo_mode}
+    return {"status": "ok", "db": "up", "zalo_mode": settings.zalo_mode}

@@ -98,7 +98,7 @@ Cập nhật: 15/10/2026
 | P2-17 | W5 | Đồ thị Coach hằng tuần | ☐ |
 | P2-18 | W6 28/12–03/01 | Bộ eval injection + lặp prompt | ☐ |
 | P2-19 | W6 | Web `/trace`, `/eval`, `/sim` | ☐ |
-| P2-20 | W6 | Gia cố: `privacy-audit`, review bảo mật, job xóa theo hạn lưu, sao lưu, Crashlytics | ◐ spec [`034-hardening-core`](../specs/034-hardening-core/) (16/10, phần lõi): đã có spec/plan/tasks (hạn lưu, xóa theo yêu cầu + ẩn danh, sao lưu mã hóa, đồng ý ở máy chủ); **chưa code**; Crashlytics ở 037 |
+| P2-20 | W6 | Gia cố: `privacy-audit`, review bảo mật, job xóa theo hạn lưu, sao lưu, Crashlytics | ◐ spec [`034-hardening-core`](../specs/034-hardening-core/) (16/10): **phần lõi XONG** (migration 0009, mặc định `prod`, `/readyz`, trần 256 KB, đồng ý ở máy chủ, hạn lưu, xóa gia đình + ẩn danh, sao lưu mã hóa, `roles.sql`); pytest 1958 xanh; review: 0 Crit, 1 High đã sửa, Medium còn mở ở `evidence.md`; **BLOCKED bởi 012** (lịch sao lưu/nơi lưu ngoài máy/áp role ở prod/đo khôi phục trên VPS); Crashlytics ở 037 |
 | P2-21 | W7 04–09/01 | Đóng băng 06/01; báo cáo thí điểm; poster; video 5 phút; **nộp 09/01** → **M3** | ☐ |
 
 **Gate M1 (06/12):** AVD API 34 + 36: cuộc gọi lạ → demobank → SafePause p95 ≤ 3 s · Zalo giai đoạn 1 p95 ≤ 10 s · thao tác người giám hộ đóng được sự cố · mỗi quyền đã cấp có dòng consent · **0 số điện thoại thô** trong DB/log · backend tắt vẫn hiện SafePause.

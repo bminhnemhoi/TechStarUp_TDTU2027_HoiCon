@@ -40,7 +40,7 @@ async def test_bad_tokens_are_401(device_world: Any, token: str) -> None:
 
 
 async def test_expired_and_foreign_tokens_are_401(device_world: Any) -> None:
-    paired = await pair_device(device_world.code)
+    paired = await pair_device(device_world.code, consent=False)
     claims = auth.decode_access_token(paired["access_token"])
     expired = auth.issue_access_token(
         claims.device_id, claims.family_id, claims.member_id, now=datetime.now(UTC) - timedelta(days=31)
@@ -52,7 +52,7 @@ async def test_expired_and_foreign_tokens_are_401(device_world: Any) -> None:
 
 
 async def test_revoked_device_is_401(device_world: Any) -> None:
-    paired = await pair_device(device_world.code)
+    paired = await pair_device(device_world.code, consent=False)
     async with get_sessionmaker().begin() as session:
         await session.execute(
             update(Device).where(Device.family_id == device_world.family_id).values(revoked_at=func.now())
@@ -63,7 +63,7 @@ async def test_revoked_device_is_401(device_world: Any) -> None:
 
 
 async def test_valid_batch_is_recorded_with_server_side_family_member_and_time(device_world: Any) -> None:
-    paired = await pair_device(device_world.code)
+    paired = await pair_device(device_world.code, consent=False)
     batch = json.loads((SCHEMAS / "fixtures" / "consent_record.v1.valid.json").read_text(encoding="utf-8"))[0]
     resp = await call("POST", "/v1/consents", token=paired["access_token"], json={"items": batch["items"]})
     assert resp.status_code == 200, resp.text
@@ -78,7 +78,7 @@ async def test_valid_batch_is_recorded_with_server_side_family_member_and_time(d
 
 
 async def test_withdrawal_appends_a_new_row_and_never_touches_the_old_one(device_world: Any) -> None:
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     assert (
         await call("POST", "/v1/consents", token=token, json={"items": [item("voice_input", True)]})
     ).status_code == 200
@@ -90,7 +90,7 @@ async def test_withdrawal_appends_a_new_row_and_never_touches_the_old_one(device
 
 
 async def test_the_ledger_is_immutable_even_for_the_application_connection(device_world: Any) -> None:
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     await call("POST", "/v1/consents", token=token, json={"items": [item()]})
     for statement in ("update consents set granted = false", "delete from consents"):
         with pytest.raises(DBAPIError, match="append-only"):
@@ -101,7 +101,7 @@ async def test_the_ledger_is_immutable_even_for_the_application_connection(devic
 
 @pytest.mark.parametrize("method", ["PUT", "PATCH", "DELETE"])
 async def test_there_is_no_http_way_to_change_or_remove_a_consent(device_world: Any, method: str) -> None:
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     resp = await call(method, "/v1/consents", token=token, json={"items": [item()]})
     assert resp.status_code == 405
 
@@ -112,7 +112,7 @@ async def test_there_is_no_http_way_to_change_or_remove_a_consent(device_world: 
     ids=lambda d: d["_why"],
 )
 async def test_invalid_contract_fixtures_are_422_and_write_nothing(doc: dict[str, Any], device_world: Any) -> None:
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     resp = await call("POST", "/v1/consents", token=token, json={k: v for k, v in doc.items() if k != "_why"})
     assert resp.status_code == 422
     assert await rows(device_world.family_id) == []
@@ -135,21 +135,21 @@ async def test_invalid_contract_fixtures_are_422_and_write_nothing(doc: dict[str
     ],
 )
 async def test_bad_batches_are_422_and_atomic(device_world: Any, payload: Any) -> None:
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     resp = await call("POST", "/v1/consents", token=token, json=payload)
     assert resp.status_code == 422
     assert await rows(device_world.family_id) == []
 
 
 async def test_a_batch_with_one_bad_item_writes_none(device_world: Any) -> None:
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     resp = await call("POST", "/v1/consents", token=token, json={"items": [item("core_protection"), item("sell_data")]})
     assert resp.status_code == 422
     assert await rows(device_world.family_id) == []
 
 
 async def test_missing_signing_key_is_503(device_world: Any, monkeypatch: pytest.MonkeyPatch) -> None:
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     monkeypatch.setenv("HOICON_DEVICE_JWT_SECRET", "")
     get_settings.cache_clear()
     assert (await call("POST", "/v1/consents", token=token, json={"items": [item()]})).status_code == 503
@@ -157,6 +157,6 @@ async def test_missing_signing_key_is_503(device_world: Any, monkeypatch: pytest
 
 async def test_hashes_are_not_echoed_into_logs(device_world: Any, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.DEBUG)
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     await call("POST", "/v1/consents", token=token, json={"items": [item()]})
     assert token not in caplog.text

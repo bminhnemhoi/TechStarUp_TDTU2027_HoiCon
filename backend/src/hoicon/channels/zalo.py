@@ -165,12 +165,16 @@ class MockZaloClient:
         return SentMessage(message_id=message_id, date=time.time_ns() // 1_000_000)
 
 
+def mock_allowed(settings: Settings) -> bool:
+    """Mock không gửi tin thật ⇒ chỉ dev/test (không cả `ci`); nơi khác phải `HOICON_ZALO_MODE=live`."""
+    return settings.env.strip().lower() in ("dev", "test")
+
+
 def build_zalo_client(settings: Settings) -> ZaloClient:
     """Chọn bản theo `HOICON_ZALO_MODE`. `live` thiếu token ⇒ lỗi (không âm thầm rơi về mock)."""
     if settings.zalo_mode == "mock":
-        if settings.env not in (
-            "dev",
-            "test",
+        if not mock_allowed(
+            settings
         ):  # mock không gửi tin thật: ngoài dev/test phải lỗi to, không âm thầm mất cảnh báo
             raise RuntimeError(f"HOICON_ENV={settings.env} phải đặt HOICON_ZALO_MODE=live (mock không gửi tin thật)")
         logger.warning("Zalo chạy chế độ MOCK: tin KHÔNG được gửi thật (đặt HOICON_ZALO_MODE=live để gửi thật)")

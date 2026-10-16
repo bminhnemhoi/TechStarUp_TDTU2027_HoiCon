@@ -18,7 +18,9 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", env_prefix="HOICON_", extra="ignore")
 
-    env: str = "dev"
+    # Mặc định `prod` (spec 034 FR-006): quên đặt HOICON_ENV ở máy chủ thật không được tắt các chặn "chỉ prod" (seed
+    # demo, kịch bản diễn tập chưa duyệt, cookie Secure, Zalo mock…). Dev/test/CI đặt tường minh (xem .env.example).
+    env: str = "prod"
     web_base_url: str = "https://app.hoicon.vn"
     # Nguồn (scheme://host[:port]) được phép gửi lệnh ghi bằng cookie phiên người giám hộ (spec 027, CSRF), ngăn cách
     # bằng dấu phẩy. Luôn gồm nguồn của `web_base_url`; ở dev/test/ci có thêm localhost:3100.
@@ -62,6 +64,14 @@ class Settings(BaseSettings):
     # Khóa AES-256-GCM (hex 64 ký tự) mã hóa Zalo chat_id (spec 002 D1); kid để xoay khóa.
     data_key_kid: int = 1
     data_key_1: SecretStr | None = None
+    # Sao lưu mã hóa (spec 034 FR-004): khóa AES-256-GCM RIÊNG (hex 64 ký tự, khác khóa dữ liệu) để mất một khóa không
+    # kéo theo khóa kia; `kid` hiện hành mã hóa bản mới, kid cũ vẫn giải mã được bản cũ. Container Postgres và thư mục
+    # lưu lấy từ cấu hình, không viết cứng (thư mục rỗng ⇒ ~/hoicon-backups, ngoài cây mã nguồn).
+    backup_key_kid: int = 1
+    backup_key_1: SecretStr | None = None
+    backup_key_2: SecretStr | None = None
+    backup_container: str = "hoicon-db"
+    backup_dir: str = ""
     # Số bit đầu của h1 trong ảnh chụp danh sách đe dọa phát xuống máy (spec 026, ADR-011): 22 ⇒ ≈ 86 số di động mỗi
     # bucket. Nâng lên 23–24 khi tỉ lệ khớp nhầm N/2^bits vượt 0,25%; hạ xuống làm máy khớp nhầm nhiều hơn.
     threat_bucket_bits: int = Field(default=22, ge=16, le=24)

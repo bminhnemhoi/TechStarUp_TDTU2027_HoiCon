@@ -29,6 +29,10 @@ GENERATED = {
     PEPPER: lambda: secrets.token_hex(32),
     "HOICON_DATA_KEY_KID": lambda: "1",
     DATA_KEY: lambda: secrets.token_hex(32),
+    # Spec 034: `/readyz` đòi khóa JWT thiết bị; sao lưu mã hóa đòi khóa riêng (khác khóa dữ liệu).
+    "HOICON_DEVICE_JWT_SECRET": lambda: secrets.token_hex(32),
+    "HOICON_BACKUP_KEY_KID": lambda: "1",
+    "HOICON_BACKUP_KEY_1": lambda: secrets.token_hex(32),
     "HOICON_ZALO_WEBHOOK_SECRET": lambda: secrets.token_urlsafe(32),
 }
 MANUAL = ("HOICON_ANTHROPIC_API_KEY", "HOICON_GEMINI_API_KEY", "HOICON_ZALO_BOT_TOKEN")
@@ -105,6 +109,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Sao lưu {DATA_KEY} cùng chỗ với pepper — mất khóa là không giải mã được chat_id Zalo đã ghép.")
     if os.name == "nt":
         print('Khóa quyền file (khuyên làm): icacls backend\\.env /inheritance:r /grant:r "%USERNAME%:F"')
+    if not values.get("HOICON_ENV"):
+        # Spec 034: mặc định là `prod` (an toàn khi quên). KHÔNG tự nối `dev` vào tệp có sẵn: lỡ chạy lệnh này ở máy
+        # chủ thật sẽ tắt mọi chặn "chỉ prod". Máy dev tự thêm.
+        print("Lưu ý: HOICON_ENV chưa đặt ⇒ ứng dụng chạy ở chế độ prod. Máy dev hãy thêm dòng HOICON_ENV=dev.")
     print("Kiểm tra: uv run --directory backend python -m hoicon.ops.check_keys")
     return 0
 

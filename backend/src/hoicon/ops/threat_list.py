@@ -3,6 +3,7 @@ Spec 026 (ADR-011): mỗi chỉ báo còn có `bucket_enc` = bucket 24 bit của
 dựng ảnh chụp bucket cho máy mà không lưu bucket dạng rõ. Dòng thiếu `bucket_enc` không xuống máy; nạp lại tệp là bù.
 
     uv run --directory backend python -m hoicon.ops.threat_list load data/threat_seed.demo.json
+    uv run --directory backend python -m hoicon.ops.threat_list unflag --h1-file <tệp> [--confirm]
 
 Tệp theo `docs/schemas/threat_seed.v1.json` (đầu vào có h1 — với tệp demo là số hư cấu). Nạp lặp lại là cập nhật
 (`ON CONFLICT`), không thêm dòng. Cả lô được kiểm trước khi ghi và ghi trong MỘT giao dịch: một dòng hỏng ⇒ không
@@ -19,7 +20,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import func, literal_column, select
+from sqlalchemy import delete, func, literal_column, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -27,7 +28,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from hoicon.config import get_settings
 from hoicon.db.models import ThreatIndicator
 from hoicon.db.session import get_sessionmaker
-from hoicon.domain.pii import hmac_h1
+from hoicon.domain.pii import candidate_hmacs, hmac_h1
 from hoicon.domain.threat_bucket import bucket24, encrypt_bucket
 
 DEMO_ALLOWED_ENVS = ("dev", "test", "ci")
@@ -180,12 +181,83 @@ async def run(path: Path) -> int:
     return 0
 
 
+MAX_UNFLAG = 10_000
+
+
+def read_h1_file(path: Path) -> tuple[list[str], int]:
+    """Đọc tệp mỗi dòng một h1 (SHA-256 hex 64 ký tự, chữ thường) ⇒ (h1 hợp lệ không trùng, số dòng sai định dạng).
+    Dòng trống và dòng bắt đầu bằng `#` bị bỏ qua. Không bao giờ nêu nội dung dòng sai (có thể là số điện thoại thô)."""
+    seen: dict[str, None] = {}
+    bad = 0
+    for line in path.read_text(encoding="utf-8").splitlines():
+        value = line.strip()
+        if not value or value.startswith("#"):
+            continue
+        if _H1.fullmatch(value):
+            seen[value] = None
+        else:
+            bad += 1
+    if len(seen) > MAX_UNFLAG:
+        raise SeedError(f"tệp có quá {MAX_UNFLAG} h1")
+    return list(seen), bad
+
+
+async def unflag(sessions: async_sessionmaker, h1s: list[str]) -> tuple[int, int]:
+    """Gỡ các số bị gắn cờ nhầm theo h1 (khớp HMAC theo mọi kid pepper) ⇒ (số h1 đã gỡ được, số h1 không thấy)."""
+    removed = missing = 0
+    async with sessions.begin() as session:  # một giao dịch: lỗi giữa chừng ⇒ không gỡ dòng nào
+        for h1 in h1s:
+            keys = candidate_hmacs(h1)
+            result = await session.execute(
+                delete(ThreatIndicator).where(
+                    ThreatIndicator.kind == "phone",
+                    tuple_(ThreatIndicator.value_kid, ThreatIndicator.value_hmac).in_(keys),
+                )
+            )
+            if result.rowcount:
+                removed += 1
+            else:
+                missing += 1
+    return removed, missing
+
+
+async def run_unflag(path: Path, *, confirm: bool) -> int:
+    if not get_settings().is_dev_env and not confirm:
+        print("Từ chối: ngoài dev/test/ci lệnh này cần thêm --confirm.")
+        return 2
+    try:
+        h1s, bad = await asyncio.to_thread(read_h1_file, path)
+    except (OSError, UnicodeDecodeError) as exc:  # chỉ tên lớp lỗi
+        print(f"Từ chối: không đọc được tệp ({type(exc).__name__}).")
+        return 2
+    except SeedError as exc:
+        print(f"Từ chối: {exc}")
+        return 2
+    if bad:
+        print(f"Từ chối: {bad} dòng không phải h1 (SHA-256 hex 64 ký tự). Không gỡ gì.")
+        return 2
+    try:
+        removed, missing = await unflag(get_sessionmaker(), h1s)
+    except RuntimeError as exc:  # thiếu khóa băm: chỉ nêu TÊN biến môi trường
+        print(f"Từ chối: {exc}")
+        return 2
+    except SQLAlchemyError as exc:
+        print(f"Lỗi cơ sở dữ liệu ({type(exc).__name__}).")
+        return 2
+    print(f"Đã gỡ cờ: {removed} · không thấy: {missing}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("load", help="nạp (upsert) một tệp danh sách đe dọa").add_argument("path", type=Path)
+    remover = sub.add_parser("unflag", help="gỡ số bị gắn cờ nhầm theo h1 trong tệp")
+    remover.add_argument("--h1-file", required=True, type=Path)
+    remover.add_argument("--confirm", action="store_true", help="bắt buộc ngoài dev/test/ci")
     args = parser.parse_args(argv)
-    return asyncio.run(run(args.path), loop_factory=asyncio.SelectorEventLoop)  # psycopg async cần SelectorEventLoop
+    job = run(args.path) if args.cmd == "load" else run_unflag(args.h1_file, confirm=args.confirm)
+    return asyncio.run(job, loop_factory=asyncio.SelectorEventLoop)  # psycopg async cần SelectorEventLoop
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 """Mô hình ORM theo docs/DATA-MODEL.md (import tại đây để Alembic thấy). Gia đình/thành viên/mã ghép/tin gửi đi:
 spec 002 (migration 0003, ADR-010). Thiết bị, sổ đồng ý, liên hệ tin cậy, action token: spec 020 (migration 0005).
 Sự cố, chuyển trạng thái, sự kiện rủi ro: spec 021 (migration 0006). Xác minh/tra cứu: spec 026 (migration 0007).
-Diễn tập: spec 028 (migration 0008)."""
+Diễn tập: spec 028 (migration 0008). Gia cố lõi (yêu cầu xóa, tombstone): spec 034 (migration 0009)."""
 
 import uuid
 from datetime import datetime
@@ -36,6 +36,7 @@ class Job(Base):
         Index("ix_jobs_due", "run_at", postgresql_where=text("done_at IS NULL")),
         # Đếm lần thử ghép Zalo và tin chữ theo thời gian (spec 002, migration 0003) không phải quét cả bảng.
         Index("ix_jobs_kind_created", "kind", "created_at"),
+        Index("ix_jobs_done_at", "done_at"),  # job `retention` (30 ngày sau done_at), spec 034
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
@@ -78,7 +79,10 @@ class AgentStep(Base):
     """Một bước của tác tử (đã che PII) — nguồn cho /trace. Nội dung giữ 30 ngày, số đo giữ lâu hơn (DATA-MODEL §6)."""
 
     __tablename__ = "agent_steps"
-    __table_args__ = (Index("ix_agent_steps_run_at", "run_id", "at"),)
+    __table_args__ = (
+        Index("ix_agent_steps_run_at", "run_id", "at"),
+        Index("ix_agent_steps_at", "at"),  # job `retention` (làm rỗng nội dung sau 30 ngày), spec 034
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
     run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("agent_runs.id", ondelete="CASCADE"))
@@ -107,6 +111,7 @@ class Family(Base):
     plan: Mapped[str] = mapped_column(String(16), server_default=text("'free'"))
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
+    deleted_at: Mapped[datetime | None]  # tombstone sau yêu cầu xóa (spec 034): dòng còn nhưng đã ẩn danh
 
 
 class Member(Base):
@@ -150,6 +155,7 @@ class Member(Base):
     zalo_chat_enc: Mapped[str | None] = mapped_column(Text)
     locale: Mapped[str] = mapped_column(String(8), server_default=text("'vi'"))
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    deleted_at: Mapped[datetime | None]  # tombstone sau yêu cầu xóa (spec 034)
 
 
 class PairingCode(Base):
@@ -558,3 +564,26 @@ class Drill(Base):
     debriefed_at: Mapped[datetime | None]
     is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class DataRequest(Base):
+    """Yêu cầu xóa dữ liệu của một gia đình (spec 034, US-20.2). FK RESTRICT: vết pháp lý còn lại sau khi xóa. Không cột
+    văn bản tự do: `error_code` là mã ngắn do máy chủ đặt."""
+
+    __tablename__ = "data_requests"
+    __table_args__ = (
+        CheckConstraint("kind IN ('delete')", name="kind"),
+        CheckConstraint("requested_via IN ('ops', 'app', 'web')", name="requested_via"),
+        CheckConstraint("status IN ('pending', 'done', 'failed')", name="status"),
+        CheckConstraint("(status = 'done') = (completed_at IS NOT NULL)", name="done_iff_completed"),
+        Index("ix_data_requests_family", "family_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="RESTRICT"))
+    kind: Mapped[str] = mapped_column(String(16), server_default=text("'delete'"))
+    requested_via: Mapped[str] = mapped_column(String(16))
+    status: Mapped[str] = mapped_column(String(16), server_default=text("'pending'"))
+    error_code: Mapped[str | None] = mapped_column(String(32))
+    requested_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    completed_at: Mapped[datetime | None]

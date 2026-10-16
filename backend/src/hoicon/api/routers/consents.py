@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from hoicon.api.auth import DeviceClaims, get_current_device
 from hoicon.db.models import Consent
 from hoicon.db.session import get_sessionmaker
+from hoicon.services import consent_gate
 
 logger = logging.getLogger(__name__)
 
@@ -89,4 +90,5 @@ async def record_consents(
     except SQLAlchemyError as exc:
         logger.error("ghi sổ đồng ý lỗi (%s)", type(exc).__name__)  # không kèm thông điệp: có thể chứa tham số
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Chưa ghi được, vui lòng thử lại") from None
+    consent_gate.invalidate(device.member_id)  # spec 034: đồng ý mới có hiệu lực ngay, không chờ hết đệm 60 giây
     return ConsentReceipt(count=len(batch.items), recorded_at=recorded_at.isoformat())

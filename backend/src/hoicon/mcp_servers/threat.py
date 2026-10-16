@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, or_, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from hoicon.config import get_settings
 from hoicon.db.models import ThreatIndicator
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain.pii import candidate_hmacs
@@ -48,16 +49,18 @@ async def lookup_h1(sessions: async_sessionmaker | AsyncSession, h1: str) -> Thr
 
 
 async def _lookup(session: AsyncSession, keys: list[tuple[int, str]]) -> ThreatVerdict:
+    conditions = [
+        ThreatIndicator.kind == "phone",
+        tuple_(ThreatIndicator.value_kid, ThreatIndicator.value_hmac).in_(keys),
+        or_(ThreatIndicator.expires_at.is_(None), ThreatIndicator.expires_at > func.now()),
+    ]
+    if (
+        not get_settings().is_dev_env
+    ):  # spec 034 FR-007: ngoài dev/test/ci, số hư cấu của danh sách demo không bao giờ khớp
+        conditions.append(ThreatIndicator.is_demo.is_(False))
     hit = (
         await session.scalars(
-            select(ThreatIndicator)
-            .where(
-                ThreatIndicator.kind == "phone",
-                tuple_(ThreatIndicator.value_kid, ThreatIndicator.value_hmac).in_(keys),
-                or_(ThreatIndicator.expires_at.is_(None), ThreatIndicator.expires_at > func.now()),
-            )
-            .order_by(ThreatIndicator.confidence.desc())
-            .limit(1)
+            select(ThreatIndicator).where(*conditions).order_by(ThreatIndicator.confidence.desc()).limit(1)
         )
     ).first()
     if hit is not None:

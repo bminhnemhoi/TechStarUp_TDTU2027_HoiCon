@@ -79,6 +79,7 @@ class IncidentState(TypedDict, total=False):
     incident_id: str
     run_id: str
     family_id: str  # UUID gia đình nhận tin; vắng khi sự cố không gắn gia đình (spec 002)
+    guardian_alerts: bool  # False ⇒ chưa đồng ý báo người giám hộ: không xếp tin Zalo (spec 034); vắng = True
     is_drill: bool
     is_demo: bool
     elder_alias: str
@@ -175,6 +176,8 @@ def build_graph(deps: Deps) -> StateGraph:
 
     async def notify(state: IncidentState, template: str, text: str, guardian_rank: int = 1) -> list[str]:
         """Xếp tin cho người giám hộ (Zalo ở P1-S3/P2-07, qua bộ kiểm hạn mức `messages_out`)."""
+        if state.get("guardian_alerts", True) is False:  # spec 034 FR-005: không có đồng ý thì không có tin
+            return []
         key = f"{state['incident_id']}:msg:{template}"
         payload = {
             "incident_id": state["incident_id"],
