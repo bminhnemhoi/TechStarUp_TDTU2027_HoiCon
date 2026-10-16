@@ -237,7 +237,7 @@ def fake_data_key(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 
 @pytest.fixture
-async def seeded_threat(require_db: None, fake_pepper: None) -> AsyncGenerator[dict[str, Any]]:
+async def seeded_threat(require_db: None, fake_pepper: None, fake_data_key: None) -> AsyncGenerator[dict[str, Any]]:
     """Danh sách đe dọa DEMO (số hư cấu) trong DB ứng dụng, băm bằng khóa GIẢ; xóa đúng các dòng đó khi xong."""
     import json
 
