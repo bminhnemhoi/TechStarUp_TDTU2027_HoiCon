@@ -58,7 +58,7 @@ async def tokens_of(member_id: Any) -> list[ActionToken]:
 # --- phân loại ở webhook: job không mang chữ thô ----------------------------------------------------------------
 
 
-def test_webhook_classifies_4_into_a_login_job_without_the_text(fake_pepper: None) -> None:
+def test_webhook_classifies_4_into_a_login_job_without_the_text(zalo_env: None) -> None:
     parsed = ParsedUpdate("m-1", "u-1", "c-1", "Đăng nhập")
     payload = build_job_payload("bot-x", parsed)
     assert payload["kind"] == "login" and "choice" not in payload and "code_hash" not in payload
