@@ -16,10 +16,20 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import Delete, Update, delete, func, null, or_, select, text, update
+from sqlalchemy import Delete, Update, delete, func, null, or_, select, text, tuple_, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from hoicon.db.models import ActionToken, AgentRun, AgentStep, Drill, Incident, Job, RiskEventRecord, Verification
+from hoicon.db.models import (
+    ActionToken,
+    AgentRun,
+    AgentStep,
+    DeviceHeartbeat,
+    Drill,
+    Incident,
+    Job,
+    RiskEventRecord,
+    Verification,
+)
 from hoicon.jobs.queue import enqueue
 
 logger = logging.getLogger(__name__)
@@ -37,6 +47,7 @@ RETENTION: dict[str, timedelta] = {
     "action_tokens": timedelta(days=30),  # sau `expires_at`
     "verifications": timedelta(days=90),  # từ `at`
     "drills": timedelta(days=365),  # "12 tháng" từ `created_at`
+    "device_heartbeats": timedelta(days=90),  # từ `slot` (spec 029)
 }
 
 DeleteThread = Callable[[str], Awaitable[None]]
@@ -177,6 +188,17 @@ async def purge_drills(sessions: async_sessionmaker, *, now: datetime, dry_run: 
     return await _run_batches(sessions, build, dry)
 
 
+async def purge_device_heartbeats(sessions: async_sessionmaker, *, now: datetime, dry_run: bool = False) -> int:
+    where = DeviceHeartbeat.slot < now - RETENTION["device_heartbeats"]
+
+    def build(n: int) -> Delete:
+        keys = select(DeviceHeartbeat.device_id, DeviceHeartbeat.slot).where(where).limit(n)
+        return delete(DeviceHeartbeat).where(tuple_(DeviceHeartbeat.device_id, DeviceHeartbeat.slot).in_(keys))
+
+    dry = select(func.count()).select_from(DeviceHeartbeat).where(where) if dry_run else None
+    return await _run_batches(sessions, build, dry)
+
+
 async def run_retention(
     sessions: async_sessionmaker,
     delete_thread: DeleteThread | None,
@@ -199,6 +221,7 @@ async def run_retention(
     report["incidents"] = await purge_incidents(sessions, now=moment, dry_run=dry_run)
     report["jobs"] = await purge_jobs(sessions, now=moment, dry_run=dry_run)
     report["action_tokens"] = await purge_action_tokens(sessions, now=moment, dry_run=dry_run)
+    report["device_heartbeats"] = await purge_device_heartbeats(sessions, now=moment, dry_run=dry_run)
     async with sessions() as session:
         has_verifications = await _table_exists(session, "verifications")
         has_drills = await _table_exists(session, "drills")

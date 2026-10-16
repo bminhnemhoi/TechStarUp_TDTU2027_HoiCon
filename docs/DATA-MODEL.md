@@ -70,6 +70,7 @@ tra số/đường link do người dùng tự nhập; `downgrade` dựng lại 
 |---|---|---|
 | `jobs` | id, kind, payload jsonb, run_at, idempotency_key (unique), attempts, locked_at, locked_by, done_at, error, created_at | **đã có** (`0002`); `FOR UPDATE SKIP LOCKED`; khóa chống trùng khi node chạy lại (ADR-009) |
 | `demo_sessions` | id, code, created_at, expires_at | dữ liệu demo tự xóa sau 24 giờ |
+| `device_heartbeats` | device_id (FK `devices` `CASCADE`), slot (mốc 15 phút, CHECK chia hết 900 giây), protected bool; PK `(device_id, slot)` | **đã có** (`0010`, spec 029); tối đa 96 dòng/ngày/thiết bị; đo độ phủ heartbeat cho Gate M2 (`ops pilot report`); không văn bản tự do, không định danh; giữ 90 ngày (§6) |
 | `data_requests` | id, family_id (FK `RESTRICT`: vết pháp lý còn lại sau khi xóa), kind (`delete`; `export` để dành), requested_via (`ops/app/web`), status (`pending/done/failed`), error_code (≤ 32, mã do máy chủ đặt), requested_at, completed_at | **đã có** (`0009`, spec 034); quyền chủ thể dữ liệu (Luật 91/2025); CHECK `(status = 'done') = (completed_at IS NOT NULL)`; không cột văn bản tự do |
 
 ## 3. Băm số điện thoại / số tài khoản (ADR-006)
@@ -139,6 +140,7 @@ theo lô ≤ 1.000 dòng, mỗi lô một giao dịch, lũy đẳng; `python -m 
 | `action_tokens` | 30 ngày sau `expires_at` | job `retention` |
 | `verifications` | 90 ngày | job `retention` (từ `at`) |
 | `drills` | 12 tháng | job `retention` (từ `created_at`) |
+| `device_heartbeats` | 90 ngày | job `retention` (từ `slot`, spec 029) |
 | `data_requests` | giữ | vết pháp lý của yêu cầu xóa dữ liệu (không có văn bản tự do) |
 
 ### Xóa dữ liệu gia đình theo yêu cầu (spec 034)

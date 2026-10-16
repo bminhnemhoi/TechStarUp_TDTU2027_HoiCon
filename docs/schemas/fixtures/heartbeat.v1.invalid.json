@@ -1,0 +1,9 @@
+[
+  { "_name": "thiếu permission_state", "app_version": "0.3.0", "rules_version": "r1" },
+  { "_name": "trường lạ (nhãn máy)", "app_version": "0.3.0", "rules_version": "r1", "permission_state": {}, "label": "may cua ba" },
+  { "_name": "quyền không phải boolean", "app_version": "0.3.0", "rules_version": "r1", "permission_state": { "usage_access": "yes" } },
+  { "_name": "tên quyền sai dạng", "app_version": "0.3.0", "rules_version": "r1", "permission_state": { "Usage Access": true } },
+  { "_name": "phiên bản dài như số điện thoại", "app_version": "0900000123456", "rules_version": "r1", "permission_state": {} },
+  { "_name": "threat_list_version không phải băm 16 hex", "app_version": "0.3.0", "rules_version": "r1", "threat_list_version": "v1", "permission_state": {} },
+  { "_name": "quá 16 quyền", "app_version": "0.3.0", "rules_version": "r1", "permission_state": { "a":true,"b":true,"c":true,"d":true,"e":true,"f":true,"g":true,"h":true,"i":true,"j":true,"k":true,"l":true,"m":true,"n":true,"o":true,"p":true,"q":true } }
+]

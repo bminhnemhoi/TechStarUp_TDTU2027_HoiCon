@@ -1,0 +1,12 @@
+{
+  "app_version": "0.3.0",
+  "rules_version": "r1",
+  "threat_list_version": "0123456789abcdef",
+  "permission_state": {
+    "call_screening_role": true,
+    "display_over_apps": true,
+    "usage_access": true,
+    "notifications": true,
+    "battery_unrestricted": false
+  }
+}

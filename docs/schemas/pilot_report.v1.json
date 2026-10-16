@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/pilot_report.v1.json",
+  "title": "PilotReport v1",
+  "description": "Đầu ra `ops pilot report --days N --json` (spec 029). KHÔNG PII: gia đình chỉ có bí danh gia đình (không tên thành viên, không HMAC, không số điện thoại), thiết bị chỉ có 8 ký tự đầu của id.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["generated_at", "days", "families"],
+  "properties": {
+    "generated_at": { "type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+(Z|[+-][0-9]{2}:[0-9]{2})$" },
+    "days": { "type": "integer", "minimum": 1, "maximum": 90 },
+    "families": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["alias", "devices", "incidents", "false_alarms"],
+        "properties": {
+          "alias": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "incidents": { "type": "integer", "minimum": 0, "description": "Sự cố thật (không diễn tập, không demo) mở trong kỳ" },
+          "false_alarms": { "type": "integer", "minimum": 0, "description": "Trong số đó, sự cố kết thúc ở `resolved_false_alarm`" },
+          "devices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["device", "coverage", "protected_ratio", "last_heartbeat_at", "app_version", "revoked", "permissions_off"],
+              "properties": {
+                "device": { "type": "string", "pattern": "^[0-9a-f]{8}$" },
+                "coverage": { "type": ["number", "null"], "minimum": 0, "maximum": 1, "description": "Số khung 15 phút có heartbeat ÷ số khung kỳ vọng; null khi chưa có khung kỳ vọng nào" },
+                "protected_ratio": { "type": ["number", "null"], "minimum": 0, "maximum": 1, "description": "Trong các khung có heartbeat, tỉ lệ khung mà mọi quyền lõi đều bật; null khi chưa có heartbeat" },
+                "last_heartbeat_at": { "type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+(Z|[+-][0-9]{2}:[0-9]{2})$" },
+                "app_version": { "type": "string", "maxLength": 32 },
+                "revoked": { "type": "boolean" },
+                "permissions_off": { "type": "array", "maxItems": 16, "items": { "type": "string", "pattern": "^[a-z_]{1,32}$" }, "description": "Quyền đang tắt ở heartbeat gần nhất" },
+                "slots_expected": { "type": "integer", "minimum": 0 },
+                "slots_seen": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

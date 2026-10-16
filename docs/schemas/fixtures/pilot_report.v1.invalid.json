@@ -1,0 +1,6 @@
+[
+  { "_name": "thiếu families", "generated_at": "2026-12-14T03:00:00+00:00", "days": 7 },
+  { "_name": "id thiết bị đầy đủ (không rút gọn)", "generated_at": "2026-12-14T03:00:00+00:00", "days": 7, "families": [ { "alias": "A", "incidents": 0, "false_alarms": 0, "devices": [ { "device": "0a1b2c3d-0000-4000-8000-000000000000", "coverage": 1, "protected_ratio": 1, "last_heartbeat_at": "2026-12-14T02:45:00+00:00", "app_version": "0.3.0", "revoked": false, "permissions_off": [] } ] } ] },
+  { "_name": "độ phủ > 1", "generated_at": "2026-12-14T03:00:00+00:00", "days": 7, "families": [ { "alias": "A", "incidents": 0, "false_alarms": 0, "devices": [ { "device": "0a1b2c3d", "coverage": 1.2, "protected_ratio": 1, "last_heartbeat_at": "2026-12-14T02:45:00+00:00", "app_version": "0.3.0", "revoked": false, "permissions_off": [] } ] } ] },
+  { "_name": "trường lạ ở gia đình (tên thành viên)", "generated_at": "2026-12-14T03:00:00+00:00", "days": 7, "families": [ { "alias": "A", "member_alias": "Bà Tư", "incidents": 0, "false_alarms": 0, "devices": [] } ] }
+]

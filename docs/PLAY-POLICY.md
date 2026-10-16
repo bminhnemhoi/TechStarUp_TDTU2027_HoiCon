@@ -27,3 +27,16 @@ Accessibility, Notification Listener, ghi âm cuộc gọi, `REQUEST_IGNORE_BATT
 Cần chuẩn bị (P1-08): Data safety form, chính sách quyền riêng tư công khai (`/privacy`), video minh họa FGS specialUse
 (quay trên máy ảo: cuộc gọi lạ → mở app ngân hàng mẫu → màn dừng an toàn), tài khoản thử cho reviewer, closed testing qua
 Google Group (ADR-005).
+
+## Data safety: heartbeat (spec 029)
+
+Mỗi 15 phút app gửi `POST /v1/heartbeat` (`heartbeat.v1.json`). Khai báo trong Data safety form cho đúng các trường này, không hơn:
+
+| Trường gửi | Loại dữ liệu theo Play | Mục đích | Ghi chú |
+|---|---|---|---|
+| `app_version`, `rules_version`, `threat_list_version` | Thông tin ứng dụng và hiệu suất → *Chẩn đoán* | Chức năng ứng dụng; phân tích (đo độ phủ bảo vệ) | không định danh người dùng |
+| `permission_state` (cờ đúng/sai của 5 quyền sàng lọc) | Thông tin ứng dụng và hiệu suất → *Chẩn đoán* | Chức năng ứng dụng (biết bảo vệ có đang chạy không) | không có nội dung màn hình, danh bạ hay cuộc gọi |
+| mốc giờ khung 15 phút (máy chủ ghi) | *Hoạt động ứng dụng* | Phân tích độ phủ | gắn với id thiết bị ngẫu nhiên, giữ 90 ngày |
+
+Mã hóa khi truyền (HTTPS). Người dùng yêu cầu xóa được qua `ops data request-delete` (034). Không chia sẻ với bên thứ ba.
+Heartbeat chỉ được nhận khi người dùng còn đồng ý `core_protection` (403 `consent_withdrawn` nếu đã rút).

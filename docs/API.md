@@ -32,7 +32,7 @@
 | POST | `/v1/lookups` | tra cứu số/link/QR (đã băm/che) |
 | GET | `/v1/drills/offer` | **đã có** (`drill_offer.v1.json`) — hỏi bài diễn tập theo nhịp heartbeat (spec 028) |
 | POST | `/v1/drills/{id}/result` | **đã có** (`drill_result.v1.json`) — gửi kết quả diễn tập (spec 028) |
-| POST | `/v1/heartbeat` | trạng thái quyền, phiên bản |
+| POST | `/v1/heartbeat` | **đã có** (`heartbeat.v1.json`) — Android báo mỗi 15 phút: phiên bản + cờ quyền (spec 029, xem dưới) |
 
 ### Ghép đôi, đồng ý, thiết bị (spec 020 — đã có)
 Hợp đồng: `pair_request.v1.json` / `pair_response.v1.json`, `consent_record.v1.json`, `device_me.v1.json` (fixture `fixtures/*.v1.*.json`).
@@ -52,6 +52,19 @@ Thành viên được bảo vệ (`role=protected`) của gia đình được t�
 **`POST /v1/consents`** — cần token thiết bị. Thân `{"items": [...]}` (1–32 mục). Chặt hơn schema chung ở hai điểm: `channel` phải là `app`, và mỗi `purpose` chỉ một lần trong một lô. `family_id`/`member_id` lấy từ token, `recorded_at` do máy chủ đặt. Trả `{"status": "recorded", "count": N, "recorded_at": "<ISO>"}`. 401 không/sai token · 422 sai hợp đồng (cả lô không ghi) · 503 DB lỗi hoặc chưa cấu hình khóa ký. Không có PUT/PATCH/DELETE (405); trigger Postgres chặn sửa/xóa ở cấp CSDL. Rút đồng ý = gửi lại `purpose` với `granted=false`.
 
 **`GET /v1/devices/me`** — cần token thiết bị. Trả `device` (id, gia đình, nền tảng, phiên bản, mốc thời gian; KHÔNG token/băm bí mật) và `consents`: dòng mới nhất của mỗi purpose.
+
+### Heartbeat (spec 029 — đã có)
+Hợp đồng: `heartbeat.v1.json` (fixture `fixtures/heartbeat.v1.*.json`; fixture valid khớp thân `PairingApiClient.sendHeartbeat` của Android).
+
+**`POST /v1/heartbeat`** — cần token thiết bị. Thân CHẶT: `app_version`, `rules_version` (dạng phiên bản như `risk_event.v1`), `threat_list_version?` (16 hex), `permission_state` (≤ 16 khóa `[a-z_]{1,32}` → boolean thật). Trường lạ là lỗi. Máy chủ cập nhật `devices` (`last_heartbeat_at` theo giờ máy chủ, phiên bản, `permission_state`) và ghi **tối đa một dòng `device_heartbeats` mỗi khung 15 phút** (`ON CONFLICT DO NOTHING`; `protected` = cả hai quyền lõi `call_screening_role` và `usage_access` đều bật). Trả `{"status": "ok"}`. Dữ liệu này dùng để đo độ phủ Gate M2 (`ops pilot report`), giữ 90 ngày.
+
+| Mã | Khi nào |
+|---|---|
+| 200 | đã ghi (gửi lặp trong cùng khung vẫn 200, bảng khung giữ dòng đầu) |
+| 401 | không/sai token, thiết bị bị thu hồi |
+| 403 `{"detail": "consent_withdrawn"}` | chưa có/đã rút đồng ý `core_protection` — cùng mã với `POST /v1/events` (app hiện "cần đồng ý lại", không xóa token); không ghi gì |
+| 422 | thân sai hợp đồng; thông báo chỉ nêu vị trí + loại lỗi, không lặp lại giá trị |
+| 429 + `Retry-After` | quá 8 lần/giờ/thiết bị (Android gửi 4 lần/giờ) |
 
 ### Sự kiện & sự cố (spec 021 — đã có)
 Hợp đồng: `events_batch.v1.json` (+ `risk_event.v1.json`), `events_result.v1.json`, `incident.v1.json` (fixture `fixtures/*.v1.*.json`).
@@ -73,7 +86,7 @@ Mở/liên kết sự cố (FR-008): sự kiện loại `banking_app_foreground`
 **Thực thi đồng ý ở máy chủ (spec 034):** trước khi đọc lô, máy chủ tra đồng ý của người cao tuổi sở hữu token (`member_id` lấy từ token, không từ thân yêu cầu), đệm 60 giây theo người; `POST /v1/consents` xóa mục đệm của chính người ghi nên đồng ý mới có hiệu lực ngay. Đồng ý đổi từ kênh khác có thể trễ tối đa 60 giây.
 - Thiếu `core_protection` ⇒ 403 `consent_withdrawn` (bảng trên).
 - Có `core_protection` nhưng thiếu `guardian_alerts` ⇒ **vẫn nhận sự kiện và mở sự cố** (an toàn của người cao tuổi), nhưng **không xếp tin nào cho người giám hộ**: không cảnh báo nhanh; đồ thị sự cố vẫn chạy (hỏi người cao tuổi, chấm rủi ro) song mọi tin `notify_guardian` bị bỏ.
-- Chưa có route `/v1/heartbeat`; khi thêm phải dùng cùng cổng `consent_gate`.
+- `POST /v1/heartbeat` dùng cùng cổng `consent_gate` (mục dưới).
 
 **`GET /v1/incidents/{id}`** — cần token thiết bị; chỉ sự cố của gia đình mình, sự cố nhà khác trả 404 (không lộ sự tồn tại). Trả `incident.v1.json` kèm `transitions` (cũ → mới).
 **`GET /v1/families/{id}/incidents?limit=`** — `id` phải là gia đình của token (nhà khác ⇒ 404); mới nhất trước, `limit` 1–100 (mặc định 20), bản tóm tắt không có `transitions`. Người giám hộ đọc qua `/a/{token}` (spec 022), không qua các route này.

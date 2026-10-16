@@ -587,3 +587,18 @@ class DataRequest(Base):
     error_code: Mapped[str | None] = mapped_column(String(32))
     requested_at: Mapped[datetime] = mapped_column(server_default=func.now())
     completed_at: Mapped[datetime | None]
+
+
+class DeviceHeartbeat(Base):
+    """Một dòng mỗi khung 15 phút có heartbeat (spec 029, FR-003): đo độ phủ Gate M2. Không văn bản tự do, không PII.
+    `protected` = mọi quyền lõi (vai trò sàng lọc cuộc gọi, quyền xem mức dùng app) đều bật. Xóa thiết bị ⇒ CASCADE."""
+
+    __tablename__ = "device_heartbeats"
+    __table_args__ = (
+        CheckConstraint("mod(extract(epoch from slot)::bigint, 900) = 0", name="slot_15min"),
+        Index("ix_device_heartbeats_slot", "slot"),
+    )
+
+    device_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("devices.id", ondelete="CASCADE"), primary_key=True)
+    slot: Mapped[datetime] = mapped_column(primary_key=True)
+    protected: Mapped[bool]

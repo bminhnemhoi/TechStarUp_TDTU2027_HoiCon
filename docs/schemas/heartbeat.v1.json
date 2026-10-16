@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/heartbeat.v1.json",
+  "title": "Heartbeat v1",
+  "description": "Thân `POST /v1/heartbeat` (spec 029, P2-14): đúng thân `PairingApiClient.sendHeartbeat` của Android. Chỉ số phiên bản và cờ quyền (đúng/sai), không văn bản tự do, không định danh. Mọi trường mới là dữ liệu mới và phải sửa văn bản đồng ý.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["app_version", "rules_version", "permission_state"],
+  "properties": {
+    "app_version": { "$ref": "https://hoicon.vn/schemas/risk_event.v1.json#/properties/app_version" },
+    "rules_version": { "$ref": "https://hoicon.vn/schemas/risk_event.v1.json#/properties/rules_version" },
+    "threat_list_version": { "type": "string", "pattern": "^[0-9a-f]{16}$", "description": "Cùng dạng với `threat_list.v1`.`version`" },
+    "permission_state": {
+      "type": "object",
+      "maxProperties": 16,
+      "propertyNames": { "pattern": "^[a-z_]{1,32}$" },
+      "additionalProperties": { "type": "boolean" },
+      "description": "Tên quyền (chữ thường) → đã cấp hay chưa. Quyền lõi (`protected`): call_screening_role và usage_access."
+    }
+  }
+}

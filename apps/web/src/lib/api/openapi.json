@@ -118,6 +118,52 @@
     ]
    }
   },
+  "/v1/heartbeat": {
+   "post": {
+    "tags": [
+     "devices"
+    ],
+    "summary": "Heartbeat",
+    "operationId": "heartbeat_v1_heartbeat_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/HeartbeatIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HeartbeatOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
   "/v1/events": {
    "post": {
     "tags": [
@@ -2362,6 +2408,64 @@
     },
     "type": "object",
     "title": "HTTPValidationError"
+   },
+   "HeartbeatIn": {
+    "properties": {
+     "app_version": {
+      "type": "string",
+      "maxLength": 32,
+      "pattern": "^[A-Za-z]{0,16}[-_]?\\d{1,4}(?:\\.\\d{1,4}){0,3}(?:[-+][0-9A-Za-z.]{1,16})?$",
+      "title": "App Version"
+     },
+     "rules_version": {
+      "type": "string",
+      "maxLength": 32,
+      "pattern": "^[A-Za-z]{0,16}[-_]?\\d{1,4}(?:\\.\\d{1,4}){0,3}(?:[-+][0-9A-Za-z.]{1,16})?$",
+      "title": "Rules Version"
+     },
+     "threat_list_version": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Threat List Version"
+     },
+     "permission_state": {
+      "patternProperties": {
+       "^[a-z_]{1,32}$": {
+        "type": "boolean"
+       }
+      },
+      "type": "object",
+      "maxProperties": 16,
+      "title": "Permission State"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "app_version",
+     "rules_version",
+     "permission_state"
+    ],
+    "title": "HeartbeatIn"
+   },
+   "HeartbeatOut": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "const": "ok",
+      "title": "Status",
+      "default": "ok"
+     }
+    },
+    "type": "object",
+    "title": "HeartbeatOut"
    },
    "IncidentDecisionIn": {
     "properties": {
