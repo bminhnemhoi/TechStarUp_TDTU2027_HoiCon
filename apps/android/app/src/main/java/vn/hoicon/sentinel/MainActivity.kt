@@ -21,6 +21,7 @@ import vn.hoicon.sentinel.data.consent.consentTexts
 import vn.hoicon.sentinel.data.local.TokenStorage
 import vn.hoicon.sentinel.data.remote.PairingApiClient
 import vn.hoicon.sentinel.domain.rules.RiskWindowManager
+import vn.hoicon.sentinel.sensing.Notifications
 import vn.hoicon.sentinel.sensing.SensorPermission
 import vn.hoicon.sentinel.sensing.SensorPermissions
 import vn.hoicon.sentinel.ui.PermissionsScreen
@@ -102,6 +103,8 @@ class MainActivity : ComponentActivity() {
     /** The device token was refused: forget the pairing, drop the queued events (they belong to the family being left) and start again from E1. */
     private fun reconnect() {
         SentinelServices.of(this).wipeOutbox()
+        vn.hoicon.sentinel.data.drill.PrefsDrillStore(this).clearAll()
+        Notifications.cancelDrillInvitation(this)
         tokens?.clear()
         startActivity(Intent(this, OnboardingActivity::class.java))
         finish()

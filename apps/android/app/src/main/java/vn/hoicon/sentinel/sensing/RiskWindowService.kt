@@ -89,6 +89,8 @@ class RiskWindowService : Service() {
     }
 
     private fun tryStartForeground(): Boolean = try {
+        // A real call is on: a practice invitation still waiting in the shade must not be tapped now (Spec 028 FR-008).
+        Notifications.cancelDrillInvitation(this)
         val notification = Notifications.protecting(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(

@@ -30,6 +30,7 @@
 
     <!-- Cửa sổ rủi ro (foreground service): không nói "10 phút" để không gây áp lực thời gian. -->
     <string name="channel_protecting">Đang để ý giúp bác</string>
+    <string name="channel_drills">Luyện tập</string>
     <string name="channel_pause">Nhắc khoan chuyển tiền</string>
     <string name="protecting_title">HỏiCon đang để ý giúp bác</string>
     <string name="protecting_text">Vừa có số lạ gọi tới. Ai bảo chuyển tiền hay đọc mã, bác hỏi con trước nhé.</string>
@@ -254,4 +255,39 @@
     <string name="lookup_icon_unknown">Biểu tượng chưa có thông tin</string>
     <string name="lookup_icon_safe">Biểu tượng khiên có dấu tích</string>
     <string name="lookup_icon_offline">Biểu tượng không có mạng</string>
+
+    <!-- E11: Luyện tập nhận biết lừa đảo (Spec 028). Mọi tên cơ quan và số trong bài là hư cấu; màn luôn có [DIỄN TẬP]. -->
+    <string name="drill_notif_title">[DIỄN TẬP] Đến giờ luyện tập nhận biết lừa đảo</string>
+    <string name="drill_notif_text">Bác luyện vài phút cho quen nhé. Đây chỉ là bài tập, không có ai gọi thật.</string>
+    <string name="drill_badge">[DIỄN TẬP]</string>
+    <string name="drill_badge_icon">Biểu tượng mũ tốt nghiệp, bài luyện tập</string>
+    <string name="drill_ai">Đây là trợ lý AI HỏiCon.</string>
+    <string name="drill_invite_title">Đến giờ luyện tập</string>
+    <string name="drill_invite_body">Bác sẽ nghe vài câu của một người lạ trong bài tập, rồi chọn cách trả lời. Chỉ mất vài phút. Đây chỉ là luyện tập: không có ai gọi bác thật, và bác không mất gì cả. Khi bác làm xong, HỏiCon sẽ báo cho con biết bác đã luyện tập, để cùng ôn lại với bác.</string>
+    <string name="drill_start">Bắt đầu luyện tập</string>
+    <string name="drill_later">Để lúc khác</string>
+    <string name="drill_step_counter">Câu %1$d trên %2$d</string>
+    <string name="drill_caller_says">Trong bài tập, người lạ nói:</string>
+    <string name="drill_pick">Bác sẽ trả lời thế nào?</string>
+    <string name="drill_right">Đúng rồi!</string>
+    <string name="drill_wrong">Chưa đúng, nhưng không sao.</string>
+    <string name="drill_next">Tiếp tục</string>
+    <string name="drill_summary">Xem tổng kết</string>
+    <string name="drill_stop">Dừng luyện tập</string>
+    <string name="drill_debrief_title">Tổng kết bài luyện tập</string>
+    <string name="drill_debrief_score">Bác đã nhận ra được %1$d trong %2$d tình huống.</string>
+    <string name="drill_debrief_family">HỏiCon sẽ báo cho con biết bác đã luyện tập xong.</string>
+    <string name="drill_chose">Bác đã chọn: %1$s</string>
+    <string name="drill_safe_way">Cách an toàn: %1$s</string>
+    <string name="drill_option">Lựa chọn %1$d: %2$s</string>
+    <string name="drill_banner_desc">Đây là diễn tập, không phải cuộc gọi thật</string>
+    <string name="drill_debrief_flags">Dấu hiệu lừa đảo bác nên nhớ</string>
+    <string name="drill_debrief_end">ĐÂY LÀ DIỄN TẬP</string>
+    <string name="drill_debrief_speech_end">Đây là diễn tập. Chưa có ai gọi bác thật.</string>
+    <string name="drill_done">Đã hiểu — Xong</string>
+    <string name="drill_stopped_title">Đã dừng luyện tập</string>
+    <string name="drill_stopped_body">Không sao cả, bác có thể luyện tập lúc khác. Chưa có ai gọi bác thật.</string>
+    <string name="drill_expired_body">Bài luyện tập này đã hết giờ hoặc bác đã làm xong rồi. Khi có bài mới, HỏiCon sẽ nhắc bác nhé.</string>
+    <string name="drill_close">Xong</string>
+    <string name="drill_listen">Nghe lại</string>
 </resources>
