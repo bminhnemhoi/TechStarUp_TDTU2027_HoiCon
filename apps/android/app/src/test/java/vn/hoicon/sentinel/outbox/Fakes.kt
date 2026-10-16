@@ -58,6 +58,8 @@ class FakeOutboxDao : OutboxDao {
         return gone.size
     }
 
+    override suspend fun deleteAll(): Int = rows.size.also { rows.clear() }
+
     override suspend fun dropOldestFinished(n: Int): Int {
         val gone = rows.values.filter { it.status == OutboxStatus.SENT || it.status == OutboxStatus.FAILED }
             .sortedBy { it.createdAt }.take(n)

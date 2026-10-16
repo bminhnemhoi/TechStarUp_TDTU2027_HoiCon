@@ -99,8 +99,9 @@ class MainActivity : ComponentActivity() {
     /** A permission the protection needs (one the consent ledger tracks) that is not granted right now. */
     private fun missingCore(): Boolean = SensorPermission.entries.any { ConsentLedger.purposeOf(it) != null && it !in granted }
 
-    /** The device token was refused: forget the pairing (queued events stay) and start again from E1. */
+    /** The device token was refused: forget the pairing, drop the queued events (they belong to the family being left) and start again from E1. */
     private fun reconnect() {
+        SentinelServices.of(this).wipeOutbox()
         tokens?.clear()
         startActivity(Intent(this, OnboardingActivity::class.java))
         finish()
@@ -113,7 +114,11 @@ class MainActivity : ComponentActivity() {
         // A permission turned off in Settings becomes a new granted=false ledger row (the ledger only grows).
         val texts = consentTexts(resources)
         val now = granted
-        lifecycleScope.launch { withContext(Dispatchers.IO) { sync.run(now, texts) } }
+        lifecycleScope.launch {
+            val outcome = withContext(Dispatchers.IO) { sync.run(now, texts) }
+            // The grant is on the server's ledger now: events may go out (they were not queued before this point).
+            if (outcome == ConsentSync.Outcome.UP_TO_DATE) OutboxScheduler.kick(this@MainActivity)
+        }
     }
 
     /** E6 shows the risk-window banner while the Sentinel's window row says a stranger's call is being watched. */

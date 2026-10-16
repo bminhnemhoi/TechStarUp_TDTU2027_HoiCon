@@ -18,10 +18,16 @@ data class ConsentItem(
  */
 object ConsentLedger {
     /** Bump whenever any text the user agrees to changes (CLAUDE.md rule 7); the E3 screen is then shown again. */
-    const val VERSION = "2026.10-v1"
+    const val VERSION = "2026.10-v2"
 
     /** The E3 prominent disclosure itself. */
     const val CORE_PROTECTION = "core_protection"
+
+    /**
+     * Sending the events and the heartbeat to the family (Spec 022): agreed in the same E3 screen, recorded as its own
+     * purpose so it can be withdrawn on its own, with the words of the two "what is sent / who gets it" cards.
+     */
+    const val GUARDIAN_ALERTS = "guardian_alerts"
 
     /** Android's own permission pages (E4) that map to a consent purpose; notification/battery settings do not. */
     fun purposeOf(permission: SensorPermission): String? = when (permission) {
@@ -29,6 +35,16 @@ object ConsentLedger {
         SensorPermission.USAGE_ACCESS -> "usage_monitoring"
         SensorPermission.DISPLAY_OVER_APPS -> "overlay_pause"
         SensorPermission.NOTIFICATIONS, SensorPermission.BATTERY_UNRESTRICTED -> null
+    }
+
+    /**
+     * May events and heartbeats leave the phone for the family? Only after the CURRENT disclosure was accepted AND
+     * the server's ledger holds the `guardian_alerts` grant for the exact current words: until then, nothing is sent
+     * (and [vn.hoicon.sentinel.SentinelServices] does not even queue).
+     */
+    fun mayShareWithFamily(accepted: String?, recorded: Set<String>, texts: Map<String, String>): Boolean {
+        val words = texts[GUARDIAN_ALERTS] ?: return false
+        return accepted == VERSION && key(GUARDIAN_ALERTS, words) in recorded
     }
 
     fun sha256Hex(text: String): String =

@@ -2,6 +2,7 @@ package vn.hoicon.sentinel.data
 
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import vn.hoicon.sentinel.data.consent.ConsentLedger
@@ -66,5 +67,20 @@ class ConsentLedgerTest {
         assertEquals("core_protection", rows[0].purpose)
         assertTrue(rows[0].granted)
         assertEquals(ConsentLedger.sha256Hex("core"), rows[0].textSha256)
+    }
+
+    @Test
+    fun nothingIsSharedUntilTheCurrentDisclosureIsAcceptedAndItsGrantIsOnTheLedger() {
+        val words = mapOf("guardian_alerts" to "guardian words")
+        val recorded = setOf(ConsentLedger.key("guardian_alerts", "guardian words"))
+        assertTrue(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, recorded, words))
+        // accepted but the server has not confirmed yet (offline / 5xx): still closed
+        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, emptySet(), words))
+        // an older version accepted (device upgraded, "Chưa đồng ý" on the new E3): closed
+        assertFalse(ConsentLedger.mayShareWithFamily("2026.10-v1", recorded, words))
+        assertFalse(ConsentLedger.mayShareWithFamily(null, recorded, words))
+        // the words changed since the grant was recorded: closed until it is agreed again
+        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, recorded, mapOf("guardian_alerts" to "new words")))
+        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, recorded, emptyMap()))
     }
 }

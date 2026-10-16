@@ -86,8 +86,9 @@ object OutboxScheduler {
 /** Every 15 minutes: which permissions are granted and which versions run, so the family learns of lost protection. */
 class HeartbeatWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result = try {
-        val session = TokenStorage.create(applicationContext).load()
-        if (session == null) {
+        val tokens = TokenStorage.create(applicationContext)
+        val session = tokens.load()
+        if (session == null || !SentinelServices.of(applicationContext).mayShare()) {
             Result.success()
         } else {
             val services = SentinelServices.of(applicationContext)

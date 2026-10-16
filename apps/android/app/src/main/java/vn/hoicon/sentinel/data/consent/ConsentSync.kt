@@ -21,7 +21,10 @@ class ConsentSync(private val storage: TokenStorage, private val api: PairingApi
         if (!busy.compareAndSet(false, true)) return Outcome.SKIPPED
         try {
             val purposes = buildSet {
-                if (storage.acceptedDisclosureVersion == ConsentLedger.VERSION) add(ConsentLedger.CORE_PROTECTION)
+                if (storage.acceptedDisclosureVersion == ConsentLedger.VERSION) {
+                    add(ConsentLedger.CORE_PROTECTION)
+                    add(ConsentLedger.GUARDIAN_ALERTS)
+                }
                 granted.mapNotNullTo(this) { ConsentLedger.purposeOf(it) }
             }
             val items = ConsentLedger.changes(storage.recordedConsents, purposes, texts)

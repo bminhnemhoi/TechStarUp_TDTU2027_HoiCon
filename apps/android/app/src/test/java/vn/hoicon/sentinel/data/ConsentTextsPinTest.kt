@@ -23,9 +23,9 @@ class ConsentTextsPinTest {
 
     @Test
     fun consentTextsMatchTheirPinnedHashesForThisVersion() {
-        assertEquals("2026.10-v1", ConsentLedger.VERSION, "version changed: re-pin the hashes below")
+        assertEquals("2026.10-v2", ConsentLedger.VERSION, "version changed: re-pin the hashes below")
         assertEquals(
-            "caa0b9451d12a0a534db634faaec0e7221718c9bd386f89a740043c425ad6edc",
+            "4236a256e35d62df72d7dc9f41ec8559af1f582f6eb5fa1bc26806f548e2de61",
             hash(
                 "disclosure_title",
                 "disclosure_1_title", "disclosure_1_body", "disclosure_2_title", "disclosure_2_body",
@@ -33,6 +33,7 @@ class ConsentTextsPinTest {
                 "disclosure_next",
             ),
         )
+        assertEquals("a2886aef916da7cc1824bde8fceb54a16b3c8ff5abbc93e86cdb7a4dcc9a695d", hash("disclosure_3_title", "disclosure_3_body", "disclosure_4_title", "disclosure_4_body"))
         assertEquals("49c0fca401f2de07993d3015209da49f6aa26f2bf02907cfddf5a4a091f26674", hash("perm_role_title", "perm_role_why"))
         assertEquals("fe1bf2596999014aedaf23acfd9b86a144ef761b2e2a394cc1983702aad0dc40", hash("perm_usage_title", "perm_usage_why"))
         assertEquals("cf2a3ab7c4984c2150e63ef2b7e4736860ec7017827df3299fe94e6513f35a4c", hash("perm_overlay_title", "perm_overlay_why"))
