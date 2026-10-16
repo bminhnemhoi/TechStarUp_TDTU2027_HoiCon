@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/heartbeat.v1.json",
+  "title": "Heartbeat v1",
+  "description": "Thân yêu cầu POST /v1/heartbeat (spec 029): app Lính gác báo mỗi 15 phút các phiên bản đang chạy và quyền nào đang bật, để gia đình biết khi mất bảo vệ. Đúng thân PairingApiClient.sendHeartbeat; không thêm trường mới (mọi trường mới là dữ liệu mới và phải sửa văn bản đồng ý). Thiết bị/gia đình lấy từ token, không có trong thân. Không số điện thoại, không tên, không vị trí.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["app_version", "rules_version", "permission_state"],
+  "properties": {
+    "app_version": { "$ref": "risk_event.v1.json#/properties/app_version" },
+    "rules_version": { "$ref": "risk_event.v1.json#/properties/rules_version" },
+    "threat_list_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "description": "Phiên bản danh sách mối đe dọa đang nạp; vắng mặt khi máy chưa tải danh sách nào."
+    },
+    "permission_state": {
+      "type": "object",
+      "maxProperties": 16,
+      "propertyNames": { "pattern": "^[a-z_]{1,32}$" },
+      "additionalProperties": { "type": "boolean" },
+      "description": "Tên quyền (SensorPermission, chữ thường) → đang cấp hay không."
+    }
+  }
+}

@@ -158,4 +158,30 @@ class OutboxSenderTest {
         assertEquals(2, dao.deliverableCount())
         assertEquals(OutboxStatus.SENT, dao.rows.getValue(ids[0]).status)
     }
+
+    @Test
+    fun aWithdrawnConsentKeepsEverythingAndIsNotATokenRefusal() = runBlocking {
+        queue(2)
+        val server = FakeUploader { EventsResult.ConsentWithdrawn }
+        assertEquals(FlushOutcome.CONSENT_REQUIRED, sender(server).flush())
+        assertEquals(2, dao.deliverableCount())
+        assertTrue(dao.rows.values.all { it.retryCount == 0 })
+    }
+
+    @Test
+    fun aWithdrawnConsentWhileIsolatingStopsAndKeepsTheRest() = runBlocking {
+        val ids = queue(3)
+        var calls = 0
+        val server = FakeUploader {
+            calls++
+            when (calls) {
+                1 -> EventsResult.Rejected
+                2 -> EventsResult.Accepted
+                else -> EventsResult.ConsentWithdrawn
+            }
+        }
+        assertEquals(FlushOutcome.CONSENT_REQUIRED, sender(server).flush())
+        assertEquals(2, dao.deliverableCount())
+        assertEquals(OutboxStatus.SENT, dao.rows.getValue(ids[0]).status)
+    }
 }

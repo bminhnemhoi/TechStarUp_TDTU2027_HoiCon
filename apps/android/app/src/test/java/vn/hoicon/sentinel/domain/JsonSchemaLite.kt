@@ -1,11 +1,13 @@
 package vn.hoicon.sentinel.domain
 
+import java.io.File
 import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Just enough JSON Schema (2020-12) for `docs/schemas/risk_event.v1.json`: type, required, properties,
- * additionalProperties=false, enum, const, pattern, minimum, maxLength, format uuid / date-time, and allOf/if/then.
+ * Just enough JSON Schema (2020-12) for `docs/schemas/risk_event.v1.json` and `heartbeat.v1.json`: type, required,
+ * properties, additionalProperties (false or a schema), propertyNames, maxProperties, enum, const, pattern, minimum,
+ * minLength / maxLength, format uuid / date-time, allOf/if/then, and `$ref` to `<file>#/<json pointer>` in the schemas dir.
  * Not a general validator; it exists so a contract change breaks a test here instead of a batch on the server.
  */
 object JsonSchemaLite {
@@ -19,6 +21,7 @@ object JsonSchemaLite {
     }
 
     private fun check(schema: JSONObject, value: Any?, path: String, errors: MutableList<String>) {
+        schema.optString("\$ref").takeIf { it.isNotEmpty() }?.let { check(resolve(it), value, path, errors) }
         schema.optJSONArray("enum")?.let { options ->
             if (options.toList().none { it == value }) errors += "$path: $value not in enum ${options.toList()}"
         }
@@ -34,6 +37,7 @@ object JsonSchemaLite {
                 if (!Regex(it).containsMatchIn(value)) errors += "$path: '$value' does not match $it"
             }
             if (schema.has("maxLength") && value.length > schema.getInt("maxLength")) errors += "$path: longer than maxLength"
+            if (schema.has("minLength") && value.length < schema.getInt("minLength")) errors += "$path: shorter than minLength"
             when (schema.optString("format")) {
                 "uuid" -> if (!uuid.matches(value)) errors += "$path: not a uuid"
                 "date-time" -> if (!dateTime.matches(value)) errors += "$path: not a date-time"
@@ -59,12 +63,28 @@ object JsonSchemaLite {
             if (!value.has(key as String)) errors += "$path: missing required '$key'"
         }
         val properties = schema.optJSONObject("properties")
-        if (schema.opt("additionalProperties") == false && properties != null) {
-            value.keys().forEach { key -> if (!properties.has(key)) errors += "$path: unexpected property '$key'" }
+        if (schema.has("maxProperties") && value.length() > schema.getInt("maxProperties")) errors += "$path: more than maxProperties"
+        schema.optJSONObject("propertyNames")?.let { names -> value.keys().forEach { key -> check(names, key, "$path.<name '$key'>", errors) } }
+        when (val extra = schema.opt("additionalProperties")) {
+            false -> if (properties != null) {
+                value.keys().forEach { key -> if (!properties.has(key)) errors += "$path: unexpected property '$key'" }
+            }
+            is JSONObject -> value.keys().forEach { key ->
+                if (properties?.has(key) != true) check(extra, value.get(key), "$path.$key", errors)
+            }
         }
         properties?.keys()?.forEach { key ->
             if (value.has(key)) check(properties.getJSONObject(key), value.get(key), "$path.$key", errors)
         }
+    }
+
+    /** `<file>#/<pointer>` relative to the shared schemas dir (the tests get it from `hoicon.schemasDir`). */
+    private fun resolve(ref: String): JSONObject {
+        val file = ref.substringBefore('#')
+        val pointer = ref.substringAfter('#', "")
+        var node: Any = JSONObject(File(System.getProperty("hoicon.schemasDir"), file).readText())
+        for (part in pointer.split('/').filter { it.isNotEmpty() }) node = (node as JSONObject).get(part)
+        return node as JSONObject
     }
 
     private fun typeMatches(type: String, value: Any?): Boolean = when (type) {
