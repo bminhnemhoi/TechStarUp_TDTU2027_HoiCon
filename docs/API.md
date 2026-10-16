@@ -75,6 +75,25 @@ Hợp đồng: `elder_question.v1.json`, `elder_answer.v1.json` (fixture `fixtur
 **`POST /v1/incidents/{id}/answers`** — cần token thiết bị; nhà khác ⇒ 404. Thân `elder_answer.v1.json`: `question_id`, `answer` ∈ `yes/no/unsure/timeout`, `note_flags` (tùy chọn) chỉ gồm cờ bool của `NOTE_KEYWORDS` (`mentions_authority/transfer/code/secrecy/app_or_link`). Không nhận văn bản tự do hay ghi âm (ADR-009). Câu trả lời KHÔNG chạy đồ thị trong request: máy chủ xếp job `graph_resume` (khóa `{id}:elder_answer` ⇒ bấm hai lần vẫn một job), worker chạy tiếp. Trả `{"status", "incident_id", "level"}`: `accepted` | `expired` (đồ thị không còn chờ câu này, hoặc `question_id` khác câu đang hỏi) | `already_resolved`; `level` là mức hiện tại của sự cố. Trả lời "Có" cho câu chuyển tiền ⇒ đồ thị nâng ít nhất `critical`; "Có" xưng cơ quan / "Không" quen người gọi ⇒ ít nhất `high` (tất định, không phụ thuộc LLM).
 Đồ thị tự chạy: `POST /v1/events` mở/nâng sự cố lên `high`/`critical` ⇒ job `start_graph` (cùng ngưỡng cảnh báo nhanh; payload không h1, không tên gói). Worker là task nền trong tiến trình API (ADR-002; `HOICON_RUN_WORKER=false` khi chạy riêng). Người giám hộ quyết qua `/a/`, JWT hay Zalo ⇒ đồ thị không gửi chi tiết/nhắc T1/leo thang T2 nữa; T3 không ai trả lời ⇒ `resolved_no_response` (actor `timer`); "lừa đảo" ⇒ `case_open`.
 
+### Tra cứu & danh sách đe dọa (spec 026 — phần server đã có; Android: làn A, chưa)
+Hợp đồng: `lookup_request.v1.json`, `lookup_result.v1.json`, `threat_list.v1.json` (fixture `fixtures/*.v1.*.json`); ADR-011 (**Đề xuất**).
+
+**`POST /v1/lookups`** — token **thiết bị** (người cao tuổi) hoặc token **người giám hộ**. Thân `lookup_request.v1.json`: `kind` ∈ `phone`/`url`, `via` ∈ `typed`/`qr`, `incident_id?`. `phone` gửi `h1` + `last3` (số thô KHÔNG bao giờ rời máy; trường lạ như `number` là 422); `url` gửi đường link ≤ 2048 ký tự. `kind=account` để dành ⇒ 422 `kind_not_supported`. Kết quả TẤT ĐỊNH theo bảng quy tắc (không LLM) và **không bao giờ `safe`** ở v1 (chưa có sổ đăng ký chính thức): `dangerous` (số trong danh sách, độ tin cậy ≥ 0,70; link tải `.apk/.xapk/.apks/.exe/.bat/.scr` ở đường dẫn hoặc chuỗi truy vấn), `warning` (số độ tin cậy thấp; link dùng IP/punycode/rút gọn, có "tên:mật khẩu@" trước host, nhắc tên ngân hàng hoặc cơ quan, `http` không TLS; dấu `\` được hiểu như `/` giống trình duyệt), `unknown` (còn lại, kể cả số chưa có trong danh sách). Trả `lookup_result.v1.json`: `reasons[]` (mã + câu tiếng Việt), `sources[]`, `disclaimer` mở đầu "Đây là trợ lý AI HỏiCon.", `incident_level` (khi có `incident_id`), `is_demo`. Không bao giờ có h1, HMAC, URL hay host trong phản hồi/log.
+
+| Mã | Khi nào |
+|---|---|
+| 200 | đã tra |
+| 401 | không/sai token (thiết bị bị thu hồi, thành viên không còn) |
+| 403 | chưa có đồng ý `lookups` mới nhất đang `granted` của chính người gọi (`POST /v1/consents` ghi cho thiết bị) |
+| 404 | `incident_id` không thuộc gia đình của token, hoặc (token thiết bị) không phải sự cố CỦA người dùng thiết bị đó (nhà khác và id lạ cùng một 404) |
+| 422 | sai hợp đồng, URL không phân tích được (thông báo chỉ nêu vị trí + loại lỗi, không lặp lại đầu vào) |
+| 429 + `Retry-After` | vượt hạn mức, đếm trên `verifications` (bền qua khởi động lại, đúng khi gọi đồng thời nhờ khóa tư vấn): thiết bị 20/giờ & 60/ngày, người giám hộ 60/giờ, cả gia đình 200/ngày (không tính dòng tự động của hệ thống); lần bị từ chối không được ghi |
+| 503 | thiếu pepper băm, hoặc chờ khóa quá 3 giây |
+
+Có `incident_id`: kết luận `dangerous` ⇒ NÂNG `incidents.level` lên `critical`, `warning` ⇒ `high` (`IncidentService.raise_level`: chỉ nâng, mỗi lần nâng thật tăng `version`, không đổi trạng thái; sự cố đã qua `awaiting_guardian` thì giữ nguyên). Nếu người tra là **thiết bị** và kết luận `dangerous` ⇒ xếp job `graph_resume {"evidence": verification_id}` (khóa `{incident}:evidence:{verification_id}`, nên một job bị bỏ vì đồ thị chưa chờ không đốt khóa của lần tra sau) để node `await_guardian` — node duy nhất được gửi tin — báo con đúng MỘT tin; router không gửi gì. Người giám hộ chưa có đường ghi đồng ý `lookups` (web/Zalo, spec 023/027) nên hiện bị 403.
+
+**`GET /v1/threat-list?since=<version>`** — token thiết bị. Ảnh chụp bucket k-ẩn danh (`threat_list.v1.json`: `version`, `bucket_bits` 16–24, `count`, `buckets_b64`, `generated_at`): `bucket24 = int(h1[:6], 16)` dịch về `HOICON_THREAT_BUCKET_BITS` (mặc định 22 ≈ 86 số di động/bucket) bit đầu, bỏ trùng, sắp xếp, 3 byte/bucket (uint24 big-endian). Không có h1, HMAC hay last3. `since` trùng `version` (= `sha256(bits ‖ nội dung)[:16]`) ⇒ **304** không thân; `since` sai định dạng ⇒ 422. Loại dòng hết hạn, thiếu `bucket_enc`, không giải mã được, và dòng `is_demo` ở mọi môi trường ngoài dev/test/ci. Cache trong tiến trình 5 phút; tối đa 24 lần/ngày/thiết bị (429, đếm trong bộ nhớ); ghi `devices.threat_list_version`. Máy khớp bucket chỉ nên coi là "có thể" (khớp nhầm ≈ `N/2^bits`); kết luận chính xác luôn do máy chủ tra h1 khi nhận sự kiện.
+
 ## Người giám hộ (spec 023 — đã có)
 
 Hợp đồng: `action_view.v1.json`, `incident_decision.v1.json` (fixture `fixtures/*.v1.*.json`).

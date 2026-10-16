@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     # Khóa AES-256-GCM (hex 64 ký tự) mã hóa Zalo chat_id (spec 002 D1); kid để xoay khóa.
     data_key_kid: int = 1
     data_key_1: SecretStr | None = None
+    # Số bit đầu của h1 trong ảnh chụp danh sách đe dọa phát xuống máy (spec 026, ADR-011): 22 ⇒ ≈ 86 số di động mỗi
+    # bucket. Nâng lên 23–24 khi tỉ lệ khớp nhầm N/2^bits vượt 0,25%; hạ xuống làm máy khớp nhầm nhiều hơn.
+    threat_bucket_bits: int = Field(default=22, ge=16, le=24)
 
 
 @lru_cache

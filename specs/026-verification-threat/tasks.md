@@ -13,24 +13,24 @@
 
 ## Giai đoạn 0: Hợp đồng & quyết định (checkout chính)
 
-- [ ] T001 [AB] [FR-003] Viết `docs/adr/ADR-011-danh-sach-de-doa-bucket.md` ở trạng thái **Đề xuất**: bối cảnh (dò ngược
+- [x] T001 [AB] [FR-003] Viết `docs/adr/ADR-011-danh-sach-de-doa-bucket.md` ở trạng thái **Đề xuất**: bối cảnh (dò ngược
   h1), ba phương án A/B/C, công thức k-ẩn danh và tỉ lệ khớp nhầm, `bucket_enc`, chính sách chọn `bucket_bits`, hệ quả.
   Không sửa thân ADR-006.
   · Verify: `grep -c "Đề xuất" docs/adr/ADR-011-danh-sach-de-doa-bucket.md`
-- [ ] T002 [AB] [FR-001] Viết `docs/schemas/lookup_request.v1.json`, `lookup_result.v1.json` và `threat_list.v1.json`
+- [x] T002 [AB] [FR-001] Viết `docs/schemas/lookup_request.v1.json`, `lookup_result.v1.json` và `threat_list.v1.json`
   theo plan §6. Thêm `lookups` vào enum `purpose` của `consent_record.v1.json`. Viết fixture `valid`/`invalid` cho cả 3
   schema; fixture invalid phải có đủ các lỗi liệt kê ở plan §6.
   · Verify: `$PYTEST tests/contract/test_lookup_schemas.py tests/contract/test_pairing_schemas.py`
-- [ ] T003 [AB] [FR-001] Viết `backend/tests/contract/test_lookup_schemas.py`. Test kiểm valid qua, invalid trượt, và
+- [x] T003 [AB] [FR-001] Viết `backend/tests/contract/test_lookup_schemas.py`. Test kiểm valid qua, invalid trượt, và
   câu `disclaimer` của mọi fixture valid mở đầu bằng "Đây là trợ lý AI HỏiCon.".
   · Verify: như T002
 
 ## Làn B: Server
 
-- [ ] T004 [B] [FR-002] Viết migration `backend/migrations/versions/20261016_0007_verification_lookups.py` theo plan §5
+- [x] T004 [B] [FR-002] Viết migration `backend/migrations/versions/20261016_0007_verification_lookups.py` theo plan §5
   và cập nhật `db/models.py` (`Verification`, `ThreatIndicator.bucket_enc`, CHECK của `consents`).
   · Verify: `uv run --directory backend alembic upgrade head && uv run --directory backend alembic downgrade -1 && uv run --directory backend alembic upgrade head`
-- [ ] T005 [B] [FR-002] Viết `backend/tests/integration/test_schema_0007.py`. Test kiểm:
+- [x] T005 [B] [FR-002] Viết `backend/tests/integration/test_schema_0007.py`. Test kiểm:
   - các CHECK (`actor`, `kind`, `via`, `verdict`, hex, `last3`);
   - UNIQUE một phần cho `via='call'`;
   - xóa gia đình thì xóa dây chuyền;
@@ -39,13 +39,13 @@
   - hạ cấp rồi nâng cấp lại khi đã có dòng consent `lookups`: trigger chặn DELETE nên CHECK cũ phải dựng bằng `NOT VALID`.
 
   · Verify: `$PYTEST tests/integration/test_schema_0007.py`
-- [ ] T006 [B] [FR-003] Viết `backend/src/hoicon/domain/threat_bucket.py`:
+- [x] T006 [B] [FR-003] Viết `backend/src/hoicon/domain/threat_bucket.py`:
   - `bucket24(h1)`;
   - `shift(bucket24, bits)`;
   - `encrypt_bucket(bucket24, value_hmac, kid=None)` và `decrypt_bucket(...)`, dùng lại `_aead` của `domain/pii.py`,
     AAD `hoicon:threat:bucket:v1:<kid>:<value_hmac>`.
   · Verify: `$PYTEST tests/unit/test_threat_bucket.py`
-- [ ] T007 [B] [FR-003] Viết `backend/tests/unit/test_threat_bucket.py`. Các ca:
+- [x] T007 [B] [FR-003] Viết `backend/tests/unit/test_threat_bucket.py`. Các ca:
   - vectơ cố định (h1 → bucket24);
   - `shift` ở 16/22/24 bit;
   - mã hóa rồi giải mã cho lại giá trị cũ;
@@ -54,10 +54,10 @@
   - bản mã không chứa bucket dạng rõ.
 
   · Verify: như T006
-- [ ] T008 [B] [FR-003] Sửa `ops/threat_list.py` để ghi `bucket_enc` khi nạp và khi nạp lại. In ra số dòng thiếu
+- [x] T008 [B] [FR-003] Sửa `ops/threat_list.py` để ghi `bucket_enc` khi nạp và khi nạp lại. In ra số dòng thiếu
   `bucket_enc`. Không in h1, HMAC hay bucket. Bổ sung test vào bộ test hiện có của loader.
   · Verify: `$PYTEST tests/integration/test_threat_indicators.py`
-- [ ] T009 [B] [FR-004] Viết `backend/src/hoicon/services/verification_service.py`:
+- [x] T009 [B] [FR-004] Viết `backend/src/hoicon/services/verification_service.py`:
   - `verify_phone` dùng lại `lookup_h1`;
   - `verify_url` (chuẩn hóa IDNA, bỏ đường dẫn/truy vấn/thông tin đăng nhập, áp bảng ở plan §4);
   - `record(...)`;
@@ -65,7 +65,7 @@
 
   Không gọi LLM.
   · Verify: `$PYTEST tests/unit/test_verification_rules.py`
-- [ ] T010 [B] [FR-004] Viết `backend/tests/unit/test_verification_rules.py`. Các ca:
+- [x] T010 [B] [FR-004] Viết `backend/tests/unit/test_verification_rules.py`. Các ca:
   - toàn bộ các dòng của bảng plan §4;
   - `phone` không bao giờ ra `safe` (lặp với mọi `confidence`);
   - URL có `user:pass@`, truy vấn chứa số điện thoại hư cấu: không phần nào lọt vào kết quả hay vào thứ được băm
@@ -74,12 +74,12 @@
   - mọi câu `reasons` không chứa cụm nào trong `PANIC_PHRASES` (`eval/checks.py`).
 
   · Verify: như T009
-- [ ] T011 [B] [FR-006] Thêm `IncidentService.raise_level(session, incident_id, level, reason)`: chỉ nâng, tăng
+- [x] T011 [B] [FR-006] Thêm `IncidentService.raise_level(session, incident_id, level, reason)`: chỉ nâng, tăng
   `version`, không ghi `incident_transitions`, giữ `_lock`. Sự cố không ở `GUARDIAN_DECIDABLE` thì trả về mà không làm gì.
   Viết test trong `tests/integration/test_incident_service.py` cho các ca: không hạ, không vượt khi đã quyết, gọi đồng
   thời.
   · Verify: `$PYTEST tests/integration/test_incident_service.py`
-- [ ] T012 [B] [FR-005] [FR-006] Viết `backend/src/hoicon/api/routers/lookups.py` với `POST /v1/lookups`:
+- [x] T012 [B] [FR-005] [FR-006] Viết `backend/src/hoicon/api/routers/lookups.py` với `POST /v1/lookups`:
   - nhận JWT thiết bị hoặc JWT người giám hộ;
   - kiểm consent `lookups`;
   - advisory lock rồi đếm hạn mức (plan D3);
@@ -90,7 +90,7 @@
 
   Gắn router vào `api/main.py`.
   · Verify: `$PYTEST tests/integration/test_api_lookups.py`
-- [ ] T013 [B] [FR-005] [FR-006] Viết `backend/tests/integration/test_api_lookups.py`. Các ca:
+- [x] T013 [B] [FR-005] [FR-006] Viết `backend/tests/integration/test_api_lookups.py`. Các ca:
   - số trong danh sách và số không có;
   - URL `.apk`;
   - 401;
@@ -104,12 +104,12 @@
   - quét DB và `caplog` không thấy h1, URL hay host.
 
   · Verify: như T012
-- [ ] T014 [B] [FR-009] Viết `backend/src/hoicon/services/threat_list_service.py` (dựng ảnh chụp, `version`, cache 5
+- [x] T014 [B] [FR-009] Viết `backend/src/hoicon/services/threat_list_service.py` (dựng ảnh chụp, `version`, cache 5
   phút, bỏ dòng `is_demo` khi `HOICON_ENV=prod`, bỏ dòng hết hạn hoặc thiếu `bucket_enc`) và route
   `GET /v1/threat-list?since=`: JWT thiết bị, trả `304` khi trùng phiên bản, hạn mức 24 lần/ngày. Thêm cấu hình
   `threat_bucket_bits` (mặc định 22, giới hạn 16–24) vào `config.py`.
   · Verify: `$PYTEST tests/integration/test_threat_list.py`
-- [ ] T015 [B] [FR-009] Viết `backend/tests/integration/test_threat_list.py`. Các ca:
+- [x] T015 [B] [FR-009] Viết `backend/tests/integration/test_threat_list.py`. Các ca:
   - payload khớp `threat_list.v1`;
   - giải mã `buckets_b64` ra đúng tập bucket đã sắp xếp, không trùng;
   - không có h1, HMAC hay last3 trong phản hồi;
@@ -119,12 +119,12 @@
   - 401 và 429.
 
   · Verify: như T014
-- [ ] T016 [B] [FR-008] Trong `api/routers/events.py`, khi `_start_graph` chạy thì ghi một dòng `verifications`
+- [x] T016 [B] [FR-008] Trong `api/routers/events.py`, khi `_start_graph` chạy thì ghi một dòng `verifications`
   (`actor=system`, `via=call`, kết luận theo bảng plan §4) từ kết quả `prepare_event`, dùng `ON CONFLICT DO NOTHING`.
   Giữ nguyên kiểm tra "payload `start_graph` không mang h1". Thêm test vào `tests/integration/test_api_elder.py` hoặc
   `tests/integration/test_api_events.py`.
   · Verify: `$PYTEST tests/integration/test_api_events.py tests/integration/test_api_elder.py`
-- [ ] T017 [B] [FR-007] Sửa `agents/incident_graph.py`:
+- [x] T017 [B] [FR-007] Sửa `agents/incident_graph.py`:
   - thêm node `verification` giữa `risk_scorer` và `intervention`: đọc `verifications` của sự cố, rescore bằng `max()`,
     gọi `raise_level`, ghi `step` (không có HMAC); lượt eval/demo thì bỏ qua DB;
   - `await_guardian` nhận resume `{"evidence": id}`: sự cố chưa quyết thì gửi
@@ -132,7 +132,7 @@
 
   Thêm `texts.guardian_evidence(alias, kind, last3, is_drill)`, dùng `_message` nên tự có câu công khai AI và nhãn diễn tập.
   · Verify: `$PYTEST tests/integration/test_graph_verification.py tests/integration/test_incident_graph.py tests/integration/test_graph_durable.py`
-- [ ] T018 [B] [FR-007] Viết `backend/tests/integration/test_graph_verification.py`. Các ca:
+- [x] T018 [B] [FR-007] Viết `backend/tests/integration/test_graph_verification.py`. Các ca:
   - sự cố có dòng `dangerous` thì mức thành `critical` trong state **và** trong `incidents.level`;
   - không có dòng xác minh nào thì mức không đổi;
   - mức không bao giờ dưới `rule_floor`;
@@ -143,7 +143,7 @@
   - sự cố diễn tập: tin có nhãn `[DIỄN TẬP]`.
 
   · Verify: như T017
-- [ ] T019 [B] [FR-013] Chạy `hoicon-eval --suite smoke --compare baseline`. Nếu lệch thì sửa code, **không** ghi đè
+- [x] T019 [B] [FR-013] Chạy `hoicon-eval --suite smoke --compare baseline`. Nếu lệch thì sửa code, **không** ghi đè
   baseline.
   · Verify: `uv run --directory backend hoicon-eval --suite smoke --compare baseline --database-url postgresql+psycopg://hoicon:hoicon_dev@127.0.0.1:15432/hoicon --shared-db-ok`
 

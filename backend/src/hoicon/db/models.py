@@ -1,6 +1,6 @@
 """Mô hình ORM theo docs/DATA-MODEL.md (import tại đây để Alembic thấy). Gia đình/thành viên/mã ghép/tin gửi đi:
 spec 002 (migration 0003, ADR-010). Thiết bị, sổ đồng ý, liên hệ tin cậy, action token: spec 020 (migration 0005).
-Sự cố, chuyển trạng thái, sự kiện rủi ro: spec 021 (migration 0006)."""
+Sự cố, chuyển trạng thái, sự kiện rủi ro: spec 021 (migration 0006). Xác minh/tra cứu: spec 026 (migration 0007)."""
 
 import uuid
 from datetime import datetime
@@ -219,6 +219,8 @@ class ThreatIndicator(Base):
     first_seen: Mapped[datetime] = mapped_column(server_default=func.now())
     last_seen: Mapped[datetime] = mapped_column(server_default=func.now())
     expires_at: Mapped[datetime | None]
+    # Spec 026, ADR-011: bucket 24 bit của h1, MÃ HÓA (AES-256-GCM, AAD gắn `value_hmac`). Không bao giờ lưu dạng rõ.
+    bucket_enc: Mapped[str | None] = mapped_column(String(128))
 
 
 class Device(Base):
@@ -256,7 +258,7 @@ class Consent(Base):
     __table_args__ = (
         CheckConstraint(
             "purpose IN ('core_protection', 'call_screening', 'usage_monitoring', 'overlay_pause', 'guardian_alerts',"
-            " 'llm_processing', 'voice_input', 'drills', 'pilot_research')",
+            " 'llm_processing', 'voice_input', 'drills', 'pilot_research', 'lookups')",
             name="purpose",
         ),
         CheckConstraint("channel IN ('app', 'zalo', 'web')", name="channel"),
@@ -466,3 +468,49 @@ __all__ = [
     "ThreatIndicator",
     "TrustedContact",
 ]
+
+
+class Verification(Base):
+    """Kết quả tra cứu/xác minh một số điện thoại hoặc đường link (spec 026, P2-11). CHỈ HMAC của chủ thể
+    (`HMAC(pepper[kid], …)`) + 3 số cuối của số; không cột nào chứa số thô, h1 hay URL. Đồng thời là sổ đếm hạn mức
+    `POST /v1/lookups` (chỉ mục `(actor_id, at)`). Giữ 90 ngày như sự cố (job retention, P2-20)."""
+
+    __tablename__ = "verifications"
+    __table_args__ = (
+        CheckConstraint("actor IN ('device', 'guardian', 'system')", name="actor"),
+        CheckConstraint("kind IN ('phone', 'url', 'account')", name="kind"),
+        CheckConstraint("via IN ('typed', 'qr', 'call')", name="via"),
+        CheckConstraint("verdict IN ('safe', 'warning', 'dangerous', 'unknown')", name="verdict"),
+        CheckConstraint("subject_hmac ~ '^[0-9a-f]{64}$'", name="subject_hmac_hex"),
+        CheckConstraint("last3 ~ '^[0-9]{3}$'", name="last3"),
+        CheckConstraint("confidence >= 0 AND confidence <= 1", name="confidence"),
+        Index("ix_verifications_actor_at", "actor_id", "at"),
+        Index("ix_verifications_incident", "incident_id"),
+        # Ghi số gọi đến lũy đẳng: mỗi (sự cố, chủ thể) một dòng `via = 'call'`.
+        Index(
+            "uq_verifications_call",
+            "incident_id",
+            "kind",
+            "subject_kid",
+            "subject_hmac",
+            unique=True,
+            postgresql_where=text("via = 'call'"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    incident_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("incidents.id", ondelete="CASCADE"))
+    actor: Mapped[str] = mapped_column(String(16))
+    actor_id: Mapped[uuid.UUID | None]  # devices.id | members.id; NULL khi actor = system
+    kind: Mapped[str] = mapped_column(String(16))
+    via: Mapped[str] = mapped_column(String(8))
+    subject_kid: Mapped[int] = mapped_column(SmallInteger)
+    subject_hmac: Mapped[str] = mapped_column(CHAR(64))
+    last3: Mapped[str | None] = mapped_column(CHAR(3))  # chỉ kind = phone
+    verdict: Mapped[str] = mapped_column(String(16))
+    confidence: Mapped[Decimal] = mapped_column(Numeric(3, 2))
+    sources: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, server_default=text("'[]'::jsonb"))
+    list_version: Mapped[str | None] = mapped_column(String(32))
+    is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
+    at: Mapped[datetime] = mapped_column(server_default=func.now())

@@ -17,5 +17,17 @@
         "channel": "app"
       }
     ]
+  },
+  {
+    "_name": "đồng ý đúng lúc cho mục đích lookups",
+    "items": [
+      {
+        "purpose": "lookups",
+        "granted": true,
+        "consent_version": "v1.0",
+        "text_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "channel": "app"
+      }
+    ]
   }
 ]

@@ -101,6 +101,22 @@ def guardian_reminder(alias: str, is_drill: bool) -> str:
     )
 
 
+def guardian_evidence(alias: str, kind: str, last3: str | None, is_drill: bool) -> str:
+    """Tin MỘT LẦN khi người cao tuổi tự tra ra số/link nguy hiểm lúc sự cố còn mở (spec 026). Chỉ nêu "số đuôi …" hoặc
+    "một đường link": không nêu số đầy đủ, tên miền hay nguồn dữ liệu. Việc cần làm đứng đầu."""
+    if kind == "url":
+        subject = "một đường link, và HỏiCon thấy đường link này rất đáng ngờ"
+    elif last3:
+        subject = f"một số điện thoại đuôi {last3}, và HỏiCon thấy số này nằm trong danh sách cảnh báo lừa đảo"
+    else:
+        subject = "một số điện thoại, và HỏiCon thấy số này nằm trong danh sách cảnh báo lừa đảo"
+    return _message(
+        f"Anh/chị gọi hỏi {alias} ngay nhé: {alias} vừa tự tra {subject}. "
+        f"Nhờ {alias} đừng chuyển tiền, đừng đọc mã OTP cho ai.\n\n{REPLY_GUIDE}",
+        is_drill,
+    )
+
+
 def guardian_escalation(alias: str, is_drill: bool) -> str:
     return _message(
         f"HỏiCon đã nhắn cho một người nhà khác của {alias} nhưng chưa nhận được trả lời. "

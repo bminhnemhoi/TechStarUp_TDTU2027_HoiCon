@@ -1,10 +1,13 @@
 """Đồ thị sự cố (AGENTS.md) — bản spike P1-S4:
 
-    ingest → fast_alert → risk_scorer ⇄ [INTERRUPT ask_elder] → intervention
-           → [INTERRUPT await_guardian ⟲ T1/T2] → resolve
+    ingest → fast_alert → risk_scorer ⇄ [INTERRUPT ask_elder] → verification → intervention
+           → [INTERRUPT await_guardian ⟲ T1/T2/evidence] → resolve
 
 - `fast_alert` không dùng LLM: tin mẫu tới người giám hộ ngay khi có sự cố (đường cảnh báo không phụ thuộc LLM).
 - LLM (`risk_scorer`, `intervention`) chỉ NÂNG mức rủi ro, không bao giờ dưới `rule_floor`; lỗi/quá hạn ⇒ mẫu soạn sẵn.
+- Spec 026: `verification` KHÔNG dùng LLM (nguồn dẫn phải là dữ kiện có thật): gom các dòng `verifications` của sự cố,
+  nâng mức bằng `max()` và ghi xuyên `incidents.level`. Bằng chứng đến giữa lúc chờ (`evidence`) được `await_guardian`
+  (node được phép gửi tin) báo con đúng một lần.
 - Tác dụng phụ (gửi tin, hẹn giờ) chỉ ở `fast_alert`, `ask_elder`, `intervention`, `await_guardian`, `resolve` và
   luôn qua hàng đợi job có khóa chống trùng: node chạy lại (interrupt chạy lại node từ đầu; kill -9) không gửi trùng.
 - Mỗi node ghi một dòng `agent_steps` (đã che PII). Chuyển trạng thái sự cố qua `IncidentService.transition` ở P2-03.
@@ -24,18 +27,24 @@ from uuid import UUID
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 from pydantic import BaseModel, Field
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from hoicon.agents import texts
 from hoicon.agents.llm_router import LlmResult, LlmRouter, load_prompt
 from hoicon.channels.fcm import notify_elder_fcm
 from hoicon.config import Settings
-from hoicon.db.models import AgentRun, AgentStep
+from hoicon.db.models import AgentRun, AgentStep, Verification
 from hoicon.domain.pii import mask_text
 from hoicon.domain.risk import RiskLevel, raise_only
 from hoicon.jobs.queue import cancel_prefix, enqueue
-from hoicon.services.incident_service import GRAPH_OUTCOMES, close_from_graph, decided_state
+from hoicon.services.incident_service import (
+    GRAPH_OUTCOMES,
+    IncidentNotFoundError,
+    IncidentService,
+    close_from_graph,
+    decided_state,
+)
 
 QuestionId = Literal["q_caller_authority", "q_asked_transfer", "q_know_caller", "none"]
 Tactic = Literal[
@@ -275,6 +284,67 @@ def build_graph(deps: Deps) -> StateGraph:
         await step(state, "ask_elder", started, elder_answer)
         return {"elder_answer": elder_answer}
 
+    async def verification(state: IncidentState) -> dict[str, Any]:
+        """Tất định: `level = max(state.level, sàn từ các kết luận xác minh của sự cố)`, ghi xuyên `incidents.level` (cả
+        mức `risk_scorer` đã nâng). Không bao giờ hạ. Lượt eval/demo không có sự cố thật ⇒ bỏ qua DB."""
+        started = time.monotonic()
+        before = RiskLevel(state["level"])
+        incident_id = _incident_uuid(state)
+        if incident_id is None:
+            await step(state, "verify", started, {"skipped": "no_incident"})
+            return {}
+        counts = {"dangerous": 0, "warning": 0}
+        found = True
+        async with deps.sessions.begin() as session:
+            verdicts = await session.scalars(
+                select(Verification.verdict).where(Verification.incident_id == incident_id)
+            )
+            checked = 0
+            for verdict in verdicts:
+                checked += 1
+                if verdict in counts:
+                    counts[verdict] += 1
+            floor = RiskLevel.CRITICAL if counts["dangerous"] else RiskLevel.HIGH if counts["warning"] else None
+            after = raise_only(before, floor)
+            if after is not RiskLevel.NONE:  # `raise_level` từ chối NONE; mức NONE thì không có gì để ghi xuyên
+                try:
+                    stored = await IncidentService.raise_level(session, incident_id, after, "graph_verify")
+                    after = raise_only(
+                        after, RiskLevel(stored.level)
+                    )  # DB có thể đã cao hơn (tra cứu/correlate chen vào)
+                except IncidentNotFoundError:  # id hợp lệ nhưng không có dòng `incidents` (demo): chỉ đồ thị nâng mức
+                    found = False
+        output: dict[str, Any] = {
+            "checked": checked,
+            **counts,
+            "level_before": before.value,
+            "level_after": after.value,
+        }
+        if not found:
+            output["skipped"] = "no_incident"
+        await step(state, "verify", started, output)
+        return {"level": after.value}
+
+    async def evidence_message(state: IncidentState, verification_id: str) -> list[str]:
+        """Tin `evidence`: chỉ cho dòng xác minh `dangerous` thuộc ĐÚNG sự cố này; còn lại không gửi gì."""
+        incident_id = _incident_uuid(state)
+        if incident_id is None:
+            return []
+        async with deps.sessions() as session:
+            row = (
+                await session.execute(
+                    select(Verification.kind, Verification.last3).where(
+                        Verification.id == UUID(verification_id),
+                        Verification.incident_id == incident_id,
+                        Verification.verdict == "dangerous",
+                    )
+                )
+            ).first()
+        if row is None:
+            return []
+        text = texts.guardian_evidence(state["elder_alias"], row.kind, row.last3, state["is_drill"])
+        return await notify(state, "evidence", text)  # khóa theo mẫu ⇒ mỗi sự cố tối đa một tin
+
     async def intervention(state: IncidentState) -> dict[str, Any]:
         started = time.monotonic()
         if (done := await decided(state)) is not None:  # người giám hộ đã quyết: không gửi chi tiết thừa
@@ -322,6 +392,7 @@ def build_graph(deps: Deps) -> StateGraph:
         update_: dict[str, Any] = {}
         decision = value.get("decision") if isinstance(value, dict) else None
         timer_name = value.get("timer") if isinstance(value, dict) else None
+        evidence = value.get("evidence") if isinstance(value, dict) else None
         if decision in ("safe", "scam"):
             update_["guardian_decision"] = decision
         elif timer_name == "t1":
@@ -334,7 +405,10 @@ def build_graph(deps: Deps) -> StateGraph:
             update_["guardian_stage"] = 2
         elif timer_name == "t3":
             update_["guardian_decision"] = "no_response"
-        await step(state, "await_guardian", started, {"resumed_with": decision or timer_name or "invalid"})
+        elif evidence:  # kết quả tra cứu nguy hiểm đến giữa lúc chờ (spec 026): quay lại chờ sau khi báo con
+            update_["outbox"] = await evidence_message(state, evidence)
+        resumed = decision or timer_name or ("evidence" if evidence else "invalid")
+        await step(state, "await_guardian", started, {"resumed_with": resumed})
         return update_
 
     async def resolve(state: IncidentState) -> dict[str, Any]:
@@ -359,6 +433,7 @@ def build_graph(deps: Deps) -> StateGraph:
         ("fast_alert", fast_alert),
         ("risk_scorer", risk_scorer),
         ("ask_elder", ask_elder),
+        ("verification", verification),
         ("intervention", intervention),
         ("await_guardian", await_guardian),
         ("resolve", resolve),
@@ -368,9 +443,10 @@ def build_graph(deps: Deps) -> StateGraph:
     graph.add_edge("ingest", "fast_alert")
     graph.add_edge("fast_alert", "risk_scorer")
     graph.add_conditional_edges(
-        "risk_scorer", lambda s: "ask_elder" if s.get("question_id") else "intervention", ["ask_elder", "intervention"]
+        "risk_scorer", lambda s: "ask_elder" if s.get("question_id") else "verification", ["ask_elder", "verification"]
     )
     graph.add_edge("ask_elder", "risk_scorer")
+    graph.add_edge("verification", "intervention")
     graph.add_conditional_edges(
         "intervention",
         lambda s: "resolve" if s.get("guardian_decision") == DECIDED else "await_guardian",

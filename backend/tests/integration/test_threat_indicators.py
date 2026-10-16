@@ -15,6 +15,7 @@ from hoicon.config import get_settings
 from hoicon.db.models import ThreatIndicator
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain.pii import hmac_h1
+from hoicon.domain.threat_bucket import bucket24, decrypt_bucket
 from hoicon.mcp_servers.threat import lookup_h1
 from hoicon.ops import threat_list
 
@@ -38,7 +39,7 @@ def indicator(label: str, **extra: Any) -> dict[str, Any]:
 
 
 @pytest.fixture(autouse=True)
-async def clean(require_db: None, fake_pepper: None) -> AsyncGenerator[None]:
+async def clean(require_db: None, fake_pepper: None, fake_data_key: None) -> AsyncGenerator[None]:
     yield
     async with get_sessionmaker().begin() as session:
         await session.execute(delete(ThreatIndicator).where(ThreatIndicator.list_version == VERSION))
@@ -207,3 +208,86 @@ async def test_h1_with_a_trailing_newline_is_not_accepted() -> None:
         )
     with pytest.raises(ValueError):
         hmac_h1(fake_h1("a") + "\n")
+
+
+# ---- Spec 026 FR-003 (ADR-011): bucket_enc ----
+
+
+async def test_load_stores_an_encrypted_bucket_tied_to_the_row() -> None:
+    await threat_list.load_seed(get_sessionmaker(), seed_doc(indicator("a"), indicator("b")), env="dev")
+    for row in await rows():
+        assert row.bucket_enc
+        assert row.bucket_enc.startswith("1.")
+        label = "a" if row.value_hmac == hmac_h1(fake_h1("a"))[1] else "b"
+        assert decrypt_bucket(row.bucket_enc, row.value_hmac) == bucket24(fake_h1(label))
+
+
+async def test_no_plain_bucket_is_stored_next_to_the_hmac() -> None:
+    await threat_list.load_seed(get_sessionmaker(), seed_doc(indicator("a")), env="dev")
+    query = text("select t::text from threat_indicators t where list_version = :v")
+    async with get_sessionmaker()() as session:
+        dump = "\n".join(await session.scalars(query, {"v": VERSION}))
+    assert format(bucket24(fake_h1("a")), "06x") not in dump
+    assert fake_h1("a")[:6] not in dump
+
+
+async def test_reload_refreshes_bucket_enc_and_backfills_old_rows() -> None:
+    await threat_list.load_seed(get_sessionmaker(), seed_doc(indicator("a")), env="dev")
+    async with get_sessionmaker().begin() as session:
+        await session.execute(
+            text("update threat_indicators set bucket_enc = null where list_version = :v"), {"v": VERSION}
+        )
+    assert (await rows())[0].bucket_enc is None
+    await threat_list.load_seed(get_sessionmaker(), seed_doc(indicator("a")), env="dev")
+    (row,) = await rows()
+    assert row.bucket_enc is not None
+    assert decrypt_bucket(row.bucket_enc, row.value_hmac) == bucket24(fake_h1("a"))
+
+
+async def test_without_bucket_the_column_is_left_alone() -> None:
+    """`hoicon-eval` nạp danh sách demo vào DB mà không có khóa dữ liệu: không được ghi đè `bucket_enc` đã có."""
+    sessions = get_sessionmaker()
+    await threat_list.load_seed(sessions, seed_doc(indicator("a")), env="dev", with_bucket=False)
+    assert (await rows())[0].bucket_enc is None
+    await threat_list.load_seed(sessions, seed_doc(indicator("a")), env="dev")
+    before = (await rows())[0].bucket_enc
+    assert before is not None
+    await threat_list.load_seed(sessions, seed_doc(indicator("a")), env="dev", with_bucket=False)
+    assert (await rows())[0].bucket_enc == before
+
+
+async def test_count_missing_bucket_counts_rows_without_one() -> None:
+    sessions = get_sessionmaker()
+    base = await threat_list.count_missing_bucket(sessions)
+    await threat_list.load_seed(sessions, seed_doc(indicator("a"), indicator("b")), env="dev", with_bucket=False)
+    assert await threat_list.count_missing_bucket(sessions) == base + 2
+    await threat_list.load_seed(sessions, seed_doc(indicator("a"), indicator("b")), env="dev")
+    assert await threat_list.count_missing_bucket(sessions) == base
+
+
+async def test_cli_reports_missing_buckets_without_printing_the_bucket(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "seed.json"
+    path.write_text(json.dumps(seed_doc(indicator("a"))), encoding="utf-8")
+    assert await threat_list.run(path) == 0
+    out = capsys.readouterr().out
+    assert "thiếu bucket_enc" in out
+    row = (await rows())[0]
+    assert row.bucket_enc
+    assert row.bucket_enc not in out
+    assert fake_h1("a") not in out
+    assert row.value_hmac not in out
+    assert format(bucket24(fake_h1("a")), "06x") not in out
+
+
+async def test_cli_refuses_without_a_data_key_and_writes_nothing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("HOICON_DATA_KEY_KID", "9")  # khóa 9 chưa khai báo
+    get_settings.cache_clear()
+    path = tmp_path / "seed.json"
+    path.write_text(json.dumps(seed_doc(indicator("a"))), encoding="utf-8")
+    assert await threat_list.run(path) == 2
+    assert "HOICON_DATA_KEY" in capsys.readouterr().out
+    assert await rows() == []

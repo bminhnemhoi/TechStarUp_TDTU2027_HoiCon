@@ -456,3 +456,83 @@ async def test_recent_activity_keeps_an_old_incident_open_for_linking(world: Wor
         )
     second = await store_and_correlate(world, event(type="safe_pause_shown", rule_floor="none", rule_id=None))
     assert second is not None and second.opened is False and second.incident.id == first.incident.id
+
+
+# --- raise_level (spec 026 FR-006): chỉ nâng, không đụng trạng thái/nhật ký --------------------------------------
+
+
+async def raise_level(incident_id: UUID, level: str, reason: str = "verification") -> Incident:
+    async with get_sessionmaker().begin() as session:
+        return await IncidentService.raise_level(session, incident_id, level, reason)
+
+
+@pytest.mark.parametrize("state", ["detected", "assessing", "awaiting_guardian"])
+async def test_raise_level_raises_the_level_and_bumps_the_version(world: World, state: str) -> None:
+    incident_id = await make_incident(world, state, level="high", rule_floor="high")
+    row = await raise_level(incident_id, "critical")
+    assert (row.level, row.rule_floor, row.state, row.version) == ("critical", "high", state, 2)
+    assert (await load(incident_id)).level == "critical"
+    assert await history(incident_id) == []  # không ghi incident_transitions
+
+
+async def test_raise_level_never_lowers_and_keeps_the_version(world: World) -> None:
+    incident_id = await make_incident(world, level="critical", rule_floor="high")
+    for lower in ("low", "medium", "high", "critical"):
+        row = await raise_level(incident_id, lower)
+        assert (row.level, row.version) == ("critical", 1)
+
+
+async def test_raise_level_never_goes_below_the_rule_floor(world: World) -> None:
+    incident_id = await make_incident(world, level="high", rule_floor="high")
+    assert (await raise_level(incident_id, "low")).level == "high"
+
+
+@pytest.mark.parametrize(
+    "state",
+    ["verifying", "rescore", "case_open", "resolved_safe", "resolved_prevented", "resolved_no_response", "closed"],
+)
+async def test_raise_level_does_nothing_once_the_guardian_has_decided(world: World, state: str) -> None:
+    incident_id = await make_incident(world, state, level="high", rule_floor="high")
+    row = await raise_level(incident_id, "critical")
+    assert (row.level, row.state, row.version) == ("high", state, 1)
+    assert (await load(incident_id)).level == "high"
+
+
+async def test_raise_level_rejects_unknown_levels_and_missing_incidents(world: World) -> None:
+    incident_id = await make_incident(world)
+    for bad in ("none", "extreme", ""):
+        with pytest.raises(ValueError, match="level"):
+            await raise_level(incident_id, bad)
+    with pytest.raises(IncidentNotFoundError):
+        await raise_level(new_id(), "critical")
+    with pytest.raises(ValueError, match="reason"):
+        await raise_level(incident_id, "critical", "x" * 300)
+
+
+async def test_concurrent_raise_levels_end_at_the_highest_with_one_bump_per_real_raise(world: World) -> None:
+    incident_id = await make_incident(world, level="low", rule_floor="low")
+    levels = ["medium", "high", "critical", "low", "high", "medium", "critical", "high"]
+    await asyncio.gather(*(raise_level(incident_id, level) for level in levels))
+    row = await load(incident_id)
+    assert row.level == "critical"
+    assert 2 <= row.version <= 4  # mỗi lần nâng THẬT tăng version đúng 1; lần không nâng thì không tăng
+
+
+async def test_raise_level_waits_for_the_advisory_lock(world: World) -> None:
+    incident_id = await make_incident(world)
+    holder = get_sessionmaker()()
+    await holder.execute(text("select pg_advisory_xact_lock(hashtext(:i))"), {"i": str(incident_id)})
+    task = asyncio.create_task(raise_level(incident_id, "critical"))
+    await asyncio.sleep(0.4)
+    assert not task.done(), "raise_level đã chạy dù khóa advisory đang bị giữ"
+    await holder.rollback()
+    await holder.close()
+    assert (await asyncio.wait_for(task, 5)).level == "critical"
+
+
+async def test_a_raise_makes_a_stale_guardian_version_conflict(world: World) -> None:
+    """Người giám hộ cầm version cũ không ghi đè mức vừa được nâng: nhận ConcurrencyConflictError."""
+    incident_id = await make_incident(world, "awaiting_guardian", level="high", rule_floor="high")
+    await raise_level(incident_id, "critical")
+    with pytest.raises(ConcurrencyConflictError):
+        await transition(incident_id, "resolved_safe", version=1)

@@ -32,6 +32,7 @@ class ThreatVerdict(BaseModel):
     confidence: float = 0.0
     tactic: str | None = None
     list_version: str
+    is_demo: bool = False  # dòng demo (số hư cấu): kết luận của dịch vụ xác minh mang cờ này ra ngoài
 
 
 async def lookup_h1(sessions: async_sessionmaker | AsyncSession, h1: str) -> ThreatVerdict:
@@ -66,6 +67,7 @@ async def _lookup(session: AsyncSession, keys: list[tuple[int, str]]) -> ThreatV
             confidence=float(hit.confidence),
             tactic=hit.tactic,
             list_version=hit.list_version,
+            is_demo=hit.is_demo,
         )
     latest = await session.scalar(select(func.max(ThreatIndicator.list_version)))
     return ThreatVerdict(verdict="unknown", list_version=latest or NO_LIST_VERSION)

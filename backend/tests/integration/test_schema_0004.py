@@ -60,6 +60,7 @@ async def test_columns_match_the_data_model_and_hold_no_raw_number() -> None:
         "first_seen",
         "last_seen",
         "expires_at",
+        "bucket_enc",  # migration 0007 (spec 026): bucket 24 bit đã mã hóa
     }
     assert not [name for name in cols if "h1" in name or "phone" in name or "number" in name]
     assert (cols["value_hmac"].data_type, cols["value_hmac"].character_maximum_length) == ("character", 64)

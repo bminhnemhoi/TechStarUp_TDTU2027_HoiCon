@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/lookup_result.v1.json",
+  "title": "LookupResult v1",
+  "description": "Phản hồi `POST /v1/lookups` (spec 026, P2-11). Kết luận tất định theo bảng quy tắc, không do LLM sinh. `safe` chỉ phát ra khi khớp sổ đăng ký chính thức (v1 chưa có nên không bao giờ phát ra). Không bao giờ chứa h1, HMAC, số điện thoại hay URL. `disclaimer` luôn mở đầu bằng câu công khai AI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verification_id", "kind", "verdict", "confidence", "reasons", "sources", "disclaimer", "is_demo"],
+  "properties": {
+    "verification_id": { "type": "string", "format": "uuid" },
+    "kind": { "enum": ["phone", "url"] },
+    "verdict": { "enum": ["safe", "warning", "dangerous", "unknown"] },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "reasons": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "text"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[a-z_]{1,32}$" },
+          "text": { "type": "string", "minLength": 1, "maxLength": 400 }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "type": { "enum": ["threat_list", "heuristic", "registry"] },
+          "list_version": { "type": "string", "maxLength": 32 },
+          "url": { "type": "string", "maxLength": 2048 }
+        }
+      }
+    },
+    "disclaimer": { "type": "string", "pattern": "^Đây là trợ lý AI HỏiCon\\.", "maxLength": 400 },
+    "incident_level": { "enum": ["low", "medium", "high", "critical"] },
+    "is_demo": { "type": "boolean" }
+  }
+}

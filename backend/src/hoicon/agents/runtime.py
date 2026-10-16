@@ -11,7 +11,7 @@ import logging
 import os
 import re
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
@@ -62,6 +62,10 @@ def clean_resume(value: Any) -> dict[str, Any]:
         clean["decision"] = value["decision"]
     if value.get("timer") in ("t1", "t2", "t3"):
         clean["timer"] = value["timer"]
+    evidence = value.get("evidence")  # id một dòng `verifications` (spec 026): chỉ giữ nếu đúng là UUID
+    if isinstance(evidence, str):
+        with suppress(ValueError):
+            clean["evidence"] = str(UUID(evidence))
     flags = value.get("note_flags")  # E8 (spec 024): app gửi sẵn cờ tất định, chỉ giữ cờ đã biết có giá trị bool
     if isinstance(flags, dict):
         kept = {k: v for k, v in flags.items() if k in NOTE_KEYWORDS and isinstance(v, bool)}

@@ -22,7 +22,8 @@
 | `consents` | id, family_id, member_id, purpose, granted bool, consent_version, text_sha256, channel (`app/zalo/web`), recorded_at | **đã có** (`0005`); **chỉ ghi thêm**: trigger `trg_consents_immutable` (UPDATE/DELETE, mỗi dòng) và `trg_consents_no_truncate` (TRUNCATE) cùng gọi `prevent_consent_tamper()` ⇒ ném lỗi (bật `ENABLE ALWAYS`: vẫn chạy khi `session_replication_role = replica`; chủ bảng/superuser vẫn tắt được ⇒ prod nên tách role ứng dụng chỉ có INSERT/SELECT); `downgrade` từ chối khi còn dòng; rút đồng ý = dòng mới `granted=false`; FK `RESTRICT` (xóa gia đình/thành viên không kéo theo xóa bằng chứng; muốn xóa cần thủ tục riêng có người duyệt, tắt trigger trong một giao dịch); `text_sha256` là 64 hex thường |
 
 `purpose` (enum, thêm giá trị ⇒ văn bản đồng ý mới): `core_protection`, `call_screening`, `usage_monitoring`,
-`overlay_pause`, `guardian_alerts`, `llm_processing`, `voice_input`, `drills`, `pilot_research`.
+`overlay_pause`, `guardian_alerts`, `llm_processing`, `voice_input`, `drills`, `pilot_research`, `lookups` (`0007`, spec 026:
+tra số/đường link do người dùng tự nhập; `downgrade` dựng lại CHECK cũ bằng `NOT VALID` vì sổ chỉ-ghi-thêm không xóa được dòng `lookups`).
 
 ### Liên hệ & xác thực
 | Bảng | Cột chính | Ghi chú |
@@ -53,8 +54,8 @@
 ### Xác minh & hồ sơ
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
-| `verifications` | id, incident_id, kind (`phone/url/qr/account`), subject_hmac, verdict, sources jsonb, at | |
-| `threat_indicators` | id, kind (`phone`), value_hmac (char 64, CHECK hex), value_kid, last3 (char 3, rỗng được), source, confidence (0–1), tactic, list_version, is_demo, first_seen, last_seen, expires_at | **đã có** (`0004`, spec 003); chỉ HMAC (ADR-006), không cột h1; `UNIQUE (kind, value_kid, value_hmac)` cũng là chỉ mục tra cứu; nạp bằng `ops/threat_list`. **Chưa đồng bộ xuống máy được**: máy so **h1** mà bảng chỉ có HMAC ⇒ 022/026 phải chọn (cột `value_enc` AES-GCM hoặc danh sách h1 tách khỏi DB) |
+| `verifications` | id, family_id (FK `CASCADE`), incident_id (FK `incidents` `CASCADE`, rỗng được), actor (`device/guardian/system`), actor_id, kind (`phone/url/account`), via (`typed/qr/call`), subject_kid, subject_hmac (CHECK hex 64), last3 (chỉ phone), verdict (`safe/warning/dangerous/unknown`), confidence (0–1), sources jsonb, list_version, is_demo, at | **đã có** (`0007`, spec 026); chỉ HMAC của chủ thể (phone: `HMAC(pepper, h1)`; url: `HMAC(pepper, SHA-256("hoicon:url:v1:" + host))`, đường dẫn/truy vấn/thông tin đăng nhập bỏ ngay); không cột nào chứa số thô, h1 hay URL. Chỉ mục `(actor_id, at)` đếm hạn mức `POST /v1/lookups`, `(incident_id)`, UNIQUE một phần `(incident_id, kind, subject_kid, subject_hmac) WHERE via = 'call'` để ghi số gọi đến lũy đẳng. Giữ 90 ngày như sự cố (job `retention`, P2-20 — chưa có; **nợ**: chưa có job xóa theo hạn, chưa xóa/ẩn danh khi rút đồng ý `lookups`) |
+| `threat_indicators` | id, kind (`phone`), value_hmac (char 64, CHECK hex), value_kid, last3 (char 3, rỗng được), source, confidence (0–1), tactic, list_version, is_demo, first_seen, last_seen, expires_at | **đã có** (`0004`, spec 003); chỉ HMAC (ADR-006), không cột h1; `UNIQUE (kind, value_kid, value_hmac)` cũng là chỉ mục tra cứu; nạp bằng `ops/threat_list`. **Cột `bucket_enc`** (`0007`, spec 026, ADR-011 *Đề xuất*): bucket 24 bit đầu của h1, MÃ HÓA AES-256-GCM (`"<kid>." + base64url(nonce ‖ bản mã)`, AAD `hoicon:threat:bucket:v1:<kid>:<value_hmac>` nên tráo bản mã giữa hai dòng làm giải mã hỏng); không bao giờ lưu bucket dạng rõ cạnh `last3`. Ảnh chụp bucket cho máy dựng từ cột này (`GET /v1/threat-list`); dòng cũ thiếu `bucket_enc` không xuống máy cho tới khi nạp lại tệp seed (`ops/threat_list` in số dòng còn thiếu) |
 | `case_files` | id, incident_id, status (`draft/approved/sent`), content jsonb, approved_by, approved_at | hồ sơ gửi cơ quan sau khi người giám hộ duyệt |
 
 ### Diễn tập & đánh giá
