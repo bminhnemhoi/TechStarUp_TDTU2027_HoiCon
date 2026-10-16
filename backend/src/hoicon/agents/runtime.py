@@ -110,6 +110,21 @@ def _psycopg_url(sqlalchemy_url: str) -> str:
     return sqlalchemy_url.replace("postgresql+psycopg://", "postgresql://", 1)
 
 
+@asynccontextmanager
+async def open_checkpointer(database_url: str) -> AsyncGenerator[AsyncPostgresSaver, None]:
+    """Bộ lưu checkpoint LangGraph trên kết nối riêng (dùng chung: runtime, job hạn lưu, xóa dữ liệu gia đình)."""
+    # langchain-core có sẵn LangSmith: một biến môi trường sót trên máy là state bị gửi ra nước ngoài ⇒ tắt cứng.
+    os.environ["LANGSMITH_TRACING"] = os.environ["LANGCHAIN_TRACING_V2"] = "false"
+    # LangGraph đòi autocommit + dict_row; prepare_threshold=0 để chạy được sau pgbouncer.
+    kwargs = {"autocommit": True, "prepare_threshold": 0, "row_factory": dict_row, "connect_timeout": 5}
+    async with AsyncConnectionPool(
+        _psycopg_url(database_url), min_size=1, max_size=5, kwargs=kwargs, open=False
+    ) as pool:
+        saver = AsyncPostgresSaver(pool)
+        await saver.setup()  # tạo/nâng bảng checkpoint của LangGraph (idempotent)
+        yield saver
+
+
 class IncidentRuntime:
     def __init__(self, graph: CompiledStateGraph, sessions: async_sessionmaker) -> None:
         self.graph = graph
@@ -118,14 +133,7 @@ class IncidentRuntime:
     @classmethod
     @asynccontextmanager
     async def open(cls, deps: Deps) -> AsyncGenerator["IncidentRuntime", None]:
-        # langchain-core có sẵn LangSmith: một biến môi trường sót trên máy là state bị gửi ra nước ngoài ⇒ tắt cứng.
-        os.environ["LANGSMITH_TRACING"] = os.environ["LANGCHAIN_TRACING_V2"] = "false"
-        url = _psycopg_url(deps.settings.database_url.get_secret_value())
-        # LangGraph đòi autocommit + dict_row; prepare_threshold=0 để chạy được sau pgbouncer.
-        kwargs = {"autocommit": True, "prepare_threshold": 0, "row_factory": dict_row, "connect_timeout": 5}
-        async with AsyncConnectionPool(url, min_size=1, max_size=5, kwargs=kwargs, open=False) as pool:
-            saver = AsyncPostgresSaver(pool)
-            await saver.setup()  # tạo/nâng bảng checkpoint của LangGraph (idempotent)
+        async with open_checkpointer(deps.settings.database_url.get_secret_value()) as saver:
             yield cls(build_graph(deps).compile(checkpointer=saver), deps.sessions)
 
     @asynccontextmanager
@@ -166,6 +174,7 @@ class IncidentRuntime:
         elder_alias: str,
         is_demo: bool = False,
         family_id: str | None = None,
+        guardian_alerts: bool = True,
     ) -> RunStatus:
         """Chạy đồ thị từ sự kiện đã qua `prepare_event` (job `start_graph`, spec 024). Thread đã có trạng thái ⇒ không
         chạy lại (job thử lại sau khi đồ thị đã chạy không mở lượt thứ hai)."""
@@ -195,6 +204,8 @@ class IncidentRuntime:
             }
             if family_id is not None:  # không đặt khóa khi không có ⇒ state/checkpoint sự cố không gia đình không đổi
                 state["family_id"] = family_id
+            if not guardian_alerts:  # spec 034: chỉ đặt khi tắt ⇒ checkpoint của sự cố bình thường không đổi
+                state["guardian_alerts"] = False
             await self.graph.ainvoke(state, self._config(incident_id), durability="sync")
             return await self._record(incident_id)
 

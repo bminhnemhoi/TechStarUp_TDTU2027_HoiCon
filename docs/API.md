@@ -62,11 +62,18 @@ Hợp đồng: `events_batch.v1.json` (+ `risk_event.v1.json`), `events_result.v
 |---|---|
 | 200 | đã xử lý (kể cả khi toàn bộ là trùng: `accepted = 0`) |
 | 401 | không/sai token, thiết bị bị thu hồi |
+| 403 `{"detail": "consent_withdrawn"}` | người cao tuổi của token chưa có/đã rút đồng ý `core_protection` (dòng `consents` MỚI NHẤT của mục đích đó không `granted`) — **không ghi gì**, kể cả sự kiện. App hiểu là "cần đồng ý lại", không phải "mất kết nối" (spec 034) |
+| 413 `{"detail": "Dữ liệu gửi lên quá lớn."}` | thân > 256 KB (kiểm trước khi phân tích, cả `Content-Length` lẫn thân chunked); một lô 50 sự kiện nhỏ hơn nhiều mức này |
 | 422 | thân sai hợp đồng — cả lô không ghi gì. Thông báo chỉ nêu vị trí + loại lỗi, KHÔNG lặp lại giá trị đã gửi. Chuỗi tự do bị ràng buộc: `app.package` dạng gói Android, `app_version`/`rules_version` dạng phiên bản (số đầu ≤ 4 chữ số, hậu tố build tùy chọn như `0.1.0-20261016`), mỗi thành phần tối đa 8 chữ số nên số điện thoại không lọt vào; số nguyên có cận trên (`duration_s` ≤ 86400, `timing.*_ms` ≤ 3.600.000); cờ boolean phải là `true/false` thật |
 | 429 + `Retry-After` | thiết bị gửi quá 30 lô/phút (đếm trong bộ nhớ, một tiến trình) |
 | 503 + `Retry-After` | chưa cấu hình pepper băm số điện thoại (không lưu gì), hoặc chờ khóa thiết bị quá 3 giây (lô không ghi gì, app gửi lại được) |
 
-Mở/liên kết sự cố (FR-008): sự kiện loại `banking_app_foreground`/`flagged_number_call`/`sideload_detected`/`ask_child_pressed` hoặc `rule_floor ≥ high` mở sự cố `detected` nếu thiết bị chưa có sự cố đang mở; mọi sự kiện sau đó liên kết vào sự cố đang mở (cùng thiết bị, cùng loại thật/diễn tập, cùng `drill_id`) **còn hoạt động trong 600 giây gần nhất** (mốc = sự kiện cuối của sự cố, hoặc lúc mở nếu chưa có), và `rule_floor` cao hơn thì NÂNG `rule_floor` + `level` (không bao giờ hạ). Sự cố im lặng quá 600 giây không nhận thêm: sự kiện mới tạo sự cố MỚI (sự cố cũ giữ nguyên trạng thái; đưa nó ra khỏi `detected` thuộc bộ hẹn giờ/tác tử). Sự cố đã kết thúc không mở lại — sự kiện mới tạo sự cố mới. Số gọi đến chỉ lưu `HMAC(pepper, h1)` + 3 số cuối (ADR-006); h1 không vào DB hay log. Chưa có giới hạn kích thước thân ở tầng ứng dụng (FastAPI đọc thân trước khi xác thực) — cần giới hạn ở Caddy khi mở ra Internet.
+Mở/liên kết sự cố (FR-008): sự kiện loại `banking_app_foreground`/`flagged_number_call`/`sideload_detected`/`ask_child_pressed` hoặc `rule_floor ≥ high` mở sự cố `detected` nếu thiết bị chưa có sự cố đang mở; mọi sự kiện sau đó liên kết vào sự cố đang mở (cùng thiết bị, cùng loại thật/diễn tập, cùng `drill_id`) **còn hoạt động trong 600 giây gần nhất** (mốc = sự kiện cuối của sự cố, hoặc lúc mở nếu chưa có), và `rule_floor` cao hơn thì NÂNG `rule_floor` + `level` (không bao giờ hạ). Sự cố im lặng quá 600 giây không nhận thêm: sự kiện mới tạo sự cố MỚI (sự cố cũ giữ nguyên trạng thái; đưa nó ra khỏi `detected` thuộc bộ hẹn giờ/tác tử). Sự cố đã kết thúc không mở lại — sự kiện mới tạo sự cố mới. Số gọi đến chỉ lưu `HMAC(pepper, h1)` + 3 số cuối (ADR-006); h1 không vào DB hay log. Giới hạn thân 256 KB áp ở tầng ứng dụng cho MỌI route (spec 034); Caddy (012) vẫn nên đặt giới hạn riêng.
+
+**Thực thi đồng ý ở máy chủ (spec 034):** trước khi đọc lô, máy chủ tra đồng ý của người cao tuổi sở hữu token (`member_id` lấy từ token, không từ thân yêu cầu), đệm 60 giây theo người; `POST /v1/consents` xóa mục đệm của chính người ghi nên đồng ý mới có hiệu lực ngay. Đồng ý đổi từ kênh khác có thể trễ tối đa 60 giây.
+- Thiếu `core_protection` ⇒ 403 `consent_withdrawn` (bảng trên).
+- Có `core_protection` nhưng thiếu `guardian_alerts` ⇒ **vẫn nhận sự kiện và mở sự cố** (an toàn của người cao tuổi), nhưng **không xếp tin nào cho người giám hộ**: không cảnh báo nhanh; đồ thị sự cố vẫn chạy (hỏi người cao tuổi, chấm rủi ro) song mọi tin `notify_guardian` bị bỏ.
+- Chưa có route `/v1/heartbeat`; khi thêm phải dùng cùng cổng `consent_gate`.
 
 **`GET /v1/incidents/{id}`** — cần token thiết bị; chỉ sự cố của gia đình mình, sự cố nhà khác trả 404 (không lộ sự tồn tại). Trả `incident.v1.json` kèm `transitions` (cũ → mới).
 **`GET /v1/families/{id}/incidents?limit=`** — `id` phải là gia đình của token (nhà khác ⇒ 404); mới nhất trước, `limit` 1–100 (mặc định 20), bản tóm tắt không có `transitions`. Người giám hộ đọc qua `/a/{token}` (spec 022), không qua các route này.
@@ -183,7 +190,16 @@ Hợp đồng: `drill_script.v1.json`, `drill_offer.v1.json`, `drill_result.v1.j
 - Mã: 200 đã ghi nhận / chấp nhận · 401 thiếu/sai token · 404 bài không thuộc gia đình hoặc không tồn tại · 409 xung đột trạng thái / kết quả khác · 422 sai schema (có trường lạ, trường cấm `note`).
 
 ## Webhook & khác
-`POST /webhooks/zalo/{bot_id}` · `/demo/*` · `/admin/*` · `/mcp/*` (FastMCP) · `GET /healthz`
+`POST /webhooks/zalo/{bot_id}` · `/demo/*` · `/admin/*` · `/mcp/*` (FastMCP) · `GET /healthz` · `GET /readyz`
+
+### `GET /readyz` (spec 034)
+| Mã | Thân | Khi nào |
+|---|---|---|
+| 200 | `{"status": "ok", "db": "up", "zalo_mode": "mock"` hoặc `"live"}` | kết nối được Postgres và đủ khóa bắt buộc |
+| 503 | `{"status": "unavailable", "db": "down"}` | Postgres không trả lời trong 6 giây |
+| 503 | `{"status": "unavailable", "db": "up", "missing": ["phone_pepper", "data_key", "device_jwt_secret"]}` | thiếu pepper `kid` hiện hành, khóa dữ liệu `kid` hiện hành, hoặc khóa JWT thiết bị (< 32 ký tự). Chỉ nêu TÊN, không bao giờ giá trị |
+
+`HOICON_ENV` mặc định `prod` (spec 034): máy dev đặt `HOICON_ENV=dev` trong tệp cấu hình cục bộ (`init_env` ghi sẵn), CI/test đặt `test`.
 
 ### `POST /webhooks/zalo/{bot_id}` (spec 002 — đã có)
 Hợp đồng thân: `docs/schemas/zalo_update.v1.json` (fixture `fixtures/zalo_update.v1.*.json`). Không thuộc `/v1`, không sinh client TS.

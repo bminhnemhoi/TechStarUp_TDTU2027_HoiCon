@@ -75,6 +75,17 @@ def zalo_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     get_settings.cache_clear()
 
 
+@pytest.fixture
+def service_keys(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Đủ ba khóa mà `/readyz` đòi (spec 034): pepper, khóa dữ liệu, khóa JWT thiết bị. Chuỗi GIẢ, công khai."""
+    get_settings.cache_clear()
+    monkeypatch.setenv("HOICON_PHONE_PEPPER_1", "11" * 32)
+    monkeypatch.setenv("HOICON_DATA_KEY_1", "aa" * 32)
+    monkeypatch.setenv("HOICON_DEVICE_JWT_SECRET", "integration-test-key-" + "k" * 32)  # gitleaks:allow
+    yield
+    get_settings.cache_clear()
+
+
 @dataclass
 class ZaloWorld:
     """Một bot + một gia đình demo + các người giám hộ đã ghép, trên Postgres thật; dọn sạch sau test."""

@@ -16,8 +16,8 @@
 ### Gia đình & đồng ý
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
-| `families` | id, display_name (bí danh do người dùng đặt), region (`bac/trung/nam`), plan, created_at, is_demo | **đã có** (`0003`, spec 002) |
-| `members` | id, family_id, role (`protected/guardian`), alias (cách xưng hô: "Mẹ", "Bố"…, rỗng được), address_form, guardian_rank (1, 2), **zalo_bot_id, zalo_user_hmac, zalo_hmac_kid, zalo_chat_enc**, locale, created_at | **đã có** (`0003`); không lưu tên thật; 4 cột Zalo cùng có hoặc cùng rỗng; unique `(family_id, guardian_rank)` cho người giám hộ, unique `(zalo_bot_id, zalo_user_hmac)`; cột Zalo theo D1 (§3b) |
+| `families` | id, display_name (bí danh do người dùng đặt), region (`bac/trung/nam`), plan, created_at, is_demo | **đã có** (`0003`, spec 002); **`deleted_at`** (`0009`): tombstone sau yêu cầu xóa, `display_name` = `[đã xóa]` |
+| `members` | id, family_id, role (`protected/guardian`), alias (cách xưng hô: "Mẹ", "Bố"…, rỗng được), address_form, guardian_rank (1, 2), **zalo_bot_id, zalo_user_hmac, zalo_hmac_kid, zalo_chat_enc**, locale, created_at | **đã có** (`0003`); không lưu tên thật; 4 cột Zalo cùng có hoặc cùng rỗng; unique `(family_id, guardian_rank)` cho người giám hộ, unique `(zalo_bot_id, zalo_user_hmac)`; cột Zalo theo D1 (§3b); **`deleted_at`** (`0009`): tombstone đã ẩn danh (alias `[đã xóa]`, các cột Zalo = NULL), token người giám hộ bị từ chối |
 | `devices` | id, family_id, member_id, platform, label, app_version, rules_version, threat_list_version, permission_state jsonb, fcm_token_enc, device_secret_hash, last_heartbeat_at, revoked_at, created_at | **đã có** (`0005`, spec 020); tạo khi ghép đôi; `device_secret_hash` = SHA-256 của refresh token (unique, không lưu token thô); `label` = bí danh máy, không PII; FK gia đình/thành viên `CASCADE` |
 | `consents` | id, family_id, member_id, purpose, granted bool, consent_version, text_sha256, channel (`app/zalo/web`), recorded_at | **đã có** (`0005`); **chỉ ghi thêm**: trigger `trg_consents_immutable` (UPDATE/DELETE, mỗi dòng) và `trg_consents_no_truncate` (TRUNCATE) cùng gọi `prevent_consent_tamper()` ⇒ ném lỗi (bật `ENABLE ALWAYS`: vẫn chạy khi `session_replication_role = replica`; chủ bảng/superuser vẫn tắt được ⇒ prod nên tách role ứng dụng chỉ có INSERT/SELECT); `downgrade` từ chối khi còn dòng; rút đồng ý = dòng mới `granted=false`; FK `RESTRICT` (xóa gia đình/thành viên không kéo theo xóa bằng chứng; muốn xóa cần thủ tục riêng có người duyệt, tắt trigger trong một giao dịch); `text_sha256` là 64 hex thường |
 
@@ -70,7 +70,7 @@ tra số/đường link do người dùng tự nhập; `downgrade` dựng lại 
 |---|---|---|
 | `jobs` | id, kind, payload jsonb, run_at, idempotency_key (unique), attempts, locked_at, locked_by, done_at, error, created_at | **đã có** (`0002`); `FOR UPDATE SKIP LOCKED`; khóa chống trùng khi node chạy lại (ADR-009) |
 | `demo_sessions` | id, code, created_at, expires_at | dữ liệu demo tự xóa sau 24 giờ |
-| `data_requests` | id, family_id, kind (`export/delete`), status, requested_at, completed_at | quyền chủ thể dữ liệu (Luật 91/2025) |
+| `data_requests` | id, family_id (FK `RESTRICT`: vết pháp lý còn lại sau khi xóa), kind (`delete`; `export` để dành), requested_via (`ops/app/web`), status (`pending/done/failed`), error_code (≤ 32, mã do máy chủ đặt), requested_at, completed_at | **đã có** (`0009`, spec 034); quyền chủ thể dữ liệu (Luật 91/2025); CHECK `(status = 'done') = (completed_at IS NOT NULL)`; không cột văn bản tự do |
 
 ## 3. Băm số điện thoại / số tài khoản (ADR-006)
 
@@ -120,14 +120,30 @@ detected → assessing → awaiting_guardian ──(T1 = 2' nhắc; T2 = 5' chuy
 
 ## 6. Hạn lưu
 
+Thực thi bằng job `retention` hằng ngày (`services/retention_service.py`, hằng số `RETENTION`; spec 034). Mỗi loại xử lý
+theo lô ≤ 1.000 dòng, mỗi lô một giao dịch, lũy đẳng; `python -m hoicon.ops.data retention --dry-run` in số dòng sẽ bị
+đụng mà không ghi. Test `test_retention.py` so khớp bảng này với `RETENTION`.
+
 | Dữ liệu | Hạn | Cơ chế |
 |---|---|---|
-| `risk_events` | 90 ngày | job `retention` hằng ngày |
-| `agent_steps.input_redacted/output` | 30 ngày (giữ số đo) | job `retention` |
-| `incidents` + transitions | 12 tháng | job `retention` |
+| `risk_events` | 90 ngày | job `retention` hằng ngày (từ `received_at`) |
+| `agent_steps.input_redacted/output` | 30 ngày (giữ số đo) | job `retention` làm rỗng, giữ dòng và `latency`/`tokens`/`cost` |
+| `incidents` + transitions | 12 tháng | job `retention` xóa sự cố đã đóng (từ `closed_at`), CASCADE nhật ký chuyển, xác minh, token |
 | Dữ liệu demo | 24 giờ | `demo_sessions.expires_at` |
-| `consents` | suốt thời gian dịch vụ + 2 năm | không xóa (bằng chứng đồng ý, Nghị định 356/2025) |
+| `consents` | suốt thời gian dịch vụ + 2 năm | không xóa (bằng chứng đồng ý, Nghị định 356/2025); xóa gia đình chỉ ẩn danh `families`/`members` |
 | Giọng nói | không lưu trên máy chủ | STT xử lý luồng rồi bỏ |
 | Lời kể tự do của người cao tuổi | **không lưu** | chỉ giữ cờ tất định `note_flags` (ADR-009) |
-| Checkpoint LangGraph (`checkpoints`, `checkpoint_blobs`, `checkpoint_writes`) | sự cố đóng + 7 ngày | job `retention` gọi `adelete_thread` (P2-20); `agent_steps` đủ cho trace |
-| `jobs` (gồm `payload.text` = toàn văn tin gửi người giám hộ) | 30 ngày sau `done_at` | job `retention` (P2-20) |
+| Checkpoint LangGraph (`checkpoints`, `checkpoint_blobs`, `checkpoint_writes`) | sự cố đóng + 7 ngày | job `retention` gọi `adelete_thread`; `agent_steps` đủ cho trace |
+| `jobs` (gồm `payload.text` = toàn văn tin gửi người giám hộ) | 30 ngày sau `done_at` | job `retention` |
+| `messages_out` | giữ dòng (không có cột văn bản) | đếm hạn mức Zalo theo tháng; toàn văn tin nằm ở `jobs.payload` và đi theo hạn của `jobs` |
+| `action_tokens` | 30 ngày sau `expires_at` | job `retention` |
+| `verifications` | 90 ngày | job `retention` (từ `at`) |
+| `drills` | 12 tháng | job `retention` (từ `created_at`) |
+| `data_requests` | giữ | vết pháp lý của yêu cầu xóa dữ liệu (không có văn bản tự do) |
+
+### Xóa dữ liệu gia đình theo yêu cầu (spec 034)
+
+`python -m hoicon.ops.data request-delete --family <id>` ghi `data_requests` và xếp job `purge_family`: thu hồi thiết bị,
+xóa checkpoint, xóa mọi dữ liệu nghiệp vụ của gia đình, rồi **ẩn danh** `members` (bí danh `[đã xóa]`, HMAC Zalo và bản mã
+định danh = NULL) và `families` (`display_name = [đã xóa]`); `deleted_at` đánh dấu tombstone. `consents` giữ nguyên vì
+FK RESTRICT và luật. Mục tiêu hoàn tất ≤ 72 giờ (thực tế: ngay khi worker nhận job).

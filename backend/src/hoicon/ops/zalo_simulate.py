@@ -51,7 +51,7 @@ async def run(
     text: str, *, user: str = "fixture-user-0001", message_id: str | None = None, deps: ChannelDeps | None = None
 ) -> int:
     settings = deps.settings if deps else get_settings()
-    if settings.env != "dev":
+    if not settings.is_dev_env:
         print("Từ chối: chỉ chạy được khi HOICON_ENV=dev.")
         return 2
     if not user.startswith(USER_PREFIX):

@@ -450,7 +450,7 @@ export interface paths {
         };
         /**
          * Readyz
-         * @description Readiness: kết nối được Postgres (trả lời trong ≤ READYZ_TIMEOUT_S kể cả khi DB treo).
+         * @description Readiness: kết nối được Postgres (trả lời trong ≤ READYZ_TIMEOUT_S kể cả khi DB treo) và đủ khóa bắt buộc.
          */
         get: operations["readyz_readyz_get"];
         put?: never;
@@ -2178,7 +2178,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        [key: string]: string;
+                        [key: string]: unknown;
                     };
                 };
             };

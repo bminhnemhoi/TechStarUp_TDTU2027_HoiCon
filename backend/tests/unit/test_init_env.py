@@ -90,3 +90,36 @@ def test_existing_env_gets_data_key_appended_only_with_the_flag(target: Path) ->
     assert init_env.main(["--new-data-key"]) == 0
     assert target.read_text(encoding="utf-8").startswith(original)
     assert len(dotenv_values(target)["HOICON_DATA_KEY_1"] or "") == 64
+
+
+def test_new_env_pins_dev_and_generates_the_spec_034_keys(target: Path) -> None:
+    assert init_env.main([]) == 0
+    values = dotenv_values(target)
+    assert values["HOICON_ENV"] == "dev"  # máy dev: tường minh, vì mặc định của ứng dụng là prod
+    assert len(values["HOICON_DEVICE_JWT_SECRET"] or "") == 64  # /readyz đòi khóa JWT thiết bị
+    assert len(values["HOICON_BACKUP_KEY_1"] or "") == 64 and values["HOICON_BACKUP_KEY_KID"] == "1"
+    assert values["HOICON_BACKUP_KEY_1"] != values["HOICON_DATA_KEY_1"]  # khóa sao lưu RIÊNG, khác khóa dữ liệu
+
+
+def test_existing_env_without_hoicon_env_is_warned_not_silently_set_to_dev(
+    target: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    init_env.main([])
+    lines = [line for line in target.read_text(encoding="utf-8").splitlines() if not line.startswith("HOICON_ENV=")]
+    target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    capsys.readouterr()
+    assert init_env.main([]) == 0
+    assert "HOICON_ENV" not in dotenv_values(target)  # không tự nối `dev`: lỡ chạy ở máy chủ thật sẽ tắt chặn prod
+    assert "prod" in capsys.readouterr().out
+
+
+def test_an_old_env_gets_the_new_keys_appended_without_touching_old_lines(target: Path) -> None:
+    old = (
+        f"HOICON_ENV=dev\n{PEPPER}={'ab' * 32}\nHOICON_DATA_KEY_KID=1\nHOICON_DATA_KEY_1={'cd' * 32}\n"
+        "HOICON_PHONE_PEPPER_KID=1\nHOICON_ZALO_WEBHOOK_SECRET=x" + "y" * 20 + "\n"
+    )
+    target.write_text(old, encoding="utf-8")
+    assert init_env.main([]) == 0
+    assert target.read_text(encoding="utf-8").startswith(old)
+    values = dotenv_values(target)
+    assert len(values["HOICON_BACKUP_KEY_1"] or "") == 64 and len(values["HOICON_DEVICE_JWT_SECRET"] or "") == 64

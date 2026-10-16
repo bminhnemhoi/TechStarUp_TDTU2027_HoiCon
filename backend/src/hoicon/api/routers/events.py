@@ -30,7 +30,7 @@ from hoicon.domain.events import RiskEventIn
 from hoicon.domain.pii import hmac_h1
 from hoicon.jobs.queue import enqueue
 from hoicon.mcp_servers.threat import ThreatVerdict
-from hoicon.services import AlertService, IncidentService
+from hoicon.services import AlertService, IncidentService, consent_gate
 from hoicon.services import verification_service as vs
 
 logger = logging.getLogger(__name__)
@@ -45,6 +45,7 @@ MAX_TRACKED_DEVICES = 4096
 # Chờ khóa tư vấn của thiết bị quá lâu ⇒ trả 503 thay vì giữ kết nối trong pool (mặc định chờ vô hạn).
 LOCK_TIMEOUT_MS = 3000
 BUSY = "Hệ thống đang bận, vui lòng thử lại sau ít giây."
+CONSENT_WITHDRAWN = "consent_withdrawn"  # mã cố định: app dựa vào đây để hiện "cần đồng ý lại" (spec 034)
 
 _batches: dict[UUID, deque[float]] = {}
 
@@ -176,7 +177,9 @@ async def _record_call_verification(
     )
 
 
-async def _start_graph(session: AsyncSession, incident: Incident, event: RiskEventIn) -> None:
+async def _start_graph(
+    session: AsyncSession, incident: Incident, event: RiskEventIn, *, guardian_alerts: bool = True
+) -> None:
     """Spec 024 FR-006: sự cố đạt mức cảnh báo (cùng ngưỡng với cảnh báo nhanh) ⇒ xếp job chạy đồ thị tác tử, cùng
     giao dịch với lô. Khóa theo sự cố ⇒ một sự cố một lượt dù nhiều sự kiện liên kết vào. Payload đã bỏ h1 + tên gói
     (ADR-006): bảng `jobs` giữ dòng đã chạy xong."""
@@ -190,6 +193,8 @@ async def _start_graph(session: AsyncSession, incident: Incident, event: RiskEve
         "family_id": str(incident.family_id),
         "elder_alias": safe_alias(member.alias if member else None),
         "is_demo": bool(incident.is_demo),
+        # Spec 034 FR-005: chưa đồng ý `guardian_alerts` ⇒ đồ thị vẫn chạy (an toàn người cao tuổi), không xếp tin Zalo.
+        "guardian_alerts": guardian_alerts,
     }
     await enqueue(session, "start_graph", payload, key=f"{incident.id}:graph:start")
 
@@ -200,6 +205,11 @@ async def post_events(batch: EventsBatch, claims: Annotated[DeviceClaims, Depend
     if wait is not None:
         logger.info("events: thiết bị vượt hạn mức lô")
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, detail=BUSY, headers={"Retry-After": str(wait)})
+    async with get_sessionmaker()() as session:
+        consent = await consent_gate.state_for(session, claims.member_id)
+    if not consent.core_protection:  # spec 034 FR-005: đã rút (hoặc chưa có) đồng ý ⇒ không nhận, không ghi gì
+        logger.info("events: thiết bị bị từ chối vì chưa/không còn đồng ý core_protection")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail=CONSENT_WITHDRAWN)
     events, rejected = await _vet_drill_claims(batch.events, family_id=claims.family_id, member_id=claims.member_id)
     if rejected:  # không ghi id hay định danh: chỉ số lượng (máy có thể khai bậy bất cứ id nào)
         logger.warning("events: drill flag rejected (%d sự kiện coi như thật)", rejected)
@@ -232,8 +242,11 @@ async def post_events(batch: EventsBatch, claims: Annotated[DeviceClaims, Depend
                 if result is not None:
                     incident_id, opened = result.incident.id, opened or result.opened
                     if result.incident.level in ("high", "critical"):
-                        await AlertService.trigger_guardian_fast_alert(session, incident=result.incident, event=event)
-                        await _start_graph(session, result.incident, event)
+                        if consent.guardian_alerts:  # chưa đồng ý báo người giám hộ ⇒ nhận sự kiện nhưng không gửi Zalo
+                            await AlertService.trigger_guardian_fast_alert(
+                                session, incident=result.incident, event=event
+                            )
+                        await _start_graph(session, result.incident, event, guardian_alerts=consent.guardian_alerts)
             accepted = len(fresh)
     except OperationalError as exc:
         if not isinstance(exc.orig, LockNotAvailable):

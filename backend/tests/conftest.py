@@ -1,8 +1,13 @@
 import asyncio
+import os
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
 import pytest
+
+# Spec 034 D4: `Settings.env` mặc định `prod`. Bộ test chạy ở `test`, đặt TRƯỚC khi module nào nạp cấu hình; CI có thể
+# đặt giá trị khác bằng biến môi trường. Biến môi trường thắng tệp cấu hình cục bộ nên máy dev vẫn chạy ở `test`.
+os.environ.setdefault("HOICON_ENV", "test")
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

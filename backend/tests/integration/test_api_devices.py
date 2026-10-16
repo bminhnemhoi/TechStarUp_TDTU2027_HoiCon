@@ -28,7 +28,7 @@ async def test_requires_a_device_token(device_world: Any) -> None:
 
 
 async def test_fresh_device_has_no_consents_and_matches_the_contract(device_world: Any) -> None:
-    paired = await pair_device(device_world.code, device_label="Máy của mẹ")
+    paired = await pair_device(device_world.code, consent=False, device_label="Máy của mẹ")
     resp = await call("GET", "/v1/devices/me", token=paired["access_token"])
     assert resp.status_code == 200, resp.text
     data = resp.json()
@@ -41,14 +41,14 @@ async def test_fresh_device_has_no_consents_and_matches_the_contract(device_worl
 
 
 async def test_response_never_leaks_secrets(device_world: Any) -> None:
-    paired = await pair_device(device_world.code)
+    paired = await pair_device(device_world.code, consent=False)
     text = (await call("GET", "/v1/devices/me", token=paired["access_token"])).text
     for leaked in (paired["refresh_token"], paired["access_token"], "device_secret_hash", "fcm_token"):
         assert leaked not in text
 
 
 async def test_consents_show_only_the_latest_row_per_purpose(device_world: Any) -> None:
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     await call("POST", "/v1/consents", token=token, json={"items": [item("voice_input", True), item("drills", True)]})
     await call(
         "POST", "/v1/consents", token=token, json={"items": [item("voice_input", False, consent_version="v1.1")]}
@@ -66,7 +66,7 @@ async def test_another_familys_consents_are_not_visible(device_world: Any) -> No
 
     from hoicon.db.models import Family
 
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     await call("POST", "/v1/consents", token=token, json={"items": [item("drills", True)]})
     async with get_sessionmaker().begin() as session:
         other = Family(display_name=f"{device_world.display_name}-b", region="bac", is_demo=True)
@@ -75,7 +75,7 @@ async def test_another_familys_consents_are_not_visible(device_world: Any) -> No
         other_id = other.id
     try:
         other_code = await _code_for(other_id)
-        other_token = (await pair_device(other_code))["access_token"]
+        other_token = (await pair_device(other_code, consent=False))["access_token"]
         data = (await call("GET", "/v1/devices/me", token=other_token)).json()
         assert data["consents"] == [] and data["device"]["family_id"] == str(other_id)
     finally:
@@ -89,7 +89,7 @@ async def _code_for(family_id: Any) -> str:
 
 
 async def test_revoked_device_loses_access_immediately(device_world: Any) -> None:
-    token = (await pair_device(device_world.code))["access_token"]
+    token = (await pair_device(device_world.code, consent=False))["access_token"]
     assert (await call("GET", "/v1/devices/me", token=token)).status_code == 200
     async with get_sessionmaker().begin() as session:
         await session.execute(

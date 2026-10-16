@@ -1342,7 +1342,7 @@
      "ops"
     ],
     "summary": "Readyz",
-    "description": "Readiness: kết nối được Postgres (trả lời trong ≤ READYZ_TIMEOUT_S kể cả khi DB treo).",
+    "description": "Readiness: kết nối được Postgres (trả lời trong ≤ READYZ_TIMEOUT_S kể cả khi DB treo) và đủ khóa bắt buộc.",
     "operationId": "readyz_readyz_get",
     "responses": {
      "200": {
@@ -1350,9 +1350,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": {
-          "type": "string"
-         },
+         "additionalProperties": true,
          "type": "object",
          "title": "Response Readyz Readyz Get"
         }

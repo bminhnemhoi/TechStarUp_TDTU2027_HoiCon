@@ -225,7 +225,7 @@ async def test_mock_is_refused_outside_dev_and_test() -> None:
         assert isinstance(build_zalo_client(Settings(_env_file=None, env=env)), MockZaloClient)
 
 
-async def test_readyz_reports_the_send_mode(zalo_world: Any) -> None:
+async def test_readyz_reports_the_send_mode(zalo_world: Any, service_keys: None) -> None:
     from httpx import ASGITransport, AsyncClient
 
     from hoicon.api.main import app
