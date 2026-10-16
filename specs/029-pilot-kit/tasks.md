@@ -14,14 +14,14 @@
 
 ## Giai đoạn 1: Làm được ngay
 
-- [ ] T001 [AB] [FR-001] Viết `docs/schemas/heartbeat.v1.json` (đúng thân `PairingApiClient.sendHeartbeat`, dùng `$ref`
+- [ ] T001 [AB] (phần B xong 17/10: 2 schema + fixture + `test_heartbeat_schema.py`; CÒN test Android ghim fixture — làn A) [FR-001] Viết `docs/schemas/heartbeat.v1.json` (đúng thân `PairingApiClient.sendHeartbeat`, dùng `$ref`
   tới mẫu phiên bản của `risk_event.v1`) và `pilot_report.v1.json`, kèm fixture. Fixture valid của heartbeat sinh từ
   chính hàm dựng thân của Android; thêm test Android ghim fixture đó.
   · Verify: `$PYTEST tests/contract/test_heartbeat_schema.py && $GRADLE :app:testDebugUnitTest`
-- [ ] T002 [B] [FR-003] Viết migration bảng `device_heartbeats` (PK `(device_id, slot)`, FK `CASCADE`), cập nhật model,
+- [x] T002 [B] [FR-003] Viết migration bảng `device_heartbeats` (PK `(device_id, slot)`, FK `CASCADE`), cập nhật model,
   và test lược đồ.
   · Verify: `uv run --directory backend alembic upgrade head && uv run --directory backend alembic downgrade -1 && uv run --directory backend alembic upgrade head && $PYTEST tests/integration/test_schema_<số>.py`
-- [ ] T003 [B] [FR-002] Thêm `POST /v1/heartbeat` vào `api/routers/devices.py`:
+- [x] T003 [B] [FR-002] Thêm `POST /v1/heartbeat` vào `api/routers/devices.py`:
   - cập nhật `devices`;
   - chèn `device_heartbeats` theo khung 15 phút, `ON CONFLICT DO NOTHING`;
   - kiểm `core_protection` (dùng hàm của 034 nếu đã có);
@@ -29,7 +29,7 @@
   - đăng ký hạn lưu 90 ngày với job `retention` nếu 034 đã merge, không thì ghi TODO vào ROADMAP "Ghi chú".
 
   · Verify: `$PYTEST tests/integration/test_heartbeat.py tests/integration/test_api_devices.py`
-- [ ] T004 [B] [FR-002] Viết `backend/tests/integration/test_heartbeat.py`. Các ca:
+- [x] T004 [B] [FR-002] Viết `backend/tests/integration/test_heartbeat.py`. Các ca:
   - thân đúng ⇒ 200, `last_heartbeat_at` đổi;
   - gửi lặp trong cùng khung ⇒ 1 dòng;
   - trường lạ ⇒ 422 (lỗi không lặp lại giá trị);
@@ -42,10 +42,10 @@
 - [ ] T005 [A] [FR-001] Trong `PairingApiClient`, phân biệt 403 có mã `consent_withdrawn` cho `sendHeartbeat` và
   `sendEvents` thành trạng thái "cần đồng ý lại" (không xóa token, không hiện "Kết nối lại"). Test ánh xạ.
   · Verify: `$GRADLE :app:testDebugUnitTest`
-- [ ] T006 [B] [FR-004] Viết `ops/pilot.py` (`enroll --confirm-adult`, `report --days --json`, `gate-m2`) theo plan D2/D4.
+- [x] T006 [B] [FR-004] Viết `ops/pilot.py` (`enroll --confirm-adult`, `report --days --json`, `gate-m2`) theo plan D2/D4.
   Đầu ra không có PII. `gate-m2` đánh dấu "NHẬP TAY" cho chỉ tiêu do người nhập.
   · Verify: `$PYTEST tests/integration/test_ops_pilot.py`
-- [ ] T007 [B] [FR-004] Viết `backend/tests/integration/test_ops_pilot.py`. Các ca:
+- [x] T007 [B] [FR-004] Viết `backend/tests/integration/test_ops_pilot.py`. Các ca:
   - độ phủ 100% / 50% / 0% với dữ liệu dựng sẵn;
   - thiết bị ghép giữa kỳ (mẫu số đúng);
   - thiết bị bị thu hồi;
@@ -61,7 +61,7 @@
 - [ ] T009 [H] [FR-006] Soạn `docs/setup/PILOT-ONBOARDING.md` và `docs/setup/PILOT-SUPPORT.md`, rồi bổ sung phần thí
   điểm của `docs/PILOT-PROTOCOL.md` (ghi rõ phần chờ 011). Gửi `ux-elder-reviewer` duyệt câu chữ; Minh duyệt bản cuối.
   · Verify: báo cáo reviewer không còn mục chặn; evidence ghi trạng thái Minh duyệt
-- [ ] T010 [AB] [FR-010] Sinh lại client TS; cập nhật `docs/API.md` (heartbeat, 403 `consent_withdrawn`),
+- [x] T010 [AB] [FR-010] Sinh lại client TS; cập nhật `docs/API.md` (heartbeat, 403 `consent_withdrawn`),
   `docs/DATA-MODEL.md` (`device_heartbeats`, hạn lưu), `docs/PLAY-POLICY.md` (Data safety khớp các trường heartbeat).
   · Verify: `bash scripts/gen-api-client.sh && pnpm --dir apps/web typecheck`
 

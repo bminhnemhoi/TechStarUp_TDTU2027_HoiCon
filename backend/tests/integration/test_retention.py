@@ -131,6 +131,7 @@ def test_retention_constants_match_the_data_model_table() -> None:
     assert days(row("`action_tokens`")) == rs.RETENTION["action_tokens"].days
     assert days(row("`verifications`")) == rs.RETENTION["verifications"].days
     assert "12 tháng" in row("`drills`") and rs.RETENTION["drills"].days == 365
+    assert days(row("`device_heartbeats`")) == rs.RETENTION["device_heartbeats"].days
     assert set(rs.RETENTION) == {
         "risk_events",
         "agent_steps_content",
@@ -140,6 +141,7 @@ def test_retention_constants_match_the_data_model_table() -> None:
         "action_tokens",
         "verifications",
         "drills",
+        "device_heartbeats",
     }
 
 
