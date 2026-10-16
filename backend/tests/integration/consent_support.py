@@ -42,4 +42,12 @@ async def purge_family(family_id: UUID) -> None:
         await conn.execute(text("alter table consents disable trigger trg_consents_immutable"))
         await conn.execute(text("delete from consents where family_id = :id"), {"id": family_id})
         await conn.execute(text("alter table consents enable always trigger trg_consents_immutable"))
+        # Job của sự cố trong gia đình (đồ thị, hẹn giờ, tin, FCM — spec 024): không có FK, khóa bắt đầu bằng id sự cố.
+        await conn.execute(
+            text(
+                "delete from jobs j using incidents i where i.family_id = :id"
+                " and j.idempotency_key like i.id::text || ':%'"
+            ),
+            {"id": family_id},
+        )
         await conn.execute(text("delete from families where id = :id"), {"id": family_id})

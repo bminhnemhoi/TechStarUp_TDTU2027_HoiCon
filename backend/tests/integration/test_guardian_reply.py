@@ -91,7 +91,7 @@ async def test_2_resumes_the_graph_as_scam(zalo_world: Any, runtime: Any, thread
     await pair(world, USER_1, 1)
     incident = await open_incident(world, runtime, threads)
     await reply(world, USER_1, "2", runtime)
-    assert (await runtime.status(incident)).outcome == "resolved_prevented"
+    assert (await runtime.status(incident)).outcome == "case_open"  # spec 023/024: "2 - nghi lừa đảo" mở hồ sơ
     assert world.sent_to(USER_1)[-1] == texts.guardian_ack("scam", False)
     await finish(runtime, incident)
 
@@ -169,7 +169,7 @@ async def test_rank_2_can_answer_after_escalation(zalo_world: Any, runtime: Any,
     assert any(m.text.startswith(texts.guardian_escalation("Mẹ", False)[:60]) for m in world.client.sent)
     assert world.sent_to(USER_2)[0].startswith("Đây là trợ lý AI HỏiCon.")
     await reply(world, USER_2, "2", runtime)
-    assert (await runtime.status(incident)).outcome == "resolved_prevented"
+    assert (await runtime.status(incident)).outcome == "case_open"
     await finish(runtime, incident)
 
 

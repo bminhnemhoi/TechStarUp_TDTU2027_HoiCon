@@ -8,6 +8,10 @@
 - Tác dụng phụ (gửi tin, hẹn giờ) chỉ ở `fast_alert`, `ask_elder`, `intervention`, `await_guardian`, `resolve` và
   luôn qua hàng đợi job có khóa chống trùng: node chạy lại (interrupt chạy lại node từ đầu; kill -9) không gửi trùng.
 - Mỗi node ghi một dòng `agent_steps` (đã che PII). Chuyển trạng thái sự cố qua `IncidentService.transition` ở P2-03.
+- Spec 024: người giám hộ có thể quyết NGOÀI đồ thị (link `/a/`, JWT, Zalo 1/2 — spec 023). `intervention` và
+  `await_guardian` đọc trạng thái sự cố trước khi gửi gì: đã quyết ⇒ không gửi chi tiết/nhắc/leo thang nữa, đi thẳng
+  tới `resolve`; `resolve` ghi kết quả của chính đồ thị (T3 không ai trả lời, "lừa đảo" ⇒ `case_open`) qua
+  `IncidentService`.
 """
 
 import re
@@ -25,11 +29,13 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from hoicon.agents import texts
 from hoicon.agents.llm_router import LlmResult, LlmRouter, load_prompt
+from hoicon.channels.fcm import notify_elder_fcm
 from hoicon.config import Settings
 from hoicon.db.models import AgentRun, AgentStep
 from hoicon.domain.pii import mask_text
 from hoicon.domain.risk import RiskLevel, raise_only
 from hoicon.jobs.queue import cancel_prefix, enqueue
+from hoicon.services.incident_service import GRAPH_OUTCOMES, close_from_graph, decided_state
 
 QuestionId = Literal["q_caller_authority", "q_asked_transfer", "q_know_caller", "none"]
 Tactic = Literal[
@@ -96,9 +102,33 @@ class Deps:
     settings: Settings
 
 
+# Câu trả lời E8 nói rõ dấu hiệu lừa đảo ⇒ mức tối thiểu (tất định, không phụ thuộc LLM — SC-002).
+_ANSWER_FLOOR: dict[tuple[str, str], RiskLevel] = {
+    ("q_asked_transfer", "yes"): RiskLevel.CRITICAL,
+    ("q_caller_authority", "yes"): RiskLevel.HIGH,
+    ("q_know_caller", "no"): RiskLevel.HIGH,
+}
+DECIDED = "decided"  # người giám hộ đã quyết ngoài đồ thị; kết quả thật nằm ở `incidents.state`
+
+
+def _incident_uuid(state: IncidentState) -> UUID | None:
+    """Id sự cố thật; lượt eval (`eval-…`) và demo không gắn sự cố trong bảng `incidents`."""
+    try:
+        return UUID(state["incident_id"])
+    except ValueError:
+        return None
+
+
 def build_graph(deps: Deps) -> StateGraph:
     risk_prompt = load_prompt("risk_scorer")
     brief_prompt = load_prompt("intervention")
+
+    async def decided(state: IncidentState) -> str | None:
+        incident_id = _incident_uuid(state)
+        if incident_id is None:
+            return None
+        async with deps.sessions() as session:
+            return await decided_state(session, incident_id)
 
     async def step(
         state: IncidentState,
@@ -201,11 +231,17 @@ def build_graph(deps: Deps) -> StateGraph:
     async def risk_scorer(state: IncidentState) -> dict[str, Any]:
         started = time.monotonic()
         floor = RiskLevel(state["rule_floor"])
-        answered = state.get("elder_answer") is not None
+        elder_ans = state.get("elder_answer")
+        answered = elder_ans is not None
+        forced_level = _ANSWER_FLOOR.get((elder_ans.get("question_id"), elder_ans.get("answer"))) if elder_ans else None
         fallback = RiskAssessment(
-            level=state["level"],
+            level=(forced_level or RiskLevel(state["level"])).value,
             tactic="unknown",
-            reasons=["Dùng mức sàn của luật trên máy (chưa có đánh giá AI)"],
+            reasons=[
+                "Người cao tuổi xác nhận dấu hiệu lừa đảo ở câu hỏi nhanh"
+                if forced_level
+                else "Dùng mức sàn của luật trên máy (chưa có đánh giá AI)"
+            ],
             ask_question="none" if answered else "q_asked_transfer",
         )
         # Không có văn bản tự do nào: lời kể của người cao tuổi chỉ còn là cờ tất định (runtime.clean_resume).
@@ -213,7 +249,7 @@ def build_graph(deps: Deps) -> StateGraph:
             prompt=risk_prompt, context=context(state), output=RiskAssessment, fallback=fallback
         )
         assessed = llm.output
-        level = raise_only(floor, RiskLevel(state["level"]), RiskLevel(assessed.level))
+        level = raise_only(floor, RiskLevel(state["level"]), RiskLevel(assessed.level), forced_level)
         question = None if answered or assessed.ask_question == "none" else assessed.ask_question
         output = {"level": level, "tactic": assessed.tactic, "question": question, "llm_level": assessed.level}
         await step(state, "risk_scorer", started, output, llm)
@@ -223,14 +259,13 @@ def build_graph(deps: Deps) -> StateGraph:
         # Chạy lại từ đầu khi resume ⇒ mọi thứ trước interrupt() phải idempotent (job có khóa).
         started = time.monotonic()
         question_id = state["question_id"] or "q_asked_transfer"
+        text = texts.question_for_elder(question_id, state["is_drill"])
         await timer(state, "ask_elder", deps.settings.timer_ask_elder_s, "ask_elder", {"timeout": True})
+        await notify_elder_fcm(
+            deps.sessions, incident_id=state["incident_id"], question_id=question_id, is_drill=state["is_drill"]
+        )
         answer = interrupt(
-            {
-                "kind": "ask_elder",
-                "question_id": question_id,
-                "text": texts.question_for_elder(question_id, state["is_drill"]),
-                "answers": list(texts.ANSWERS),
-            }
+            {"kind": "ask_elder", "question_id": question_id, "text": text, "answers": list(texts.ANSWERS)}
         )
         # `answer` đã qua runtime.clean_resume. Hẹn giờ ask_elder để nguyên: đến muộn thì `expect` bỏ qua, còn nếu tiến
         # trình chết ngay sau đây thì chính nó gỡ kẹt cho sự cố.
@@ -242,6 +277,9 @@ def build_graph(deps: Deps) -> StateGraph:
 
     async def intervention(state: IncidentState) -> dict[str, Any]:
         started = time.monotonic()
+        if (done := await decided(state)) is not None:  # người giám hộ đã quyết: không gửi chi tiết thừa
+            await step(state, "intervention", started, {"skipped": done})
+            return {"guardian_decision": DECIDED}
         level = RiskLevel(state["level"])
         fallback = GuardianBrief(
             summary=f"{state['elder_alias']} vừa nghe số lạ gọi rồi mở ứng dụng tài chính — dấu hiệu thường gặp khi "
@@ -273,6 +311,10 @@ def build_graph(deps: Deps) -> StateGraph:
 
     async def await_guardian(state: IncidentState) -> dict[str, Any]:
         started = time.monotonic()
+        # Chạy lại từ đầu ở MỖI lần resume (T1/T2/T3, Zalo): người giám hộ quyết qua `/a/` thì không nhắc/leo thang nữa.
+        if await decided(state) is not None:
+            await step(state, "await_guardian", started, {"resumed_with": DECIDED})
+            return {"guardian_decision": DECIDED}
         s = deps.settings
         for name, after_s in (("t1", s.timer_t1_s), ("t2", s.timer_t2_s), ("t3", s.timer_t3_s)):
             await timer(state, name, after_s, "await_guardian", {"timer": name})
@@ -297,11 +339,16 @@ def build_graph(deps: Deps) -> StateGraph:
 
     async def resolve(state: IncidentState) -> dict[str, Any]:
         started = time.monotonic()
-        outcome = {
-            "safe": "resolved_safe",
-            "scam": "resolved_prevented",
-            "no_response": "resolved_no_response",
-        }[state["guardian_decision"] or "no_response"]
+        decision = state["guardian_decision"] or "no_response"
+        incident_id = _incident_uuid(state)
+        if incident_id is None:  # eval/demo: không có sự cố để ghi
+            outcome = GRAPH_OUTCOMES[decision][0] if decision != DECIDED else "decided"
+        elif decision == DECIDED:
+            async with deps.sessions() as session:
+                outcome = await decided_state(session, incident_id) or "decided"
+        else:
+            async with deps.sessions.begin() as session:
+                outcome = await close_from_graph(session, incident_id, decision)
         await cancel_prefix(deps.sessions, f"{state['incident_id']}:timer:")
         await step(state, "resolve", started, {"outcome": outcome, "level": state["level"]})
         return {"outcome": outcome}
@@ -324,7 +371,11 @@ def build_graph(deps: Deps) -> StateGraph:
         "risk_scorer", lambda s: "ask_elder" if s.get("question_id") else "intervention", ["ask_elder", "intervention"]
     )
     graph.add_edge("ask_elder", "risk_scorer")
-    graph.add_edge("intervention", "await_guardian")
+    graph.add_conditional_edges(
+        "intervention",
+        lambda s: "resolve" if s.get("guardian_decision") == DECIDED else "await_guardian",
+        ["resolve", "await_guardian"],
+    )
     graph.add_conditional_edges(
         "await_guardian",
         lambda s: "resolve" if s.get("guardian_decision") else "await_guardian",

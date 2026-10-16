@@ -83,7 +83,7 @@ async def test_three_representative_cases(target: tuple[str, bool]) -> None:
     got = by_id(await run(target, [load_case(c) for c in THREE]))
     scam, benign, quiet = got[THREE[0]], got[THREE[1]], got[THREE[2]]
     # LLM cố hạ mức xuống low nhưng sàn critical giữ; người giám hộ quyết định "scam" ⇒ ngăn được
-    assert scam.result.final_level == "critical" and scam.result.outcome == "resolved_prevented"
+    assert scam.result.final_level == "critical" and scam.result.outcome == "case_open"
     assert scam.result.notified and scam.result.incident_started and scam.violations == [] and scam.failures == []
     assert scam.result.run_id and all(m.startswith("Đây là trợ lý AI HỏiCon") for m in scam.result.messages)
     assert benign.result.final_level == "high" and benign.result.outcome == "resolved_safe"  # sàn R1 = high

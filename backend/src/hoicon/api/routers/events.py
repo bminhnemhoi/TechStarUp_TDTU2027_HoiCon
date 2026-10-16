@@ -19,12 +19,15 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from hoicon.agents.runtime import prepare_event, safe_alias
 from hoicon.api.auth import DeviceClaims, get_current_device
-from hoicon.db.models import RiskEventRecord
+from hoicon.db.models import Incident, Member, RiskEventRecord
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain.events import RiskEventIn
 from hoicon.domain.pii import hmac_h1
+from hoicon.jobs.queue import enqueue
 from hoicon.services import AlertService, IncidentService
 
 logger = logging.getLogger(__name__)
@@ -108,6 +111,23 @@ def _row(event: RiskEventIn, claims: DeviceClaims) -> dict[str, Any]:
     return row
 
 
+async def _start_graph(session: AsyncSession, incident: Incident, event: RiskEventIn) -> None:
+    """Spec 024 FR-006: sự cố đạt mức cảnh báo (cùng ngưỡng với cảnh báo nhanh) ⇒ xếp job chạy đồ thị tác tử, cùng
+    giao dịch với lô. Khóa theo sự cố ⇒ một sự cố một lượt dù nhiều sự kiện liên kết vào. Payload đã bỏ h1 + tên gói
+    (ADR-006): bảng `jobs` giữ dòng đã chạy xong."""
+    threat, event_data = await prepare_event(session, event)
+    member = await session.get(Member, incident.member_id)
+    payload = {
+        "event": event_data,
+        "threat": threat,
+        "incident_id": str(incident.id),
+        "family_id": str(incident.family_id),
+        "elder_alias": safe_alias(member.alias if member else None),
+        "is_demo": bool(incident.is_demo),
+    }
+    await enqueue(session, "start_graph", payload, key=f"{incident.id}:graph:start")
+
+
 @router.post("/events", response_model=EventsResult)
 async def post_events(batch: EventsBatch, claims: Annotated[DeviceClaims, Depends(get_current_device)]) -> EventsResult:
     wait = _retry_after(claims.device_id, time.monotonic())
@@ -144,6 +164,7 @@ async def post_events(batch: EventsBatch, claims: Annotated[DeviceClaims, Depend
                     incident_id, opened = result.incident.id, opened or result.opened
                     if result.incident.level in ("high", "critical"):
                         await AlertService.trigger_guardian_fast_alert(session, incident=result.incident, event=event)
+                        await _start_graph(session, result.incident, event)
             accepted = len(fresh)
     except OperationalError as exc:
         if not isinstance(exc.orig, LockNotAvailable):

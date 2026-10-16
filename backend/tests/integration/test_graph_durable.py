@@ -56,7 +56,7 @@ async def test_resumes_after_kill_9_without_duplicate_side_effects(threads: list
         status = await runtime.resume(thread, {"answer": "yes"}, expect="ask_elder")
         assert status.waiting_for == "await_guardian"
         status = await runtime.resume(thread, {"decision": "scam"}, expect="await_guardian")
-        assert status.outcome == "resolved_prevented"
+        assert status.outcome == "case_open"  # FR-005 (spec 024): "lừa đảo" mở hồ sơ, không đóng sự cố
         await runtime.graph.checkpointer.adelete_thread(thread)
 
     async with get_sessionmaker()() as session:

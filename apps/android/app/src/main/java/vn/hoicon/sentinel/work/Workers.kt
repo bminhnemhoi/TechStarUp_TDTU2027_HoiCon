@@ -11,12 +11,16 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import java.util.concurrent.TimeUnit
 import vn.hoicon.rules.RiskEngine
 import vn.hoicon.sentinel.BuildConfig
 import vn.hoicon.sentinel.SentinelServices
 import vn.hoicon.sentinel.data.local.TokenStorage
 import vn.hoicon.sentinel.data.outbox.FlushOutcome
+import vn.hoicon.sentinel.data.remote.ElderAnswer
+import vn.hoicon.sentinel.data.remote.ElderAnswerResult
+import vn.hoicon.sentinel.data.remote.ElderApiClient
 import vn.hoicon.sentinel.data.remote.HeartbeatResult
 import vn.hoicon.sentinel.data.remote.HeartbeatStatus
 import vn.hoicon.sentinel.data.remote.PairingApiClient
@@ -121,4 +125,60 @@ object HeartbeatScheduler {
             .build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(NAME, ExistingPeriodicWorkPolicy.KEEP, request)
     }
+}
+
+/**
+ * Sends one E8 answer (spec 024 FR-009). The screen closes at once; this worker retries with backoff until the server
+ * has it. Only ids and the yes/no/unsure enum travel (ADR-009). A late answer comes back "expired": the server timer
+ * already moved on, so there is nothing left to retry.
+ */
+class ElderAnswerWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result = try {
+        val incidentId = inputData.getString(INCIDENT_ID)
+        val questionId = inputData.getString(QUESTION_ID)
+        val answer = inputData.getString(ANSWER)
+        val session = TokenStorage.create(applicationContext).load()
+        if (incidentId == null || questionId == null || answer == null || session == null) {
+            Result.success()
+        } else {
+            val result = ElderApiClient(BuildConfig.API_BASE_URL)
+                .submitAnswer(session.accessToken, incidentId, ElderAnswer(questionId, answer))
+            if (result is ElderAnswerResult.Unauthorized) TokenStorage.create(applicationContext).needsRepair = true
+            if (elderAnswerNeedsRetry(result)) Result.retry() else Result.success()
+        }
+    } catch (e: Exception) {
+        if (e is kotlin.coroutines.cancellation.CancellationException) throw e
+        Result.retry()
+    }
+
+    companion object {
+        const val INCIDENT_ID = "incident_id"
+        const val QUESTION_ID = "question_id"
+        const val ANSWER = "answer"
+    }
+}
+
+/** Only transport failures are worth another try; every answer the server understood is final. */
+fun elderAnswerNeedsRetry(result: ElderAnswerResult): Boolean =
+    result is ElderAnswerResult.NetworkError || result is ElderAnswerResult.ServerError
+
+object ElderAnswerScheduler {
+    /** KEEP: the first button pressed for an incident wins; a second tap (or the timeout) does not overwrite it. */
+    fun submit(context: Context, incidentId: String, questionId: String, answer: String) {
+        val request = OneTimeWorkRequestBuilder<ElderAnswerWorker>()
+            .setInputData(
+                workDataOf(
+                    ElderAnswerWorker.INCIDENT_ID to incidentId,
+                    ElderAnswerWorker.QUESTION_ID to questionId,
+                    ElderAnswerWorker.ANSWER to answer,
+                ),
+            )
+            .setConstraints(needsNetwork)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .build()
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork("hoicon-elder-answer-$incidentId", ExistingWorkPolicy.KEEP, request)
+    }
+
+    private const val BACKOFF_SECONDS = 10L
 }

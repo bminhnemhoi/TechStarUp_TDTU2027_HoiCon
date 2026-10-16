@@ -106,7 +106,8 @@ class CaseResult:
 def expected_outcome(case: Case) -> str:
     if plan_trigger(case.signals) is None:
         return "no_incident"
-    return "resolved_safe" if case.is_benign else "resolved_prevented"
+    # Spec 024 FR-005 (cùng quyết định spec 023): người giám hộ báo "lừa đảo" ⇒ mở hồ sơ `case_open`, không đóng sự cố.
+    return "resolved_safe" if case.is_benign else "case_open"
 
 
 def _rank(level: str) -> int:

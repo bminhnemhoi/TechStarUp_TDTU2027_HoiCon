@@ -1,0 +1,29 @@
+[
+  {
+    "_name": "câu hỏi giả danh cơ quan nhà nước",
+    "incident_id": "01851bd2-0000-7000-8000-000000000001",
+    "question_id": "q_caller_authority",
+    "text": "Đây là trợ lý AI HỏiCon. Người đang gọi có tự xưng là công an, viện kiểm sát, tòa án hoặc cán bộ cơ quan nhà nước không ạ?",
+    "is_drill": false,
+    "answers": ["yes", "no", "unsure"],
+    "expires_at": "2026-10-16T12:01:00Z"
+  },
+  {
+    "_name": "câu hỏi đòi chuyển tiền trong diễn tập",
+    "incident_id": "01851bd2-0000-7000-8000-000000000002",
+    "question_id": "q_asked_transfer",
+    "text": "Đây là trợ lý AI HỏiCon. [DIỄN TẬP] Người đang gọi có yêu cầu chuyển tiền gấp, nộp phạt hoặc đọc mã OTP không ạ?",
+    "is_drill": true,
+    "answers": ["yes", "no", "unsure"],
+    "expires_at": "2026-10-16T12:05:30Z"
+  },
+  {
+    "_name": "câu hỏi có quen biết người gọi",
+    "incident_id": "01851bd2-0000-7000-8000-000000000003",
+    "question_id": "q_know_caller",
+    "text": "Đây là trợ lý AI HỏiCon. Bác có quen biết hoặc từng gặp người đang gọi tới này từ trước không?",
+    "is_drill": false,
+    "answers": ["yes", "no", "unsure"],
+    "expires_at": "2026-10-16T12:10:00Z"
+  }
+]

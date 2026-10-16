@@ -14,7 +14,7 @@ from typing import Any
 
 from sqlalchemy import and_, delete, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from hoicon.db.ids import new_id
 from hoicon.db.models import Job
@@ -31,7 +31,7 @@ Handler = Callable[[dict[str, Any]], Awaitable[None]]
 
 
 async def enqueue(
-    sessions: async_sessionmaker,
+    sessions: async_sessionmaker | AsyncSession,
     kind: str,
     payload: dict[str, Any],
     *,
@@ -40,8 +40,11 @@ async def enqueue(
 ) -> None:
     run_at = func.now() + timedelta(seconds=delay_s)
     stmt = insert(Job).values(id=new_id(), kind=kind, payload=payload, run_at=run_at, idempotency_key=key)
-    async with sessions.begin() as session:
-        await session.execute(stmt.on_conflict_do_nothing(index_elements=[Job.idempotency_key]))
+    if isinstance(sessions, AsyncSession):
+        await sessions.execute(stmt.on_conflict_do_nothing(index_elements=[Job.idempotency_key]))
+    else:
+        async with sessions.begin() as session:
+            await session.execute(stmt.on_conflict_do_nothing(index_elements=[Job.idempotency_key]))
 
 
 async def cancel_prefix(sessions: async_sessionmaker, key_prefix: str) -> int:

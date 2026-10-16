@@ -16,11 +16,12 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from hoicon import __version__
 from hoicon.api import webhooks
-from hoicon.api.routers import actions, consents, devices, events, incidents, pairing
+from hoicon.api.routers import actions, consents, devices, elder, events, incidents, pairing
 from hoicon.config import get_settings
 from hoicon.db.session import get_engine
 from hoicon.mcp_servers import threat
 from hoicon.mcp_servers.auth import McpGuard
+from hoicon.services.runtime_service import background_worker
 
 logger = logging.getLogger(__name__)
 READYZ_TIMEOUT_S = 6
@@ -28,8 +29,9 @@ READYZ_TIMEOUT_S = 6
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
-    # MCP gắn bằng mount ⇒ app chủ phải chạy session manager của từng server (MCP SDK v2).
-    async with threat.mcp.session_manager.run():
+    # MCP gắn bằng mount ⇒ app chủ phải chạy session manager của từng server (MCP SDK v2). Worker job (đồ thị tác
+    # tử, bộ hẹn giờ, gửi tin) là task nền cùng tiến trình (ADR-002, spec 024).
+    async with threat.mcp.session_manager.run(), background_worker(get_settings().run_worker):
         yield
 
 
@@ -50,6 +52,7 @@ app.include_router(devices.router)
 app.include_router(events.router)
 app.include_router(incidents.router)
 app.include_router(actions.router)
+app.include_router(elder.router)
 app.include_router(webhooks.router)  # cùng route với ứng dụng con `hoicon.api.webhooks:app` (chỉ nó ra đường hầm)
 # /mcp/threat gắn ở MỌI môi trường nhưng đóng mặc định: `McpGuard` đòi token Bearer (chưa cấu hình client nào ⇒ 401)
 # và giới hạn tần suất theo client (spec 003, ADR-009 §9). Kiểm Host localhost của MCP SDK chỉ chống DNS rebinding,

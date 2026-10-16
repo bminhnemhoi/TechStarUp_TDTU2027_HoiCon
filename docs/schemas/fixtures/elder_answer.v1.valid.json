@@ -1,0 +1,29 @@
+[
+  {
+    "_name": "trả lời có kèm cờ phân tích giọng nói",
+    "question_id": "q_caller_authority",
+    "answer": "yes",
+    "note_flags": {
+      "mentions_authority": true,
+      "mentions_transfer": false,
+      "mentions_code": false,
+      "mentions_secrecy": false,
+      "mentions_app_or_link": false
+    }
+  },
+  {
+    "_name": "trả lời không",
+    "question_id": "q_asked_transfer",
+    "answer": "no"
+  },
+  {
+    "_name": "trả lời không rõ",
+    "question_id": "q_know_caller",
+    "answer": "unsure"
+  },
+  {
+    "_name": "hết hạn trả lời",
+    "question_id": "q_caller_authority",
+    "answer": "timeout"
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "_name": "thiếu question_id",
+    "_why": "question_id là bắt buộc",
+    "answer": "yes"
+  },
+  {
+    "_name": "thiếu answer",
+    "_why": "answer là bắt buộc",
+    "question_id": "q_caller_authority"
+  },
+  {
+    "_name": "answer sai enum",
+    "_why": "maybe không thuộc [yes, no, unsure, timeout]",
+    "question_id": "q_caller_authority",
+    "answer": "maybe"
+  },
+  {
+    "_name": "question_id sai enum",
+    "_why": "q_lottery_prize không nằm trong ngân hàng câu hỏi E8",
+    "question_id": "q_lottery_prize",
+    "answer": "yes"
+  },
+  {
+    "_name": "chứa trường cấm văn bản tự do",
+    "_why": "speech_raw_text vi phạm chính sách bảo mật không lưu giọng nói/văn bản tự do (ADR-009)",
+    "question_id": "q_caller_authority",
+    "answer": "yes",
+    "speech_raw_text": "Tôi nghe họ nói họ là trung úy công an quận"
+  },
+  {
+    "_name": "note_flags chứa trường lạ",
+    "_why": "mentions_money không thuộc bộ cờ NOTE_KEYWORDS",
+    "question_id": "q_caller_authority",
+    "answer": "yes",
+    "note_flags": {
+      "mentions_transfer": true,
+      "mentions_money": true
+    }
+  }
+]
