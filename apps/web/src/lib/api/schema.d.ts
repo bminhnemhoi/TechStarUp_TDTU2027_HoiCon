@@ -4,6 +4,286 @@
  */
 
 export interface paths {
+    "/v1/pair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pair */
+        post: operations["pair_v1_pair_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record Consents */
+        post: operations["record_consents_v1_consents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/devices/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Device Me */
+        get: operations["device_me_v1_devices_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Events */
+        post: operations["post_events_v1_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/incidents/{incident_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Incident */
+        get: operations["get_incident_v1_incidents__incident_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/families/{family_id}/incidents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Family Incidents */
+        get: operations["list_family_incidents_v1_families__family_id__incidents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/incidents/{incident_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Incident Decision
+         * @description Người giám hộ đã đăng nhập JWT gửi quyết định xử lý sự cố (spec 023, FR-006).
+         *
+         *     Chỉ cho phép người giám hộ thuộc cùng gia đình thao tác; sự cố gia đình khác trả 404.
+         */
+        post: operations["post_incident_decision_v1_incidents__incident_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/runs/{run_id}/steps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lịch sử các bước đã che của một lượt chạy */
+        get: operations["get_run_steps_v1_runs__run_id__steps_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/runs/{run_id}/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Luồng SSE các bước của một lượt chạy
+         * @description Khung: `retry: 3000`; `id/event: step/data` (agent_step.v1); `: ping` mỗi 15 s khi im lặng; `event: done` (run_done.v1) rồi đóng; `event: error` khi DB lỗi. Nối lại bằng header `Last-Event-ID`. Cần header `Authorization` nên dùng `fetch`, không dùng `EventSource`.
+         */
+        get: operations["stream_run_v1_runs__run_id__stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/incidents/{incident_id}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tìm lượt chạy của một sự cố (để mở luồng truy vết) */
+        get: operations["get_incident_run_v1_incidents__incident_id__run_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/action/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Action View
+         * @description Lấy dữ liệu hiển thị cho trang hành động `/a/[token]`.
+         *
+         *     Trả về chi tiết sự cố không chứa PII. Nếu token đã dùng hoặc hết hạn,
+         *     vẫn trả dữ liệu sự cố kèm token_valid=False để giao diện thông báo phù hợp.
+         */
+        get: operations["get_action_view_v1_action__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/action/{token}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Action Decision
+         * @description Người giám hộ gửi quyết định xử lý sự cố qua magic link dùng một lần.
+         *
+         *     Xác thực token, tiêu thụ token và chuyển trạng thái sự cố trong cùng một giao dịch CSDL nguyên tử.
+         */
+        post: operations["post_action_decision_v1_action__token__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/incidents/{incident_id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Elder Answer
+         * @description Nhận câu trả lời E8. Đồ thị không còn chờ câu này (đã quá hạn, đã trả lời) ⇒ `expired`.
+         */
+        post: operations["submit_elder_answer_v1_incidents__incident_id__answers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/incidents/{incident_id}/pending-question": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Pending Question
+         * @description Câu hỏi E8 đang chờ (app kéo khi nhận FCM, hoặc tự hỏi khi FCM chậm/mất mạng). Không có ⇒ 404.
+         */
+        get: operations["get_pending_question_v1_incidents__incident_id__pending_question_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/zalo/{bot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Zalo Webhook */
+        post: operations["zalo_webhook_webhooks_zalo__bot_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -33,7 +313,7 @@ export interface paths {
         };
         /**
          * Readyz
-         * @description Readiness: kết nối được Postgres.
+         * @description Readiness: kết nối được Postgres (trả lời trong ≤ READYZ_TIMEOUT_S kể cả khi DB treo).
          */
         get: operations["readyz_readyz_get"];
         put?: never;
@@ -47,7 +327,500 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        /** App */
+        App: {
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "bank" | "wallet" | "securities" | "sideloaded" | "other";
+            /** Package */
+            package?: string | null;
+        };
+        /** Call */
+        Call: {
+            /** Direction */
+            direction?: ("incoming" | "outgoing") | null;
+            /** Active */
+            active?: boolean | null;
+            /** Duration S */
+            duration_s?: number | null;
+            /** Since End S */
+            since_end_s?: number | null;
+        };
+        /** Caller */
+        Caller: {
+            /** H1 */
+            h1: string;
+            /** Last3 */
+            last3: string;
+            /** In Contacts */
+            in_contacts: boolean;
+            /**
+             * Trusted
+             * @default false
+             */
+            trusted: boolean;
+            /**
+             * Flagged
+             * @default false
+             */
+            flagged: boolean;
+        };
+        /**
+         * ConsentBatch
+         * @description Khớp `docs/schemas/consent_record.v1.json`, chặt hơn ở hai điểm (xem mô tả schema): kênh `app` và purpose không
+         *     trùng trong một lô (UUIDv7 cùng mili-giây không có thứ tự ⇒ "dòng mới nhất" của purpose trùng sẽ mơ hồ).
+         */
+        ConsentBatch: {
+            /** Items */
+            items: components["schemas"]["ConsentItem"][];
+        };
+        /** ConsentItem */
+        ConsentItem: {
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "core_protection" | "call_screening" | "usage_monitoring" | "overlay_pause" | "guardian_alerts" | "llm_processing" | "voice_input" | "drills" | "pilot_research";
+            /** Granted */
+            granted: boolean;
+            /** Consent Version */
+            consent_version: string;
+            /** Text Sha256 */
+            text_sha256: string;
+            /**
+             * Channel
+             * @constant
+             */
+            channel: "app";
+        };
+        /** ConsentReceipt */
+        ConsentReceipt: {
+            /**
+             * Status
+             * @default recorded
+             * @constant
+             */
+            status: "recorded";
+            /** Count */
+            count: number;
+            /** Recorded At */
+            recorded_at: string;
+        };
+        /** ConsentState */
+        ConsentState: {
+            /** Purpose */
+            purpose: string;
+            /** Granted */
+            granted: boolean;
+            /** Consent Version */
+            consent_version: string;
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+        };
+        /** DeviceInfo */
+        DeviceInfo: {
+            /** Device Id */
+            device_id: string;
+            /** Family Id */
+            family_id: string;
+            /** Member Id */
+            member_id: string;
+            /** Family Name */
+            family_name: string;
+            /** Platform */
+            platform: string;
+            /** Label */
+            label: string | null;
+            /** App Version */
+            app_version: string;
+            /** Rules Version */
+            rules_version: string;
+            /** Threat List Version */
+            threat_list_version: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Last Heartbeat At
+             * Format: date-time
+             */
+            last_heartbeat_at: string;
+        };
+        /** DeviceMe */
+        DeviceMe: {
+            device: components["schemas"]["DeviceInfo"];
+            /** Consents */
+            consents: components["schemas"]["ConsentState"][];
+        };
+        /** ElderAnswerIn */
+        ElderAnswerIn: {
+            /**
+             * Question Id
+             * @enum {string}
+             */
+            question_id: "q_caller_authority" | "q_asked_transfer" | "q_know_caller";
+            /**
+             * Answer
+             * @enum {string}
+             */
+            answer: "yes" | "no" | "unsure" | "timeout";
+            note_flags?: components["schemas"]["NoteFlags"] | null;
+        };
+        /** ElderAnswerResult */
+        ElderAnswerResult: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "accepted" | "expired" | "already_resolved";
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /** Level */
+            level: string;
+        };
+        /** EventsBatch */
+        EventsBatch: {
+            /** Events */
+            events: components["schemas"]["RiskEventIn"][];
+        };
+        /** EventsResult */
+        EventsResult: {
+            /** Accepted */
+            accepted: number;
+            /** Duplicates */
+            duplicates: number;
+            /** Incident Id */
+            incident_id: string | null;
+            /** Incident Opened */
+            incident_opened: boolean;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /** IncidentDecisionIn */
+        IncidentDecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "safe" | "prevented" | "false_alarm" | "emergency_pause";
+            /** Note */
+            note?: string | null;
+        };
+        /** IncidentDecisionResult */
+        IncidentDecisionResult: {
+            /** Success */
+            success: boolean;
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /** State */
+            state: string;
+            /** Outcome */
+            outcome?: string | null;
+        };
+        /** IncidentDetail */
+        IncidentDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Device Id */
+            device_id: string | null;
+            /** State */
+            state: string;
+            /** Level */
+            level: string;
+            /** Rule Floor */
+            rule_floor: string;
+            /** Version */
+            version: number;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Drill Id */
+            drill_id: string | null;
+            /** Opened By Event Id */
+            opened_by_event_id: string | null;
+            /** Outcome */
+            outcome: string | null;
+            /**
+             * Opened At
+             * Format: date-time
+             */
+            opened_at: string;
+            /** Closed At */
+            closed_at: string | null;
+            /** Transitions */
+            transitions: components["schemas"]["TransitionOut"][];
+        };
+        /** IncidentList */
+        IncidentList: {
+            /** Incidents */
+            incidents: components["schemas"]["IncidentSummary"][];
+        };
+        /** IncidentRun */
+        IncidentRun: {
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Status */
+            status: string;
+        };
+        /** IncidentSummary */
+        IncidentSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Device Id */
+            device_id: string | null;
+            /** State */
+            state: string;
+            /** Level */
+            level: string;
+            /** Rule Floor */
+            rule_floor: string;
+            /** Version */
+            version: number;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Drill Id */
+            drill_id: string | null;
+            /** Opened By Event Id */
+            opened_by_event_id: string | null;
+            /** Outcome */
+            outcome: string | null;
+            /**
+             * Opened At
+             * Format: date-time
+             */
+            opened_at: string;
+            /** Closed At */
+            closed_at: string | null;
+        };
+        /**
+         * NoteFlags
+         * @description Cùng bộ cờ với `hoicon.domain.pii.NOTE_KEYWORDS` (thứ LLM nhận), có test giữ khớp.
+         */
+        NoteFlags: {
+            /**
+             * Mentions Authority
+             * @default false
+             */
+            mentions_authority: boolean;
+            /**
+             * Mentions Transfer
+             * @default false
+             */
+            mentions_transfer: boolean;
+            /**
+             * Mentions Code
+             * @default false
+             */
+            mentions_code: boolean;
+            /**
+             * Mentions Secrecy
+             * @default false
+             */
+            mentions_secrecy: boolean;
+            /**
+             * Mentions App Or Link
+             * @default false
+             */
+            mentions_app_or_link: boolean;
+        };
+        /**
+         * PairRequest
+         * @description Khớp `docs/schemas/pair_request.v1.json`.
+         */
+        PairRequest: {
+            /** Code */
+            code: string;
+            /** App Version */
+            app_version: string;
+            /** Rules Version */
+            rules_version: string;
+            /**
+             * Platform
+             * @enum {string}
+             */
+            platform: "android" | "ios" | "web";
+            /** Device Label */
+            device_label?: string | null;
+        };
+        /**
+         * PairResponse
+         * @description Khớp `docs/schemas/pair_response.v1.json`.
+         */
+        PairResponse: {
+            /** Device Id */
+            device_id: string;
+            /** Family Id */
+            family_id: string;
+            /** Member Id */
+            member_id: string;
+            /** Family Name */
+            family_name: string;
+            /** Access Token */
+            access_token: string;
+            /** Refresh Token */
+            refresh_token: string;
+            /**
+             * Token Type
+             * @default bearer
+             * @constant
+             */
+            token_type: "bearer";
+            /** Expires In */
+            expires_in: number;
+        };
+        /** PendingQuestionOut */
+        PendingQuestionOut: {
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /**
+             * Question Id
+             * @enum {string}
+             */
+            question_id: "q_caller_authority" | "q_asked_transfer" | "q_know_caller";
+            /** Text */
+            text: string;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Answers */
+            answers: string[];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /**
+         * RiskEventIn
+         * @description Sự kiện NHẬN từ thiết bị (`POST /v1/events`): khớp CHẶT `risk_event.v1.json` (`additionalProperties: false`) —
+         *     trường lạ (kể cả số điện thoại thô) làm hỏng cả lô, không bị lẳng lặng bỏ qua.
+         */
+        RiskEventIn: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Schema Version
+             * @constant
+             */
+            schema_version: 1;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "call_started" | "call_ended" | "flagged_number_call" | "risk_window_opened" | "risk_window_closed" | "banking_app_foreground" | "sideload_detected" | "safe_pause_shown" | "safe_pause_continued" | "safe_pause_cancelled" | "ask_child_pressed";
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /** Rule Id */
+            rule_id?: ("R0" | "R1" | "R2" | "R4") | null;
+            rule_floor: components["schemas"]["RiskLevel"];
+            /** Is Drill */
+            is_drill: boolean;
+            /** Drill Id */
+            drill_id?: string | null;
+            caller?: components["schemas"]["Caller"] | null;
+            call?: components["schemas"]["Call"] | null;
+            app?: components["schemas"]["App"] | null;
+            timing?: components["schemas"]["Timing"] | null;
+            /** App Version */
+            app_version: string;
+            /** Rules Version */
+            rules_version: string;
+        };
+        /**
+         * RiskLevel
+         * @enum {string}
+         */
+        RiskLevel: "none" | "low" | "medium" | "high" | "critical";
+        /** Timing */
+        Timing: {
+            /** Detect Ms */
+            detect_ms?: number | null;
+            /** Pause Ms */
+            pause_ms?: number | null;
+        };
+        /** TransitionOut */
+        TransitionOut: {
+            /** From State */
+            from_state: string | null;
+            /** To State */
+            to_state: string;
+            /** Actor */
+            actor: string;
+            /** Reason */
+            reason: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
@@ -56,6 +829,544 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    pair_v1_pair_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_consents_v1_consents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    device_me_v1_devices_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceMe"];
+                };
+            };
+        };
+    };
+    post_events_v1_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventsBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventsResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_incident_v1_incidents__incident_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_family_incidents_v1_families__family_id__incidents_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_incident_decision_v1_incidents__incident_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentDecisionResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_run_steps_v1_runs__run_id__steps_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Thiếu hoặc sai token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_run_v1_runs__run_id__stream_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Last-Event-ID"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Luồng sự kiện */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
+            };
+            /** @description Thiếu hoặc sai token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Người này đã mở đủ 3 luồng (có Retry-After) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Máy chủ đã đủ 20 luồng (có Retry-After) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_incident_run_v1_incidents__incident_id__run_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentRun"];
+                };
+            };
+            /** @description Thiếu hoặc sai token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Chưa có lượt hoặc không thuộc nhà */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_action_view_v1_action__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_action_decision_v1_action__token__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentDecisionResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_elder_answer_v1_incidents__incident_id__answers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElderAnswerIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElderAnswerResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_pending_question_v1_incidents__incident_id__pending_question_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingQuestionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    zalo_webhook_webhooks_zalo__bot_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     healthz_healthz_get: {
         parameters: {
             query?: never;

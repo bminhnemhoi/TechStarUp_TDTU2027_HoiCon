@@ -1,6 +1,6 @@
 import asyncio
 import secrets
-from collections.abc import AsyncGenerator, Iterator
+from collections.abc import AsyncGenerator, AsyncIterator, Iterator
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
@@ -284,4 +284,45 @@ async def device_world(require_db: None, monkeypatch: pytest.MonkeyPatch) -> Asy
     yield DeviceWorld(family_id, name, code)
     await purge_family(family_id)
     pairing.reset_limits()
+    get_settings.cache_clear()
+
+
+@pytest.fixture
+async def trace_world(require_db: None, monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[dict[str, Any]]:
+    """Hai gia đình demo, mỗi nhà một người giám hộ; một sự cố + một lượt `done` có 4 bước "đầu độc" ở nhà thứ nhất."""
+    from consent_support import purge_family
+    from trace_support import AT, JWT_KEY, add_run
+
+    from hoicon.api.auth import issue_guardian_access_token
+    from hoicon.services import trace_service
+
+    monkeypatch.setenv("HOICON_DEVICE_JWT_SECRET", JWT_KEY)
+    get_settings.cache_clear()
+    trace_service._reset_slots()
+    ids: dict[str, Any] = {"runs": []}
+    async with get_sessionmaker().begin() as session:
+        for tag in ("a", "b"):
+            family = Family(display_name=f"Gia đình mẫu 025{tag}", region="nam", is_demo=True)
+            session.add(family)
+            await session.flush()
+            protected = Member(family_id=family.id, role="protected", alias="Mẹ")
+            guardian = Member(family_id=family.id, role="guardian", guardian_rank=1)
+            session.add_all([protected, guardian])
+            await session.flush()
+            incident = Incident(
+                family_id=family.id, member_id=protected.id, state="resolved_safe", level="high", rule_floor="high",
+                is_demo=True, outcome="safe", closed_at=AT,
+            )  # fmt: skip
+            session.add(incident)
+            await session.flush()
+            ids[tag] = {"family": family.id, "guardian": guardian.id, "incident": incident.id}
+    ids["a"]["run"] = await add_run(ids["a"]["incident"], ids)
+    ids["a"]["token"] = issue_guardian_access_token(ids["a"]["guardian"], ids["a"]["family"])
+    ids["b"]["token"] = issue_guardian_access_token(ids["b"]["guardian"], ids["b"]["family"])
+    yield ids
+    async with get_sessionmaker().begin() as session:
+        await session.execute(delete(AgentRun).where(AgentRun.id.in_(ids["runs"])))
+    for tag in ("a", "b"):
+        await purge_family(ids[tag]["family"])
+    trace_service._reset_slots()
     get_settings.cache_clear()

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/run_steps.v1.json",
+  "title": "RunSteps v1",
+  "description": "Phản hồi GET /v1/runs/{run_id}/steps (spec 025): các bước đã che của một lượt chạy, theo thứ tự (at, id). Tối đa 500 bước (lượt sự cố thật có khoảng 7–15 bước).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "status", "is_drill", "is_demo", "steps"],
+  "properties": {
+    "run_id": { "type": "string", "format": "uuid" },
+    "status": { "enum": ["running", "waiting", "done", "failed"] },
+    "is_drill": { "type": "boolean", "description": "Luật 8: giao diện gắn nhãn [DIỄN TẬP]" },
+    "is_demo": { "type": "boolean" },
+    "steps": { "type": "array", "maxItems": 500, "items": { "$ref": "https://hoicon.vn/schemas/agent_step.v1.json" } }
+  }
+}

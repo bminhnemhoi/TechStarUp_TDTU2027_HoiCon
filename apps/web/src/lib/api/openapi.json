@@ -5,6 +5,771 @@
   "version": "0.1.0"
  },
  "paths": {
+  "/v1/pair": {
+   "post": {
+    "tags": [
+     "pairing"
+    ],
+    "summary": "Pair",
+    "operationId": "pair_v1_pair_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PairRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PairResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/consents": {
+   "post": {
+    "tags": [
+     "consents"
+    ],
+    "summary": "Record Consents",
+    "operationId": "record_consents_v1_consents_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ConsentBatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ConsentReceipt"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/v1/devices/me": {
+   "get": {
+    "tags": [
+     "devices"
+    ],
+    "summary": "Device Me",
+    "operationId": "device_me_v1_devices_me_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DeviceMe"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/v1/events": {
+   "post": {
+    "tags": [
+     "events"
+    ],
+    "summary": "Post Events",
+    "operationId": "post_events_v1_events_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EventsBatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EventsResult"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/v1/incidents/{incident_id}": {
+   "get": {
+    "tags": [
+     "incidents"
+    ],
+    "summary": "Get Incident",
+    "operationId": "get_incident_v1_incidents__incident_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IncidentDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/families/{family_id}/incidents": {
+   "get": {
+    "tags": [
+     "incidents"
+    ],
+    "summary": "List Family Incidents",
+    "operationId": "list_family_incidents_v1_families__family_id__incidents_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "family_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Family Id"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 20,
+       "title": "Limit"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IncidentList"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/incidents/{incident_id}/decision": {
+   "post": {
+    "tags": [
+     "incidents"
+    ],
+    "summary": "Post Incident Decision",
+    "description": "Người giám hộ đã đăng nhập JWT gửi quyết định xử lý sự cố (spec 023, FR-006).\n\nChỉ cho phép người giám hộ thuộc cùng gia đình thao tác; sự cố gia đình khác trả 404.",
+    "operationId": "post_incident_decision_v1_incidents__incident_id__decision_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/IncidentDecisionIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IncidentDecisionResult"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/runs/{run_id}/steps": {
+   "get": {
+    "tags": [
+     "trace"
+    ],
+    "summary": "Lịch sử các bước đã che của một lượt chạy",
+    "operationId": "get_run_steps_v1_runs__run_id__steps_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "run_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Run Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Get Run Steps V1 Runs  Run Id  Steps Get"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Thiếu hoặc sai token"
+     },
+     "404": {
+      "description": "Không thấy (hoặc không thuộc nhà)"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/runs/{run_id}/stream": {
+   "get": {
+    "tags": [
+     "trace"
+    ],
+    "summary": "Luồng SSE các bước của một lượt chạy",
+    "description": "Khung: `retry: 3000`; `id/event: step/data` (agent_step.v1); `: ping` mỗi 15 s khi im lặng; `event: done` (run_done.v1) rồi đóng; `event: error` khi DB lỗi. Nối lại bằng header `Last-Event-ID`. Cần header `Authorization` nên dùng `fetch`, không dùng `EventSource`.",
+    "operationId": "stream_run_v1_runs__run_id__stream_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "run_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Run Id"
+      }
+     },
+     {
+      "name": "Last-Event-ID",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Last-Event-Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Luồng sự kiện",
+      "content": {
+       "text/event-stream": {
+        "schema": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Thiếu hoặc sai token"
+     },
+     "404": {
+      "description": "Không thấy (hoặc không thuộc nhà)"
+     },
+     "429": {
+      "description": "Người này đã mở đủ 3 luồng (có Retry-After)"
+     },
+     "503": {
+      "description": "Máy chủ đã đủ 20 luồng (có Retry-After)"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/incidents/{incident_id}/run": {
+   "get": {
+    "tags": [
+     "trace"
+    ],
+    "summary": "Tìm lượt chạy của một sự cố (để mở luồng truy vết)",
+    "operationId": "get_incident_run_v1_incidents__incident_id__run_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IncidentRun"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Thiếu hoặc sai token"
+     },
+     "404": {
+      "description": "Chưa có lượt hoặc không thuộc nhà"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/action/{token}": {
+   "get": {
+    "tags": [
+     "actions"
+    ],
+    "summary": "Get Action View",
+    "description": "Lấy dữ liệu hiển thị cho trang hành động `/a/[token]`.\n\nTrả về chi tiết sự cố không chứa PII. Nếu token đã dùng hoặc hết hạn,\nvẫn trả dữ liệu sự cố kèm token_valid=False để giao diện thông báo phù hợp.",
+    "operationId": "get_action_view_v1_action__token__get",
+    "parameters": [
+     {
+      "name": "token",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Get Action View V1 Action  Token  Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/action/{token}/decision": {
+   "post": {
+    "tags": [
+     "actions"
+    ],
+    "summary": "Post Action Decision",
+    "description": "Người giám hộ gửi quyết định xử lý sự cố qua magic link dùng một lần.\n\nXác thực token, tiêu thụ token và chuyển trạng thái sự cố trong cùng một giao dịch CSDL nguyên tử.",
+    "operationId": "post_action_decision_v1_action__token__decision_post",
+    "parameters": [
+     {
+      "name": "token",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/IncidentDecisionIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IncidentDecisionResult"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/incidents/{incident_id}/answers": {
+   "post": {
+    "tags": [
+     "elder"
+    ],
+    "summary": "Submit Elder Answer",
+    "description": "Nhận câu trả lời E8. Đồ thị không còn chờ câu này (đã quá hạn, đã trả lời) ⇒ `expired`.",
+    "operationId": "submit_elder_answer_v1_incidents__incident_id__answers_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ElderAnswerIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ElderAnswerResult"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/incidents/{incident_id}/pending-question": {
+   "get": {
+    "tags": [
+     "elder"
+    ],
+    "summary": "Get Pending Question",
+    "description": "Câu hỏi E8 đang chờ (app kéo khi nhận FCM, hoặc tự hỏi khi FCM chậm/mất mạng). Không có ⇒ 404.",
+    "operationId": "get_pending_question_v1_incidents__incident_id__pending_question_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PendingQuestionOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/webhooks/zalo/{bot_id}": {
+   "post": {
+    "tags": [
+     "webhooks"
+    ],
+    "summary": "Zalo Webhook",
+    "operationId": "zalo_webhook_webhooks_zalo__bot_id__post",
+    "parameters": [
+     {
+      "name": "bot_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Bot Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": {
+          "type": "boolean"
+         },
+         "title": "Response Zalo Webhook Webhooks Zalo  Bot Id  Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/healthz": {
    "get": {
     "tags": [
@@ -37,7 +802,7 @@
      "ops"
     ],
     "summary": "Readyz",
-    "description": "Readiness: kết nối được Postgres.",
+    "description": "Readiness: kết nối được Postgres (trả lời trong ≤ READYZ_TIMEOUT_S kể cả khi DB treo).",
     "operationId": "readyz_readyz_get",
     "responses": {
      "200": {
@@ -55,6 +820,1305 @@
       }
      }
     }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "App": {
+    "properties": {
+     "category": {
+      "type": "string",
+      "enum": [
+       "bank",
+       "wallet",
+       "securities",
+       "sideloaded",
+       "other"
+      ],
+      "title": "Category"
+     },
+     "package": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 128,
+        "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z0-9_]+)+$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Package"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "category"
+    ],
+    "title": "App"
+   },
+   "Call": {
+    "properties": {
+     "direction": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "incoming",
+         "outgoing"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Direction"
+     },
+     "active": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Active"
+     },
+     "duration_s": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 86400.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duration S"
+     },
+     "since_end_s": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 86400.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Since End S"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "Call"
+   },
+   "Caller": {
+    "properties": {
+     "h1": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "H1"
+     },
+     "last3": {
+      "type": "string",
+      "pattern": "^[0-9]{3}$",
+      "title": "Last3"
+     },
+     "in_contacts": {
+      "type": "boolean",
+      "title": "In Contacts"
+     },
+     "trusted": {
+      "type": "boolean",
+      "title": "Trusted",
+      "default": false
+     },
+     "flagged": {
+      "type": "boolean",
+      "title": "Flagged",
+      "default": false
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "h1",
+     "last3",
+     "in_contacts"
+    ],
+    "title": "Caller"
+   },
+   "ConsentBatch": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ConsentItem"
+      },
+      "type": "array",
+      "maxItems": 32,
+      "minItems": 1,
+      "title": "Items"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "items"
+    ],
+    "title": "ConsentBatch",
+    "description": "Khớp `docs/schemas/consent_record.v1.json`, chặt hơn ở hai điểm (xem mô tả schema): kênh `app` và purpose không\ntrùng trong một lô (UUIDv7 cùng mili-giây không có thứ tự ⇒ \"dòng mới nhất\" của purpose trùng sẽ mơ hồ)."
+   },
+   "ConsentItem": {
+    "properties": {
+     "purpose": {
+      "type": "string",
+      "enum": [
+       "core_protection",
+       "call_screening",
+       "usage_monitoring",
+       "overlay_pause",
+       "guardian_alerts",
+       "llm_processing",
+       "voice_input",
+       "drills",
+       "pilot_research"
+      ],
+      "title": "Purpose"
+     },
+     "granted": {
+      "type": "boolean",
+      "title": "Granted"
+     },
+     "consent_version": {
+      "type": "string",
+      "maxLength": 16,
+      "minLength": 1,
+      "title": "Consent Version"
+     },
+     "text_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Text Sha256"
+     },
+     "channel": {
+      "type": "string",
+      "const": "app",
+      "title": "Channel"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "purpose",
+     "granted",
+     "consent_version",
+     "text_sha256",
+     "channel"
+    ],
+    "title": "ConsentItem"
+   },
+   "ConsentReceipt": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "const": "recorded",
+      "title": "Status",
+      "default": "recorded"
+     },
+     "count": {
+      "type": "integer",
+      "title": "Count"
+     },
+     "recorded_at": {
+      "type": "string",
+      "title": "Recorded At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "count",
+     "recorded_at"
+    ],
+    "title": "ConsentReceipt"
+   },
+   "ConsentState": {
+    "properties": {
+     "purpose": {
+      "type": "string",
+      "title": "Purpose"
+     },
+     "granted": {
+      "type": "boolean",
+      "title": "Granted"
+     },
+     "consent_version": {
+      "type": "string",
+      "title": "Consent Version"
+     },
+     "recorded_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Recorded At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "purpose",
+     "granted",
+     "consent_version",
+     "recorded_at"
+    ],
+    "title": "ConsentState"
+   },
+   "DeviceInfo": {
+    "properties": {
+     "device_id": {
+      "type": "string",
+      "title": "Device Id"
+     },
+     "family_id": {
+      "type": "string",
+      "title": "Family Id"
+     },
+     "member_id": {
+      "type": "string",
+      "title": "Member Id"
+     },
+     "family_name": {
+      "type": "string",
+      "title": "Family Name"
+     },
+     "platform": {
+      "type": "string",
+      "title": "Platform"
+     },
+     "label": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Label"
+     },
+     "app_version": {
+      "type": "string",
+      "title": "App Version"
+     },
+     "rules_version": {
+      "type": "string",
+      "title": "Rules Version"
+     },
+     "threat_list_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Threat List Version"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "last_heartbeat_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Last Heartbeat At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "device_id",
+     "family_id",
+     "member_id",
+     "family_name",
+     "platform",
+     "label",
+     "app_version",
+     "rules_version",
+     "threat_list_version",
+     "created_at",
+     "last_heartbeat_at"
+    ],
+    "title": "DeviceInfo"
+   },
+   "DeviceMe": {
+    "properties": {
+     "device": {
+      "$ref": "#/components/schemas/DeviceInfo"
+     },
+     "consents": {
+      "items": {
+       "$ref": "#/components/schemas/ConsentState"
+      },
+      "type": "array",
+      "title": "Consents"
+     }
+    },
+    "type": "object",
+    "required": [
+     "device",
+     "consents"
+    ],
+    "title": "DeviceMe"
+   },
+   "ElderAnswerIn": {
+    "properties": {
+     "question_id": {
+      "type": "string",
+      "enum": [
+       "q_caller_authority",
+       "q_asked_transfer",
+       "q_know_caller"
+      ],
+      "title": "Question Id"
+     },
+     "answer": {
+      "type": "string",
+      "enum": [
+       "yes",
+       "no",
+       "unsure",
+       "timeout"
+      ],
+      "title": "Answer"
+     },
+     "note_flags": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/NoteFlags"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "question_id",
+     "answer"
+    ],
+    "title": "ElderAnswerIn"
+   },
+   "ElderAnswerResult": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "accepted",
+       "expired",
+       "already_resolved"
+      ],
+      "title": "Status"
+     },
+     "incident_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Incident Id"
+     },
+     "level": {
+      "type": "string",
+      "title": "Level"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "incident_id",
+     "level"
+    ],
+    "title": "ElderAnswerResult"
+   },
+   "EventsBatch": {
+    "properties": {
+     "events": {
+      "items": {
+       "$ref": "#/components/schemas/RiskEventIn"
+      },
+      "type": "array",
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Events"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "events"
+    ],
+    "title": "EventsBatch"
+   },
+   "EventsResult": {
+    "properties": {
+     "accepted": {
+      "type": "integer",
+      "title": "Accepted"
+     },
+     "duplicates": {
+      "type": "integer",
+      "title": "Duplicates"
+     },
+     "incident_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Incident Id"
+     },
+     "incident_opened": {
+      "type": "boolean",
+      "title": "Incident Opened"
+     }
+    },
+    "type": "object",
+    "required": [
+     "accepted",
+     "duplicates",
+     "incident_id",
+     "incident_opened"
+    ],
+    "title": "EventsResult"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "IncidentDecisionIn": {
+    "properties": {
+     "decision": {
+      "type": "string",
+      "enum": [
+       "safe",
+       "prevented",
+       "false_alarm",
+       "emergency_pause"
+      ],
+      "title": "Decision"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 256
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "decision"
+    ],
+    "title": "IncidentDecisionIn"
+   },
+   "IncidentDecisionResult": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success"
+     },
+     "incident_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Incident Id"
+     },
+     "state": {
+      "type": "string",
+      "title": "State"
+     },
+     "outcome": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Outcome"
+     }
+    },
+    "type": "object",
+    "required": [
+     "success",
+     "incident_id",
+     "state"
+    ],
+    "title": "IncidentDecisionResult"
+   },
+   "IncidentDetail": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "family_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Family Id"
+     },
+     "member_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Member Id"
+     },
+     "device_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Device Id"
+     },
+     "state": {
+      "type": "string",
+      "title": "State"
+     },
+     "level": {
+      "type": "string",
+      "title": "Level"
+     },
+     "rule_floor": {
+      "type": "string",
+      "title": "Rule Floor"
+     },
+     "version": {
+      "type": "integer",
+      "title": "Version"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "title": "Is Drill"
+     },
+     "drill_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Drill Id"
+     },
+     "opened_by_event_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Opened By Event Id"
+     },
+     "outcome": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Outcome"
+     },
+     "opened_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Opened At"
+     },
+     "closed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Closed At"
+     },
+     "transitions": {
+      "items": {
+       "$ref": "#/components/schemas/TransitionOut"
+      },
+      "type": "array",
+      "title": "Transitions"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "family_id",
+     "member_id",
+     "device_id",
+     "state",
+     "level",
+     "rule_floor",
+     "version",
+     "is_drill",
+     "drill_id",
+     "opened_by_event_id",
+     "outcome",
+     "opened_at",
+     "closed_at",
+     "transitions"
+    ],
+    "title": "IncidentDetail"
+   },
+   "IncidentList": {
+    "properties": {
+     "incidents": {
+      "items": {
+       "$ref": "#/components/schemas/IncidentSummary"
+      },
+      "type": "array",
+      "title": "Incidents"
+     }
+    },
+    "type": "object",
+    "required": [
+     "incidents"
+    ],
+    "title": "IncidentList"
+   },
+   "IncidentRun": {
+    "properties": {
+     "run_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Run Id"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     }
+    },
+    "type": "object",
+    "required": [
+     "run_id",
+     "status"
+    ],
+    "title": "IncidentRun"
+   },
+   "IncidentSummary": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "family_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Family Id"
+     },
+     "member_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Member Id"
+     },
+     "device_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Device Id"
+     },
+     "state": {
+      "type": "string",
+      "title": "State"
+     },
+     "level": {
+      "type": "string",
+      "title": "Level"
+     },
+     "rule_floor": {
+      "type": "string",
+      "title": "Rule Floor"
+     },
+     "version": {
+      "type": "integer",
+      "title": "Version"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "title": "Is Drill"
+     },
+     "drill_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Drill Id"
+     },
+     "opened_by_event_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Opened By Event Id"
+     },
+     "outcome": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Outcome"
+     },
+     "opened_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Opened At"
+     },
+     "closed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Closed At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "family_id",
+     "member_id",
+     "device_id",
+     "state",
+     "level",
+     "rule_floor",
+     "version",
+     "is_drill",
+     "drill_id",
+     "opened_by_event_id",
+     "outcome",
+     "opened_at",
+     "closed_at"
+    ],
+    "title": "IncidentSummary"
+   },
+   "NoteFlags": {
+    "properties": {
+     "mentions_authority": {
+      "type": "boolean",
+      "title": "Mentions Authority",
+      "default": false
+     },
+     "mentions_transfer": {
+      "type": "boolean",
+      "title": "Mentions Transfer",
+      "default": false
+     },
+     "mentions_code": {
+      "type": "boolean",
+      "title": "Mentions Code",
+      "default": false
+     },
+     "mentions_secrecy": {
+      "type": "boolean",
+      "title": "Mentions Secrecy",
+      "default": false
+     },
+     "mentions_app_or_link": {
+      "type": "boolean",
+      "title": "Mentions App Or Link",
+      "default": false
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "NoteFlags",
+    "description": "Cùng bộ cờ với `hoicon.domain.pii.NOTE_KEYWORDS` (thứ LLM nhận), có test giữ khớp."
+   },
+   "PairRequest": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$",
+      "title": "Code"
+     },
+     "app_version": {
+      "type": "string",
+      "pattern": "^[0-9A-Za-z._+-]{1,32}$",
+      "title": "App Version"
+     },
+     "rules_version": {
+      "type": "string",
+      "pattern": "^[0-9A-Za-z._+-]{1,32}$",
+      "title": "Rules Version"
+     },
+     "platform": {
+      "type": "string",
+      "enum": [
+       "android",
+       "ios",
+       "web"
+      ],
+      "title": "Platform"
+     },
+     "device_label": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Device Label"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "code",
+     "app_version",
+     "rules_version",
+     "platform"
+    ],
+    "title": "PairRequest",
+    "description": "Khớp `docs/schemas/pair_request.v1.json`."
+   },
+   "PairResponse": {
+    "properties": {
+     "device_id": {
+      "type": "string",
+      "title": "Device Id"
+     },
+     "family_id": {
+      "type": "string",
+      "title": "Family Id"
+     },
+     "member_id": {
+      "type": "string",
+      "title": "Member Id"
+     },
+     "family_name": {
+      "type": "string",
+      "title": "Family Name"
+     },
+     "access_token": {
+      "type": "string",
+      "title": "Access Token"
+     },
+     "refresh_token": {
+      "type": "string",
+      "title": "Refresh Token"
+     },
+     "token_type": {
+      "type": "string",
+      "const": "bearer",
+      "title": "Token Type",
+      "default": "bearer"
+     },
+     "expires_in": {
+      "type": "integer",
+      "title": "Expires In"
+     }
+    },
+    "type": "object",
+    "required": [
+     "device_id",
+     "family_id",
+     "member_id",
+     "family_name",
+     "access_token",
+     "refresh_token",
+     "expires_in"
+    ],
+    "title": "PairResponse",
+    "description": "Khớp `docs/schemas/pair_response.v1.json`."
+   },
+   "PendingQuestionOut": {
+    "properties": {
+     "incident_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Incident Id"
+     },
+     "question_id": {
+      "type": "string",
+      "enum": [
+       "q_caller_authority",
+       "q_asked_transfer",
+       "q_know_caller"
+      ],
+      "title": "Question Id"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "title": "Is Drill"
+     },
+     "answers": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Answers"
+     },
+     "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Expires At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "incident_id",
+     "question_id",
+     "text",
+     "is_drill",
+     "answers",
+     "expires_at"
+    ],
+    "title": "PendingQuestionOut"
+   },
+   "RiskEventIn": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "title": "Schema Version"
+     },
+     "type": {
+      "type": "string",
+      "enum": [
+       "call_started",
+       "call_ended",
+       "flagged_number_call",
+       "risk_window_opened",
+       "risk_window_closed",
+       "banking_app_foreground",
+       "sideload_detected",
+       "safe_pause_shown",
+       "safe_pause_continued",
+       "safe_pause_cancelled",
+       "ask_child_pressed"
+      ],
+      "title": "Type"
+     },
+     "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Occurred At"
+     },
+     "rule_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "R0",
+         "R1",
+         "R2",
+         "R4"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rule Id"
+     },
+     "rule_floor": {
+      "$ref": "#/components/schemas/RiskLevel"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "title": "Is Drill"
+     },
+     "drill_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Drill Id"
+     },
+     "caller": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Caller"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "call": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Call"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "app": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/App"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "timing": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Timing"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "app_version": {
+      "type": "string",
+      "maxLength": 32,
+      "pattern": "^[A-Za-z]{0,16}[-_]?\\d{1,4}(?:\\.\\d{1,4}){0,3}(?:[-+][0-9A-Za-z.]{1,16})?$",
+      "title": "App Version"
+     },
+     "rules_version": {
+      "type": "string",
+      "maxLength": 32,
+      "pattern": "^[A-Za-z]{0,16}[-_]?\\d{1,4}(?:\\.\\d{1,4}){0,3}(?:[-+][0-9A-Za-z.]{1,16})?$",
+      "title": "Rules Version"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "id",
+     "schema_version",
+     "type",
+     "occurred_at",
+     "rule_floor",
+     "is_drill",
+     "app_version",
+     "rules_version"
+    ],
+    "title": "RiskEventIn",
+    "description": "Sự kiện NHẬN từ thiết bị (`POST /v1/events`): khớp CHẶT `risk_event.v1.json` (`additionalProperties: false`) —\ntrường lạ (kể cả số điện thoại thô) làm hỏng cả lô, không bị lẳng lặng bỏ qua."
+   },
+   "RiskLevel": {
+    "type": "string",
+    "enum": [
+     "none",
+     "low",
+     "medium",
+     "high",
+     "critical"
+    ],
+    "title": "RiskLevel"
+   },
+   "Timing": {
+    "properties": {
+     "detect_ms": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 3600000.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detect Ms"
+     },
+     "pause_ms": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 3600000.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pause Ms"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "Timing"
+   },
+   "TransitionOut": {
+    "properties": {
+     "from_state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "From State"
+     },
+     "to_state": {
+      "type": "string",
+      "title": "To State"
+     },
+     "actor": {
+      "type": "string",
+      "title": "Actor"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "from_state",
+     "to_state",
+     "actor",
+     "reason",
+     "at"
+    ],
+    "title": "TransitionOut"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   }
+  },
+  "securitySchemes": {
+   "HTTPBearer": {
+    "type": "http",
+    "scheme": "bearer"
    }
   }
  }

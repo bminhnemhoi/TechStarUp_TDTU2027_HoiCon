@@ -88,7 +88,7 @@ Cập nhật: 15/10/2026
 | P2-07 | W2 | Cảnh báo giai đoạn 1 qua Zalo (mẫu) + trang hành động `/a/[token]` + quyết định người giám hộ → **M1** | ☑ spec [`023-guardian-alert`](../specs/023-guardian-alert/) (kéo sớm Đợt 6, 16/10): cảnh báo mẫu qua Zalo (token `/a/` sinh lúc gửi, chỉ lưu SHA-256), trang `/a/[token]`, quyết định qua liên kết/JWT/Zalo 1-2 (nghi lừa đảo ⇒ `case_open`), `scripts/e2e-m1.sh` phần máy chủ (còn: p95 Zalo thật, chặng Android ↔ máy chủ) |
 | P2-08 | W3 07–13/12 | `risk_scorer` + ngân hàng câu hỏi + E8 qua FCM | ◐ spec [`024-risk-and-intervention`](../specs/024-risk-and-intervention/) (kéo sớm Đợt 7, 16/10): ngân hàng câu hỏi E8 (công khai AI), API pending-question/answers, E8 Compose + WorkManager, câu trả lời nâng mức tất định; còn: FCM thật (P0-08) + đường mở E8 trên máy |
 | P2-09 | W3 | Tác tử can thiệp + interrupt `await_guardian` + hẹn giờ T1/T2/T3 | ◐ spec [`024-risk-and-intervention`](../specs/024-risk-and-intervention/) (kéo sớm Đợt 7, 16/10): đồ thị tự chạy từ `/v1/events` (worker trong API), T1/T2/T3 tôn trọng quyết định ngoài đồ thị, kết quả ghi qua IncidentService; còn: tóm tắt p95 với LLM thật |
-| P2-10 | W3 | `agent_steps` + luồng SSE trace | ◐ spec [`025-trace-sse`](../specs/025-trace-sse/) (khởi động Đợt 8, 16/10): đã có spec/plan/tasks (SSE `/v1/runs/{id}/stream` + `/steps`, JWT người giám hộ, che PII 2 lớp); **chưa code** |
+| P2-10 | W3 | `agent_steps` + luồng SSE trace | ◐ spec [`025-trace-sse`](../specs/025-trace-sse/) (16/10): **đã làm** `GET /v1/runs/{id}/steps`, `/v1/runs/{id}/stream` (SSE), `/v1/incidents/{id}/run` (JWT người giám hộ), `redact_json` + danh sách trắng cột (không `input_redacted`), trần 20 luồng/3 mỗi người, client TS sinh lại; SC-001 p95 ≈ 0,30 s trên uvicorn thật (localhost); **còn** giao diện tiêu thụ (027/033) và đo `: ping` qua Caddy (012) — giữ ◐ |
 | P2-11 | W4 14–20/12 | Tác tử xác minh + MCP `threat` + E10 | ☐ |
 | P2-12 | W4 | Web tối thiểu: danh sách/chi tiết sự cố cho người giám hộ | ☐ |
 | P2-13 | W4 | Diễn tập v1 (E11, bảng `drills`) | ☐ |
@@ -166,3 +166,13 @@ Cập nhật: 15/10/2026
 - **Chặn phát hành (review 09/10):** KHÔNG đưa bản build nào cho người thật (closed testing, thí điểm, gian trưng bày)
   trước khi có: E3 công bố nổi bật + bản ghi đồng ý có phiên bản (P2-02), Room + Tink thay SharedPreferences (P2-05),
   buildType `demo`/release với R8 + log chẩn đoán tắt (P1-08). Bản spike chỉ dùng trên máy ảo/máy dev.
+- (Spec 025) `agent_runs.incident_id` **không được ghi** khi `IncidentRuntime` tạo lượt (liên kết sự cố ↔ lượt chỉ là
+  `thread_id = str(incident.id)`). Luồng truy vết dựa vào `thread_id`; nên ghi cột này (và thêm FK) khi sửa runtime ở
+  spec tác tử kế tiếp. Cùng chỗ: lượt kẹt `running` khi node ném lỗi (chỉ `recover()` lúc khởi động đặt `failed`) ⇒ luồng
+  SSE không có `done`, chỉ đóng theo `MAX_STREAM_S`.
+- (Spec 025, review) `mask_text` chưa gộp dấu `,`/`:` giữa các nhóm số (`0900,000,123` ⇒ lộ 6 số cuối); lớp che `output` dựa vào
+  danh sách đen khóa — khi thêm node mới nên chuyển sang danh sách trắng khóa theo từng node. Trần luồng chưa có giới hạn tần
+  suất mở luồng/đăng ký gia đình; `uvicorn --timeout-graceful-shutdown` cần đặt ở lệnh chạy (012).
+- (Spec 025, review lượt 3) `mask_text` còn lộ 6 số cuối khi số điện thoại ngăn bằng `, ; : * |` có dấu cách (`0900, 000, 123`);
+  `redact_json` không bắt token base64 chuẩn có `/` hay token < 32 ký tự, và khóa viết liền (`phonenumber`) — lớp thật sự chặn
+  vẫn là danh sách trắng cột `step_view` + khóa cấm; node mới ghi vào `agent_steps.output` nên dùng khóa/giá trị enum.
