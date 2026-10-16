@@ -90,15 +90,15 @@ Cập nhật: 15/10/2026
 | P2-09 | W3 | Tác tử can thiệp + interrupt `await_guardian` + hẹn giờ T1/T2/T3 | ◐ spec [`024-risk-and-intervention`](../specs/024-risk-and-intervention/) (kéo sớm Đợt 7, 16/10): đồ thị tự chạy từ `/v1/events` (worker trong API), T1/T2/T3 tôn trọng quyết định ngoài đồ thị, kết quả ghi qua IncidentService; còn: tóm tắt p95 với LLM thật |
 | P2-10 | W3 | `agent_steps` + luồng SSE trace | ◐ spec [`025-trace-sse`](../specs/025-trace-sse/) (16/10): **đã làm** `GET /v1/runs/{id}/steps`, `/v1/runs/{id}/stream` (SSE), `/v1/incidents/{id}/run` (JWT người giám hộ), `redact_json` + danh sách trắng cột (không `input_redacted`), trần 20 luồng/3 mỗi người, client TS sinh lại; SC-001 p95 ≈ 0,30 s trên uvicorn thật (localhost); **còn** giao diện tiêu thụ (027/033) và đo `: ping` qua Caddy (012) — giữ ◐ |
 | P2-11 | W4 14–20/12 | Tác tử xác minh + MCP `threat` + E10 | ◐ spec [`026-verification-threat`](../specs/026-verification-threat/) (16/10): đã có spec/plan/tasks (`/v1/lookups`, node `verification` tất định, danh sách trên máy dạng bucket k-ẩn danh — ADR-011 **đề xuất**, E10); **chưa code** |
-| P2-12 | W4 | Web tối thiểu: danh sách/chi tiết sự cố cho người giám hộ | ☐ |
-| P2-13 | W4 | Diễn tập v1 (E11, bảng `drills`) | ☐ |
-| P2-14 | W4 | Bộ thí điểm + Play internal v0.3 → **M2** | ☐ |
+| P2-12 | W4 | Web tối thiểu: danh sách/chi tiết sự cố cho người giám hộ | ◐ spec [`027-guardian-web`](../specs/027-guardian-web/) (16/10): đã có spec/plan/tasks (đăng nhập bằng liên kết một lần qua Zalo, cookie phiên, `/v1/guardian/*`, trace trực tiếp); **chưa code** |
+| P2-13 | W4 | Diễn tập v1 (E11, bảng `drills`) | ◐ spec [`028-drills`](../specs/028-drills/) (16/10): đã có spec/plan/tasks (luyện tập công khai trong app, cờ diễn tập chỉ do máy chủ cấp); **chưa code**; nội dung chờ Minh duyệt |
+| P2-14 | W4 | Bộ thí điểm + Play internal v0.3 → **M2** | ◐ spec [`029-pilot-kit`](../specs/029-pilot-kit/) (16/10): đã có spec/plan/tasks; giai đoạn 1 (heartbeat máy chủ, báo cáo thí điểm, `release-gate.sh`, tài liệu) làm được ngay; giai đoạn 2 chờ 012 + 034 + W0-3; **chưa code** |
 | P2-15 | W5 21–27/12 | CLI `hoicon-eval` + ≥ 100 ca + chạy full lần đầu | ◐ 15/10: xong CLI `hoicon-eval` + 20 ca smoke tất định (O1/B3, `specs/030-eval-smoke`, bằng chứng ở `evidence.md`; còn chờ CI xanh trên PR — SC-006); ≥ 100 ca + full ở spec 036 |
 | P2-16 | W5 | Nhánh hồ sơ vụ việc (`case_file`, interrupt duyệt) | ☐ |
 | P2-17 | W5 | Đồ thị Coach hằng tuần | ☐ |
 | P2-18 | W6 28/12–03/01 | Bộ eval injection + lặp prompt | ☐ |
 | P2-19 | W6 | Web `/trace`, `/eval`, `/sim` | ☐ |
-| P2-20 | W6 | Gia cố: `privacy-audit`, review bảo mật, job xóa theo hạn lưu, sao lưu, Crashlytics | ☐ |
+| P2-20 | W6 | Gia cố: `privacy-audit`, review bảo mật, job xóa theo hạn lưu, sao lưu, Crashlytics | ◐ spec [`034-hardening-core`](../specs/034-hardening-core/) (16/10, phần lõi): đã có spec/plan/tasks (hạn lưu, xóa theo yêu cầu + ẩn danh, sao lưu mã hóa, đồng ý ở máy chủ); **chưa code**; Crashlytics ở 037 |
 | P2-21 | W7 04–09/01 | Đóng băng 06/01; báo cáo thí điểm; poster; video 5 phút; **nộp 09/01** → **M3** | ☐ |
 
 **Gate M1 (06/12):** AVD API 34 + 36: cuộc gọi lạ → demobank → SafePause p95 ≤ 3 s · Zalo giai đoạn 1 p95 ≤ 10 s · thao tác người giám hộ đóng được sự cố · mỗi quyền đã cấp có dòng consent · **0 số điện thoại thô** trong DB/log · backend tắt vẫn hiện SafePause.
