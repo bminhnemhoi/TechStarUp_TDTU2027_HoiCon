@@ -88,7 +88,7 @@ Cập nhật: 15/10/2026
 | P2-07 | W2 | Cảnh báo giai đoạn 1 qua Zalo (mẫu) + trang hành động `/a/[token]` + quyết định người giám hộ → **M1** | ☑ spec [`023-guardian-alert`](../specs/023-guardian-alert/) (kéo sớm Đợt 6, 16/10): cảnh báo mẫu qua Zalo (token `/a/` sinh lúc gửi, chỉ lưu SHA-256), trang `/a/[token]`, quyết định qua liên kết/JWT/Zalo 1-2 (nghi lừa đảo ⇒ `case_open`), `scripts/e2e-m1.sh` phần máy chủ (còn: p95 Zalo thật, chặng Android ↔ máy chủ) |
 | P2-08 | W3 07–13/12 | `risk_scorer` + ngân hàng câu hỏi + E8 qua FCM | ◐ spec [`024-risk-and-intervention`](../specs/024-risk-and-intervention/) (kéo sớm Đợt 7, 16/10): ngân hàng câu hỏi E8 (công khai AI), API pending-question/answers, E8 Compose + WorkManager, câu trả lời nâng mức tất định; còn: FCM thật (P0-08) + đường mở E8 trên máy |
 | P2-09 | W3 | Tác tử can thiệp + interrupt `await_guardian` + hẹn giờ T1/T2/T3 | ◐ spec [`024-risk-and-intervention`](../specs/024-risk-and-intervention/) (kéo sớm Đợt 7, 16/10): đồ thị tự chạy từ `/v1/events` (worker trong API), T1/T2/T3 tôn trọng quyết định ngoài đồ thị, kết quả ghi qua IncidentService; còn: tóm tắt p95 với LLM thật |
-| P2-10 | W3 | `agent_steps` + luồng SSE trace | ☐ |
+| P2-10 | W3 | `agent_steps` + luồng SSE trace | ◐ spec [`025-trace-sse`](../specs/025-trace-sse/) (khởi động Đợt 8, 16/10): thiết kế Spec Kit, luồng SSE `/v1/runs/{id}/stream`, che mờ PII |
 | P2-11 | W4 14–20/12 | Tác tử xác minh + MCP `threat` + E10 | ☐ |
 | P2-12 | W4 | Web tối thiểu: danh sách/chi tiết sự cố cho người giám hộ | ☐ |
 | P2-13 | W4 | Diễn tập v1 (E11, bảng `drills`) | ☐ |
