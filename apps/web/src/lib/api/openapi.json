@@ -518,6 +518,128 @@
     }
    }
   },
+  "/v1/lookups": {
+   "post": {
+    "tags": [
+     "lookups"
+    ],
+    "summary": "Tra cứu một số điện thoại (đã băm) hoặc một đường link",
+    "operationId": "post_lookup_v1_lookups_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LookupIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LookupResult"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Thiếu hoặc sai token"
+     },
+     "403": {
+      "description": "Chưa đồng ý mục đích `lookups`"
+     },
+     "404": {
+      "description": "Sự cố không thuộc gia đình"
+     },
+     "429": {
+      "description": "Vượt hạn mức tra cứu"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/v1/threat-list": {
+   "get": {
+    "tags": [
+     "lookups"
+    ],
+    "summary": "Ảnh chụp bucket k-ẩn danh của danh sách đe dọa (ADR-011)",
+    "operationId": "get_threat_list_v1_threat_list_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "since",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "pattern": "^[0-9a-f]{16}$"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Since"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ThreatListOut"
+        }
+       }
+      }
+     },
+     "304": {
+      "description": "`since` trùng phiên bản hiện tại: không có thân"
+     },
+     "401": {
+      "description": "Thiếu hoặc sai token thiết bị"
+     },
+     "429": {
+      "description": "Quá 24 lần/ngày/thiết bị"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/v1/action/{token}": {
    "get": {
     "tags": [
@@ -987,7 +1109,8 @@
        "llm_processing",
        "voice_input",
        "drills",
-       "pilot_research"
+       "pilot_research",
+       "lookups"
       ],
       "title": "Purpose"
      },
@@ -1663,6 +1786,159 @@
     ],
     "title": "IncidentSummary"
    },
+   "LookupIn": {
+    "properties": {
+     "kind": {
+      "type": "string",
+      "title": "Kind"
+     },
+     "via": {
+      "type": "string",
+      "enum": [
+       "typed",
+       "qr"
+      ],
+      "title": "Via"
+     },
+     "h1": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "H1"
+     },
+     "last3": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last3"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2048,
+        "minLength": 4
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     },
+     "incident_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Incident Id"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "kind",
+     "via"
+    ],
+    "title": "LookupIn",
+    "description": "Một chủ thể tra cứu. Cấm mọi trường lạ (kể cả `number`/`phone`): số thô không được phép tới đây."
+   },
+   "LookupResult": {
+    "properties": {
+     "verification_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Verification Id"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "phone",
+       "url"
+      ],
+      "title": "Kind"
+     },
+     "verdict": {
+      "type": "string",
+      "enum": [
+       "safe",
+       "warning",
+       "dangerous",
+       "unknown"
+      ],
+      "title": "Verdict"
+     },
+     "confidence": {
+      "type": "number",
+      "title": "Confidence"
+     },
+     "reasons": {
+      "items": {
+       "$ref": "#/components/schemas/Reason"
+      },
+      "type": "array",
+      "title": "Reasons"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/Source"
+      },
+      "type": "array",
+      "title": "Sources"
+     },
+     "disclaimer": {
+      "type": "string",
+      "title": "Disclaimer"
+     },
+     "incident_level": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "low",
+         "medium",
+         "high",
+         "critical"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Incident Level"
+     },
+     "is_demo": {
+      "type": "boolean",
+      "title": "Is Demo"
+     }
+    },
+    "type": "object",
+    "required": [
+     "verification_id",
+     "kind",
+     "verdict",
+     "confidence",
+     "reasons",
+     "sources",
+     "disclaimer",
+     "is_demo"
+    ],
+    "title": "LookupResult"
+   },
    "NoteFlags": {
     "properties": {
      "mentions_authority": {
@@ -1844,6 +2120,24 @@
     ],
     "title": "PendingQuestionOut"
    },
+   "Reason": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "text"
+    ],
+    "title": "Reason"
+   },
    "RiskEventIn": {
     "properties": {
      "id": {
@@ -1992,6 +2286,85 @@
      "critical"
     ],
     "title": "RiskLevel"
+   },
+   "Source": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "type": {
+      "type": "string",
+      "enum": [
+       "threat_list",
+       "heuristic",
+       "registry"
+      ],
+      "title": "Type"
+     },
+     "list_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "List Version"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "type"
+    ],
+    "title": "Source"
+   },
+   "ThreatListOut": {
+    "properties": {
+     "version": {
+      "type": "string",
+      "title": "Version"
+     },
+     "bucket_bits": {
+      "type": "integer",
+      "title": "Bucket Bits"
+     },
+     "count": {
+      "type": "integer",
+      "title": "Count"
+     },
+     "buckets_b64": {
+      "type": "string",
+      "title": "Buckets B64"
+     },
+     "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Generated At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "version",
+     "bucket_bits",
+     "count",
+     "buckets_b64",
+     "generated_at"
+    ],
+    "title": "ThreatListOut"
    },
    "Timing": {
     "properties": {

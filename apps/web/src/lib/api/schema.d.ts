@@ -182,6 +182,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/lookups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tra cứu một số điện thoại (đã băm) hoặc một đường link */
+        post: operations["post_lookup_v1_lookups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/threat-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ảnh chụp bucket k-ẩn danh của danh sách đe dọa (ADR-011) */
+        get: operations["get_threat_list_v1_threat_list_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/action/{token}": {
         parameters: {
             query?: never;
@@ -383,7 +417,7 @@ export interface components {
              * Purpose
              * @enum {string}
              */
-            purpose: "core_protection" | "call_screening" | "usage_monitoring" | "overlay_pause" | "guardian_alerts" | "llm_processing" | "voice_input" | "drills" | "pilot_research";
+            purpose: "core_protection" | "call_screening" | "usage_monitoring" | "overlay_pause" | "guardian_alerts" | "llm_processing" | "voice_input" | "drills" | "pilot_research" | "lookups";
             /** Granted */
             granted: boolean;
             /** Consent Version */
@@ -638,6 +672,57 @@ export interface components {
             closed_at: string | null;
         };
         /**
+         * LookupIn
+         * @description Một chủ thể tra cứu. Cấm mọi trường lạ (kể cả `number`/`phone`): số thô không được phép tới đây.
+         */
+        LookupIn: {
+            /** Kind */
+            kind: string;
+            /**
+             * Via
+             * @enum {string}
+             */
+            via: "typed" | "qr";
+            /** H1 */
+            h1?: string | null;
+            /** Last3 */
+            last3?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Incident Id */
+            incident_id?: string | null;
+        };
+        /** LookupResult */
+        LookupResult: {
+            /**
+             * Verification Id
+             * Format: uuid
+             */
+            verification_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "phone" | "url";
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "safe" | "warning" | "dangerous" | "unknown";
+            /** Confidence */
+            confidence: number;
+            /** Reasons */
+            reasons: components["schemas"]["Reason"][];
+            /** Sources */
+            sources: components["schemas"]["Source"][];
+            /** Disclaimer */
+            disclaimer: string;
+            /** Incident Level */
+            incident_level?: ("low" | "medium" | "high" | "critical") | null;
+            /** Is Demo */
+            is_demo: boolean;
+        };
+        /**
          * NoteFlags
          * @description Cùng bộ cờ với `hoicon.domain.pii.NOTE_KEYWORDS` (thứ LLM nhận), có test giữ khớp.
          */
@@ -737,6 +822,13 @@ export interface components {
              */
             expires_at: string;
         };
+        /** Reason */
+        Reason: {
+            /** Code */
+            code: string;
+            /** Text */
+            text: string;
+        };
         /**
          * RiskEventIn
          * @description Sự kiện NHẬN từ thiết bị (`POST /v1/events`): khớp CHẶT `risk_event.v1.json` (`additionalProperties: false`) —
@@ -784,6 +876,36 @@ export interface components {
          * @enum {string}
          */
         RiskLevel: "none" | "low" | "medium" | "high" | "critical";
+        /** Source */
+        Source: {
+            /** Name */
+            name: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "threat_list" | "heuristic" | "registry";
+            /** List Version */
+            list_version?: string | null;
+            /** Url */
+            url?: string | null;
+        };
+        /** ThreatListOut */
+        ThreatListOut: {
+            /** Version */
+            version: string;
+            /** Bucket Bits */
+            bucket_bits: number;
+            /** Count */
+            count: number;
+            /** Buckets B64 */
+            buckets_b64: string;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+        };
         /** Timing */
         Timing: {
             /** Detect Ms */
@@ -1197,6 +1319,119 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    post_lookup_v1_lookups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LookupIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupResult"];
+                };
+            };
+            /** @description Thiếu hoặc sai token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Chưa đồng ý mục đích `lookups` */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sự cố không thuộc gia đình */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Vượt hạn mức tra cứu */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_threat_list_v1_threat_list_get: {
+        parameters: {
+            query?: {
+                since?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreatListOut"];
+                };
+            };
+            /** @description `since` trùng phiên bản hiện tại: không có thân */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Thiếu hoặc sai token thiết bị */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Quá 24 lần/ngày/thiết bị */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
