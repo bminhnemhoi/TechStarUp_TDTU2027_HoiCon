@@ -104,6 +104,9 @@ interface OutboxDao {
     )
     suspend fun dropOldestFinished(n: Int): Int
 
+    @Query("DELETE FROM outbox_events")
+    suspend fun deleteAll(): Int
+
     @Query("DELETE FROM outbox_events WHERE id IN (SELECT id FROM outbox_events ORDER BY createdAt LIMIT :n)")
     suspend fun dropOldest(n: Int): Int
 }

@@ -119,4 +119,11 @@ class OutboxRepositoryTest {
         assertEquals(OutboxStatus.PENDING, dao.rows.getValue(a.id).status, "a later, working key store can still read it")
         assertEquals(1, repo.nextBatch(10).size)
     }
+
+    @Test
+    fun wipeForgetsEverythingQueued() = runBlocking {
+        repeat(3) { repo.enqueue(sampleEvent(factory)) }
+        repo.wipe()
+        assertEquals(0, dao.count())
+    }
 }

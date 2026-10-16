@@ -63,6 +63,11 @@ class OutboxRepository(
     /** The server refused these events for good. They are kept (as FAILED) for a few days, not retried. */
     suspend fun markFailed(ids: List<String>) = update(ids) { dao.setStatus(it, OutboxStatus.FAILED) }
 
+    /** Drops everything queued, sent or not. */
+    suspend fun wipe() {
+        dao.deleteAll()
+    }
+
     suspend fun hasDeliverable(): Boolean = dao.deliverableCount() > 0
 
     /** Drops confirmed rows after a day and refused rows after a week. Cheap; call it once per worker run. */

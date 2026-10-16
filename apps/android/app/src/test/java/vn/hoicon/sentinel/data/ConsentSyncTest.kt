@@ -32,6 +32,7 @@ class ConsentSyncTest {
     private val sync = ConsentSync(storage, PairingApiClient("http://127.0.0.1:${server.address.port}", timeoutMs = 2_000))
     private val texts = mapOf(
         "core_protection" to "core",
+        "guardian_alerts" to "guardian",
         "call_screening" to "call",
         "usage_monitoring" to "usage",
         "overlay_pause" to "overlay",
@@ -49,8 +50,8 @@ class ConsentSyncTest {
         val granted = setOf(SensorPermission.CALL_SCREENING_ROLE, SensorPermission.NOTIFICATIONS, SensorPermission.BATTERY_UNRESTRICTED)
         assertEquals(ConsentSync.Outcome.UP_TO_DATE, sync.run(granted, texts))
         // Notifications and battery have no consent purpose; the disclosure and the call-screening role do.
-        assertEquals(listOf("call_screening" to true, "core_protection" to true), purposesSent(0))
-        assertEquals(setOf("core_protection", "call_screening"), purposeNames(storage.recordedConsents))
+        assertEquals(listOf("call_screening" to true, "core_protection" to true, "guardian_alerts" to true), purposesSent(0))
+        assertEquals(setOf("core_protection", "guardian_alerts", "call_screening"), purposeNames(storage.recordedConsents))
 
         assertEquals(ConsentSync.Outcome.UP_TO_DATE, sync.run(granted, texts))
         assertEquals(1, bodies.size, "nothing changed, nothing sent")
@@ -61,7 +62,7 @@ class ConsentSyncTest {
         sync.run(setOf(SensorPermission.USAGE_ACCESS), texts)
         sync.run(emptySet(), texts)
         assertEquals(listOf("usage_monitoring" to false), purposesSent(1))
-        assertEquals(setOf("core_protection"), purposeNames(storage.recordedConsents))
+        assertEquals(setOf("core_protection", "guardian_alerts"), purposeNames(storage.recordedConsents))
     }
 
     @Test
@@ -79,7 +80,24 @@ class ConsentSyncTest {
         status = 200
         assertEquals(ConsentSync.Outcome.UP_TO_DATE, sync.run(emptySet(), texts))
         assertEquals(2, bodies.size)
-        assertEquals(setOf("core_protection"), purposeNames(storage.recordedConsents))
+        assertEquals(setOf("core_protection", "guardian_alerts"), purposeNames(storage.recordedConsents))
+    }
+
+    @Test
+    fun theFamilyAlertsPurposeIsRecordedWithTheDisclosureAndNotWithoutIt() {
+        sync.run(emptySet(), texts)
+        assertEquals(listOf("core_protection" to true, "guardian_alerts" to true), purposesSent(0))
+        storage.clear()
+        storage.save(DeviceSession("d", "f", "m", "Nhà", "access", "refresh"))
+        sync.run(emptySet(), texts)
+        assertEquals(1, bodies.size, "an unaccepted disclosure records nothing, so nothing about the family is agreed")
+    }
+
+    @Test
+    fun aDeviceUpgradedFromAnOlderVersionRecordsNothingUntilItAcceptsTheNewDisclosure() {
+        storage.acceptedDisclosureVersion = "2026.10-v1"
+        sync.run(setOf(SensorPermission.CALL_SCREENING_ROLE), texts)
+        assertEquals(listOf("call_screening" to true), purposesSent(0), "no core_protection and no guardian_alerts for v2")
     }
 
     @Test

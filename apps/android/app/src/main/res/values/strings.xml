@@ -146,26 +146,26 @@
     <!-- E3: công bố nổi bật (Google Play). Văn bản này được băm (SHA-256) vào sổ đồng ý: đổi chữ ⇒ đổi ConsentLedger.VERSION. -->
     <string name="disclosure_connected">Đã kết nối với %1$s.</string>
     <string name="disclosure_title">Trước khi bật quyền, HỏiCon xin nói rõ</string>
-    <string name="disclosure_1_title">Chỉ để ý khi có số lạ gọi tới</string>
-    <string name="disclosure_1_body">Khi có số không có trong danh bạ gọi tới, HỏiCon xem trong 10 phút sau cuộc gọi đó bác có mở ứng dụng ngân hàng, ví điện tử hay chứng khoán không. Lúc khác HỏiCon không theo dõi gì.</string>
+    <string name="disclosure_1_title">Chỉ để ý quanh những cuộc gọi với số lạ</string>
+    <string name="disclosure_1_body">Khi có số không có trong danh bạ gọi tới hoặc bác gọi đi, HỏiCon xem trong 10 phút sau cuộc gọi đó bác có mở ứng dụng ngân hàng, ví điện tử, chứng khoán hay ứng dụng điều khiển điện thoại từ xa (như AnyDesk, TeamViewer) không. Lúc khác HỏiCon không theo dõi gì.</string>
     <string name="disclosure_2_title">HỏiCon không nghe cuộc gọi của bác</string>
     <string name="disclosure_2_body">HỏiCon không nghe và không ghi âm cuộc gọi, không đọc tin nhắn, không đọc danh bạ. HỏiCon không xem được bên trong ứng dụng ngân hàng, không biết số dư, giao dịch hay mã xác thực (OTP) của bác.</string>
     <string name="disclosure_3_title">Chỉ gửi đi những gì cần để báo cho con</string>
-    <string name="disclosure_3_body">Khi cần báo cho con bác, HỏiCon chỉ gửi: một dãy ký tự đại diện cho số lạ (HỏiCon không gửi và không lưu số điện thoại đầy đủ, chỉ giữ 3 số cuối), loại ứng dụng vừa mở (như “ngân hàng”) và thời điểm.</string>
+    <string name="disclosure_3_body">HỏiCon gửi cho con bác, qua máy chủ của HỏiCon, hai loại tin. Một: mỗi lần có cuộc gọi với số lạ, HỏiCon gửi dãy ký tự đại diện cho số đó (không gửi số đầy đủ, chỉ giữ 3 số cuối), cuộc gọi tới hay gọi đi và kéo dài bao lâu, ứng dụng vừa mở (ngân hàng, ví điện tử, chứng khoán hay điều khiển từ xa; riêng ứng dụng tài chính thì kèm tên ứng dụng), nút bác bấm trên màn nhắc và thời điểm. Hai: cứ 15 phút khi có mạng, HỏiCon gửi việc bác đang bật hay tắt các quyền và phiên bản ứng dụng. Tin chờ gửi nằm trong điện thoại, đã mã hóa.</string>
     <string name="disclosure_4_title">Không bán dữ liệu, bác tắt được bất cứ lúc nào</string>
-    <string name="disclosure_4_body">HỏiCon không bán dữ liệu của bác và không đưa cho bên quảng cáo. Chỉ con bác nhận được cảnh báo. Bác có thể tắt từng quyền trong Cài đặt của điện thoại bất cứ lúc nào.</string>
+    <string name="disclosure_4_body">HỏiCon không bán dữ liệu của bác và không đưa cho bên quảng cáo. Cảnh báo đi tới con bác qua Zalo; dữ liệu giữ trên máy chủ HỏiCon tối đa 90 ngày. Muốn dừng, bác tắt từng quyền trong Cài đặt của điện thoại: HỏiCon thôi canh chừng, nhưng vẫn báo cho con biết quyền nào đang tắt.</string>
     <string name="disclosure_decline">Chưa đồng ý</string>
     <string name="decline_title">Không sao bác ạ</string>
-    <string name="decline_body">HỏiCon sẽ chưa bật bảo vệ và chưa làm gì thêm. Khi nào bác muốn, bác mở lại HỏiCon và đọc lại các cam kết.</string>
+    <string name="decline_body">HỏiCon sẽ chưa gửi gì cho con bác. Khi nào bác muốn, bác mở lại HỏiCon và đọc lại các cam kết.</string>
     <string name="decline_review">Xem lại cam kết</string>
     <string name="decline_close">Đóng ứng dụng</string>
     <string name="disclosure_next">Ở bước sau, điện thoại sẽ mở từng trang cài đặt để bác bật quyền. Bác bật hay không là do bác quyết định.</string>
     <string name="disclosure_accept">Đồng ý, tiếp tục</string>
     <string-array name="disclosure_speech">
         <item>Đây là trợ lý AI HỏiCon.</item>
-        <item>HỏiCon chỉ để ý khi có số lạ gọi tới.</item>
+        <item>HỏiCon chỉ để ý quanh những cuộc gọi với số lạ.</item>
         <item>HỏiCon không nghe lén, không ghi âm cuộc gọi.</item>
-        <item>HỏiCon chỉ gửi cho con bác những gì cần để báo cho con.</item>
+        <item>HỏiCon chỉ gửi cho con bác những gì cần để báo cho con, và cho con biết quyền nào đang bật hay tắt.</item>
         <item>HỏiCon không bán dữ liệu của bác. Bác tắt được bất cứ lúc nào.</item>
         <item>Phần còn lại bác đọc trên màn hình nhé.</item>
         <item>Bác bấm Đồng ý, tiếp tục khi bác đã nghe rõ, hoặc bấm Chưa đồng ý.</item>
