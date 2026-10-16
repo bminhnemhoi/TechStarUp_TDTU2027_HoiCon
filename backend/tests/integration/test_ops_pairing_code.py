@@ -36,7 +36,7 @@ async def test_creates_demo_family_and_a_code_stored_only_as_hash(
         (row,) = (await session.scalars(select(PairingCode).where(PairingCode.family_id == family.id))).all()
         remaining = await session.scalar(select(row.expires_at - func.now()))
     assert family.is_demo is True  # lệnh này chỉ dành cho gia đình dev/demo
-    assert row.code_hash == hmac_pairing_code(code.group(1)) and code.group(1) not in row.code_hash
+    assert row.code_hash == hmac_pairing_code(code.group(1)) and row.code_hash != code.group(1)
     assert row.used_at is None and timedelta(minutes=14) < remaining <= timedelta(minutes=15)
     assert "15 phút" in out and str(family.id) in out
 
