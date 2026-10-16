@@ -81,3 +81,60 @@ def test_hmac_h1_without_pepper_fails_loudly(monkeypatch: pytest.MonkeyPatch) ->
             hmac_h1(H1)
     finally:
         get_settings.cache_clear()
+
+
+@pytest.mark.parametrize(
+    "raw", ["0900000123 tr", "0900000123 k", "0900 000 123 ty", "1234567890123 đồng", "0900000123 đ"]
+)
+def test_a_long_number_is_not_excused_by_a_trailing_money_unit(raw: str) -> None:
+    assert not re.search(r"\d{4}", mask_text(f"chuyển {raw}"))
+
+
+@pytest.mark.parametrize(
+    "raw", ["20.000.000 đồng", "1.500.000.000 đồng", "50.000₫", "500000 đồng", "50k", "2 tỷ", "300 nghìn"]
+)
+def test_real_money_amounts_are_kept(raw: str) -> None:
+    assert raw in mask_text(f"phí {raw}")
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "900000123 k",  # 9 chữ số, bỏ số 0 đầu
+        "900000123 đồng",
+        "0.900.000.123 đ",  # nhóm nghìn giả, bắt đầu bằng 0
+        "090.000.123 đ",
+        "0,900,000,123 k",
+        "84900000123 tr",
+        "+84900000123 tr",
+        "1.234.567.890.123 k",  # số tài khoản 13 chữ số
+        "912345678 vnd",
+    ],
+)
+def test_phone_and_account_numbers_dressed_as_money_are_masked(raw: str) -> None:
+    assert len(re.sub(r"\D", "", mask_text(f"chuyển {raw}"))) <= 3, raw  # chỉ còn 3 số cuối trong nhãn
+
+
+def test_fuzz_no_phone_survives_a_money_unit() -> None:
+    import random
+
+    rng = random.Random(25)  # noqa: S311 — dữ liệu thử, không phải mật mã
+    units = ["k", "tr", "đ", "đồng", "vnd", "ty", "nghìn", "triệu"]
+    for _ in range(3000):
+        tail = "".join(rng.choice("0123456789") for _ in range(8))
+        number = rng.choice(["09", "03", "07", "08", "05"]) + tail
+        forms = [number, number[1:], "84" + number[1:], "+84" + number[1:]]
+        raw = rng.choice(forms)
+        if rng.random() < 0.5:  # chèn dấu nhóm
+            raw = ".".join(
+                raw[max(0, i - 3) : i] for i in range(len(raw) % 3 or 3, len(raw) + 3, 3) if raw[max(0, i - 3) : i]
+            )
+        text = f"gửi {raw} {rng.choice(units)}"
+        assert len(re.sub(r"\D", "", mask_text(text))) <= 3, text
+
+
+@pytest.mark.parametrize(
+    "raw", ["1500000000 đ", "1000000000 đồng", "2000000000 đồng", "12345678 đ", "2,5 triệu", "20k"]
+)
+def test_large_real_amounts_are_kept(raw: str) -> None:
+    assert raw in mask_text(f"đòi {raw}")

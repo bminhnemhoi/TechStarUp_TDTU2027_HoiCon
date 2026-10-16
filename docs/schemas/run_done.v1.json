@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/run_done.v1.json",
+  "title": "RunDone v1",
+  "description": "Payload của khung `event: done` trong luồng SSE /v1/runs/{id}/stream (spec 025): lượt đã kết thúc và mọi bước đã được phát. Phát đúng một lần rồi server đóng kết nối.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "status", "total_steps", "cost_usd", "is_drill", "is_demo"],
+  "properties": {
+    "run_id": { "type": "string", "format": "uuid" },
+    "status": { "enum": ["done", "failed"] },
+    "total_steps": { "type": "integer", "minimum": 0 },
+    "cost_usd": { "type": "string", "pattern": "^\\d+\\.\\d{6}$" },
+    "is_drill": { "type": "boolean" },
+    "is_demo": { "type": "boolean" }
+  }
+}

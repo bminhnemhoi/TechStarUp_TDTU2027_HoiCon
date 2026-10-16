@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/agent_step.v1.json",
+  "title": "AgentStep v1",
+  "description": "Một bước của tác tử đã che dữ liệu (spec 025, ADR-006): danh sách trắng cột của agent_steps, KHÔNG có input_redacted. Dùng chung cho GET /v1/runs/{id}/steps và khung `event: step` của luồng SSE. `output` đã qua redact_json: không khóa h1/hmac/phone/token/note/text…, không chuỗi hex dài, mỗi chuỗi ≤ 500 ký tự.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "run_id",
+    "node",
+    "model_profile",
+    "model",
+    "prompt_version",
+    "latency_ms",
+    "tokens_in",
+    "tokens_out",
+    "cost_usd",
+    "fallback_used",
+    "error",
+    "output",
+    "at"
+  ],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "run_id": { "type": "string", "format": "uuid" },
+    "node": { "type": "string", "pattern": "^[a-z_]{1,64}$" },
+    "model_profile": { "type": ["string", "null"], "maxLength": 16 },
+    "model": { "type": ["string", "null"], "maxLength": 64 },
+    "prompt_version": { "type": ["string", "null"], "maxLength": 32 },
+    "latency_ms": { "type": "integer", "minimum": 0 },
+    "tokens_in": { "type": "integer", "minimum": 0 },
+    "tokens_out": { "type": "integer", "minimum": 0 },
+    "cost_usd": { "type": "string", "pattern": "^\\d+\\.\\d{6}$", "description": "Chuỗi thập phân 6 chữ số, không dùng số thực" },
+    "fallback_used": { "type": "boolean" },
+    "error": { "type": ["string", "null"], "maxLength": 64 },
+    "output": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/safeObject" }],
+      "description": "null khi job retention đã xóa nội dung (sau 30 ngày, DATA-MODEL §6)"
+    },
+    "at": { "type": "string", "format": "date-time", "pattern": "Z$" }
+  },
+  "$defs": {
+    "safeObject": {
+      "type": "object",
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "h1",
+            "hmac",
+            "phone",
+            "phone_hmac",
+            "last3",
+            "package",
+            "caller",
+            "token",
+            "action_token",
+            "chat_id",
+            "zalo_user_id",
+            "note",
+            "text",
+            "input_redacted"
+          ]
+        }
+      },
+      "additionalProperties": { "$ref": "#/$defs/safeValue" }
+    },
+    "safeValue": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "boolean" },
+        { "type": "number" },
+        { "type": "string", "maxLength": 500, "not": { "pattern": "[0-9a-fA-F]{32,}" } },
+        { "type": "array", "items": { "$ref": "#/$defs/safeValue" } },
+        { "$ref": "#/$defs/safeObject" }
+      ]
+    }
+  }
+}

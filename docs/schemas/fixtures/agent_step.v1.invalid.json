@@ -1,0 +1,223 @@
+[
+  {
+    "_why": "còn trường input_redacted",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "risk_scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "level": "high"
+    },
+    "at": "2026-12-01T02:15:31.123456Z",
+    "input_redacted": {
+      "context": "x",
+      "untrusted": false
+    }
+  },
+  {
+    "_why": "khóa h1 trong output",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "risk_scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "level": "high",
+      "h1": "[HASH]"
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_why": "khóa cấm lồng sâu (độ sâu 3)",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "risk_scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "a": {
+        "b": [
+          {
+            "phone": "[SĐT ***678]"
+          }
+        ]
+      }
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_why": "cost_usd là số thực",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "risk_scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": 0.00125,
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "level": "high"
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_why": "cost_usd sai định dạng (2 chữ số lẻ)",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "risk_scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.00",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "level": "high"
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_why": "chuỗi hex 64 ký tự trong output",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "risk_scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "ref": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_why": "chuỗi dài hơn 500 ký tự",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "risk_scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "summary": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_why": "node viết hoa",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "Risk_Scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "level": "high"
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_why": "thiếu run_id",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": null,
+    "node": "risk_scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "level": "high"
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_why": "thời điểm không phải UTC (thiếu Z)",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "risk_scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "level": "high"
+    },
+    "at": "2026-12-01T02:15:31.123456"
+  },
+  {
+    "_why": "trường thừa",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e09",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "risk_scorer",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "level": "high"
+    },
+    "at": "2026-12-01T02:15:31.123456Z",
+    "extra": 1
+  }
+]

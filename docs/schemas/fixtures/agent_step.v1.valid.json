@@ -1,0 +1,112 @@
+[
+  {
+    "_name": "bước tất định (ingest)",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e01",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "ingest",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "level": "high",
+      "rule_floor": "high",
+      "threat": "unknown"
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_name": "bước LLM rơi về mẫu soạn sẵn",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e02",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "risk_scorer",
+    "model_profile": "fast",
+    "model": null,
+    "prompt_version": "risk_scorer@3",
+    "latency_ms": 412,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": true,
+    "error": "timeout",
+    "output": {
+      "level": "high",
+      "tactic": "authority",
+      "question": "q_caller_authority",
+      "llm_level": null
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_name": "bước LLM có chi phí",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e03",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "intervention",
+    "model_profile": "fast",
+    "model": "claude-haiku-4-5",
+    "prompt_version": "intervention@2",
+    "latency_ms": 900,
+    "tokens_in": 812,
+    "tokens_out": 96,
+    "cost_usd": "0.001250",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "brief": [
+        "Mẹ đang nghe cuộc gọi lạ",
+        "Gọi lại cho mẹ"
+      ]
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_name": "nội dung đã bị xóa (retention)",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e04",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "resolve",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": null,
+    "at": "2026-12-01T02:15:31.123456Z"
+  },
+  {
+    "_name": "số tiền giữ nguyên, mã đã che",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e05",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "node": "ask_elder",
+    "model_profile": null,
+    "model": null,
+    "prompt_version": null,
+    "latency_ms": 3,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "cost_usd": "0.000000",
+    "fallback_used": false,
+    "error": null,
+    "output": {
+      "amount": "20.000.000 đồng",
+      "masked": "[SĐT ***678]",
+      "nested": {
+        "items": [
+          1,
+          2.5,
+          true,
+          null
+        ]
+      }
+    },
+    "at": "2026-12-01T02:15:31.123456Z"
+  }
+]

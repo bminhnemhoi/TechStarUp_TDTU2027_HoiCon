@@ -95,8 +95,41 @@ Cảnh báo giai đoạn 1: lô sự kiện mở/nâng sự cố lên `high`/`cr
 
 `/v1/families`, `/v1/case-files`, `/v1/drills` (người giám hộ) — chưa có.
 
-## Luồng SSE
-`/v1/runs/{id}/stream` · `/v1/families/{id}/stream` · `/v1/demo/stream`
+## Luồng SSE & truy vết tác tử (spec 025 — đã có)
+
+Hợp đồng: `agent_step.v1.json`, `run_steps.v1.json`, `run_done.v1.json` (fixture `fixtures/*.v1.*.json`). Chỉ đọc. Xác thực bằng JWT người giám hộ (`Authorization: Bearer …`); **không nhận token qua query string** (Caddy ghi log URL). Chưa có: `/v1/families/{id}/stream`, `/v1/demo/stream` (033/050).
+
+**`GET /v1/runs/{run_id}/steps`** — (`Cache-Control: no-store`) lịch sử các bước đã che của lượt, theo thứ tự `(at, id)`, tối đa 500 bước: `{"run_id", "status", "is_drill", "is_demo", "steps": [agent_step…]}`.
+
+**`GET /v1/runs/{run_id}/stream`** — `text/event-stream; charset=utf-8`, `Cache-Control: no-cache, no-transform`, `X-Accel-Buffering: no`; không có `Connection` (hop-by-hop, HTTP/2 cấm). Khung (UTF-8, `data` là JSON một dòng, mỗi khung kết thúc bằng một dòng trống):
+
+```
+retry: 3000
+
+id: <step_id>
+event: step
+data: {agent_step.v1}
+
+: ping
+
+event: done
+data: {run_done.v1}
+
+event: error
+data: {"retryable":true}
+```
+
+- `id:` chỉ có ở `event: step`. Nối lại bằng header `Last-Event-ID` = `id` của bước cuối đã nhận: server phát tiếp từ sau bước đó, không trùng; id không thuộc lượt hoặc không phải UUID ⇒ phát lại từ đầu (header rác không gây lỗi).
+- `: ping` mỗi 15 s kể từ lần ghi cuối (giữ kết nối qua proxy). Server đọc DB mỗi 0,3 s nên độ trễ bước mới thường < 0,5 s.
+- `done` đến đúng một lần, SAU bước cuối (lượt `done`/`failed`), rồi server đóng. Lượt `waiting` (chờ người giám hộ) không đóng luồng. Quá 600 s mà lượt chưa xong ⇒ server đóng không kèm `done`; client nối lại bằng `Last-Event-ID`.
+- `error` (DB lỗi 3 nhịp liên tiếp) rồi đóng; client thử lại sau `retry`.
+- Mã: 401 thiếu/sai token · 404 lượt không thấy, thuộc nhà khác hoặc là lượt eval (cùng một câu, không lộ lượt có tồn tại) · 429 người này đã mở 3 luồng hoặc cả gia đình đã mở 4 luồng · 503 tiến trình đã đủ 20 luồng (429/503 có `Retry-After`) — đều trả trước khi luồng bắt đầu. Hạn mức đếm trong bộ nhớ ⇒ đúng với một tiến trình (ADR-002).
+- Bước chỉ gồm các cột trong danh sách trắng (KHÔNG có `input_redacted`); `output` qua `redact_json` (bỏ khóa `h1/hmac/phone/token/note/text/package/caller…`, hex dài ⇒ `[HASH]`, token ⇒ `[TOKEN]`, số điện thoại ⇒ `[SĐT ***xxx]`, chuỗi cắt ở 500 ký tự). `output` là `null` khi job retention đã xóa nội dung. `is_drill`/`is_demo` ở `run_steps`/`done` để giao diện gắn nhãn `[DIỄN TẬP]`.
+- **Client web dùng `fetch` + đọc `ReadableStream`, không dùng `EventSource`** (không đặt được header `Authorization`). Phải tự nối lại theo `retry` và gửi `Last-Event-ID`.
+- Quyền xem chỉ kiểm lúc kết nối (luồng đang mở sống tối đa 600 s). Khi tắt máy, uvicorn chờ các luồng còn mở: chạy với `--timeout-graceful-shutdown` (ví dụ 10).
+- Phía sau Caddy/nginx phải tắt đệm và nén cho route này (đã có `X-Accel-Buffering: no`); đo `: ping` qua proxy thật ở spec 012.
+
+**`GET /v1/incidents/{incident_id}/run`** — JWT người giám hộ cùng gia đình ⇒ `{"run_id", "status"}`; chưa có lượt hoặc sự cố thuộc nhà khác ⇒ 404. Đây là cách client tìm `run_id` từ sự cố.
 
 ## Webhook & khác
 `POST /webhooks/zalo/{bot_id}` · `/demo/*` · `/admin/*` · `/mcp/*` (FastMCP) · `GET /healthz`
