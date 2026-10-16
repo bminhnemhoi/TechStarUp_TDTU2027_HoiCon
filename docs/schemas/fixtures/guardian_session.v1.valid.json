@@ -1,0 +1,20 @@
+[
+  {
+    "_name": "yêu cầu đổi token lấy phiên",
+    "_as": "request",
+    "token": "aBcDeFgHiJkLmNoPqRsTuVwXyZ012345-_aBcDeFg"
+  },
+  {
+    "_name": "yêu cầu token 32 ký tự (tối thiểu)",
+    "_as": "request",
+    "token": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "_name": "phản hồi phiên",
+    "_as": "response",
+    "member_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "family_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e81",
+    "family_name": "Gia đình thử nghiệm",
+    "expires_at": "2026-12-08T02:15:31Z"
+  }
+]

@@ -16,7 +16,18 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from hoicon import __version__
 from hoicon.api import webhooks
-from hoicon.api.routers import actions, consents, devices, elder, events, incidents, lookups, pairing, runs
+from hoicon.api.routers import (
+    actions,
+    consents,
+    devices,
+    elder,
+    events,
+    guardian,
+    incidents,
+    lookups,
+    pairing,
+    runs,
+)
 from hoicon.config import get_settings
 from hoicon.db.session import get_engine
 from hoicon.mcp_servers import threat
@@ -31,7 +42,15 @@ READYZ_TIMEOUT_S = 6
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     # MCP gắn bằng mount ⇒ app chủ phải chạy session manager của từng server (MCP SDK v2). Worker job (đồ thị tác
     # tử, bộ hẹn giờ, gửi tin) là task nền cùng tiến trình (ADR-002, spec 024).
-    async with threat.mcp.session_manager.run(), background_worker(get_settings().run_worker):
+    settings = get_settings()
+    if settings.is_dev_env and settings.web_base_url.lower().startswith("https://"):
+        # Cookie phiên web chỉ có cờ Secure khi HOICON_ENV ∉ {dev, test, ci}: quên đặt HOICON_ENV ở prod là fail-open.
+        logger.warning(
+            "HOICON_ENV=%s nhưng HOICON_WEB_BASE_URL là https: cookie phiên người giám hộ KHÔNG có cờ Secure. "
+            "Ở máy chủ thật hãy đặt HOICON_ENV=prod.",
+            settings.env,
+        )
+    async with threat.mcp.session_manager.run(), background_worker(settings.run_worker):
         yield
 
 
@@ -52,6 +71,7 @@ app.include_router(devices.router)
 app.include_router(events.router)
 app.include_router(incidents.router)
 app.include_router(runs.router)
+app.include_router(guardian.router)
 app.include_router(lookups.router)
 app.include_router(actions.router)
 app.include_router(elder.router)

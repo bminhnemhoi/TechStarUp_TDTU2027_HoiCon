@@ -12,10 +12,23 @@ from hoicon.db.session import get_engine
 SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 
-async def call(method: str, path: str, *, token: str | None = None, json: Any = None, host: str = "203.0.113.7") -> Any:
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-    async with AsyncClient(transport=ASGITransport(app=app, client=(host, 50000)), base_url="http://test") as client:
-        return await client.request(method, path, json=json, headers=headers)
+async def call(
+    method: str,
+    path: str,
+    *,
+    token: str | None = None,
+    json: Any = None,
+    host: str = "203.0.113.7",
+    headers: dict[str, str] | None = None,
+    cookies: dict[str, str] | None = None,
+) -> Any:
+    """`headers`/`cookies` (spec 027): thêm `Origin`, `Sec-Fetch-Site`, cookie phiên `hc_guardian`."""
+    merged = {"Authorization": f"Bearer {token}"} if token else {}
+    merged.update(headers or {})
+    async with AsyncClient(
+        transport=ASGITransport(app=app, client=(host, 50000)), base_url="http://test", cookies=cookies
+    ) as client:
+        return await client.request(method, path, json=json, headers=merged)
 
 
 async def pair_device(code: str, **changes: Any) -> dict[str, Any]:

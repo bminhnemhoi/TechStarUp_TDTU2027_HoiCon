@@ -6,6 +6,7 @@ from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
+DEV_ENVS = ("dev", "test", "ci")  # môi trường được nới lỏng (cookie không Secure, nguồn localhost)
 
 
 class Settings(BaseSettings):
@@ -19,6 +20,9 @@ class Settings(BaseSettings):
 
     env: str = "dev"
     web_base_url: str = "https://app.hoicon.vn"
+    # Nguồn (scheme://host[:port]) được phép gửi lệnh ghi bằng cookie phiên người giám hộ (spec 027, CSRF), ngăn cách
+    # bằng dấu phẩy. Luôn gồm nguồn của `web_base_url`; ở dev/test/ci có thêm localhost:3100.
+    web_origins: str = ""
     # Dev DB từ infra/compose.dev.yml (chỉ bind 127.0.0.1, không phải bí mật). Prod: HOICON_DATABASE_URL có mật khẩu.
     database_url: SecretStr = SecretStr("postgresql+psycopg://hoicon:hoicon_dev@127.0.0.1:15432/hoicon")
 
@@ -61,6 +65,19 @@ class Settings(BaseSettings):
     # Số bit đầu của h1 trong ảnh chụp danh sách đe dọa phát xuống máy (spec 026, ADR-011): 22 ⇒ ≈ 86 số di động mỗi
     # bucket. Nâng lên 23–24 khi tỉ lệ khớp nhầm N/2^bits vượt 0,25%; hạ xuống làm máy khớp nhầm nhiều hơn.
     threat_bucket_bits: int = Field(default=22, ge=16, le=24)
+
+    @property
+    def is_dev_env(self) -> bool:
+        return self.env.strip().lower() in DEV_ENVS
+
+    @property
+    def allowed_web_origins(self) -> frozenset[str]:
+        origins = {
+            o.strip().rstrip("/").lower() for o in [self.web_base_url, *self.web_origins.split(",")] if o.strip()
+        }
+        if self.is_dev_env:
+            origins |= {"http://localhost:3100", "http://127.0.0.1:3100"}
+        return frozenset(origins)
 
 
 @lru_cache

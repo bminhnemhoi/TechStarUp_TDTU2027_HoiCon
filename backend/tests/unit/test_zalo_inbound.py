@@ -31,7 +31,20 @@ def fixture(name: str) -> dict[str, Any]:
         ("1", ("choice", "1")),
         (" 2 ", ("choice", "2")),
         ("3\n", ("choice", "3")),
-        ("4", ("other", None)),
+        ("4", ("login", None)),
+        (" 4\n", ("login", None)),
+        ("web", ("login", None)),
+        ("WEB", ("login", None)),
+        ("Đăng nhập", ("login", None)),
+        ("đăng   nhập", ("login", None)),
+        ("dang nhap", ("login", None)),
+        ("ĐĂNG NHẬP", ("login", None)),
+        ("đăng nhập web", ("other", None)),  # chỉ nhận đúng lệnh, không đoán ý
+        ("4 5", ("other", None)),
+        ("44", ("other", None)),
+        ("٤", ("other", None)),  # chữ số Ả Rập-Ấn Độ không được coi là 4
+        ("webinar", ("other", None)),
+        ("5", ("other", None)),
         ("1 2", ("other", None)),
         ("١", ("other", None)),  # chữ số Ả Rập-Ấn Độ không được coi là 1
         ("Cho con xem chi tiết với", ("other", None)),

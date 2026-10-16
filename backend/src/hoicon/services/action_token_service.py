@@ -58,14 +58,15 @@ class ActionTokenService:
         cls,
         session: AsyncSession,
         *,
-        incident_id: UUID,
+        incident_id: UUID | None,
         member_id: UUID,
         scope: str = "incident_decision",
         ttl: timedelta = DEFAULT_TTL,
     ) -> tuple[ActionToken, str]:
         """Tạo ActionToken mới. Trả về (bản ghi CSDL, raw_token để gửi người dùng).
 
-        Ghi chú: Service KHÔNG tự commit, người gọi sở hữu giao dịch.
+        `incident_id` rỗng chỉ cho `guardian_view` đăng nhập web (spec 027). Ghi chú: Service KHÔNG tự commit, người gọi
+        sở hữu giao dịch.
         """
         if scope not in VALID_SCOPES:
             raise ValueError(f"Scope không hợp lệ: {scope} (phải là một trong {VALID_SCOPES})")

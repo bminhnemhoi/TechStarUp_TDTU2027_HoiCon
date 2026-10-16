@@ -1,7 +1,8 @@
 """Truy vết tác tử cho người giám hộ (spec 025, FR-006/FR-007): lịch sử bước, luồng SSE, tìm lượt từ sự cố.
 
 Khớp `docs/schemas/{agent_step,run_steps,run_done}.v1.json`. Chỉ ĐỌC. Xác thực bằng JWT người giám hộ (`Authorization`);
-KHÔNG nhận token qua query string vì Caddy ghi log URL. Client web dùng `fetch` + đọc luồng, không dùng `EventSource`.
+KHÔNG nhận token qua query string vì Caddy ghi log URL. Client dùng header `Authorization` (app/fetch) hoặc cookie phiên
+`hc_guardian` cùng nguồn (web, `EventSource`, spec 027).
 
 Quyền xem: `agent_runs.thread_id` phải là UUID của một sự cố thuộc gia đình của token. Lượt eval (`eval-…`), lượt
 của gia đình khác và id lạ đều trả CÙNG một 404 (không lộ lượt có tồn tại hay không). 401/404/429/503 trả TRƯỚC khi
@@ -93,8 +94,8 @@ async def get_run_steps(
     summary="Luồng SSE các bước của một lượt chạy",
     description=(
         "Khung: `retry: 3000`; `id/event: step/data` (agent_step.v1); `: ping` mỗi 15 s khi im lặng; `event: done` "
-        "(run_done.v1) rồi đóng; `event: error` khi DB lỗi. Nối lại bằng header `Last-Event-ID`. Cần header "
-        "`Authorization` nên dùng `fetch`, không dùng `EventSource`."
+        "(run_done.v1) rồi đóng; `event: error` khi DB lỗi. Nối lại bằng header `Last-Event-ID`. Xác thực bằng "
+        "`Authorization: Bearer` (app) hoặc cookie phiên `hc_guardian` cùng nguồn (web dùng `EventSource`, spec 027)."
     ),
     responses={
         200: {"description": "Luồng sự kiện", "content": {"text/event-stream": {}}},

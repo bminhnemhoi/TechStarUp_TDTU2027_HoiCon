@@ -7,7 +7,9 @@
 - Thiết bị (spec 020): `Authorization: Bearer <access_token>`; JWT HS256 ký bằng `HOICON_DEVICE_JWT_SECRET` (≥ 32 ký tự), sống **30 ngày**,
   claim `sub` (device_id), `family_id`, `member_id`, `role=protected`, `iss=hoicon`, `aud=hoicon-device`. Mỗi lần gọi còn đối chiếu DB
   (thiết bị tồn tại, chưa `revoked_at`) ⇒ thu hồi có hiệu lực ngay. Refresh token (32 byte ngẫu nhiên, DB chỉ giữ SHA-256) cấp cùng
-  lúc; endpoint làm mới chưa có. Người giám hộ: magic link / action token một lần.
+  lúc; endpoint làm mới chưa có. Người giám hộ: magic link / action token một lần (`/a/[token]`, spec 023) hoặc phiên web (spec 027, mục dưới).
+- Người giám hộ trên web (spec 027): `Authorization: Bearer <JWT người giám hộ>` **hoặc** cookie `hc_guardian` (Bearer được ưu tiên; Bearer sai không rơi về cookie). Cookie là JWT `aud=hoicon-guardian` sống **7 ngày**, `HttpOnly; SameSite=Strict; Path=/v1`, thêm `Secure` ở mọi môi trường ngoài `dev/test/ci`. Mỗi request mới đối chiếu DB (thành viên tồn tại, `role=guardian`, cùng gia đình) ⇒ xóa thành viên là các request tiếp theo bị 401 ngay. Giới hạn đã biết: "Đăng xuất" chỉ xóa cookie ở trình duyệt (JWT không có danh sách đen/`jti`) và luồng SSE đã mở chỉ được xác thực lúc mở.
+- **CSRF** (lệnh ghi bằng cookie): `POST/PUT/PATCH/DELETE` xác thực bằng cookie phải có `Origin` thuộc danh sách cho phép (`HOICON_WEB_ORIGINS`, cộng nguồn của `HOICON_WEB_BASE_URL`, cộng `http://localhost:3100` ở dev/test/ci) **hoặc** `Sec-Fetch-Site: same-origin`; nếu không ⇒ 403. Lệnh đọc và lệnh dùng Bearer không cần.
 - Webhook Zalo: secret trong header `X-Bot-Api-Secret-Token` (so sánh hằng thời gian); chống trùng theo `message_id`
   (Zalo không có `update_id`).
 
@@ -108,9 +110,21 @@ Cảnh báo giai đoạn 1: lô sự kiện mở/nâng sự cố lên `high`/`cr
 - `safe`/`prevented`/`false_alarm` ⇒ `resolved_*` (kết thúc); `emergency_pause` ("nghi lừa đảo") ⇒ `case_open` (sự cố còn mở để theo dõi). Đi qua `IncidentService.transition()`; token bị khóa dòng và đánh dấu `used_at` cùng giao dịch.
 - 200: `{"success": true, "incident_id", "state", "outcome"}` · 404: không có token/sự cố · 409: token đã dùng, sự cố đã được xử lý hoặc xung đột phiên bản · 410: token hết hạn · 422: `decision` sai.
 
-**`POST /v1/incidents/{id}/decision`** — cần JWT người giám hộ (`aud=hoicon-guardian`, `role=guardian`, thành viên còn tồn tại). Thân và ánh xạ như trên. 401: thiếu/sai token · 404: sự cố không có hoặc thuộc gia đình khác · 409: đã xử lý/xung đột. Chưa có route cấp JWT người giám hộ (đăng nhập web — spec 027).
+**`POST /v1/incidents/{id}/decision`** — cần JWT người giám hộ (`aud=hoicon-guardian`, `role=guardian`, thành viên còn tồn tại). Thân và ánh xạ như trên. 401: thiếu/sai token · 404: sự cố không có hoặc thuộc gia đình khác · 409: đã xử lý/xung đột. Cookie `hc_guardian` cũng dùng được (kèm bằng chứng cùng nguồn, xem **CSRF** ở mục Xác thực).
 
 **Trả lời Zalo** (ADR-010): "1" ⇒ `resolved_safe`; "2 - vẫn thấy đáng ngờ" ⇒ `case_open`; "3" gửi lại chi tiết.
+
+### Web người giám hộ (spec 027 — đã có)
+
+**Lệnh Zalo "4"** (hoặc "web", "đăng nhập", không phân biệt dấu/hoa thường): người giám hộ **đã ghép** nhận qua Zalo một liên kết `{HOICON_WEB_BASE_URL}/login/<token>`. Token là `action_tokens` scope `guardian_view`, không gắn sự cố, hạn **15 phút**, dùng **một lần**, chỉ lưu SHA-256; sinh ngay lúc trả lời nên không có trong `jobs.payload`/`messages_out`. Liên kết mới vô hiệu liên kết cũ chưa dùng; tối đa **5 liên kết/giờ/người** (đếm trên `action_tokens`), lần thứ 6 nhận câu từ chối nhẹ nhàng. Người chưa ghép nhận hướng dẫn ghép đôi. Tin mở đầu "Đây là trợ lý AI HỏiCon." như mọi tin Zalo.
+
+**`POST /v1/guardian/session`** — thân `{"token"}` (`guardian_session.v1.json#/$defs/request`, 32–64 ký tự `[A-Za-z0-9_-]`). Khóa dòng token (`FOR UPDATE`), kiểm scope `guardian_view` + hạn + chưa dùng + thành viên còn là người giám hộ, đánh dấu `used_at` cùng giao dịch, rồi đặt cookie `hc_guardian`. Trả `{member_id, family_id, family_name, expires_at}` (không có token phiên trong thân, `Cache-Control: no-store`). Token sai/đã dùng/quá hạn/sai scope/mồ côi đều trả **cùng một** 410 (không lộ lý do); thân sai hợp đồng ⇒ 422 (không lặp lại đầu vào); thiếu bằng chứng cùng nguồn ⇒ 403 (token không bị đốt); thiếu khóa ký ⇒ 503 trước khi đốt token.
+**`GET /v1/guardian/me`** — cùng thân như trên cho phiên hiện tại; 401 khi chưa đăng nhập hoặc thành viên đã bị xóa.
+**`DELETE /v1/guardian/session`** — xóa cookie (204; vẫn 204 khi đã đăng xuất; cần bằng chứng cùng nguồn).
+
+**`GET /v1/guardian/incidents?status=open|closed&cursor=`** — theo `incident_list.v1.json`: sự cố của gia đình trong token, **đang mở trước** (`detected/assessing/awaiting_guardian/verifying/rescore/case_open`) rồi đã xong (`resolved_*`, `closed`), mỗi nhóm mới nhất trước; 20 sự cố/trang, phân trang bằng khóa `(nhóm, opened_at, id)` nên không trùng/sót; `next_cursor` là chuỗi mờ, `null` khi hết. Mỗi mục là `IncidentSummary` + `elder_alias` (cách xưng hô, không phải tên thật) + `has_run`. `status` vắng ⇒ cả hai nhóm. 422: `status`/`cursor` sai (không lặp lại đầu vào).
+**`GET /v1/guardian/incidents/{id}`** — `IncidentDetail` + `elder_alias` + `run_id` (null khi chưa có lượt chạy). Sự cố nhà khác và id lạ cùng một 404.
+Dùng cùng cookie: `GET /v1/incidents/{id}/run`, `GET /v1/runs/{run_id}/steps`, `GET /v1/runs/{run_id}/stream` (trình duyệt dùng `EventSource` cùng nguồn; cookie tự gửi, tự nối lại bằng `Last-Event-ID`) và `POST /v1/incidents/{id}/decision`. Route thiết bị `/v1/incidents/*` giữ nguyên hành vi.
 
 `/v1/families`, `/v1/case-files`, `/v1/drills` (người giám hộ) — chưa có.
 

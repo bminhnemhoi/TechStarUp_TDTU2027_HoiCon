@@ -32,11 +32,12 @@ from hoicon.services.incident_service import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1", tags=["actions"])
-_TOKEN_IN_PATH = re.compile(r"(/action/)[^/\s?\"']+")
+_TOKEN_IN_PATH = re.compile(r"(/action/|/login/)[^/\s?\"']+")
 
 
 def redact_action_token(text: str) -> str:
-    """`/v1/action/<token>/decision` ⇒ `/v1/action/***/decision`: token thô không bao giờ vào log."""
+    """`/v1/action/<token>/decision` ⇒ `/v1/action/***/decision`; `/login/<token>` ⇒ `/login/***`: token thô không bao
+    giờ vào log."""
     return _TOKEN_IN_PATH.sub(r"\1***", text)
 
 

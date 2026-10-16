@@ -168,6 +168,26 @@
               }
             }
           }
+        },
+        "elder_alias": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 64,
+          "description": "Bí danh xưng hô người được bảo vệ (spec 027, route /v1/guardian/*); không phải tên thật"
+        },
+        "has_run": {
+          "type": "boolean",
+          "description": "Có lượt chạy tác tử để xem trace (spec 027, danh sách)"
+        },
+        "run_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "description": "Lượt chạy của sự cố (spec 027, chi tiết); null khi chưa có"
         }
       }
     },

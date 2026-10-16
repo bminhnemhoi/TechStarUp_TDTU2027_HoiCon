@@ -158,7 +158,27 @@ def pairing_already() -> str:
 
 def reply_help() -> str:
     return _message(
-        f"HỏiCon chỉ đọc được số 1, 2 hoặc 3. Nếu cần gấp, anh/chị gọi ngay cho người thân nhé.\n\n{REPLY_GUIDE}",
+        f"HỏiCon chỉ đọc được số 1, 2 hoặc 3 (hoặc số 4 để lấy liên kết đăng nhập web). "
+        f"Nếu cần gấp, anh/chị gọi ngay cho người thân nhé.\n\n{REPLY_GUIDE}",
+        False,
+    )
+
+
+def guardian_login_link(url: str) -> str:
+    """Liên kết đăng nhập web một lần (spec 027), trả lời lệnh "4"; không gắn sự cố nên không có nhãn diễn tập."""
+    return _message(
+        "Liên kết đăng nhập web của anh/chị (dùng một lần, hết hạn sau 15 phút):\n"
+        f"{url}\n\n"
+        "Anh/chị chỉ mở trên máy của mình và đừng chuyển tiếp liên kết này cho ai. "
+        "Xin liên kết mới bất cứ lúc nào bằng cách nhắn số 4.",
+        False,
+    )
+
+
+def login_rate_limited() -> str:
+    return _message(
+        "HỏiCon đã gửi anh/chị nhiều liên kết đăng nhập trong một giờ qua. Anh/chị dùng liên kết mới nhất đã nhận, "
+        "hoặc chờ một lát rồi nhắn số 4 lại nhé.",
         False,
     )
 
