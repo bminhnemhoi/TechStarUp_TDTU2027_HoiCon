@@ -22,13 +22,13 @@ from langgraph.types import Command
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 from sqlalchemy import func, select, text, update
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from hoicon.agents import texts
 from hoicon.agents.incident_graph import Deps, build_graph
 from hoicon.db.models import AgentRun
 from hoicon.domain.events import RiskEvent
-from hoicon.domain.pii import note_flags
+from hoicon.domain.pii import NOTE_KEYWORDS, note_flags
 from hoicon.mcp_servers.threat import lookup_h1
 
 logger = logging.getLogger(__name__)
@@ -62,9 +62,44 @@ def clean_resume(value: Any) -> dict[str, Any]:
         clean["decision"] = value["decision"]
     if value.get("timer") in ("t1", "t2", "t3"):
         clean["timer"] = value["timer"]
+    flags = value.get("note_flags")  # E8 (spec 024): app gửi sẵn cờ tất định, chỉ giữ cờ đã biết có giá trị bool
+    if isinstance(flags, dict):
+        kept = {k: v for k, v in flags.items() if k in NOTE_KEYWORDS and isinstance(v, bool)}
+        if kept:
+            clean["note_flags"] = kept
     if isinstance(value.get("note"), str) and value["note"].strip():
         clean["note_flags"] = note_flags(value["note"][:2000])
     return clean or {"invalid": True}
+
+
+DEFAULT_ALIAS = "Bố/Mẹ"
+
+
+def safe_alias(alias: str | None) -> str:
+    """Cách xưng hô của thành viên nếu hợp lệ cho đồ thị (ngắn, không chữ số), không thì cách gọi chung."""
+    return alias if alias and _ALIAS.match(alias) else DEFAULT_ALIAS
+
+
+async def prepare_event(
+    sessions: async_sessionmaker | AsyncSession, event: RiskEvent
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """ADR-006: máy chủ không lưu h1 (dò ngược được ra số điện thoại của người gọi) ⇒ tra danh sách đe dọa NGAY, chỉ
+    giữ kết quả + 3 số cuối. Tên gói app ngân hàng cũng bỏ. ⇒ (threat, event_data) an toàn để lưu (job, state).
+    Truyền `AsyncSession` đang mở (`POST /v1/events`) ⇒ tra trong SAVEPOINT của giao dịch đó: không mượn kết nối thứ
+    hai khi đang giữ khóa thiết bị, và tra lỗi không làm hỏng cả lô."""
+    threat: dict[str, Any] = {"verdict": "unknown"}
+    if event.caller:
+        try:
+            if isinstance(sessions, AsyncSession):
+                async with sessions.begin_nested():
+                    threat = (await lookup_h1(sessions, event.caller.h1)).model_dump()
+            else:
+                threat = (await lookup_h1(sessions, event.caller.h1)).model_dump()
+        except Exception as exc:  # danh sách lỗi KHÔNG được chặn đường cảnh báo: mức sàn của máy vẫn áp dụng (luật 5)
+            logger.warning("threat lookup failed: %s", type(exc).__name__)  # không ghi thông điệp (chuỗi kết nối)
+            threat = {"verdict": "unknown", "error": type(exc).__name__}
+    event_data = event.model_dump(mode="json", exclude_none=True, exclude={"caller": {"h1"}, "app": {"package"}})
+    return threat, event_data
 
 
 def _psycopg_url(sqlalchemy_url: str) -> str:
@@ -113,38 +148,49 @@ class IncidentRuntime:
         family_id: str | None = None,
     ) -> RunStatus:
         """`family_id` (UUID, tùy chọn): gia đình nhận tin; có thì vào state và payload `notify_guardian` (spec 002)."""
+        threat, event_data = await prepare_event(self._sessions, event)
+        return await self.start_prepared(
+            event_data, threat, incident_id=incident_id, elder_alias=elder_alias, is_demo=is_demo, family_id=family_id
+        )
+
+    async def start_prepared(
+        self,
+        event_data: dict[str, Any],
+        threat: dict[str, Any],
+        *,
+        incident_id: str,
+        elder_alias: str,
+        is_demo: bool = False,
+        family_id: str | None = None,
+    ) -> RunStatus:
+        """Chạy đồ thị từ sự kiện đã qua `prepare_event` (job `start_graph`, spec 024). Thread đã có trạng thái ⇒ không
+        chạy lại (job thử lại sau khi đồ thị đã chạy không mở lượt thứ hai)."""
         if not _ALIAS.match(elder_alias):
             raise ValueError("elder_alias là cách xưng hô ngắn (≤ 20 ký tự, không chữ số), không phải họ tên đầy đủ")
         if family_id is not None:
             family_id = str(UUID(family_id))  # ValueError nếu không phải UUID; chuẩn hóa dạng chữ thường có gạch ngang
-        # ADR-006: máy chủ không lưu h1 (dò ngược được ra số điện thoại của người gọi) ⇒ tra danh sách đe dọa NGAY,
-        # chỉ đưa kết quả + 3 số cuối vào state/checkpoint. Tên gói app ngân hàng cũng không lưu.
-        threat: dict[str, Any] = {"verdict": "unknown"}
-        if event.caller:
-            try:
-                threat = (await lookup_h1(self._sessions, event.caller.h1)).model_dump()
-            except (
-                Exception
-            ) as exc:  # danh sách lỗi KHÔNG được chặn đường cảnh báo: mức sàn của máy vẫn áp dụng (luật 5)
-                logger.warning("threat lookup failed: %s", type(exc).__name__)  # không ghi thông điệp (chuỗi kết nối)
-                threat = {"verdict": "unknown", "error": type(exc).__name__}
-        event_data = event.model_dump(mode="json", exclude_none=True, exclude={"caller": {"h1"}, "app": {"package"}})
-        async with self._sessions.begin() as session:
-            run = AgentRun(graph="incident", thread_id=incident_id, is_drill=event.is_drill, is_demo=is_demo)
-            session.add(run)
-        state = {
-            "incident_id": incident_id,
-            "run_id": str(run.id),
-            "is_drill": event.is_drill,
-            "is_demo": is_demo,
-            "elder_alias": elder_alias,
-            "event": event_data,
-            "threat": threat,
-            "rule_floor": event.rule_floor.value,
-        }
-        if family_id is not None:  # không đặt khóa khi không có ⇒ state/checkpoint của sự cố không gia đình không đổi
-            state["family_id"] = family_id
+        if "h1" in (event_data.get("caller") or {}) or "package" in (event_data.get("app") or {}):
+            raise ValueError("event_data phải qua prepare_event(): không mang h1 hay tên gói")
+        is_drill = bool(event_data.get("is_drill", False))
         async with self._thread_lock(incident_id):
+            if (await self.graph.aget_state(self._config(incident_id))).values:
+                logger.info("start ignored: thread already has a run")
+                return await self.status(incident_id)
+            async with self._sessions.begin() as session:
+                run = AgentRun(graph="incident", thread_id=incident_id, is_drill=is_drill, is_demo=is_demo)
+                session.add(run)
+            state = {
+                "incident_id": incident_id,
+                "run_id": str(run.id),
+                "is_drill": is_drill,
+                "is_demo": is_demo,
+                "elder_alias": elder_alias,
+                "event": event_data,
+                "threat": threat,
+                "rule_floor": event_data["rule_floor"],
+            }
+            if family_id is not None:  # không đặt khóa khi không có ⇒ state/checkpoint sự cố không gia đình không đổi
+                state["family_id"] = family_id
             await self.graph.ainvoke(state, self._config(incident_id), durability="sync")
             return await self._record(incident_id)
 

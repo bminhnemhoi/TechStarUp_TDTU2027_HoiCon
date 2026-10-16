@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     timer_t1_s: int = 120
     timer_t2_s: int = 300
     timer_t3_s: int = 900
+    # Worker job chạy nền trong tiến trình API (ADR-002); false khi chạy worker ở tiến trình riêng.
+    run_worker: bool = True
     gemini_api_key: SecretStr | None = None
     zalo_bot_token: SecretStr | None = None
     zalo_webhook_secret: SecretStr | None = None

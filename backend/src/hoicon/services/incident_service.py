@@ -268,11 +268,44 @@ async def apply_guardian_decision(
     target = GUARDIAN_DECISIONS[decision]
     if incident.state in TERMINAL:
         raise InvalidTransitionError(f"sự cố đã kết thúc ({incident.state})")
+    return await _advance(session, incident, target, "guardian", reason or f"guardian_{decision}")
+
+
+async def _advance(session: AsyncSession, incident: Incident, target: str, actor: str, reason: str) -> Incident:
+    """detected/assessing ⇒ `target` qua các cạnh trung gian của `ALLOWED` (actor `system`), bước cuối do `actor`."""
     steps = {"detected": "assessing", "assessing": "awaiting_guardian" if target == "case_open" else None}
     while (step := steps.get(incident.state)) is not None:
         incident = await IncidentService.transition(
-            session, incident.id, step, "system", f"guardian_{decision}", expected_version=incident.version
+            session, incident.id, step, "system", reason, expected_version=incident.version
         )
     return await IncidentService.transition(
-        session, incident.id, target, "guardian", reason or f"guardian_{decision}", expected_version=incident.version
+        session, incident.id, target, actor, reason, expected_version=incident.version
     )
+
+
+# Kết quả đồ thị tác tử (spec 024 FR-005) ⇒ trạng thái đích; "scam" mở hồ sơ như "nghi lừa đảo" của người giám hộ.
+GRAPH_OUTCOMES: Final[dict[str, tuple[str, str]]] = {
+    "safe": ("resolved_safe", "guardian"),
+    "scam": ("case_open", "guardian"),
+    "no_response": ("resolved_no_response", "timer"),
+}
+
+
+async def decided_state(session: AsyncSession, incident_id: UUID) -> str | None:
+    """Trạng thái sự cố nếu người giám hộ (hoặc bên khác) đã quyết xong; None nếu còn chờ hoặc không có sự cố
+    (lượt chạy demo/eval không gắn sự cố thật)."""
+    state = await session.scalar(select(Incident.state).where(Incident.id == incident_id))
+    return None if state is None or state in GUARDIAN_DECIDABLE else state
+
+
+async def close_from_graph(session: AsyncSession, incident_id: UUID, decision: str) -> str:
+    """Ghi kết quả đồ thị vào sự cố. Đã có bên quyết trước (link `/a/`, JWT, Zalo) ⇒ giữ quyết định đó, trả trạng thái
+    hiện có. Không có sự cố (demo/eval) ⇒ trả trạng thái đích, không ghi gì."""
+    target, actor = GRAPH_OUTCOMES[decision]
+    await _lock(session, str(incident_id))
+    incident = await session.get(Incident, incident_id, populate_existing=True)
+    if incident is None:
+        return target
+    if incident.state not in GUARDIAN_DECIDABLE:
+        return incident.state
+    return (await _advance(session, incident, target, actor, f"graph_{decision}")).state

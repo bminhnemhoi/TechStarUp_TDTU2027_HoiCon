@@ -135,6 +135,14 @@
             android:launchMode="singleTask"
             android:taskAffinity="" />
 
+        <!-- Màn hình E8: Câu hỏi nhanh cho người cao tuổi (task riêng, không hiện trong Recents). -->
+        <activity
+            android:name=".pause.ElderQuestionActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="" />
+
         <!-- Chỉ quan sát: luôn cho cuộc gọi đi qua (vai trò CALL_SCREENING, không cần READ_CALL_LOG/READ_CONTACTS). -->
         <service
             android:name=".sensing.HcCallScreeningService"

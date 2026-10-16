@@ -23,7 +23,8 @@
 | POST | `/v1/events` | **đã có** — lô 1–50 sự kiện, idempotent theo id UUIDv7 từ máy (xem dưới) |
 | GET | `/v1/incidents/{id}` | **đã có** — chi tiết sự cố + lịch sử chuyển trạng thái (xem dưới) |
 | GET | `/v1/families/{id}/incidents` | **đã có** — danh sách sự cố của gia đình (xem dưới) |
-| POST | `/v1/incidents/{id}/answers` | trả lời câu hỏi nhanh E8 |
+| POST | `/v1/incidents/{id}/answers` | **đã có** — trả lời câu hỏi nhanh E8 (xem dưới) |
+| GET | `/v1/incidents/{id}/pending-question` | **đã có** — câu hỏi E8 đang chờ xử lý (xem dưới) |
 | POST | `/v1/incidents/{id}/ask-child` | nút "Hỏi con" |
 | GET | `/v1/incidents/{id}/elder-view` | nội dung E9/E10 cho người cao tuổi |
 | POST | `/v1/lookups` | tra cứu số/link/QR (đã băm/che) |
@@ -66,6 +67,13 @@ Mở/liên kết sự cố (FR-008): sự kiện loại `banking_app_foreground`
 
 **`GET /v1/incidents/{id}`** — cần token thiết bị; chỉ sự cố của gia đình mình, sự cố nhà khác trả 404 (không lộ sự tồn tại). Trả `incident.v1.json` kèm `transitions` (cũ → mới).
 **`GET /v1/families/{id}/incidents?limit=`** — `id` phải là gia đình của token (nhà khác ⇒ 404); mới nhất trước, `limit` 1–100 (mặc định 20), bản tóm tắt không có `transitions`. Người giám hộ đọc qua `/a/{token}` (spec 022), không qua các route này.
+
+### Câu hỏi nhanh & trả lời E8 (spec 024 — đã có)
+Hợp đồng: `elder_question.v1.json`, `elder_answer.v1.json` (fixture `fixtures/*.v1.*.json`).
+
+**`GET /v1/incidents/{id}/pending-question`** — cần token thiết bị; chỉ sự cố của gia đình mình (nhà khác ⇒ 404). Trả `elder_question.v1.json` khi đồ thị đang dừng ở `ask_elder`; `text` luôn mở đầu bằng "Đây là trợ lý AI HỏiCon." (diễn tập: kèm `[DIỄN TẬP]`), `expires_at` = mốc bộ hẹn giờ `ask_elder` (mặc định 60 s). Không có câu hỏi / sự cố đã kết thúc ⇒ 404; DB không với tới ⇒ 503 + `Retry-After`.
+**`POST /v1/incidents/{id}/answers`** — cần token thiết bị; nhà khác ⇒ 404. Thân `elder_answer.v1.json`: `question_id`, `answer` ∈ `yes/no/unsure/timeout`, `note_flags` (tùy chọn) chỉ gồm cờ bool của `NOTE_KEYWORDS` (`mentions_authority/transfer/code/secrecy/app_or_link`). Không nhận văn bản tự do hay ghi âm (ADR-009). Câu trả lời KHÔNG chạy đồ thị trong request: máy chủ xếp job `graph_resume` (khóa `{id}:elder_answer` ⇒ bấm hai lần vẫn một job), worker chạy tiếp. Trả `{"status", "incident_id", "level"}`: `accepted` | `expired` (đồ thị không còn chờ câu này, hoặc `question_id` khác câu đang hỏi) | `already_resolved`; `level` là mức hiện tại của sự cố. Trả lời "Có" cho câu chuyển tiền ⇒ đồ thị nâng ít nhất `critical`; "Có" xưng cơ quan / "Không" quen người gọi ⇒ ít nhất `high` (tất định, không phụ thuộc LLM).
+Đồ thị tự chạy: `POST /v1/events` mở/nâng sự cố lên `high`/`critical` ⇒ job `start_graph` (cùng ngưỡng cảnh báo nhanh; payload không h1, không tên gói). Worker là task nền trong tiến trình API (ADR-002; `HOICON_RUN_WORKER=false` khi chạy riêng). Người giám hộ quyết qua `/a/`, JWT hay Zalo ⇒ đồ thị không gửi chi tiết/nhắc T1/leo thang T2 nữa; T3 không ai trả lời ⇒ `resolved_no_response` (actor `timer`); "lừa đảo" ⇒ `case_open`.
 
 ## Người giám hộ (spec 023 — đã có)
 

@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from hoicon.agents.runtime import IncidentRuntime
+from hoicon.channels.fcm import get_fcm_client
 from hoicon.channels.guardian import ChannelDeps, send_to_guardian
 from hoicon.channels.updates import handle_update, scrub_update_job
 from hoicon.channels.zalo import build_zalo_client
@@ -41,7 +42,29 @@ def incident_handlers(runtime: IncidentRuntime, channel: ChannelDeps | None = No
             raise
         await scrub_update_job(channel.sessions, payload)  # xong rồi: bản mã định danh không nằm lại trong `jobs`
 
-    return {"graph_resume": graph_resume, "notify_guardian": notify_guardian, "zalo_update": zalo_update}
+    async def push_fcm(payload: dict[str, Any]) -> None:
+        await get_fcm_client().send_elder_question(
+            incident_id=payload["incident_id"], question_id=payload["question_id"], is_drill=payload["is_drill"]
+        )
+
+    async def start_graph(payload: dict[str, Any]) -> None:
+        # Payload đã qua `IncidentRuntime.prepare` ở `POST /v1/events`: không h1, không tên gói (ADR-006).
+        await runtime.start_prepared(
+            payload["event"],
+            payload["threat"],
+            incident_id=payload["incident_id"],
+            elder_alias=payload["elder_alias"],
+            family_id=payload["family_id"],
+            is_demo=payload["is_demo"],
+        )
+
+    return {
+        "graph_resume": graph_resume,
+        "notify_guardian": notify_guardian,
+        "zalo_update": zalo_update,
+        "push_fcm": push_fcm,
+        "start_graph": start_graph,
+    }
 
 
 async def run_worker(

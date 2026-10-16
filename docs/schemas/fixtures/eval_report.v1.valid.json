@@ -42,7 +42,7 @@
         "failures": [],
         "fallbacks": 0,
         "duration_ms": 480,
-        "outcome": "resolved_prevented",
+        "outcome": "case_open",
         "passed": true
       },
       {
@@ -113,7 +113,7 @@
         "failures": ["below_min_level"],
         "fallbacks": 0,
         "duration_ms": 100,
-        "outcome": "resolved_prevented",
+        "outcome": "case_open",
         "passed": false
       }
     ],

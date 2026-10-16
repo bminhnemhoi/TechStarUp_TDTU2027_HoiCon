@@ -32,7 +32,7 @@ def good(**changes) -> CaseResult:
         levels=["critical", "critical", "critical"],
         final_level="critical",
         notified=True,
-        outcome="resolved_prevented",
+        outcome="case_open",
         messages=[OK_MESSAGE],
         questions=[OK_QUESTION],
         llm_sent='<context>{"rule_floor": "critical", "duration_s": "[MÃ]"}</context>',

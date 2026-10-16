@@ -15,7 +15,7 @@ from typing import Literal
 from mcp.server.mcpserver import MCPServer
 from pydantic import BaseModel
 from sqlalchemy import func, or_, select, tuple_
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from hoicon.db.models import ThreatIndicator
 from hoicon.db.session import get_sessionmaker
@@ -34,33 +34,40 @@ class ThreatVerdict(BaseModel):
     list_version: str
 
 
-async def lookup_h1(sessions: async_sessionmaker, h1: str) -> ThreatVerdict:
-    """Tra theo HMAC với mọi kid pepper đã cấu hình; dòng quá hạn ⇒ `unknown`. h1 sai định dạng ⇒ `ValueError`."""
+async def lookup_h1(sessions: async_sessionmaker | AsyncSession, h1: str) -> ThreatVerdict:
+    """Tra theo HMAC với mọi kid pepper đã cấu hình; dòng quá hạn ⇒ `unknown`. h1 sai định dạng ⇒ `ValueError`.
+    Nhận một `AsyncSession` đang mở ⇒ tra trong chính giao dịch đó (không mượn thêm kết nối của pool)."""
     if not _H1.fullmatch(h1):
         raise ValueError("h1 phải là SHA-256 hex chữ thường (64 ký tự) — không gửi số điện thoại thô")
     keys = candidate_hmacs(h1)
+    if isinstance(sessions, AsyncSession):
+        return await _lookup(sessions, keys)
     async with sessions() as session:
-        hit = (
-            await session.scalars(
-                select(ThreatIndicator)
-                .where(
-                    ThreatIndicator.kind == "phone",
-                    tuple_(ThreatIndicator.value_kid, ThreatIndicator.value_hmac).in_(keys),
-                    or_(ThreatIndicator.expires_at.is_(None), ThreatIndicator.expires_at > func.now()),
-                )
-                .order_by(ThreatIndicator.confidence.desc())
-                .limit(1)
+        return await _lookup(session, keys)
+
+
+async def _lookup(session: AsyncSession, keys: list[tuple[int, str]]) -> ThreatVerdict:
+    hit = (
+        await session.scalars(
+            select(ThreatIndicator)
+            .where(
+                ThreatIndicator.kind == "phone",
+                tuple_(ThreatIndicator.value_kid, ThreatIndicator.value_hmac).in_(keys),
+                or_(ThreatIndicator.expires_at.is_(None), ThreatIndicator.expires_at > func.now()),
             )
-        ).first()
-        if hit is not None:
-            return ThreatVerdict(
-                verdict="flagged",
-                source=hit.source,
-                confidence=float(hit.confidence),
-                tactic=hit.tactic,
-                list_version=hit.list_version,
-            )
-        latest = await session.scalar(select(func.max(ThreatIndicator.list_version)))
+            .order_by(ThreatIndicator.confidence.desc())
+            .limit(1)
+        )
+    ).first()
+    if hit is not None:
+        return ThreatVerdict(
+            verdict="flagged",
+            source=hit.source,
+            confidence=float(hit.confidence),
+            tactic=hit.tactic,
+            list_version=hit.list_version,
+        )
+    latest = await session.scalar(select(func.max(ThreatIndicator.list_version)))
     return ThreatVerdict(verdict="unknown", list_version=latest or NO_LIST_VERSION)
 
 

@@ -47,7 +47,7 @@ def mk(
         levels=["high", final],
         final_level=final,
         notified=notified,
-        outcome="resolved_safe" if case.is_benign else "resolved_prevented",
+        outcome="resolved_safe" if case.is_benign else "case_open",
         messages=[MSG] if messages is None else messages,
         questions=[MSG] if questions is None else questions,
         fallbacks=fallbacks,
