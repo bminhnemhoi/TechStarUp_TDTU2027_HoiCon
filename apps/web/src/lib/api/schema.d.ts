@@ -154,7 +154,7 @@ export interface paths {
         };
         /**
          * Luồng SSE các bước của một lượt chạy
-         * @description Khung: `retry: 3000`; `id/event: step/data` (agent_step.v1); `: ping` mỗi 15 s khi im lặng; `event: done` (run_done.v1) rồi đóng; `event: error` khi DB lỗi. Nối lại bằng header `Last-Event-ID`. Cần header `Authorization` nên dùng `fetch`, không dùng `EventSource`.
+         * @description Khung: `retry: 3000`; `id/event: step/data` (agent_step.v1); `: ping` mỗi 15 s khi im lặng; `event: done` (run_done.v1) rồi đóng; `event: error` khi DB lỗi. Nối lại bằng header `Last-Event-ID`. Xác thực bằng `Authorization: Bearer` (app) hoặc cookie phiên `hc_guardian` cùng nguồn (web dùng `EventSource`, spec 027).
          */
         get: operations["stream_run_v1_runs__run_id__stream_get"];
         put?: never;
@@ -174,6 +174,75 @@ export interface paths {
         };
         /** Tìm lượt chạy của một sự cố (để mở luồng truy vết) */
         get: operations["get_incident_run_v1_incidents__incident_id__run_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Đổi token đăng nhập một lần (nhận qua Zalo) lấy cookie phiên */
+        post: operations["post_session_v1_guardian_session_post"];
+        /** Đăng xuất: xóa cookie phiên */
+        delete: operations["delete_session_v1_guardian_session_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Thông tin phiên hiện tại */
+        get: operations["get_me_v1_guardian_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/incidents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sự cố của gia đình, đang mở trước, phân trang bằng khóa (opened_at, id) */
+        get: operations["list_incidents_v1_guardian_incidents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/incidents/{incident_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chi tiết một sự cố của gia đình (kèm lịch sử chuyển trạng thái và run_id) */
+        get: operations["get_incident_detail_v1_guardian_incidents__incident_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -539,6 +608,129 @@ export interface components {
             /** Incident Opened */
             incident_opened: boolean;
         };
+        /** GuardianIncidentDetail */
+        GuardianIncidentDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Device Id */
+            device_id: string | null;
+            /** State */
+            state: string;
+            /** Level */
+            level: string;
+            /** Rule Floor */
+            rule_floor: string;
+            /** Version */
+            version: number;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Drill Id */
+            drill_id: string | null;
+            /** Opened By Event Id */
+            opened_by_event_id: string | null;
+            /** Outcome */
+            outcome: string | null;
+            /**
+             * Opened At
+             * Format: date-time
+             */
+            opened_at: string;
+            /** Closed At */
+            closed_at: string | null;
+            /** Transitions */
+            transitions: components["schemas"]["TransitionOut"][];
+            /** Elder Alias */
+            elder_alias: string | null;
+            /** Run Id */
+            run_id: string | null;
+        };
+        /** GuardianIncidentList */
+        GuardianIncidentList: {
+            /** Incidents */
+            incidents: components["schemas"]["GuardianIncidentSummary"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** GuardianIncidentSummary */
+        GuardianIncidentSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Device Id */
+            device_id: string | null;
+            /** State */
+            state: string;
+            /** Level */
+            level: string;
+            /** Rule Floor */
+            rule_floor: string;
+            /** Version */
+            version: number;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Drill Id */
+            drill_id: string | null;
+            /** Opened By Event Id */
+            opened_by_event_id: string | null;
+            /** Outcome */
+            outcome: string | null;
+            /**
+             * Opened At
+             * Format: date-time
+             */
+            opened_at: string;
+            /** Closed At */
+            closed_at: string | null;
+            /** Elder Alias */
+            elder_alias: string | null;
+            /** Has Run */
+            has_run: boolean;
+        };
+        /** GuardianSession */
+        GuardianSession: {
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /** Family Name */
+            family_name: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -876,6 +1068,11 @@ export interface components {
          * @enum {string}
          */
         RiskLevel: "none" | "low" | "medium" | "high" | "critical";
+        /** SessionIn */
+        SessionIn: {
+            /** Token */
+            token: string;
+        };
         /** Source */
         Source: {
             /** Name */
@@ -1141,7 +1338,9 @@ export interface operations {
             path: {
                 incident_id: string;
             };
-            cookie?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
         };
         requestBody: {
             content: {
@@ -1176,7 +1375,9 @@ export interface operations {
             path: {
                 run_id: string;
             };
-            cookie?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1225,7 +1426,9 @@ export interface operations {
             path: {
                 run_id: string;
             };
-            cookie?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1284,7 +1487,9 @@ export interface operations {
             path: {
                 incident_id: string;
             };
-            cookie?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1305,6 +1510,188 @@ export interface operations {
                 content?: never;
             };
             /** @description Chưa có lượt hoặc không thuộc nhà */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_session_v1_guardian_session_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianSession"];
+                };
+            };
+            /** @description Không có bằng chứng cùng nguồn (Origin/Sec-Fetch-Site) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token sai, đã dùng, quá hạn hoặc không dùng được (cùng một thông điệp) */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_session_v1_guardian_session_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_me_v1_guardian_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianSession"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_incidents_v1_guardian_incidents_get: {
+        parameters: {
+            query?: {
+                status?: ("open" | "closed") | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianIncidentList"];
+                };
+            };
+            /** @description Chưa đăng nhập */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description cursor hoặc status không hợp lệ */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_incident_detail_v1_guardian_incidents__incident_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianIncidentDetail"];
+                };
+            };
+            /** @description Chưa đăng nhập */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
             404: {
                 headers: {
                     [name: string]: unknown;

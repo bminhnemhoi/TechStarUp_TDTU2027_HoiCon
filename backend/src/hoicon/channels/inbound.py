@@ -5,6 +5,7 @@ vào job loại lệnh + giá trị đã phân loại (băm mã ghép, hoặc l�
 """
 
 import re
+import unicodedata
 from dataclasses import dataclass
 from typing import Any
 
@@ -13,6 +14,7 @@ from hoicon.domain.pii import encrypt_chat_id, hmac_pairing_code, hmac_zalo
 MAX_ID_LEN = 128
 MAX_MESSAGE_ID_LEN = 100  # khóa job `zalo:{bot_id}:{message_id}` chỉ có 200 ký tự
 CHOICES = ("1", "2", "3")
+LOGIN_WORDS = frozenset({"4", "web", "dang nhap"})  # lệnh lấy liên kết đăng nhập web (spec 027), đã bỏ dấu
 _CODE = re.compile(r"[0-9]{6}")  # chỉ chữ số ASCII (str.isdigit chấp nhận cả chữ số Ả Rập-Ấn Độ)
 _START = re.compile(r"/start(?:@\S+)?", re.IGNORECASE)
 
@@ -51,8 +53,15 @@ def parse_update(body: Any) -> ParsedUpdate | None:
     return ParsedUpdate(message_id, user_id, chat_id, text)
 
 
+def _fold(text: str) -> str:
+    """Chữ thường, bỏ dấu tiếng Việt (đ ⇒ d), gộp khoảng trắng: "Đăng  nhập" ⇒ "dang nhap"."""
+    lowered = text.lower().replace("đ", "d")
+    plain = "".join(c for c in unicodedata.normalize("NFD", lowered) if unicodedata.category(c) != "Mn")
+    return " ".join(plain.split())
+
+
 def classify(text: str) -> tuple[str, str | None]:
-    """⇒ ("start", mã 6 số) | ("start_no_code", None) | ("choice", "1"|"2"|"3") | ("other", None)."""
+    """⇒ ("start", mã 6 số) | ("start_no_code", None) | ("choice", "1"|"2"|"3") | ("login", None) | ("other", None)."""
     tokens = text.split()
     if tokens and _START.fullmatch(tokens[0]):
         if len(tokens) == 2 and _CODE.fullmatch(tokens[1]):
@@ -60,6 +69,8 @@ def classify(text: str) -> tuple[str, str | None]:
         return "start_no_code", None
     if len(tokens) == 1 and tokens[0] in CHOICES:
         return "choice", tokens[0]
+    if _fold(text) in LOGIN_WORDS:
+        return "login", None
     return "other", None
 
 

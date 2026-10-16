@@ -15,7 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 
@@ -32,6 +32,9 @@ GUARDIAN_AUDIENCE = "hoicon-guardian"
 ROLE = "protected"
 GUARDIAN_ROLE = "guardian"
 ACCESS_TTL = timedelta(days=30)
+GUARDIAN_WEB_TTL = timedelta(days=7)  # phiên web của người giám hộ (spec 027); thiết bị vẫn 30 ngày
+GUARDIAN_COOKIE = "hc_guardian"
+SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 ACCESS_TTL_S = int(ACCESS_TTL.total_seconds())
 MIN_KEY_LEN = 32  # ký tự; HS256 cần khóa ≥ 256 bit
 
@@ -148,9 +151,12 @@ class GuardianClaims:
     member_id: UUID
     family_id: UUID
     role: str = GUARDIAN_ROLE
+    expires_at: datetime | None = None
 
 
-def issue_guardian_access_token(member_id: UUID, family_id: UUID, *, now: datetime | None = None) -> str:
+def issue_guardian_access_token(
+    member_id: UUID, family_id: UUID, *, now: datetime | None = None, ttl: timedelta = ACCESS_TTL
+) -> str:
     issued = now or datetime.now(UTC)
     payload = {
         "sub": str(member_id),
@@ -159,7 +165,7 @@ def issue_guardian_access_token(member_id: UUID, family_id: UUID, *, now: dateti
         "iss": ISSUER,
         "aud": GUARDIAN_AUDIENCE,
         "iat": issued,
-        "exp": issued + ACCESS_TTL,
+        "exp": issued + ttl,
     }
     return jwt.encode(payload, _key(), algorithm=ALGORITHM)
 
@@ -177,7 +183,9 @@ def decode_guardian_access_token(token: str) -> GuardianClaims:
         )
         if raw.get("role") != GUARDIAN_ROLE:
             raise DeviceTokenError("role")
-        return GuardianClaims(UUID(raw["sub"]), UUID(raw["family_id"]))
+        return GuardianClaims(
+            UUID(raw["sub"]), UUID(raw["family_id"]), expires_at=datetime.fromtimestamp(raw["exp"], UTC)
+        )
     except (jwt.PyJWTError, KeyError, ValueError, TypeError) as exc:
         raise DeviceTokenError(type(exc).__name__) from None
 
@@ -190,14 +198,36 @@ def _unauthorized_guardian() -> HTTPException:
     )
 
 
+def require_same_origin(request: Request) -> None:
+    """Chống CSRF cho lệnh ghi xác thực bằng cookie (spec 027, FR-003): `Origin` thuộc danh sách cho phép, hoặc trình
+    duyệt khẳng định `Sec-Fetch-Site: same-origin`. `SameSite=Strict` là lớp thứ nhất; đây là lớp phòng thủ chiều sâu
+    cho trình duyệt cũ bỏ qua `SameSite`. Lệnh đọc (GET/HEAD/OPTIONS) không cần."""
+    if request.method in SAFE_METHODS:
+        return
+    origin = request.headers.get("origin", "").strip().rstrip("/").lower()
+    same_origin = request.headers.get("sec-fetch-site", "").strip().lower() == "same-origin"
+    if not ((origin and origin in get_settings().allowed_web_origins) or same_origin):
+        logger.warning("CSRF: từ chối %s %s không có bằng chứng cùng nguồn", request.method, request.url.path)
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Yêu cầu không đến từ trang web của HỏiCon")
+
+
 async def get_current_guardian(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+    cookie: Annotated[str | None, Cookie(alias=GUARDIAN_COOKIE)] = None,
 ) -> GuardianClaims:
-    """Dependency xác thực người giám hộ: token hợp lệ VÀ thành viên tồn tại với role='guardian'."""
-    if credentials is None:
+    """Dependency xác thực người giám hộ: token hợp lệ VÀ thành viên tồn tại với role='guardian'.
+
+    Nhận `Authorization: Bearer` (ưu tiên, không rơi về cookie khi Bearer sai) hoặc cookie `hc_guardian` (web, 027).
+    Xác thực bằng cookie mà là lệnh ghi ⇒ phải qua `require_same_origin`."""
+    via_cookie = credentials is None
+    token = cookie if via_cookie else credentials.credentials
+    if not token:
         raise _unauthorized_guardian()
+    if via_cookie:
+        require_same_origin(request)
     try:
-        claims = decode_guardian_access_token(credentials.credentials)
+        claims = decode_guardian_access_token(token)
     except DeviceAuthNotConfiguredError:
         logger.error("xác thực người giám hộ: HOICON_DEVICE_JWT_SECRET thiếu hoặc quá ngắn")
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Dịch vụ chưa sẵn sàng") from None

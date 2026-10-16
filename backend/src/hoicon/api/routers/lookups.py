@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from psycopg.errors import LockNotAvailable
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -78,6 +78,7 @@ class Actor:
 
 
 async def get_lookup_actor(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
 ) -> Actor:
     """Thiết bị trước, người giám hộ sau (hai audience JWT khác nhau); cả hai đều đối chiếu DB."""
@@ -93,7 +94,7 @@ async def get_lookup_actor(
         if exc.status_code != status.HTTP_401_UNAUTHORIZED:
             raise
     try:
-        guardian = await get_current_guardian(credentials)
+        guardian = await get_current_guardian(request, credentials)  # chỉ Bearer: không dùng cookie web ở đây
         return Actor("guardian", guardian.member_id, guardian.family_id, guardian.member_id)
     except HTTPException as exc:
         if exc.status_code != status.HTTP_401_UNAUTHORIZED:

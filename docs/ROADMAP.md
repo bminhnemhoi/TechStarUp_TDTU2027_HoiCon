@@ -90,7 +90,7 @@ Cập nhật: 15/10/2026
 | P2-09 | W3 | Tác tử can thiệp + interrupt `await_guardian` + hẹn giờ T1/T2/T3 | ◐ spec [`024-risk-and-intervention`](../specs/024-risk-and-intervention/) (kéo sớm Đợt 7, 16/10): đồ thị tự chạy từ `/v1/events` (worker trong API), T1/T2/T3 tôn trọng quyết định ngoài đồ thị, kết quả ghi qua IncidentService; còn: tóm tắt p95 với LLM thật |
 | P2-10 | W3 | `agent_steps` + luồng SSE trace | ◐ spec [`025-trace-sse`](../specs/025-trace-sse/) (16/10): **đã làm** `GET /v1/runs/{id}/steps`, `/v1/runs/{id}/stream` (SSE), `/v1/incidents/{id}/run` (JWT người giám hộ), `redact_json` + danh sách trắng cột (không `input_redacted`), trần 20 luồng/3 mỗi người, client TS sinh lại; SC-001 p95 ≈ 0,30 s trên uvicorn thật (localhost); **còn** giao diện tiêu thụ (027/033) và đo `: ping` qua Caddy (012) — giữ ◐ |
 | P2-11 | W4 14–20/12 | Tác tử xác minh + MCP `threat` + E10 | ◐ spec [`026-verification-threat`](../specs/026-verification-threat/) (16/10): đã có spec/plan/tasks (`/v1/lookups`, node `verification` tất định, danh sách trên máy dạng bucket k-ẩn danh — ADR-011 **đề xuất**, E10); **chưa code** |
-| P2-12 | W4 | Web tối thiểu: danh sách/chi tiết sự cố cho người giám hộ | ◐ spec [`027-guardian-web`](../specs/027-guardian-web/) (16/10): đã có spec/plan/tasks (đăng nhập bằng liên kết một lần qua Zalo, cookie phiên, `/v1/guardian/*`, trace trực tiếp); **chưa code** |
+| P2-12 | W4 | Web tối thiểu: danh sách/chi tiết sự cố cho người giám hộ | ☑ spec [`027-guardian-web`](../specs/027-guardian-web/) (16/10, chưa commit): đăng nhập bằng liên kết một lần qua Zalo (lệnh "4", **Zalo mock**), cookie `hc_guardian` + CSRF, `/v1/guardian/*`, 4 trang web + trace trực tiếp (`EventSource`); 6/6 SC đạt trên localhost (pytest 1597, Playwright 58 + live 264 ms ≤ 1 s, axe 0 lỗi); review bảo mật 0 High, UX 0 Chặn (4 Cao đã sửa); **còn**: Zalo thật, Caddy/012, các mục Medium ở Ghi chú (g–k) |
 | P2-13 | W4 | Diễn tập v1 (E11, bảng `drills`) | ◐ spec [`028-drills`](../specs/028-drills/) (16/10): đã có spec/plan/tasks (luyện tập công khai trong app, cờ diễn tập chỉ do máy chủ cấp); **chưa code**; nội dung chờ Minh duyệt |
 | P2-14 | W4 | Bộ thí điểm + Play internal v0.3 → **M2** | ◐ spec [`029-pilot-kit`](../specs/029-pilot-kit/) (16/10): đã có spec/plan/tasks; giai đoạn 1 (heartbeat máy chủ, báo cáo thí điểm, `release-gate.sh`, tài liệu) làm được ngay; giai đoạn 2 chờ 012 + 034 + W0-3; **chưa code** |
 | P2-15 | W5 21–27/12 | CLI `hoicon-eval` + ≥ 100 ca + chạy full lần đầu | ◐ 15/10: xong CLI `hoicon-eval` + 20 ca smoke tất định (O1/B3, `specs/030-eval-smoke`, bằng chứng ở `evidence.md`; còn chờ CI xanh trên PR — SC-006); ≥ 100 ca + full ở spec 036 |
@@ -131,6 +131,22 @@ Cập nhật: 15/10/2026
 **Gate G4 (26/02):** chạy gian 3 lần liên tiếp thành công, cảnh báo < 5 s; phát lại khi mất mạng hoạt động; có video dự phòng; reset demo < 1 phút.
 
 ## Ghi chú (ý tưởng ngoài phạm vi — không làm khi chưa có task)
+
+- **(Spec 027, web người giám hộ — 16/10/2026):** (a) chọn **shadcn/ui** để dành cho 033 (dashboard nhiều thành phần); 027
+  chỉ dùng Tailwind + `tokens.css`. (b) **012 (Caddy/VPS) phải che `/login/*` và `/a/*` trong log truy cập** và để `/v1/*`
+  đi thẳng tới API hoặc qua Next (đã đo: rewrite của Next không đệm/nén SSE). (c) Cookie phiên chỉ có cờ `Secure` khi
+  `HOICON_ENV` ∉ {dev, test, ci}: ở prod **bắt buộc đặt `HOICON_ENV`** (mặc định là `dev`) và `HOICON_WEB_BASE_URL`/`HOICON_WEB_ORIGINS`.
+  (d) Phiên JWT 7 ngày chỉ thu hồi bằng xóa thành viên (không có danh sách đen); cân nhắc thu hồi theo phiên nếu thí điểm cần.
+  (e) Người giám hộ trên web chưa có đường ghi đồng ý `lookups` (tra cứu E10 của 026 vẫn 403 cho họ). (f) Rewrite `/v1/*` của
+  web cố định lúc `next build` (`HOICON_API_URL`).
+  Từ review bảo mật 027 (0 Critical/High): (g) **cân nhắc đổi liên kết thành `/login#<token>`** (fragment không bao giờ tới
+  server/proxy/log/Referer và không nằm trong payload RSC; hiện theo spec là đường dẫn `/login/<token>` + 15 phút + một lần +
+  `no-referrer` + `no-store`); (h) **thu hồi phiên thật** (cột phiên/`jti` ⇒ cần migration, ngoài phạm vi 027) và cho vòng lặp
+  SSE kiểm lại thành viên/`exp` mỗi ~60 s (trace_service, 025); (i) **hỏi Minh/DPIA**: đồng ý `guardian_alerts` có bao gồm việc
+  người giám hộ XEM LẠI lịch sử/trace trên web không (nếu không ⇒ thêm giá trị enum + kiểm đồng ý ở route đọc, luật 7);
+  (j) web nhận cả `device_id`, `opened_by_event_id`, `drill_id`, `version` của người được bảo vệ dù không dùng: nên có model riêng
+  cho web; (k) từ review UX 027 còn lại (Trung bình/Thấp): sự cố `case_open` chưa có nút "đã rõ an toàn" trên web (cần quy tắc
+  chuyển trạng thái ở 031), đổi từ "sự cố" thành "cảnh báo" cho đồng nhất với Zalo, màu nút khóa đạt 7:1.
 
 - **E7 ở cỡ chữ 200% trên màn nhỏ (từ spec 010, 15/10 — vào P2-05, E7 SafePause; `ux-elder-reviewer`):** (High)
   hàng "Đây là trợ lý AI HỏiCon" + nút "Nghe lại" ép câu công khai AI thành 3 dòng hẹp; vùng cuộn chỉ còn ~2 dòng thân (~1 dòng

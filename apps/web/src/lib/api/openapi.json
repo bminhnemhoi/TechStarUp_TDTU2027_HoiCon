@@ -295,6 +295,22 @@
        "format": "uuid",
        "title": "Incident Id"
       }
+     },
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
      }
     ],
     "requestBody": {
@@ -353,6 +369,22 @@
        "format": "uuid",
        "title": "Run Id"
       }
+     },
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
      }
     ],
     "responses": {
@@ -393,7 +425,7 @@
      "trace"
     ],
     "summary": "Luồng SSE các bước của một lượt chạy",
-    "description": "Khung: `retry: 3000`; `id/event: step/data` (agent_step.v1); `: ping` mỗi 15 s khi im lặng; `event: done` (run_done.v1) rồi đóng; `event: error` khi DB lỗi. Nối lại bằng header `Last-Event-ID`. Cần header `Authorization` nên dùng `fetch`, không dùng `EventSource`.",
+    "description": "Khung: `retry: 3000`; `id/event: step/data` (agent_step.v1); `: ping` mỗi 15 s khi im lặng; `event: done` (run_done.v1) rồi đóng; `event: error` khi DB lỗi. Nối lại bằng header `Last-Event-ID`. Xác thực bằng `Authorization: Bearer` (app) hoặc cookie phiên `hc_guardian` cùng nguồn (web dùng `EventSource`, spec 027).",
     "operationId": "stream_run_v1_runs__run_id__stream_get",
     "security": [
      {
@@ -425,6 +457,22 @@
         }
        ],
        "title": "Last-Event-Id"
+      }
+     },
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
       }
      }
     ],
@@ -486,6 +534,22 @@
        "format": "uuid",
        "title": "Incident Id"
       }
+     },
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
      }
     ],
     "responses": {
@@ -504,6 +568,276 @@
      },
      "404": {
       "description": "Chưa có lượt hoặc không thuộc nhà"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/guardian/session": {
+   "post": {
+    "tags": [
+     "guardian"
+    ],
+    "summary": "Đổi token đăng nhập một lần (nhận qua Zalo) lấy cookie phiên",
+    "operationId": "post_session_v1_guardian_session_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SessionIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GuardianSession"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "Không có bằng chứng cùng nguồn (Origin/Sec-Fetch-Site)"
+     },
+     "410": {
+      "description": "Token sai, đã dùng, quá hạn hoặc không dùng được (cùng một thông điệp)"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "guardian"
+    ],
+    "summary": "Đăng xuất: xóa cookie phiên",
+    "operationId": "delete_session_v1_guardian_session_delete",
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     }
+    }
+   }
+  },
+  "/v1/guardian/me": {
+   "get": {
+    "tags": [
+     "guardian"
+    ],
+    "summary": "Thông tin phiên hiện tại",
+    "operationId": "get_me_v1_guardian_me_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GuardianSession"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/guardian/incidents": {
+   "get": {
+    "tags": [
+     "guardian"
+    ],
+    "summary": "Sự cố của gia đình, đang mở trước, phân trang bằng khóa (opened_at, id)",
+    "operationId": "list_incidents_v1_guardian_incidents_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "open",
+          "closed"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "cursor",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 128
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Cursor"
+      }
+     },
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GuardianIncidentList"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chưa đăng nhập"
+     },
+     "422": {
+      "description": "cursor hoặc status không hợp lệ"
+     }
+    }
+   }
+  },
+  "/v1/guardian/incidents/{incident_id}": {
+   "get": {
+    "tags": [
+     "guardian"
+    ],
+    "summary": "Chi tiết một sự cố của gia đình (kèm lịch sử chuyển trạng thái và run_id)",
+    "operationId": "get_incident_detail_v1_guardian_incidents__incident_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     },
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GuardianIncidentDetail"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chưa đăng nhập"
+     },
+     "404": {
+      "description": "Không thấy (hoặc không thuộc nhà)"
      },
      "422": {
       "description": "Validation Error",
@@ -1422,6 +1756,357 @@
     ],
     "title": "EventsResult"
    },
+   "GuardianIncidentDetail": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "family_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Family Id"
+     },
+     "member_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Member Id"
+     },
+     "device_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Device Id"
+     },
+     "state": {
+      "type": "string",
+      "title": "State"
+     },
+     "level": {
+      "type": "string",
+      "title": "Level"
+     },
+     "rule_floor": {
+      "type": "string",
+      "title": "Rule Floor"
+     },
+     "version": {
+      "type": "integer",
+      "title": "Version"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "title": "Is Drill"
+     },
+     "drill_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Drill Id"
+     },
+     "opened_by_event_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Opened By Event Id"
+     },
+     "outcome": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Outcome"
+     },
+     "opened_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Opened At"
+     },
+     "closed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Closed At"
+     },
+     "transitions": {
+      "items": {
+       "$ref": "#/components/schemas/TransitionOut"
+      },
+      "type": "array",
+      "title": "Transitions"
+     },
+     "elder_alias": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Elder Alias"
+     },
+     "run_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Run Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "family_id",
+     "member_id",
+     "device_id",
+     "state",
+     "level",
+     "rule_floor",
+     "version",
+     "is_drill",
+     "drill_id",
+     "opened_by_event_id",
+     "outcome",
+     "opened_at",
+     "closed_at",
+     "transitions",
+     "elder_alias",
+     "run_id"
+    ],
+    "title": "GuardianIncidentDetail"
+   },
+   "GuardianIncidentList": {
+    "properties": {
+     "incidents": {
+      "items": {
+       "$ref": "#/components/schemas/GuardianIncidentSummary"
+      },
+      "type": "array",
+      "title": "Incidents"
+     },
+     "next_cursor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Next Cursor"
+     }
+    },
+    "type": "object",
+    "required": [
+     "incidents",
+     "next_cursor"
+    ],
+    "title": "GuardianIncidentList"
+   },
+   "GuardianIncidentSummary": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "family_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Family Id"
+     },
+     "member_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Member Id"
+     },
+     "device_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Device Id"
+     },
+     "state": {
+      "type": "string",
+      "title": "State"
+     },
+     "level": {
+      "type": "string",
+      "title": "Level"
+     },
+     "rule_floor": {
+      "type": "string",
+      "title": "Rule Floor"
+     },
+     "version": {
+      "type": "integer",
+      "title": "Version"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "title": "Is Drill"
+     },
+     "drill_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Drill Id"
+     },
+     "opened_by_event_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Opened By Event Id"
+     },
+     "outcome": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Outcome"
+     },
+     "opened_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Opened At"
+     },
+     "closed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Closed At"
+     },
+     "elder_alias": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Elder Alias"
+     },
+     "has_run": {
+      "type": "boolean",
+      "title": "Has Run"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "family_id",
+     "member_id",
+     "device_id",
+     "state",
+     "level",
+     "rule_floor",
+     "version",
+     "is_drill",
+     "drill_id",
+     "opened_by_event_id",
+     "outcome",
+     "opened_at",
+     "closed_at",
+     "elder_alias",
+     "has_run"
+    ],
+    "title": "GuardianIncidentSummary"
+   },
+   "GuardianSession": {
+    "properties": {
+     "member_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Member Id"
+     },
+     "family_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Family Id"
+     },
+     "family_name": {
+      "type": "string",
+      "title": "Family Name"
+     },
+     "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Expires At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "member_id",
+     "family_id",
+     "family_name",
+     "expires_at"
+    ],
+    "title": "GuardianSession"
+   },
    "HTTPValidationError": {
     "properties": {
      "detail": {
@@ -2286,6 +2971,21 @@
      "critical"
     ],
     "title": "RiskLevel"
+   },
+   "SessionIn": {
+    "properties": {
+     "token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{32,64}$",
+      "title": "Token"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "token"
+    ],
+    "title": "SessionIn"
    },
    "Source": {
     "properties": {

@@ -91,3 +91,22 @@ tĩnh" (thanh đầy dần, không hiện số giây, chỉ khuyên). Thanh nút
 
 ## Zalo (Z1–Z8) & Web
 Xem kế hoạch §5; mẫu tin Zalo đặt ở `backend/src/hoicon/integrations/zalo/templates/` (mở đầu "Đây là trợ lý AI HỏiCon").
+
+### Web người giám hộ (spec 027)
+Người dùng là con cháu **trưởng thành** (không phải app người cao tuổi), nên chuẩn thấp hơn app nhưng vẫn đo được:
+chữ ≥ 16 px (thực tế dùng token `body` = 20 px), vùng chạm ≥ 44 px, nút chính ≥ 64 px (`min-h-16`), tương phản chữ thân
+≥ 7:1 (axe `color-contrast-enhanced`), dùng được ở cỡ chữ 200% mà không tràn ngang. Chỉ dùng Tailwind + `tokens.css`
+(chưa dùng shadcn/ui: dành cho spec 033).
+- **Trang**: `/login` (hướng dẫn nhắn số 4 cho bot), `/login/[token]` (đổi token một lần lấy phiên, URL bỏ token ngay), `/incidents`
+  (hai nhóm "Đang cần chú ý" / "Đã xong", "Tải thêm"), `/incidents/[id]` (hành động → trace "Trợ lý AI đang làm gì" → lịch sử).
+- **Khung**: `GuardianShell` (tên gia đình + "Đăng xuất"), cột đơn tối đa `max-w-3xl`; mọi khối nội dung do máy sinh mở đầu bằng
+  "Đây là trợ lý AI HỏiCon." (luật 6).
+- **Mức rủi ro**: luôn là thẻ/huy hiệu có **biểu tượng + chữ** ("▲ Mức rủi ro: Cao"): `○` chưa thấy, `●` thấp, `◆` trung bình,
+  `▲` cao, `⬣` rất cao; màu từ token `risk.*`. **Diễn tập**: nhãn `[DIỄN TẬP]` + màu `drill.*` (không mượn màu rủi ro).
+- **Hành động** (chỉ khi `detected/assessing/awaiting_guardian`): "Gọi điện cho {bí danh}" là `tel:` KHÔNG kèm số; "Đã gọi được,
+  {bí danh} an toàn", "Nghi lừa đảo", "HỏiCon báo nhầm" — mỗi nút có bước xác nhận thứ hai ("Đúng, gửi xác nhận" / "Quay lại");
+  409 ⇒ "Sự cố đã được xử lý ở nơi khác" rồi tải lại.
+- **Trace**: bảng dịch bước cố định ở `apps/web/src/lib/steps.ts` (khóa lạ ⇒ "Bước khác của trợ lý AI", không bao giờ in JSON thô);
+  trạng thái luồng: "Đang theo dõi trực tiếp" / "Đang kết nối lại…" / "Đã xong".
+- **Kiểm tra**: `pnpm --dir apps/web e2e a11y` chụp 4 màn hình × 360/768/1280 px (+ chữ 200%) vào
+  `~/hoicon-evidence/027-guardian-web/` và chạy axe-core (0 vi phạm serious/critical).

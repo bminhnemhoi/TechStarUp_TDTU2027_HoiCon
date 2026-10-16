@@ -12,6 +12,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from hoicon.api.auth import DeviceClaims, GuardianClaims, get_current_device, get_current_guardian
 from hoicon.api.routers.actions import ALREADY_HANDLED, IncidentDecisionIn, IncidentDecisionResult
@@ -66,24 +67,32 @@ def _not_found() -> HTTPException:
     return HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy sự cố")
 
 
+async def load_incident(session: AsyncSession, incident_id: UUID, family_id: UUID) -> Incident | None:
+    """Sự cố CỦA gia đình này (nhà khác và id lạ cùng trả None ⇒ route trả 404, không lộ sự tồn tại). Dùng chung cho
+    route thiết bị và route người giám hộ (spec 027)."""
+    return await session.scalar(select(Incident).where(Incident.id == incident_id, Incident.family_id == family_id))
+
+
+async def load_transitions(session: AsyncSession, incident_id: UUID) -> list[TransitionOut]:
+    rows = await session.scalars(
+        select(IncidentTransition)
+        .where(IncidentTransition.incident_id == incident_id)
+        .order_by(IncidentTransition.at, IncidentTransition.id)
+    )
+    return [TransitionOut.model_validate(row, from_attributes=True) for row in rows]
+
+
 @router.get("/incidents/{incident_id}", response_model=IncidentDetail)
 async def get_incident(
     incident_id: UUID, claims: Annotated[DeviceClaims, Depends(get_current_device)]
 ) -> IncidentDetail:
     async with get_sessionmaker()() as session:
-        incident = await session.scalar(
-            select(Incident).where(Incident.id == incident_id, Incident.family_id == claims.family_id)
-        )
+        incident = await load_incident(session, incident_id, claims.family_id)
         if incident is None:
             raise _not_found()
-        steps = await session.scalars(
-            select(IncidentTransition)
-            .where(IncidentTransition.incident_id == incident.id)
-            .order_by(IncidentTransition.at, IncidentTransition.id)
-        )
         return IncidentDetail(
             **IncidentSummary.model_validate(incident, from_attributes=True).model_dump(),
-            transitions=[TransitionOut.model_validate(step, from_attributes=True) for step in steps],
+            transitions=await load_transitions(session, incident.id),
         )
 
 
@@ -116,9 +125,7 @@ async def post_incident_decision(
     Chỉ cho phép người giám hộ thuộc cùng gia đình thao tác; sự cố gia đình khác trả 404.
     """
     async with get_sessionmaker().begin() as session:
-        incident = await session.scalar(
-            select(Incident).where(Incident.id == incident_id, Incident.family_id == claims.family_id)
-        )
+        incident = await load_incident(session, incident_id, claims.family_id)
         if incident is None:
             raise _not_found()
 

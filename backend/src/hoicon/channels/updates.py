@@ -13,13 +13,14 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from hoicon.agents import texts
-from hoicon.channels.guardian import ChannelDeps, Outgoing, deliver
-from hoicon.db.models import AgentRun, Incident, Job, Member, MessageOut, PairingCode
+from hoicon.channels.guardian import TERMINAL, ChannelDeps, Outgoing, deliver
+from hoicon.db.models import ActionToken, AgentRun, Incident, Job, Member, MessageOut, PairingCode
+from hoicon.services.action_token_service import ActionTokenService
 from hoicon.services.incident_service import (
     GUARDIAN_DECIDABLE,
     ConcurrencyConflictError,
@@ -33,6 +34,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 RANKS = (1, 2)
+LOGIN_TTL = timedelta(minutes=15)  # hạn liên kết đăng nhập web (spec 027)
+LOGIN_WINDOW = timedelta(hours=1)
+MAX_LOGIN_LINKS = 5  # mỗi người giám hộ trong LOGIN_WINDOW
 ATTEMPT_WINDOW = timedelta(minutes=15)  # bằng hạn của mã ghép
 MAX_START_ATTEMPTS = 10  # mỗi Zalo trong ATTEMPT_WINDOW
 MAX_BOT_START_ATTEMPTS = 100  # cả bot trong ATTEMPT_WINDOW (bot gói Basic chỉ có ≤ 50 người dùng)
@@ -45,6 +49,7 @@ QUIET_TEMPLATES = frozenset(
         "pairing_help",
         "pairing_already",
         "reply_help",
+        "login_rate_limited",
         "reply_no_incident",
         "detail_pending",
         "detail_resend",
@@ -171,7 +176,8 @@ async def _reply(
         template_id=template,
         text=text,
         chat_enc=payload["chat_enc"],
-        urgent=template.startswith("ack_"),
+        urgent=template.startswith("ack_")
+        or template == "login_link",  # liên kết đăng nhập không bị giữ khi gần hết hạn mức
         family_id=family_id,
         member_id=member.id if member else None,
         incident_id=incident_id,
@@ -196,9 +202,52 @@ async def handle_update(
         return await _reply(deps, payload, "pairing_help", texts.pairing_help(), attempt)
     if kind == "choice":
         return await _answer(deps, runtime, payload, member, attempt)
+    if kind == "login":
+        return await _login(deps, payload, member, attempt)
     return await _reply(
         deps, payload, "reply_help", texts.reply_help(), attempt, member=member, family_id=member.family_id
     )
+
+
+async def _login(deps: ChannelDeps, payload: dict[str, Any], member: Member, attempt: int) -> str | None:
+    """Lệnh "4" (spec 027, FR-002): phát token `guardian_view` (không gắn sự cố, 15 phút, một lần), liên kết mới vô hiệu
+    liên kết cũ chưa dùng, tối đa `MAX_LOGIN_LINKS`/giờ/người (đếm trên `action_tokens`, bền qua khởi động lại).
+    Token thô chỉ có trong tin gửi đi: chữ của tin sinh ngay tại đây (không đi qua `jobs.payload`) và `messages_out`
+    không lưu nội dung. Tin đã xong (Zalo giao lại cùng `message_id`) ⇒ không sinh token mới."""
+    job_key = f"zalo:{payload['bot_id']}:{payload['message_id']}"
+    reply = {"member": member, "family_id": member.family_id}
+    template, text = "login_link", ""  # tin đã xong thì `deliver` bỏ qua, chữ không dùng tới
+    async with deps.sessions.begin() as session:
+        done = await session.scalar(select(MessageOut.status).where(MessageOut.job_key == job_key))
+        if done not in TERMINAL:
+            # Khóa dòng người giám hộ: hai tin "4" đến cùng lúc không cùng lọt qua phép đếm.
+            await session.execute(select(Member.id).where(Member.id == member.id).with_for_update())
+            recent = await session.scalar(
+                select(func.count())
+                .select_from(ActionToken)
+                .where(
+                    ActionToken.member_id == member.id,
+                    ActionToken.scope == "guardian_view",
+                    ActionToken.created_at > func.now() - LOGIN_WINDOW,
+                )
+            )
+            if (recent or 0) >= MAX_LOGIN_LINKS:
+                template, text = "login_rate_limited", texts.login_rate_limited()
+            else:
+                unused = (
+                    ActionToken.member_id == member.id,
+                    ActionToken.scope == "guardian_view",
+                    ActionToken.used_at.is_(None),
+                )
+                if done is None:  # lần đầu: vô hiệu liên kết cũ (còn giữ dòng để tính hạn mức)
+                    await session.execute(update(ActionToken).where(*unused).values(used_at=func.now()))
+                else:  # thử lại sau lỗi gửi tạm thời: token lần hỏng chưa tới tay người dùng ⇒ thay, không tính hạn mức
+                    await session.execute(delete(ActionToken).where(*unused))
+                _, raw = await ActionTokenService.create_token(
+                    session, incident_id=None, member_id=member.id, scope="guardian_view", ttl=LOGIN_TTL
+                )
+                text = texts.guardian_login_link(f"{deps.settings.web_base_url.rstrip('/')}/login/{raw}")
+    return await _reply(deps, payload, template, text, attempt, **reply)
 
 
 async def scrub_update_job(sessions: async_sessionmaker, payload: dict[str, Any]) -> None:
