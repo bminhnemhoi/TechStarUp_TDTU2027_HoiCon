@@ -36,6 +36,7 @@ class ConsentSyncTest {
         "call_screening" to "call",
         "usage_monitoring" to "usage",
         "overlay_pause" to "overlay",
+        "lookups" to "lookups",
     )
 
     @After
@@ -107,6 +108,30 @@ class ConsentSyncTest {
         sync.run(emptySet(), texts + ("core_protection" to "core, reworded"))
         assertEquals(2, bodies.size)
         assertEquals(listOf("core_protection" to true), purposesSent(1))
+    }
+
+    @Test
+    fun lookupsIsRecordedOnlyAfterTheJustInTimeAcceptanceAndNeverForcesTheOthersAgain() {
+        sync.run(emptySet(), texts)
+        assertEquals(listOf("core_protection" to true, "guardian_alerts" to true), purposesSent(0))
+
+        sync.run(emptySet(), texts)
+        assertEquals(1, bodies.size, "not accepted yet: nothing about lookups is sent")
+
+        storage.acceptedLookupsVersion = ConsentLedger.VERSION
+        assertEquals(ConsentSync.Outcome.UP_TO_DATE, sync.run(emptySet(), texts))
+        assertEquals(listOf("lookups" to true), purposesSent(1), "only the new purpose is sent; the earlier grants are not repeated")
+        assertEquals(setOf("core_protection", "guardian_alerts", "lookups"), purposeNames(storage.recordedConsents))
+        sync.run(emptySet(), texts)
+        assertEquals(2, bodies.size, "recorded once")
+    }
+
+    @Test
+    fun lookupsAcceptedBeforeThePairingDisclosureIsStillRecordedUnderItsOwnWords() {
+        storage.acceptedDisclosureVersion = null
+        storage.acceptedLookupsVersion = ConsentLedger.VERSION
+        sync.run(emptySet(), texts)
+        assertEquals(listOf("lookups" to true), purposesSent(0))
     }
 
     @Test

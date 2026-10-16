@@ -5,6 +5,7 @@ import vn.hoicon.rules.CallDirection
 import vn.hoicon.rules.CallSignal
 import vn.hoicon.rules.HashedPhone
 import vn.hoicon.sentinel.BuildConfig
+import vn.hoicon.sentinel.data.threat.ThreatIndexes
 
 /**
  * The call(s) behind the open risk window (numbers not in contacts). Holds only h1 + last3, never the raw number.
@@ -108,7 +109,10 @@ object CallSignalStore {
     }
 }
 
-/** Local h1 lists. Real threat list (server, ADR-006) and trusted contacts (E4) come later; both empty in prod. */
+/**
+ * Local lists. Flagged = the synced k-anonymous bucket list (Spec 026, ADR-011); trusted contacts (E4) come later and
+ * stay empty in prod.
+ */
 object LocalLists {
     /**
      * h1 of `flagged_caller` in data/fixtures/phones.json — a FICTIONAL number, debug builds only (SEC-7, is_demo),
@@ -116,7 +120,13 @@ object LocalLists {
      */
     private val demoFlaggedH1 = setOf("aa1b1fcd5c51853e998738c59cffa5a4d95bd39ef7ef3b6d905c9c6c3af987e4")
 
-    fun isFlagged(h1: String): Boolean = BuildConfig.DEBUG && h1 in demoFlaggedH1
+    /**
+     * "May be on the warning list": a bucket match, which is a few comparisons over memory and safe on the main thread.
+     * Until the list has loaded this is false, which only costs the `critical` variant: R1 still says `high`, and the
+     * server checks the exact number when the event arrives.
+     */
+    fun isFlagged(h1: String): Boolean =
+        (BuildConfig.DEBUG && h1 in demoFlaggedH1) || ThreatIndexes.shared.current.contains(h1)
 
     @Suppress("UNUSED_PARAMETER")
     fun isTrusted(h1: String): Boolean = false

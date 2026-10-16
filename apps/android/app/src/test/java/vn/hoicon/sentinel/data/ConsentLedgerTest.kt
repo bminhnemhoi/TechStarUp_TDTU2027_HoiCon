@@ -50,6 +50,18 @@ class ConsentLedgerTest {
     }
 
     @Test
+    fun addingTheLookupsPurposeAppendsOneRowAndLeavesFamilySharingAlone() {
+        val all = texts + ("lookups" to "lookups") + ("guardian_alerts" to "guardian")
+        val recorded = ConsentLedger.changes(emptySet(), setOf("core_protection", "guardian_alerts"), all)
+            .mapTo(mutableSetOf()) { ConsentLedger.key(it.purpose, all.getValue(it.purpose)) }
+        val rows = ConsentLedger.changes(recorded, setOf("core_protection", "guardian_alerts", "lookups"), all)
+        assertEquals(listOf("lookups"), rows.map { it.purpose })
+        assertEquals(ConsentLedger.VERSION, rows.single().consentVersion)
+        // The new purpose never touches the gate that lets events leave the phone for the family.
+        assertTrue(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, recorded, all))
+    }
+
+    @Test
     fun aRevokedPermissionBecomesANewGrantedFalseRow() {
         val rows = ConsentLedger.changes(keys("core_protection", "usage_monitoring"), setOf("core_protection"), texts)
         assertEquals(1, rows.size)

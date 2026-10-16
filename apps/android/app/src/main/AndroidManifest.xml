@@ -127,6 +127,11 @@
             android:name=".OnboardingActivity"
             android:exported="false" />
 
+        <!-- E10 Kiểm tra số hay đường link (spec 026): chỉ mở từ E6 trong app, không nhận intent ngoài. -->
+        <activity
+            android:name=".LookupActivity"
+            android:exported="false" />
+
         <!-- Task riêng (taskAffinity rỗng): nằm trên task của app ngân hàng, không chen vào task đó. -->
         <activity
             android:name=".pause.SafePauseActivity"

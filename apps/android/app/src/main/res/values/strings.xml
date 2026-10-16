@@ -187,4 +187,71 @@
     <string name="perm_missing_enable">Bật mục còn thiếu</string>
     <string name="perm_done_button">Hoàn tất</string>
     <string name="perm_consent_pending">Mạng đang yếu nên HỏiCon chưa báo được là bác đã đồng ý. Bác cứ dùng bình thường, HỏiCon sẽ thử lại lần sau khi bác mở ứng dụng.</string>
+
+    <!-- E10: Kiểm tra số hay đường link (Spec 026). lookups_consent_* được băm (SHA-256) vào sổ đồng ý, mục đích lookups: đổi chữ ⇒ đổi ConsentLedger.VERSION. -->
+    <string name="e6_lookup">Kiểm tra số hay đường link</string>
+    <string name="lookups_consent_ai">Đây là trợ lý AI HỏiCon.</string>
+    <string name="lookups_consent_title">Nhờ HỏiCon kiểm tra giúp bác</string>
+    <string name="lookups_consent_summary">Nếu kết quả nguy hiểm, HỏiCon có thể báo cho con bác biết.</string>
+    <string name="lookups_consent_1_title">Chỉ gửi dãy ký tự, không gửi số thật</string>
+    <string name="lookups_consent_1_body">Với số điện thoại, HỏiCon không gửi số đầy đủ, chỉ gửi dãy ký tự đại diện và 3 số cuối. Với đường link, HỏiCon chỉ gửi tên trang web và đường dẫn, bỏ phần sau dấu chấm hỏi và tên đăng nhập.</string>
+    <string name="lookups_consent_2_title">So với danh sách cảnh báo lừa đảo</string>
+    <string name="lookups_consent_2_body">Máy chủ HỏiCon so với danh sách cảnh báo rồi trả lời kèm nguồn. HỏiCon không bao giờ nói một số điện thoại là “an toàn”: chưa có trong danh sách chỉ nghĩa là chưa có thông tin.</string>
+    <string name="lookups_consent_3_title">Chỉ kiểm tra khi bác nhờ, không bán dữ liệu</string>
+    <string name="lookups_consent_3_body">HỏiCon không tự kiểm tra gì thêm. Mỗi lần kiểm tra được ghi trên máy chủ HỏiCon tối đa 90 ngày để chống lạm dụng, không bán và không đưa cho bên quảng cáo. Nếu lúc đó HỏiCon đang báo một cuộc gọi lạ cho con bác và kết quả là nguy hiểm, HỏiCon có thể báo thêm cho con bác biết bác vừa kiểm tra (chỉ 3 số cuối, hoặc “một đường link”).</string>
+    <string name="lookups_consent_accept">Đồng ý, bắt đầu kiểm tra</string>
+    <string name="lookups_consent_decline">Để sau</string>
+    <string-array name="lookups_consent_speech">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>Bác nhờ HỏiCon kiểm tra một số điện thoại hay một đường link. HỏiCon không gửi số thật, chỉ gửi dãy ký tự đại diện.</item>
+        <item>HỏiCon không bao giờ nói một số điện thoại là an toàn.</item>
+        <item>Mỗi lần kiểm tra được ghi tối đa 90 ngày. Nếu kết quả nguy hiểm, HỏiCon có thể báo cho con bác biết.</item>
+        <item>Bác đọc phần còn lại trên màn hình nhé. Bác bấm Đồng ý khi đã rõ, hoặc bấm Để sau.</item>
+    </string-array>
+
+    <string name="lookup_title">Kiểm tra số hay đường link</string>
+    <string name="lookup_hint">Bác gõ số điện thoại lạ, hoặc dán đường link người ta gửi. HỏiCon sẽ xem có trong danh sách cảnh báo không.</string>
+    <string name="lookup_field_label">Số điện thoại hoặc đường link</string>
+    <string name="lookup_check">Kiểm tra</string>
+    <string name="lookup_checking">Đang kiểm tra…</string>
+    <string name="lookup_back">Quay lại</string>
+    <string name="lookup_done">Xong</string>
+    <string name="lookup_error_empty">Bác gõ số điện thoại hoặc dán đường link vào ô trên nhé.</string>
+    <string name="lookup_error_phone">Số này HỏiCon chưa đọc được. Bác xem lại đủ các chữ số giúp nhé.</string>
+    <string name="lookup_error_link">Đường link này HỏiCon chưa đọc được. Bác dán lại cả đường link nhé.</string>
+    <string name="lookup_subject_phone">Số đuôi …%1$s</string>
+    <string name="lookup_subject_link">Trang %1$s</string>
+    <string name="lookup_dangerous_title">Nguy hiểm, bác đừng làm theo</string>
+    <string name="lookup_dangerous_action">Bác đừng chuyển tiền, đừng đọc mã xác thực, đừng cài ứng dụng họ bảo. Bác bấm “Hỏi con”, rồi bấm số của con để gọi nhé.</string>
+    <string name="lookup_warning_title">Cẩn thận, có dấu hiệu đáng ngờ</string>
+    <string name="lookup_warning_action">Bác chưa nên làm theo. Bác hỏi con trước khi chuyển tiền hoặc bấm vào nhé.</string>
+    <string name="lookup_unknown_title">Chưa có thông tin</string>
+    <string name="lookup_unknown_action">Chưa có trong danh sách không có nghĩa là an toàn. Ai bảo chuyển tiền gấp, bác vẫn hỏi con trước nhé.</string>
+    <string name="lookup_safe_title">Khớp trang chính thức đã kiểm</string>
+    <string name="lookup_safe_action">Dù vậy, ai giục bác đọc mã xác thực hay chuyển tiền gấp, bác vẫn dừng lại hỏi con nhé.</string>
+    <string name="lookup_offline_ai">Đây là trợ lý AI HỏiCon. Kết quả này chỉ để tham khảo.</string>
+    <string name="lookup_offline_listed_title">Có thể nằm trong danh sách cảnh báo</string>
+    <string name="lookup_offline_listed_action">Điện thoại đang không có mạng nên HỏiCon chỉ so được sơ bộ. Số này có thể nằm trong danh sách cảnh báo, bác chưa nên làm theo và hỏi con nhé.</string>
+    <string name="lookup_offline_unknown_title">Chưa kiểm tra được</string>
+    <string name="lookup_offline_unknown_action">Điện thoại đang không có mạng nên HỏiCon chưa kiểm tra đầy đủ được. Chưa kiểm tra được không có nghĩa là an toàn. Bác hỏi con, hoặc kiểm tra lại khi có mạng nhé.</string>
+    <string name="lookup_sources_title">Nguồn của kết quả</string>
+        <string name="lookup_demo_label">Dữ liệu mẫu, không phải kết quả thật.</string>
+    <string name="lookup_notice_rate">Bác đã kiểm tra nhiều lần rồi. HỏiCon xin nghỉ một lát, bác thử lại sau nhé.</string>
+    <string name="lookup_notice_consent">HỏiCon chưa ghi nhận được là bác đã đồng ý, thường do mạng yếu. Bác thử lại sau ít phút nhé.</string>
+    <string name="lookup_notice_generic">HỏiCon chưa kiểm tra được lần này. Bác thử lại sau, hoặc hỏi con nhé.</string>
+    <string name="lookup_scan">Quét mã QR</string>
+    <string name="lookup_paste">Dán đường link</string>
+    <string name="lookup_error_paste">Máy chưa có đường link nào được chép. Bác chép đường link trước rồi bấm lại nhé.</string>
+    <string name="lookup_error_scan">Máy chưa mở được bộ quét mã. Bác gõ số hay dán đường link vào ô nhé.</string>
+    <string name="lookup_transfer_title">Mã chuyển khoản, bác xem kỹ</string>
+    <string name="lookup_transfer_action">HỏiCon không kiểm tra được tài khoản này. Bác hỏi con trước khi chuyển tiền nhé.</string>
+    <string name="lookup_transfer_payee">Người nhận (theo mã QR, HỏiCon chưa xác minh): %1$s</string>
+    <string name="lookup_transfer_amount">Số tiền: %1$s đồng</string>
+    <string name="lookup_notice_qr">HỏiCon chưa đọc được mã này. Bác thử quét lại, hoặc gõ số hay dán đường link vào ô nhé.</string>
+    <string name="lookup_icon_transfer">Biểu tượng mã chuyển khoản, cẩn thận</string>
+    <string name="lookup_icon_danger">Biểu tượng cảnh báo nguy hiểm</string>
+    <string name="lookup_icon_warning">Biểu tượng cẩn thận</string>
+    <string name="lookup_icon_unknown">Biểu tượng chưa có thông tin</string>
+    <string name="lookup_icon_safe">Biểu tượng khiên có dấu tích</string>
+    <string name="lookup_icon_offline">Biểu tượng không có mạng</string>
 </resources>

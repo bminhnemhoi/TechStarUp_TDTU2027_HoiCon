@@ -10,6 +10,8 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 /** Delivery state of an [OutboxEventEntity]. Stored as text so the schema stays readable. */
@@ -37,13 +39,33 @@ data class OutboxEventEntity(
     val createdAt: Long,
 )
 
-/** A flagged number from the server threat list (`GET /v1/threat-list`): hash + last 3 digits only (ADR-006). */
-@Entity(tableName = "threat_hashes")
-data class ThreatHashEntity(
-    @PrimaryKey val h1: String,
-    val last3: String,
+/**
+ * The server's threat list as of the last sync (Spec 026, ADR-011): ONE row holding the packed k-anonymous buckets
+ * (`buckets`: [count] big-endian uint24, ascending), not one row per number. It is a set of 22-bit buckets of `h1`,
+ * each shared by ~86 real numbers, so unlike the v1 `threat_hashes` table (h1 + last3, which was reversible and never
+ * written) it can sit in an unencrypted table. The in-memory `ThreatBucketIndex` is built from it at process start.
+ */
+@Entity(tableName = "threat_snapshot")
+data class ThreatSnapshotEntity(
+    @PrimaryKey val id: Int = SINGLETON_ID,
     val version: String,
-)
+    val bucketBits: Int,
+    val count: Int,
+    val buckets: ByteArray,
+    /** Wall clock of the last successful sync (a `304` also moves it). */
+    val fetchedAt: Long,
+) {
+    // A ByteArray field needs value equality, or two equal snapshots would compare unequal.
+    override fun equals(other: Any?) = other is ThreatSnapshotEntity && id == other.id && version == other.version &&
+        bucketBits == other.bucketBits && count == other.count && buckets.contentEquals(other.buckets) &&
+        fetchedAt == other.fetchedAt
+
+    override fun hashCode() = 31 * (31 * version.hashCode() + bucketBits) + buckets.contentHashCode()
+
+    companion object {
+        const val SINGLETON_ID = 1
+    }
+}
 
 /**
  * The risk window as the rest of the app sees it (singleton row, [id] = 1): written by the sensing chain when a
@@ -124,35 +146,61 @@ interface RiskWindowDao {
 }
 
 @Dao
-interface ThreatHashDao {
+interface ThreatSnapshotDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertAll(items: List<ThreatHashEntity>)
+    suspend fun put(snapshot: ThreatSnapshotEntity)
 
-    @Query("SELECT COUNT(*) FROM threat_hashes WHERE h1 = :h1")
-    suspend fun countOf(h1: String): Int
+    @Query("SELECT * FROM threat_snapshot WHERE id = 1")
+    suspend fun get(): ThreatSnapshotEntity?
 
-    @Query("SELECT MAX(version) FROM threat_hashes")
+    @Query("SELECT version FROM threat_snapshot WHERE id = 1")
     suspend fun latestVersion(): String?
+
+    /** `304 Not Modified`: the list is unchanged, only the time of the last successful check moves. */
+    @Query("UPDATE threat_snapshot SET fetchedAt = :fetchedAt WHERE id = 1")
+    suspend fun touch(fetchedAt: Long): Int
+
+    /** Drops a snapshot that failed validation when loaded, so the next sync downloads a whole new one. */
+    @Query("DELETE FROM threat_snapshot")
+    suspend fun clear(): Int
 }
 
 /**
- * `sentinel.db` (Spec 022). Version 1; the schema is exported to `app/schemas` so later versions ship with a
+ * `sentinel.db` (Spec 022; v2 in Spec 026). The schema is exported to `app/schemas` so every version ships with a
  * checked migration. Excluded from backup (data_extraction_rules.xml). Open it off the main thread.
  */
 @Database(
-    entities = [OutboxEventEntity::class, ThreatHashEntity::class, RiskWindowState::class],
-    version = 1,
+    entities = [OutboxEventEntity::class, ThreatSnapshotEntity::class, RiskWindowState::class],
+    version = 2,
     exportSchema = true,
 )
 abstract class SentinelDatabase : RoomDatabase() {
     abstract fun outbox(): OutboxDao
     abstract fun riskWindow(): RiskWindowDao
-    abstract fun threats(): ThreatHashDao
+    abstract fun threats(): ThreatSnapshotDao
 
     companion object {
         const val FILE = "sentinel.db"
 
+        /**
+         * v1 → v2: the never-written `threat_hashes` (h1 + last3, reversible) is dropped and `threat_snapshot` added.
+         * `outbox_events` and `risk_window_state` are not touched: queued events must survive the upgrade, which is
+         * why there is no `fallbackToDestructiveMigration` (it would erase the outbox).
+         */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `threat_hashes`")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `threat_snapshot` (`id` INTEGER NOT NULL, `version` TEXT NOT NULL, " +
+                        "`bucketBits` INTEGER NOT NULL, `count` INTEGER NOT NULL, `buckets` BLOB NOT NULL, " +
+                        "`fetchedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+                )
+            }
+        }
+
         fun open(context: Context): SentinelDatabase =
-            Room.databaseBuilder(context.applicationContext, SentinelDatabase::class.java, FILE).build()
+            Room.databaseBuilder(context.applicationContext, SentinelDatabase::class.java, FILE)
+                .addMigrations(MIGRATION_1_2)
+                .build()
     }
 }

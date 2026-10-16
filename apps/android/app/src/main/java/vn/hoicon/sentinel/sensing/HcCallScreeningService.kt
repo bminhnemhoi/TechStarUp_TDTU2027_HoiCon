@@ -15,6 +15,12 @@ import vn.hoicon.sentinel.SentinelServices
  * Observe only: always allows the call, never silences, rejects or hides it.
  */
 class HcCallScreeningService : CallScreeningService() {
+    override fun onCreate() {
+        super.onCreate()
+        // Starts loading the threat list in the background before the first call is screened (cold process).
+        SentinelServices.of(this)
+    }
+
     override fun onScreenCall(callDetails: Call.Details) {
         val now = System.currentTimeMillis()
         HcTiming.mark("call_screened", now)
