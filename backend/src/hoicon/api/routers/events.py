@@ -10,20 +10,21 @@ Thiết bị/gia đình/thành viên lấy từ token, không từ thân yêu c�
 import logging
 import time
 from collections import deque
+from datetime import datetime
 from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from psycopg.errors import LockNotAvailable
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hoicon.agents.runtime import prepare_event, safe_alias
 from hoicon.api.auth import DeviceClaims, get_current_device
-from hoicon.db.models import Incident, Member, RiskEventRecord
+from hoicon.db.models import Drill, Incident, Member, RiskEventRecord
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain.events import RiskEventIn
 from hoicon.domain.pii import hmac_h1
@@ -113,6 +114,44 @@ def _row(event: RiskEventIn, claims: DeviceClaims) -> dict[str, Any]:
     return row
 
 
+async def _vet_drill_claims(
+    events: list[RiskEventIn], *, family_id: UUID, member_id: UUID
+) -> tuple[list[RiskEventIn], int]:
+    """Spec 028 FR-003 (D2): cờ diễn tập CHỈ do máy chủ cấp. Mọi `drill_id` máy khai là một lời khai chưa kiểm: chỉ
+    được tin khi khớp một bài `in_progress` của CHÍNH người cao tuổi này (thuộc gia đình của thiết bị) và `occurred_at`
+    nằm trong khung giờ của bài. Ngược lại hạ cờ (`is_drill=false`, bỏ `drill_id`) ⇒ xử lý như sự cố THẬT: nghi ngờ thì
+    coi là thật, vì một cảnh báo thừa ít hại hơn một vụ thật bị báo là diễn tập.
+    ⇒ (sự kiện đã kiểm, số sự kiện bị hạ cờ)."""
+    claimed = {e.drill_id for e in events if e.drill_id is not None}
+    if not claimed and not any(e.is_drill for e in events):
+        return events, 0
+    windows: dict[UUID, tuple[datetime, datetime]] = {}
+    if claimed:
+        async with get_sessionmaker()() as session:
+            rows = await session.execute(
+                select(Drill.id, Drill.window_start, Drill.window_end).where(
+                    Drill.id.in_(claimed),
+                    Drill.family_id == family_id,
+                    Drill.member_id == member_id,
+                    Drill.status == "in_progress",
+                )
+            )
+            windows = {row.id: (row.window_start, row.window_end) for row in rows}
+    vetted: list[RiskEventIn] = []
+    rejected = 0
+    for event in events:
+        if event.drill_id is None and not event.is_drill:
+            vetted.append(event)
+            continue
+        window = windows.get(event.drill_id) if event.drill_id is not None else None
+        if window is not None and window[0] <= event.occurred_at <= window[1] and event.is_drill:
+            vetted.append(event)
+            continue
+        rejected += 1
+        vetted.append(event.model_copy(update={"is_drill": False, "drill_id": None}))
+    return vetted, rejected
+
+
 async def _record_call_verification(
     session: AsyncSession, incident: Incident, event: RiskEventIn, threat: dict[str, Any]
 ) -> None:
@@ -161,8 +200,11 @@ async def post_events(batch: EventsBatch, claims: Annotated[DeviceClaims, Depend
     if wait is not None:
         logger.info("events: thiết bị vượt hạn mức lô")
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, detail=BUSY, headers={"Retry-After": str(wait)})
+    events, rejected = await _vet_drill_claims(batch.events, family_id=claims.family_id, member_id=claims.member_id)
+    if rejected:  # không ghi id hay định danh: chỉ số lượng (máy có thể khai bậy bất cứ id nào)
+        logger.warning("events: drill flag rejected (%d sự kiện coi như thật)", rejected)
     try:
-        rows = sorted((_row(event, claims) for event in batch.events), key=lambda row: row["id"])  # thứ tự khóa ổn định
+        rows = sorted((_row(event, claims) for event in events), key=lambda row: row["id"])  # thứ tự khóa ổn định
     except RuntimeError as exc:  # thiếu pepper: lỗi cấu hình của ta ⇒ 503, không nêu chi tiết, không lưu gì
         logger.error("events: không băm được số gọi đến (%s)", type(exc).__name__)
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Dịch vụ chưa sẵn sàng") from None
@@ -180,7 +222,7 @@ async def post_events(batch: EventsBatch, claims: Annotated[DeviceClaims, Depend
             opened = False
             seen: set[UUID] = set()
             # Theo thứ tự xảy ra (ổn định trong lô): sự kiện cũ hơn mở sự cố trước, sự kiện sau liên kết vào.
-            for event in sorted(batch.events, key=lambda e: e.occurred_at):
+            for event in sorted(events, key=lambda e: e.occurred_at):
                 if event.id not in fresh or event.id in seen:
                     continue
                 seen.add(event.id)

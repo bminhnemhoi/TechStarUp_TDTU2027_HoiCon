@@ -10,6 +10,7 @@ from uuid import UUID
 
 import pytest
 from consent_support import call, pair_device
+from drill_support import running_drill_for
 from jsonschema import Draft202012Validator, FormatChecker
 from sqlalchemy import delete, func, select, text
 
@@ -199,7 +200,7 @@ async def test_following_events_join_the_open_incident(device_world: Any, token:
 
 
 async def test_drill_events_make_a_drill_incident(device_world: Any, token: str) -> None:
-    drill_id = str(new_id())
+    drill_id = str(await running_drill_for(token))  # spec 028 D2: cờ diễn tập chỉ được tin khi khớp bài `in_progress`
     body = (await post(token, make_event(is_drill=True, drill_id=drill_id))).json()
     async with get_sessionmaker()() as session:
         incident = await session.get(Incident, UUID(body["incident_id"]))

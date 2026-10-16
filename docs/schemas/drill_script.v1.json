@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/drill_script.v1.json",
+  "title": "DrillScript v1",
+  "description": "Kịch bản một bài diễn tập nhận biết lừa đảo (spec 028, P2-13): tệp `data/drills/*.yaml` và phần `script` nhúng trong `drill_offer.v1`. 100% hư cấu: tên cơ quan hư cấu, không số điện thoại (chỉ 3 số cuối hư cấu `caller_last3_fictional`). Mỗi bước có đúng 2 lựa chọn; máy chủ chỉ nhận MÃ lựa chọn, không văn bản tự do. `approved=false` cho tới khi Minh duyệt; bản prod từ chối đặt lịch bài chưa duyệt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "scenario_ref", "title", "agency_fictional", "steps", "debrief", "approved"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^drill_[a-z0-9_]{3,40}$" },
+    "scenario_ref": { "type": "string", "pattern": "^[a-z0-9_]{3,80}$", "description": "Id kịch bản eval trong data/scenarios/ để dùng chung red_flags/teach_points." },
+    "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "agency_fictional": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "caller_last3_fictional": { "type": "string", "pattern": "^[0-9]{3}$" },
+    "steps": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["line_vi", "choices"],
+        "properties": {
+          "line_vi": { "type": "string", "minLength": 1, "maxLength": 400 },
+          "choices": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "label_vi", "correct", "feedback_vi"],
+              "properties": {
+                "id": { "type": "string", "pattern": "^[a-z]$" },
+                "label_vi": { "type": "string", "minLength": 1, "maxLength": 40 },
+                "correct": { "type": "boolean" },
+                "feedback_vi": { "type": "string", "minLength": 1, "maxLength": 400 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "debrief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["red_flags_vi", "praise_vi"],
+      "properties": {
+        "red_flags_vi": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+        },
+        "praise_vi": { "type": "string", "minLength": 1, "maxLength": 400 }
+      }
+    },
+    "approved": { "type": "boolean" }
+  }
+}

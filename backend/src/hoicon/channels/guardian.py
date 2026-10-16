@@ -230,7 +230,9 @@ async def send_to_guardian(deps: ChannelDeps, payload: dict[str, Any], attempt: 
         block = "demo_to_real_family"
     elif family.is_demo and not is_demo:
         block = "real_to_demo_family"
-    job_key = f"{payload['incident_id']}:msg:{template}"
+    # Tin của sự cố mang `incident_id`; tin tổng kết diễn tập (spec 028) mang `drill_id` và không gắn sự cố nào.
+    owner = payload.get("incident_id") or payload["drill_id"]
+    job_key = f"{owner}:msg:{template}"
     out = Outgoing(
         job_key=job_key,
         bot_id=member.zalo_bot_id if member and member.zalo_bot_id else deps.settings.zalo_bot_id,

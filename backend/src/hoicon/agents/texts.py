@@ -117,6 +117,26 @@ def guardian_evidence(alias: str, kind: str, last3: str | None, is_drill: bool) 
     )
 
 
+def drill_debrief(alias: str, passed: bool | None, red_flags_vi: list[str]) -> str:
+    """Tin tổng kết bài luyện tập cho người giám hộ (spec 028 FR-006). LUÔN là diễn tập (`_message(..., True)` ⇒ câu
+    công khai AI rồi nhãn [DIỄN TẬP]). `passed`: True = chọn đúng mọi bước, False = còn chỗ phân vân, None = dừng giữa
+    chừng. Không điểm số, không so sánh, không lo lắng: việc cần làm (gọi hỏi thăm, cùng ôn) đứng đầu."""
+    flags = "\n".join(f"- {flag}" for flag in red_flags_vi)
+    if passed is True:
+        head = f"{alias} vừa luyện tập nhận biết lừa đảo và chọn đúng ở mọi bước. Anh/chị gọi khen {alias} một câu nhé."
+    elif passed is False:
+        head = (
+            f"{alias} vừa luyện tập nhận biết lừa đảo, còn một vài chỗ chưa chắc tay. "
+            f"Anh/chị gọi hỏi thăm {alias} và cùng ôn lại nhé."
+        )
+    else:
+        head = (
+            f"{alias} đã dừng buổi luyện tập giữa chừng, không sao cả. "
+            f"Khi tiện, anh/chị hỏi thăm {alias} và cùng xem lại nhé."
+        )
+    return _message(f"{head}\n\nCác dấu hiệu lừa đảo trong bài:\n{flags}", True)
+
+
 def guardian_escalation(alias: str, is_drill: bool) -> str:
     return _message(
         f"HỏiCon đã nhắn cho một người nhà khác của {alias} nhưng chưa nhận được trả lời. "

@@ -20,6 +20,7 @@ from hoicon.api.routers import (
     actions,
     consents,
     devices,
+    drills,
     elder,
     events,
     guardian,
@@ -73,6 +74,7 @@ app.include_router(incidents.router)
 app.include_router(runs.router)
 app.include_router(guardian.router)
 app.include_router(lookups.router)
+app.include_router(drills.router)
 app.include_router(actions.router)
 app.include_router(elder.router)
 app.include_router(webhooks.router)  # cùng route với ứng dụng con `hoicon.api.webhooks:app` (chỉ nó ra đường hầm)

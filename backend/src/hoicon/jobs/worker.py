@@ -17,6 +17,7 @@ from hoicon.channels.zalo import build_zalo_client
 from hoicon.config import get_settings
 from hoicon.db.session import get_sessionmaker
 from hoicon.jobs.queue import ATTEMPT_KEY, MAX_ATTEMPTS, Handler, run_once
+from hoicon.services.drill_service import DrillService
 
 logger = logging.getLogger(__name__)
 
@@ -58,12 +59,18 @@ def incident_handlers(runtime: IncidentRuntime, channel: ChannelDeps | None = No
             is_demo=payload["is_demo"],
         )
 
+    async def drill_expire(payload: dict[str, Any]) -> None:
+        # Spec 028: bộ hẹn giờ của một bài. Lũy đẳng: bài đã xong thì không có gì để làm; quét cả các bài quá hạn khác.
+        async with get_sessionmaker().begin() as session:
+            await DrillService.expire(session)
+
     return {
         "graph_resume": graph_resume,
         "notify_guardian": notify_guardian,
         "zalo_update": zalo_update,
         "push_fcm": push_fcm,
         "start_graph": start_graph,
+        "drill_expire": drill_expire,
     }
 
 

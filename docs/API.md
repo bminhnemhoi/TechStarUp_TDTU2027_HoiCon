@@ -30,7 +30,8 @@
 | POST | `/v1/incidents/{id}/ask-child` | nút "Hỏi con" |
 | GET | `/v1/incidents/{id}/elder-view` | nội dung E9/E10 cho người cao tuổi |
 | POST | `/v1/lookups` | tra cứu số/link/QR (đã băm/che) |
-| POST | `/v1/drills/{id}/result` | |
+| GET | `/v1/drills/offer` | **đã có** (`drill_offer.v1.json`) — hỏi bài diễn tập theo nhịp heartbeat (spec 028) |
+| POST | `/v1/drills/{id}/result` | **đã có** (`drill_result.v1.json`) — gửi kết quả diễn tập (spec 028) |
 | POST | `/v1/heartbeat` | trạng thái quyền, phiên bản |
 
 ### Ghép đôi, đồng ý, thiết bị (spec 020 — đã có)
@@ -163,6 +164,23 @@ data: {"retryable":true}
 - Phía sau Caddy/nginx phải tắt đệm và nén cho route này (đã có `X-Accel-Buffering: no`); đo `: ping` qua proxy thật ở spec 012.
 
 **`GET /v1/incidents/{incident_id}/run`** — JWT người giám hộ cùng gia đình ⇒ `{"run_id", "status"}`; chưa có lượt hoặc sự cố thuộc nhà khác ⇒ 404. Đây là cách client tìm `run_id` từ sự cố.
+
+## Diễn tập nhận biết lừa đảo (spec 028 — đã có)
+
+Hợp đồng: `drill_script.v1.json`, `drill_offer.v1.json`, `drill_result.v1.json` (fixture `fixtures/drill_*.v1.*.json`). Xác thực bằng JWT thiết bị (`get_current_device`). Hạn mức 30 lần/giờ/thiết bị. Không bao giờ lưu văn bản tự do hay ghi âm (SC-006).
+
+**`GET /v1/drills/offer`** — thiết bị hỏi bài diễn tập theo nhịp heartbeat 15 phút.
+- Trả về `{"drill": null}` khi không có bài diễn tập nào trong khung giờ hiện tại, hoặc người cao tuổi chưa cấp đồng ý `drills`.
+- Trả về `{"drill": {"drill_id", "window_end", "is_drill": true, "script": {...}}}` khi có bài trong khung giờ `[window_start, window_end]`. Khi trả bài, chuyển trạng thái từ `scheduled` sang `offered`.
+- Mã: 200 thành công · 401 thiếu/sai token · 403 không được phép (chưa đồng ý hoặc tính năng tắt, client hiểu là không có bài) · 429 quá 30 lần/giờ.
+
+**`POST /v1/drills/{id}/result`** — app Lính gác gửi kết quả diễn tập.
+- Thân: `{"drill_id", "status": "declined" | "aborted" | "completed", "answers": [{"step": 0, "choice_id": "a"}, ...], "started_at"?, "completed_at"?}`.
+- Máy chủ tự chấm điểm lại từ kịch bản lưu trên server (`Grade(score, total)`), KHÔNG tin điểm hay trạng thái do client tự tính.
+- `completed` ⇒ máy chủ chấm lại ⇒ chuyển sang `passed` (đúng hết mọi bước) hoặc `failed` (có bước sai), tự động xếp job `notify_guardian` gửi tin tổng kết Zalo có gắn nhãn `[DIỄN TẬP]` và câu công khai AI.
+- `declined` ("Để lúc khác") hoặc `aborted` ("Dừng") ⇒ ghi nhận kết quả, không gửi tin làm phiền.
+- Lũy đẳng: gửi lại cùng nội dung ⇒ 200 `ResultOutcome.replay`; gửi xung đột nội dung ⇒ 409 `ResultConflict`.
+- Mã: 200 đã ghi nhận / chấp nhận · 401 thiếu/sai token · 404 bài không thuộc gia đình hoặc không tồn tại · 409 xung đột trạng thái / kết quả khác · 422 sai schema (có trường lạ, trường cấm `note`).
 
 ## Webhook & khác
 `POST /webhooks/zalo/{bot_id}` · `/demo/*` · `/admin/*` · `/mcp/*` (FastMCP) · `GET /healthz`

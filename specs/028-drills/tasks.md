@@ -13,7 +13,7 @@
 
 ## Giai đoạn 0: Hợp đồng & nội dung
 
-- [ ] T001 [AB] [FR-001] Viết `docs/schemas/drill_script.v1.json`, `drill_offer.v1.json` và `drill_result.v1.json` theo
+- [x] T001 [AB] [FR-001] Viết `docs/schemas/drill_script.v1.json`, `drill_offer.v1.json` và `drill_result.v1.json` theo
   plan §4, kèm fixture `valid`/`invalid`. Fixture invalid phải có:
   - 3 lựa chọn ở một bước;
   - `choice_id` là chữ "x1";
@@ -21,11 +21,11 @@
   - `drill_result` có trường `note`.
 
   · Verify: `$PYTEST tests/contract/test_drill_schemas.py`
-- [ ] T002 [AB] [FR-010] Soạn 3 tệp `data/drills/*.yaml` (giả công an, giả nhân viên ngân hàng, "con cháu cần tiền gấp"),
+- [x] T002 [AB] [FR-010] Soạn 3 tệp `data/drills/*.yaml` (giả công an, giả nhân viên ngân hàng, "con cháu cần tiền gấp"),
   `approved: false`, tên cơ quan hư cấu. Dùng skill `add-scam-scenario` hoặc `vietnamese-scam-redteam` để soạn và
   `ux-elder-reviewer` để duyệt câu chữ.
   · Verify: như T003
-- [ ] T003 [AB] [FR-001] [FR-010] Viết `backend/tests/contract/test_drill_schemas.py`. Test kiểm:
+- [x] T003 [AB] [FR-001] [FR-010] Viết `backend/tests/contract/test_drill_schemas.py`. Test kiểm:
   - mọi tệp `data/drills/*.yaml` khớp schema;
   - không chuỗi nào chứa dãy ≥ 4 chữ số liền (trừ `caller_last3_fictional`);
   - không chứa từ cấm (danh sách cơ quan thật + tên tổ chức trong `bank_apps.vn.json`);
@@ -36,17 +36,17 @@
 
 ## Làn B: Server
 
-- [ ] T004 [B] [FR-002] Viết migration bảng `drills` theo spec FR-002 (CHECK trạng thái, khung giờ từ 30 phút tới 4 giờ,
+- [x] T004 [B] [FR-002] Viết migration bảng `drills` theo spec FR-002 (CHECK trạng thái, khung giờ từ 30 phút tới 4 giờ,
   chỉ mục) và cập nhật `db/models.py`.
   · Verify: `uv run --directory backend alembic upgrade head && uv run --directory backend alembic downgrade -1 && uv run --directory backend alembic upgrade head`
-- [ ] T005 [B] [FR-002] Viết `backend/tests/integration/test_schema_<số>.py`: các CHECK, xóa gia đình thì xóa dây chuyền,
+- [x] T005 [B] [FR-002] Viết `backend/tests/integration/test_schema_<số>.py`: các CHECK, xóa gia đình thì xóa dây chuyền,
   và không cột nào chứa văn bản tự do.
   · Verify: `$PYTEST tests/integration/test_schema_<số>.py`
-- [ ] T006 [B] [FR-004] Viết `backend/src/hoicon/domain/drill.py` (nạp YAML qua schema, chấm điểm tất định) và
+- [x] T006 [B] [FR-004] Viết `backend/src/hoicon/domain/drill.py` (nạp YAML qua schema, chấm điểm tất định) và
   `services/drill_service.py` (`schedule`, `offer`, `record_result`, `expire`, bảng cạnh `ALLOWED`, khóa theo gia đình
   bằng `_lock`).
   · Verify: `$PYTEST tests/unit/test_drill_scoring.py tests/integration/test_api_drills.py`
-- [ ] T007 [B] [FR-004] Viết `backend/tests/unit/test_drill_scoring.py`. Các ca:
+- [x] T007 [B] [FR-004] Viết `backend/tests/unit/test_drill_scoring.py`. Các ca:
   - đúng hết ⇒ `passed`;
   - một sai ⇒ `failed`;
   - mã lựa chọn lạ ⇒ lỗi;
@@ -54,11 +54,11 @@
   - máy chủ chấm lại, bỏ qua điểm do máy gửi.
 
   · Verify: như T006
-- [ ] T008 [B] [FR-003] Thêm bước chặn cờ diễn tập trong `api/routers/events.py` (plan D2), log `warning` không có PII.
+- [x] T008 [B] [FR-003] Thêm bước chặn cờ diễn tập trong `api/routers/events.py` (plan D2), log `warning` không có PII.
   Sửa các test cũ gửi `is_drill=true` cho tạo dòng `drills` hợp lệ trước (`test_api_events.py`, `test_api_incidents.py`,
   `test_incident_service.py` nếu đi qua API) và ghi số test đã sửa vào evidence.
   · Verify: `$PYTEST tests/integration/test_drill_flag_guard.py tests/integration/test_api_events.py tests/integration/test_api_incidents.py`
-- [ ] T009 [B] [FR-003] Viết `backend/tests/integration/test_drill_flag_guard.py` với ma trận:
+- [x] T009 [B] [FR-003] Viết `backend/tests/integration/test_drill_flag_guard.py` với ma trận:
   - không có bài;
   - bài của nhà khác;
   - bài `scheduled` (chưa `in_progress`);
@@ -68,10 +68,10 @@
 
   Mọi ca sai ⇒ sự cố `is_drill=false` và cảnh báo gửi đi như thật; ca đúng ⇒ `is_drill=true`, tin có `[DIỄN TẬP]`.
   · Verify: như T008
-- [ ] T010 [B] [FR-005] Viết `api/routers/drills.py`: `GET /v1/drills/offer` và `POST /v1/drills/{id}/result`, JWT thiết
+- [x] T010 [B] [FR-005] Viết `api/routers/drills.py`: `GET /v1/drills/offer` và `POST /v1/drills/{id}/result`, JWT thiết
   bị, hạn mức 30 lần/giờ/thiết bị. Gắn vào `api/main.py`.
   · Verify: `$PYTEST tests/integration/test_api_drills.py`
-- [ ] T011 [B] [FR-004] [FR-005] [FR-006] Viết `backend/tests/integration/test_api_drills.py`. Các ca:
+- [x] T011 [B] [FR-004] [FR-005] [FR-006] Viết `backend/tests/integration/test_api_drills.py`. Các ca:
   - `schedule`: chưa đồng ý, bài thứ 3 trong tháng, khung giờ quá khứ, khung > 4 giờ, kịch bản chưa duyệt khi
     `HOICON_ENV=prod` ⇒ đều bị từ chối;
   - `offer` chỉ trả bài trong khung giờ;
@@ -83,27 +83,27 @@
   - quét DB không có văn bản tự do.
 
   · Verify: như T010
-- [ ] T012 [B] [FR-006] [FR-007] Thêm `texts.drill_debrief(...)` (qua `_message`, nên tự có câu công khai và nhãn diễn tập), job
+- [x] T012 [B] [FR-006] [FR-007] Thêm `texts.drill_debrief(...)` (qua `_message`, nên tự có câu công khai và nhãn diễn tập), job
   `drill_expire` (đăng ký trong `incident_handlers` hoặc chạy theo lịch của worker), và lệnh ops `ops/drills.py`
   (`schedule`, `list`, `cancel`; chặn chạy khi `HOICON_ENV=prod` nếu không có `--confirm`).
   · Verify: `$PYTEST tests/integration/test_api_drills.py tests/unit/test_drill_scoring.py`
-- [ ] T013 [B] [FR-012] Sinh lại client TS; cập nhật `docs/API.md` và `docs/DATA-MODEL.md`.
+- [x] T013 [B] [FR-012] Sinh lại client TS; cập nhật `docs/API.md` và `docs/DATA-MODEL.md`.
   · Verify: `bash scripts/gen-api-client.sh && pnpm --dir apps/web typecheck`
 
 ## Làn A: Android
 
-- [ ] T014 [A] [FR-009] Viết `DrillEngine.kt` (JVM thuần): bước kế, chấm điểm, `red_flags` cần nhắc. Viết test JVM dùng
+- [x] T014 [A] [FR-009] Viết `DrillEngine.kt` (JVM thuần): bước kế, chấm điểm, `red_flags` cần nhắc. Viết test JVM dùng
   fixture `data/drills` qua `hoicon.schemasDir` (theo mẫu test hợp đồng hiện có của app).
   · Verify: `$GRADLE :app:testDebugUnitTest`
-- [ ] T015 [A] [FR-008] Viết `DrillApiClient.kt` (mẫu `ElderApiClient`). Trong `HeartbeatWorker`: hỏi bài khi
+- [x] T015 [A] [FR-008] Viết `DrillApiClient.kt` (mẫu `ElderApiClient`). Trong `HeartbeatWorker`: hỏi bài khi
   `mayShare()` đúng **và** đã có đồng ý `drills`; có bài thì hiện thông báo kênh "Luyện tập" (mức ưu tiên mặc định,
   không full-screen); không hiện khi cửa sổ rủi ro đang mở. Test: không đồng ý ⇒ không hỏi; cửa sổ mở ⇒ hoãn; lỗi mạng
   ⇒ không sập.
   · Verify: `$GRADLE :app:testDebugUnitTest`
-- [ ] T016 [A] [FR-009] Viết `DrillResultWorker` (cần mạng, backoff, `KEEP` theo `drill_id`). Test ánh xạ 2xx/409/4xx/5xx
+- [x] T016 [A] [FR-009] Viết `DrillResultWorker` (cần mạng, backoff, `KEEP` theo `drill_id`). Test ánh xạ 2xx/409/4xx/5xx
   và mất mạng.
   · Verify: `$GRADLE :app:testDebugUnitTest`
-- [ ] T017 [A] [FR-009] Viết `ui/DrillScreen.kt` và `DrillActivity.kt` (`exported=false`), dùng skill `ui-screen`:
+- [x] T017 [A] [FR-009] Viết `ui/DrillScreen.kt` và `DrillActivity.kt` (`exported=false`), dùng skill `ui-screen`:
   - 4 màn (lời mời, bước, debrief, đã dừng);
   - token `drill.*`, `[DIỄN TẬP]` + biểu tượng `school` cố định ở đầu;
   - `Speaker` đọc lời người gọi và debrief;
@@ -111,7 +111,7 @@
   - 200% vẫn thấy đủ nút (nút ghim, nội dung cuộn).
 
   · Verify: `$GRADLE :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`
-- [ ] T018 [A] [FR-009] Chụp ảnh 4 màn ở 100% và 200% trên AVD `hc-api36`, lưu `~/hoicon-evidence/028-drills/`. Gửi
+- [x] T018 [A] [FR-009] Chụp ảnh 4 màn ở 100% và 200% trên AVD `hc-api36`, lưu `~/hoicon-evidence/028-drills/`. Gửi
   `ux-elder-reviewer` và sửa hết mục chặn. Kiểm manifest không có quyền mới.
   · Verify: ảnh đủ 8 tệp; `git diff --stat -- apps/android/app/src/main/AndroidManifest.xml` chỉ thêm khai báo `DrillActivity`
 

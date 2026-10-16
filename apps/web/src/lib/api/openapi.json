@@ -974,6 +974,90 @@
     }
    }
   },
+  "/v1/drills/offer": {
+   "get": {
+    "tags": [
+     "drills"
+    ],
+    "summary": "Get Offer",
+    "operationId": "get_offer_v1_drills_offer_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DrillOffer"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/v1/drills/{drill_id}/result": {
+   "post": {
+    "tags": [
+     "drills"
+    ],
+    "summary": "Post Result",
+    "operationId": "post_result_v1_drills__drill_id__result_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "drill_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Drill Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DrillResultIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DrillResultAck"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/v1/action/{token}": {
    "get": {
     "tags": [
@@ -1281,6 +1365,27 @@
  },
  "components": {
   "schemas": {
+   "AnswerIn": {
+    "properties": {
+     "step": {
+      "type": "integer",
+      "minimum": 0.0,
+      "title": "Step"
+     },
+     "choice_id": {
+      "type": "string",
+      "pattern": "^[a-z]$",
+      "title": "Choice Id"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "step",
+     "choice_id"
+    ],
+    "title": "AnswerIn"
+   },
    "App": {
     "properties": {
      "category": {
@@ -1631,6 +1736,146 @@
      "consents"
     ],
     "title": "DeviceMe"
+   },
+   "DrillOffer": {
+    "properties": {
+     "drill": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/DrillOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "drill"
+    ],
+    "title": "DrillOffer"
+   },
+   "DrillOut": {
+    "properties": {
+     "drill_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Drill Id"
+     },
+     "window_end": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Window End"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "const": true,
+      "title": "Is Drill",
+      "default": true
+     },
+     "script": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Script"
+     }
+    },
+    "type": "object",
+    "required": [
+     "drill_id",
+     "window_end",
+     "script"
+    ],
+    "title": "DrillOut"
+   },
+   "DrillResultAck": {
+    "properties": {
+     "drill_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Drill Id"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "score": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Score"
+     }
+    },
+    "type": "object",
+    "required": [
+     "drill_id",
+     "status",
+     "score"
+    ],
+    "title": "DrillResultAck"
+   },
+   "DrillResultIn": {
+    "properties": {
+     "drill_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Drill Id"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "declined",
+       "aborted",
+       "completed"
+      ],
+      "title": "Status"
+     },
+     "answers": {
+      "items": {
+       "$ref": "#/components/schemas/AnswerIn"
+      },
+      "type": "array",
+      "maxItems": 5,
+      "title": "Answers"
+     },
+     "started_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Started At"
+     },
+     "completed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Completed At"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "drill_id",
+     "status",
+     "answers"
+    ],
+    "title": "DrillResultIn"
    },
    "ElderAnswerIn": {
     "properties": {

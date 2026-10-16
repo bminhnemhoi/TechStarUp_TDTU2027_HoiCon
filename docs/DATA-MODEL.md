@@ -62,7 +62,7 @@ tra số/đường link do người dùng tự nhập; `downgrade` dựng lại 
 | Bảng | Cột chính | Ghi chú |
 |---|---|---|
 | `scenarios` | id, slug, tactic, region, version, yaml_sha256 | nguồn: `data/scenarios/*.yaml` |
-| `drills` | id, family_id, scenario_id, scheduled_for, window, result (`passed/failed/aborted`), debriefed_at | luôn `is_drill` |
+| `drills` | id, family_id (FK `CASCADE`), member_id (FK `CASCADE`), scheduled_by, script_id, window_start, window_end, status (`scheduled/offered/in_progress/passed/failed/aborted/declined/expired`), score, answers jsonb, offered_at, started_at, completed_at, debriefed_at, is_demo, created_at | **đã có** (`0008`, spec 028); CHECK status và CHECK khung giờ 30m–4h; chỉ mục `(family_id, window_start)`; không lưu văn bản tự do, answers chỉ chứa mã choice_id. |
 | `eval_runs` / `eval_results` | suite, baseline, metrics jsonb / case_id, expected, actual, passed, safety_violations | |
 
 ### Vận hành & quyền dữ liệu

@@ -7,6 +7,7 @@ from uuid import UUID
 
 import pytest
 from consent_support import call, pair_device, purge_family
+from drill_support import running_drill_for
 from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 from test_api_events import harmless, make_event, post
@@ -105,7 +106,7 @@ async def test_another_familys_incident_looks_like_it_does_not_exist(device_worl
 
 async def test_family_list_is_newest_first_limited_and_matches_the_contract(device_world: Any, token: str) -> None:
     first = await open_incident(token)
-    drill = str(new_id())
+    drill = str(await running_drill_for(token))  # spec 028 D2: bài `in_progress` hợp lệ thì cờ diễn tập mới được tin
     second = await open_incident(token, is_drill=True, drill_id=drill)  # diễn tập là sự cố riêng, gắn cờ is_drill
     resp = await call("GET", f"/v1/families/{device_world.family_id}/incidents", token=token)
     assert resp.status_code == 200

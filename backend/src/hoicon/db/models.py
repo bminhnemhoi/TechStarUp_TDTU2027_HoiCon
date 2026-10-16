@@ -1,6 +1,7 @@
 """Mô hình ORM theo docs/DATA-MODEL.md (import tại đây để Alembic thấy). Gia đình/thành viên/mã ghép/tin gửi đi:
 spec 002 (migration 0003, ADR-010). Thiết bị, sổ đồng ý, liên hệ tin cậy, action token: spec 020 (migration 0005).
-Sự cố, chuyển trạng thái, sự kiện rủi ro: spec 021 (migration 0006). Xác minh/tra cứu: spec 026 (migration 0007)."""
+Sự cố, chuyển trạng thái, sự kiện rủi ro: spec 021 (migration 0006). Xác minh/tra cứu: spec 026 (migration 0007).
+Diễn tập: spec 028 (migration 0008)."""
 
 import uuid
 from datetime import datetime
@@ -514,3 +515,46 @@ class Verification(Base):
     list_version: Mapped[str | None] = mapped_column(String(32))
     is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
     at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+DRILL_STATES = "'scheduled', 'offered', 'in_progress', 'passed', 'failed', 'aborted', 'declined', 'expired'"
+
+
+class Drill(Base):
+    """Một bài diễn tập đã đặt lịch cho một người cao tuổi (spec 028, P2-13, DATA-MODEL §Drills). Cờ diễn tập CHỈ do
+    máy chủ cấp (FR-003): `POST /v1/events` chỉ tin `drill_id` khớp một dòng `in_progress` của chính gia đình, trong
+    khung giờ. Không cột nào chứa văn bản tự do: `answers` chỉ là mã lựa chọn (một chữ cái) theo từng bước. Mọi đổi
+    `status` đi qua `DrillService` (bảng cạnh `ALLOWED`); trạng thái cuối không có cạnh đi ra."""
+
+    __tablename__ = "drills"
+    __table_args__ = (
+        CheckConstraint(f"status IN ({DRILL_STATES})", name="status"),
+        # 30 phút bảo đảm máy hỏi được ít nhất một lần theo nhịp heartbeat 15 phút; 4 giờ chặn khung mở quá lâu.
+        CheckConstraint(
+            "window_end > window_start AND window_end - window_start >= interval '30 minutes'"
+            " AND window_end - window_start <= interval '4 hours'",
+            name="window",
+        ),
+        # Điểm (số bước đúng) chỉ có khi máy chủ đã chấm xong: passed/failed.
+        CheckConstraint("(status IN ('passed', 'failed')) = (score IS NOT NULL)", name="score_iff_graded"),
+        CheckConstraint("score IS NULL OR (score >= 0 AND score <= 5)", name="score_range"),
+        CheckConstraint("answers IS NULL OR jsonb_typeof(answers) = 'array'", name="answers_array"),
+        Index("ix_drills_family_window", "family_id", "window_start"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    member_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("members.id", ondelete="CASCADE"))  # người cao tuổi
+    scheduled_by: Mapped[str] = mapped_column(String(64))  # id thành viên đặt lịch, hoặc "ops"
+    script_id: Mapped[str] = mapped_column(String(64))  # id kịch bản trong data/drills (không phải khóa ngoại)
+    window_start: Mapped[datetime]
+    window_end: Mapped[datetime]
+    status: Mapped[str] = mapped_column(String(24), server_default=text("'scheduled'"))
+    score: Mapped[int | None] = mapped_column(SmallInteger)
+    answers: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB)  # [{"step": 0, "choice_id": "b"}]; chỉ mã
+    offered_at: Mapped[datetime | None]
+    started_at: Mapped[datetime | None]
+    completed_at: Mapped[datetime | None]
+    debriefed_at: Mapped[datetime | None]
+    is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
