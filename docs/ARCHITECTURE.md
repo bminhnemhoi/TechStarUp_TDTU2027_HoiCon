@@ -117,6 +117,12 @@ Cổng 5432/6379/8000/3000/54321–54327 thuộc dự án khác trên máy dev �
 
 - Trace: bảng `agent_steps` (đã che PII) + SSE → `/trace/[runId]`. Langfuse là tùy chọn (nằm trong danh sách cắt).
 - Android: heartbeat (trạng thái quyền, phiên bản luật/danh sách) → phát hiện "mất bảo vệ"; Crashlytics từ P2-20.
+- Android, Lính gác v1 (spec 022, P2-05/P2-06): sự kiện rủi ro (`risk_event.v1.json`) **không bao giờ gửi thẳng**: `RiskWindowService`/
+  `SafePauseActivity` → `SentinelServices.record()` (một luồng nền tuần tự) → Room `sentinel.db` (`outbox_events`, payload mã hóa
+  Tink AES-256-GCM, associated data = id sự kiện; `risk_window_state`; `threat_hashes`) → `OutboxWorker` (WorkManager, cần mạng,
+  lô ≤ 50, `POST /v1/events`, id UUIDv7 nên gửi lại an toàn, lô bị từ chối thì tách từng sự kiện) và `HeartbeatWorker` (15 phút,
+  `POST /v1/heartbeat`). Đường dừng an toàn không chờ, không biết tới các worker này. Luật R5 (app điều khiển từ xa, `RemoteControlCatalog`
+  trong `:rules`) ⇒ `critical`; sự kiện R5 gửi không kèm `rule_id` cho tới khi schema liệt kê R5.
 - Hạn lưu: sự kiện 90 ngày · nội dung bước tác tử 30 ngày · sự cố 12 tháng · demo 24 giờ (job `retention`).
 
 ## 8. Giới hạn đã biết

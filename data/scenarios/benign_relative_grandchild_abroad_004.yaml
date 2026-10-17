@@ -1,0 +1,21 @@
+id: benign_relative_grandchild_abroad_004
+category: benign_relative_new_number
+is_benign: true
+twin_of: deepfake_relative_silent_call_004
+region: south
+channel: phone_call
+script_vi: |
+  Cháu đi du học gọi qua số quốc tế, nói chuyện lâu, khoe kết quả học tập, không nhờ chuyển tiền.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: gt_15m, app_category: none}
+elder_answers: {knows_caller: "yes", asks_transfer: "no"}
+expected:
+  min_risk_level: none
+  max_risk_level: low
+  notify_guardian: false
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Cuộc gọi dài nhưng không có dấu hiệu đòi tiền"
+source_ref: "VietnamPlus 27/03/2026 – Bảo vệ người cao tuổi trước chiêu lừa đảo (mật khẩu gia đình, gọi lại số quen): https://www.vietnamplus.vn/bao-ve-nguoi-cao-tuoi-truoc-cac-chieu-lua-dao-tinh-vi-tren-khong-gian-mang-post1101437.vnp"
+draft: true

@@ -19,6 +19,7 @@ def _settings(**overrides: str) -> Settings:
         "zalo_bot_token": None,
         "zalo_webhook_secret": None,
         "phone_pepper_1": None,
+        "data_key_1": None,
     }
     base.update({k: SecretStr(v) for k, v in overrides.items()})
     return Settings(_env_file=None, **base)
@@ -35,6 +36,7 @@ def _all(value: str) -> Settings:
         zalo_bot_token=value,
         zalo_webhook_secret=value,
         phone_pepper_1=value,
+        data_key_1=value,
     )
 
 
@@ -88,3 +90,17 @@ def test_length_and_format_checks(monkeypatch: pytest.MonkeyPatch) -> None:
     assert results["Zalo webhook secret (8–256)"].startswith("Lỗi")
     assert results["Pepper băm số điện thoại"] == "Đạt"
     assert dict(check_keys.run(_settings(phone_pepper_1="x" * 64)))["Pepper băm số điện thoại"].startswith("Lỗi")
+
+
+def test_data_key_check_is_offline_and_never_printed(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Khóa AES-256 (spec 002 D1): kiểm hex 64 ký tự, không gọi mạng, không in khóa."""
+    monkeypatch.setattr(check_keys, "_get", _no_network)
+    name = "Khóa mã hóa dữ liệu (AES-256)"
+    assert dict(check_keys.run(_settings()))[name] == "Thiếu"
+    assert dict(check_keys.run(_settings(data_key_1=FAKE_PEPPER)))[name] == "Đạt"
+    assert dict(check_keys.run(_settings(data_key_1="short-but-secret")))[name].startswith("Lỗi")
+    monkeypatch.setattr(check_keys, "get_settings", lambda: _settings(data_key_1="short-but-secret"))
+    check_keys.main()
+    _assert_not_printed(capsys, "short-but-secret")

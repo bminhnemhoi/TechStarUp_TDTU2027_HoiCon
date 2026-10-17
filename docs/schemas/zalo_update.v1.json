@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/zalo_update.v1.json",
+  "title": "ZaloUpdate v1",
+  "description": "Tập con cập nhật webhook Zalo Bot mà HỏiCon dùng (POST /webhooks/zalo/{bot_id}). Theo tài liệu chính thức https://bot.zapps.me/docs/webhook/ (tra 15/10/2026, docs/spikes/P1-S3-zalo.md §1). Zalo KHÔNG gửi update_id ⇒ khóa chống trùng là result.message.message_id. Chỉ bắt buộc phần ta cần; trường lạ được phép (Zalo có thể thêm). display_name là tên thật: khai báo để biết, mã KHÔNG lưu/log.",
+  "type": "object",
+  "required": ["ok", "result"],
+  "properties": {
+    "ok": { "const": true },
+    "result": {
+      "type": "object",
+      "required": ["event_name"],
+      "properties": {
+        "event_name": {
+          "enum": [
+            "message.text.received",
+            "message.image.received",
+            "message.sticker.received",
+            "message.voice.received",
+            "message.unsupported.received"
+          ]
+        },
+        "message": { "type": "object" }
+      },
+      "if": { "properties": { "event_name": { "const": "message.text.received" } }, "required": ["event_name"] },
+      "then": { "required": ["message"], "properties": { "message": { "$ref": "#/$defs/text_message" } } }
+    }
+  },
+  "$defs": {
+    "text_message": {
+      "description": "Tin chữ: người gửi, cuộc trò chuyện, nội dung và mã tin (dùng chống trùng).",
+      "type": "object",
+      "required": ["from", "chat", "text", "message_id"],
+      "properties": {
+        "from": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "display_name": { "type": "string", "description": "Tên thật — không lưu, không log" },
+            "is_bot": { "type": "boolean", "description": "Có trong ví dụ mẫu nhưng bảng đặc tả không đánh dấu bắt buộc; handler bỏ qua tin có is_bot = true" }
+          }
+        },
+        "chat": {
+          "type": "object",
+          "required": ["id", "chat_type"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "chat_type": { "enum": ["PRIVATE", "GROUP"], "description": "GROUP còn ở mức Beta; HỏiCon chỉ xử lý PRIVATE" }
+          }
+        },
+        "text": { "type": "string" },
+        "message_id": { "type": "string", "minLength": 1, "description": "Khóa chống trùng: zalo:{bot_id}:{message_id}" },
+        "date": { "type": "integer", "minimum": 0, "description": "Mili-giây epoch (theo ví dụ mẫu của Zalo)" }
+      }
+    }
+  }
+}

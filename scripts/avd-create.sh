@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# Tạo ma trận máy ảo HỏiCon trên D: (idempotent). Xem docs/EMULATOR.md.
+# Tạo ma trận máy ảo HỏiCon (Windows: ổ D:, Linux: ~/.android/avd; idempotent). Xem docs/EMULATOR.md.
 #   bash scripts/avd-create.sh            # tạo hc-api36, hc-api34, hc-api29 nếu chưa có
 #   bash scripts/avd-create.sh --recreate # xóa và tạo lại (mất dữ liệu trong máy ảo)
 # Gọi thẳng lớp Java của avdmanager: avdmanager.bat chạy qua cmd.exe sẽ tách tham số tại dấu ';'
 # trong "system-images;android-36;…" (cùng lỗi với sdkmanager.bat).
 set -euo pipefail
+. "$(dirname "$0")/android-env.sh"
 
-SDK="${ANDROID_HOME:-D:/Android/Sdk}"
-JAVA="${HOICON_JDK:-D:/Android/jdk-21}/bin/java.exe"
-export ANDROID_HOME="$SDK" ANDROID_SDK_ROOT="$SDK" ANDROID_AVD_HOME="${ANDROID_AVD_HOME:-D:/Android/avd}"
+JAVA="$JDK_DIR/bin/java$EXE"
 TOOLS="$SDK/cmdline-tools/latest"
 RECREATE="${1:-}"
 
@@ -54,7 +53,7 @@ for row in "${MATRIX[@]}"; do
   set_prop "$cfg" vm.heapSize 256
   set_prop "$cfg" disk.dataPartition.size "$data"
   set_prop "$cfg" hw.gpu.enabled yes
-  set_prop "$cfg" hw.gpu.mode auto
+  set_prop "$cfg" hw.gpu.mode "${HC_GPU:-auto}"   # Linux + Orca/headless: auto (host sập khi -no-window, xem emu-start.sh)
   set_prop "$cfg" hw.keyboard yes
   set_prop "$cfg" hw.audioInput yes
   set_prop "$cfg" fastboot.forceColdBoot no

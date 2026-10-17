@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/threat_seed.v1.json",
+  "title": "ThreatSeed v1",
+  "description": "Tệp NẠP danh sách đe dọa (spec 003): `python -m hoicon.ops.threat_list load <tệp>`. Đầu vào chứa h1 (SHA-256 của số điện thoại, ADR-006) — với tệp demo là số HƯ CẤU. Máy chủ KHÔNG lưu h1: lệnh nạp tính HMAC(pepper[kid], h1) rồi chỉ lưu HMAC + last3 vào `threat_indicators`. Tệp `is_demo: true` bị từ chối khi HOICON_ENV=prod.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "is_demo", "indicators"],
+  "properties": {
+    "_note": { "type": "string", "description": "Ghi chú cho người đọc tệp; bị bỏ qua khi nạp" },
+    "version": { "type": "string", "minLength": 1, "maxLength": 32, "description": "Ghi vào `threat_indicators.list_version`" },
+    "is_demo": { "type": "boolean" },
+    "indicators": { "type": "array", "items": { "$ref": "#/$defs/indicator" } }
+  },
+  "$defs": {
+    "indicator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["h1", "source", "confidence"],
+      "properties": {
+        "h1": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 hex chữ thường; KHÔNG phải số điện thoại thô" },
+        "source": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "tactic": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "last3": { "type": "string", "pattern": "^[0-9]{3}$" },
+        "expires_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

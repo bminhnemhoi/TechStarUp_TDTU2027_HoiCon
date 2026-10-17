@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/drill_result.v1.json",
+  "title": "DrillResult v1",
+  "description": "Thân `POST /v1/drills/{id}/result` (spec 028, P2-13). Chỉ MÃ lựa chọn (một chữ cái), không văn bản tự do, không ghi âm, không trường `note`. Máy chỉ báo `completed`/`aborted`/`declined`; máy chủ tự chấm lại để quyết `passed`/`failed`, bỏ qua mọi điểm do máy gửi.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["drill_id", "status", "answers"],
+  "properties": {
+    "drill_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$" },
+    "status": { "enum": ["declined", "aborted", "completed"] },
+    "answers": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step", "choice_id"],
+        "properties": {
+          "step": { "type": "integer", "minimum": 0 },
+          "choice_id": { "type": "string", "pattern": "^[a-z]$" }
+        }
+      }
+    },
+    "started_at": { "type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+(Z|[+-][0-9]{2}:[0-9]{2})$" },
+    "completed_at": { "type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+(Z|[+-][0-9]{2}:[0-9]{2})$" }
+  }
+}

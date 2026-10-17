@@ -1,0 +1,22 @@
+[
+  {
+    "_why": "mã 5 chữ số bị từ chối",
+    "code": "12345",
+    "app_version": "0.2.0",
+    "rules_version": "2026.10.15",
+    "platform": "android"
+  },
+  {
+    "_why": "platform lạ bị từ chối",
+    "code": "123456",
+    "app_version": "0.2.0",
+    "rules_version": "2026.10.15",
+    "platform": "windows"
+  },
+  {
+    "_why": "thiếu app_version",
+    "code": "123456",
+    "rules_version": "2026.10.15",
+    "platform": "android"
+  }
+]

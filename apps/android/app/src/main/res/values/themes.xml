@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Nền trắng khi khởi động; màu và chữ thật do Compose HoiConTheme quyết định. -->
-    <style name="Theme.HoiCon" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Nền trắng khi khởi động; chữ Be Vietnam Pro đóng gói trong APK (offline) cho cả màn View lẫn Compose. -->
+    <style name="Theme.HoiCon" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+    </style>
 </resources>

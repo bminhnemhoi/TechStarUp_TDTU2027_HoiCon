@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/incident_list.v1.json",
+  "title": "IncidentList v1",
+  "description": "Phản hồi GET /v1/guardian/incidents?status=open|closed&cursor= (spec 027, FR-004): trang sự cố của gia đình người giám hộ, đang mở trước, phân trang bằng khóa (opened_at, id). `next_cursor` là chuỗi mờ (máy chủ đặt), null khi hết trang. Mỗi mục là incident.v1 `summary` kèm `elder_alias` và `has_run`; không có transitions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["incidents", "next_cursor"],
+  "properties": {
+    "incidents": {
+      "type": "array",
+      "maxItems": 100,
+      "items": { "$ref": "https://hoicon.vn/schemas/incident.v1.json#/$defs/summary" }
+    },
+    "next_cursor": { "type": ["string", "null"], "maxLength": 128 }
+  }
+}

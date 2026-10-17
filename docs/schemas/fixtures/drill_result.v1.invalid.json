@@ -1,0 +1,153 @@
+[
+  {
+    "_why": "có trường note (văn bản tự do)",
+    "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "completed",
+    "answers": [
+      {
+        "step": 0,
+        "choice_id": "b"
+      },
+      {
+        "step": 1,
+        "choice_id": "a"
+      },
+      {
+        "step": 2,
+        "choice_id": "b"
+      }
+    ],
+    "started_at": "2026-10-20T09:00:00+07:00",
+    "completed_at": "2026-10-20T09:03:00+07:00",
+    "note": "bác thấy lạ"
+  },
+  {
+    "_why": "status passed (chỉ máy chủ quyết)",
+    "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "passed",
+    "answers": [
+      {
+        "step": 0,
+        "choice_id": "b"
+      },
+      {
+        "step": 1,
+        "choice_id": "a"
+      },
+      {
+        "step": 2,
+        "choice_id": "b"
+      }
+    ],
+    "started_at": "2026-10-20T09:00:00+07:00",
+    "completed_at": "2026-10-20T09:03:00+07:00"
+  },
+  {
+    "_why": "choice_id là 'x1'",
+    "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "completed",
+    "answers": [
+      {
+        "step": 0,
+        "choice_id": "x1"
+      }
+    ],
+    "started_at": "2026-10-20T09:00:00+07:00",
+    "completed_at": "2026-10-20T09:03:00+07:00"
+  },
+  {
+    "_why": "6 câu trả lời",
+    "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "completed",
+    "answers": [
+      {
+        "step": 0,
+        "choice_id": "a"
+      },
+      {
+        "step": 1,
+        "choice_id": "a"
+      },
+      {
+        "step": 2,
+        "choice_id": "a"
+      },
+      {
+        "step": 3,
+        "choice_id": "a"
+      },
+      {
+        "step": 4,
+        "choice_id": "a"
+      },
+      {
+        "step": 5,
+        "choice_id": "a"
+      }
+    ],
+    "started_at": "2026-10-20T09:00:00+07:00",
+    "completed_at": "2026-10-20T09:03:00+07:00"
+  },
+  {
+    "_why": "thiếu drill_id",
+    "status": "completed",
+    "answers": [
+      {
+        "step": 0,
+        "choice_id": "b"
+      },
+      {
+        "step": 1,
+        "choice_id": "a"
+      },
+      {
+        "step": 2,
+        "choice_id": "b"
+      }
+    ],
+    "started_at": "2026-10-20T09:00:00+07:00",
+    "completed_at": "2026-10-20T09:03:00+07:00"
+  },
+  {
+    "_why": "máy tự gửi score",
+    "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "completed",
+    "answers": [
+      {
+        "step": 0,
+        "choice_id": "b"
+      },
+      {
+        "step": 1,
+        "choice_id": "a"
+      },
+      {
+        "step": 2,
+        "choice_id": "b"
+      }
+    ],
+    "started_at": "2026-10-20T09:00:00+07:00",
+    "completed_at": "2026-10-20T09:03:00+07:00",
+    "score": 3
+  },
+  {
+    "_why": "step âm",
+    "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "completed",
+    "answers": [
+      {
+        "step": -1,
+        "choice_id": "a"
+      }
+    ],
+    "started_at": "2026-10-20T09:00:00+07:00",
+    "completed_at": "2026-10-20T09:03:00+07:00"
+  },
+  {
+    "_why": "thiếu answers",
+    "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "completed",
+    "started_at": "2026-10-20T09:00:00+07:00",
+    "completed_at": "2026-10-20T09:03:00+07:00"
+  }
+]

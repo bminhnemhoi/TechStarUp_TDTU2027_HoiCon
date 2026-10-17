@@ -1,0 +1,24 @@
+[
+  {
+    "_why": "device_id không phải UUID",
+    "device_id": "not-a-uuid",
+    "family_id": "01928374-abcd-7123-89ef-0123456789cd",
+    "member_id": "01928374-abcd-7123-89ef-0123456789ef",
+    "family_name": "Gia đình Bác Ba",
+    "access_token": "token",
+    "refresh_token": "r_token",
+    "token_type": "bearer",
+    "expires_in": 3600
+  },
+  {
+    "_why": "token_type không phải bearer",
+    "device_id": "01928374-abcd-7123-89ef-0123456789ab",
+    "family_id": "01928374-abcd-7123-89ef-0123456789cd",
+    "member_id": "01928374-abcd-7123-89ef-0123456789ef",
+    "family_name": "Gia đình Bác Ba",
+    "access_token": "token",
+    "refresh_token": "r_token",
+    "token_type": "basic",
+    "expires_in": 3600
+  }
+]

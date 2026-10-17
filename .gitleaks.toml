@@ -16,4 +16,7 @@ paths = ['''^backend/tests/''']
 
 [allowlist]
 description = "Mã nguồn công cụ và mẫu không chứa giá trị thật"
-paths = ['''backend/\.env\.example$''']
+paths = [
+  '''backend/\.env\.example$''',
+  '''docs/schemas/fixtures/''',
+]

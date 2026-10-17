@@ -17,6 +17,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -25,17 +29,18 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import vn.hoicon.sentinel.R
+import vn.hoicon.sentinel.data.consent.ConsentLedger
 import vn.hoicon.sentinel.sensing.SensorPermission
 import vn.hoicon.sentinel.ui.theme.HoiConTheme
 
-private class PermissionRow(@StringRes val title: Int, @StringRes val why: Int)
+private class PermissionRow(@StringRes val title: Int, @StringRes val why: Int, @StringRes val how: Int = 0)
 
 private val rows = mapOf(
-    SensorPermission.CALL_SCREENING_ROLE to PermissionRow(R.string.perm_role_title, R.string.perm_role_why),
-    SensorPermission.DISPLAY_OVER_APPS to PermissionRow(R.string.perm_overlay_title, R.string.perm_overlay_why),
-    SensorPermission.USAGE_ACCESS to PermissionRow(R.string.perm_usage_title, R.string.perm_usage_why),
-    SensorPermission.NOTIFICATIONS to PermissionRow(R.string.perm_notif_title, R.string.perm_notif_why),
-    SensorPermission.BATTERY_UNRESTRICTED to PermissionRow(R.string.perm_battery_title, R.string.perm_battery_why),
+    SensorPermission.CALL_SCREENING_ROLE to PermissionRow(R.string.perm_role_title, R.string.perm_role_why, R.string.perm_how_role),
+    SensorPermission.DISPLAY_OVER_APPS to PermissionRow(R.string.perm_overlay_title, R.string.perm_overlay_why, R.string.perm_how_settings),
+    SensorPermission.USAGE_ACCESS to PermissionRow(R.string.perm_usage_title, R.string.perm_usage_why, R.string.perm_how_settings),
+    SensorPermission.NOTIFICATIONS to PermissionRow(R.string.perm_notif_title, R.string.perm_notif_why, R.string.perm_how_notif),
+    SensorPermission.BATTERY_UNRESTRICTED to PermissionRow(R.string.perm_battery_title, R.string.perm_battery_why, R.string.perm_how_battery),
 )
 
 /**
@@ -47,6 +52,7 @@ fun PermissionsScreen(
     granted: Set<SensorPermission>,
     onOpen: (SensorPermission) -> Unit,
     modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
 ) {
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -66,6 +72,10 @@ fun PermissionsScreen(
             for ((permission, row) in rows) {
                 HorizontalDivider()
                 PermissionItem(row = row, isGranted = permission in granted, onOpen = { onOpen(permission) })
+            }
+            if (onBack != null) {
+                HorizontalDivider()
+                SecondaryButton(text = stringResource(R.string.e6_back), onClick = onBack)
             }
         }
     }
@@ -99,6 +109,88 @@ private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () ->
                 Text(text = stringResource(R.string.perm_open_settings), style = MaterialTheme.typography.labelLarge)
             }
         }
+    }
+}
+
+/**
+ * E4 Cấp quyền: one system permission per step (docs/DESIGN-SYSTEM.md), already-granted ones are skipped, "Để sau"
+ * never traps the user. The disclosure (E3) has been accepted before this screen is ever reached (SC-003).
+ * Granting is detected by the activity on resume; this screen only reflects [granted].
+ */
+@Composable
+fun PermissionStepScreen(
+    granted: Set<SensorPermission>,
+    consentPending: Boolean,
+    onOpen: (SensorPermission) -> Unit,
+    onFinish: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val all = SensorPermission.entries
+    var passed by rememberSaveable { mutableIntStateOf(0) }
+    val index = (passed until all.size).firstOrNull { all[it] !in granted }
+    if (index == null) {
+        // Without the three sensing-chain permissions HỏiCon cannot protect: never say "ready" then (UX review).
+        val missing = all.filter { ConsentLedger.purposeOf(it) != null && it !in granted }
+        OnboardingScaffold(modifier = modifier, actions = {
+            if (missing.isEmpty()) {
+                PrimaryButton(text = stringResource(R.string.perm_done_button), onClick = onFinish)
+            } else {
+                PrimaryButton(text = stringResource(R.string.perm_missing_enable), onClick = { passed = all.indexOf(missing.first()) })
+                SecondaryButton(text = stringResource(R.string.perm_step_later), onClick = onFinish)
+            }
+        }) {
+            Text(
+                text = stringResource(if (missing.isEmpty()) R.string.perm_done_title else R.string.perm_missing_title),
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.semantics { heading() },
+            )
+            Text(
+                text = stringResource(if (missing.isEmpty()) R.string.perm_done_body else R.string.perm_missing_body),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            for (permission in all) {
+                val row = rows.getValue(permission)
+                InfoCard(
+                    title = stringResource(row.title),
+                    body = stringResource(if (permission in granted) R.string.perm_status_on else R.string.perm_status_off),
+                )
+            }
+            if (consentPending) NoticePanel(text = stringResource(R.string.perm_consent_pending))
+        }
+        return
+    }
+    val permission = all[index]
+    val row = rows.getValue(permission)
+    OnboardingScaffold(
+        modifier = modifier,
+        actions = {
+            PrimaryButton(text = stringResource(R.string.perm_step_enable), onClick = { onOpen(permission) })
+            SecondaryButton(text = stringResource(R.string.perm_step_later), onClick = { passed = index + 1 })
+        },
+    ) {
+        Text(text = stringResource(R.string.perm_step_counter, index + 1, all.size), style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = stringResource(row.title),
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+        Text(text = stringResource(row.why), style = MaterialTheme.typography.bodyLarge)
+        Text(text = stringResource(row.how), style = MaterialTheme.typography.bodyMedium)
+        if (consentPending) NoticePanel(text = stringResource(R.string.perm_consent_pending))
+    }
+}
+
+@Preview(showBackground = true, locale = "vi")
+@Preview(showBackground = true, locale = "vi", fontScale = 2f, name = "Cỡ chữ 200%")
+@Composable
+private fun PermissionStepScreenPreview() {
+    HoiConTheme {
+        PermissionStepScreen(
+            granted = setOf(SensorPermission.CALL_SCREENING_ROLE),
+            consentPending = false,
+            onOpen = {},
+            onFinish = {},
+        )
     }
 }
 

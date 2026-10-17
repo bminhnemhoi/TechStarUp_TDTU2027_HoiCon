@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/bench_report.v1.json",
+  "title": "BenchReport v1",
+  "description": "Kết quả một lần `python -m hoicon.agents.spike bench --model <id> --json <tệp>` (spec 003, ADR-009 §10). Không PII. `llm_mode` = 'fallback' khi không có khóa API (hoặc mọi bước LLM rơi về mẫu): số đo chỉ là điều phối, KHÔNG phải số của model. `host` tự mô tả máy (hệ điều hành, kiến trúc, số lõi), không định danh người.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["model", "llm_mode", "n", "turns", "fallback_rate", "cost_usd_avg", "measured_at", "host"],
+  "properties": {
+    "model": { "type": "string", "minLength": 1 },
+    "llm_mode": { "enum": ["live", "fallback"] },
+    "n": { "type": "integer", "minimum": 1 },
+    "turns": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["p50_s", "p95_s", "max_s"],
+        "properties": {
+          "p50_s": { "type": "number", "minimum": 0 },
+          "p95_s": { "type": "number", "minimum": 0 },
+          "max_s": { "type": "number", "minimum": 0 }
+        }
+      }
+    },
+    "fallback_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "cost_usd_avg": { "type": "number", "minimum": 0 },
+    "measured_at": { "type": "string", "format": "date-time" },
+    "host": { "type": "string", "minLength": 1 }
+  }
+}

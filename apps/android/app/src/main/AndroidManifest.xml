@@ -3,12 +3,16 @@
   Spike P1-S1: chuỗi cảm biến "cuộc gọi số lạ → app ngân hàng → dừng an toàn". Mọi quyền phải khớp docs/PLAY-POLICY.md.
   CẤM (không bao giờ khai báo): SMS, nhật ký cuộc gọi, danh bạ, QUERY_ALL_PACKAGES, REQUEST_INSTALL_PACKAGES,
   REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Accessibility, Notification Listener, ghi âm cuộc gọi.
-  Không có INTERNET: đường găng không dùng mạng (H6) — outbox/đồng bộ thêm sau.
+  INTERNET để ghép đôi, ghi sổ đồng ý (spec 020) và gửi hàng đợi sự kiện + heartbeat (spec 022), tất cả NGOÀI đường
+  găng: đường dừng an toàn KHÔNG dùng mạng (H6) nên SafePause vẫn hiện khi offline; sự kiện nằm trong Room mã hóa Tink
+  rồi WorkManager gửi lại khi có mạng. Không thêm quyền nào khác cho việc này (WorkManager tự khai báo quyền mức normal).
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Cửa sổ rủi ro ≤ 10 phút sau cuộc gọi số lạ (RiskWindowService). -->
+    <!-- Ghép đôi (POST /v1/pair) và ghi sổ đồng ý (POST /v1/consents). Bản phát hành chỉ HTTPS (cleartext bị chặn). -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- Thông báo "HỏiCon đang bảo vệ" + thông báo dự phòng khi không mở được SafePause. -->
@@ -30,19 +34,72 @@
     -->
 
     <!--
-      Thay cho QUERY_ALL_PACKAGES: chỉ các gói ngân hàng/ví cần nhìn thấy trong UsageStats (khớp ĐÚNG tên gói,
-      sensing/BankApps.kt). Tập con của data/bank_apps.vn.json — danh sách đầy đủ ở P1-S2.
+      Thay cho QUERY_ALL_PACKAGES: chỉ các gói ngân hàng/ví/chứng khoán cần nhìn thấy trong UsageStats (khớp ĐÚNG
+      tên gói, rules/BankAppCatalog.kt). Nguồn: data/bank_apps.vn.json ⇒ `python scripts/gen-bank-apps.py`.
     -->
     <queries>
-        <package android:name="vn.hoicon.demobank" />
+        <!-- BEGIN bank_apps: sinh bởi scripts/gen-bank-apps.py, không sửa tay -->
         <package android:name="com.VCB" />
-        <package android:name="com.vnpay.bidv" />
+        <package android:name="com.bab.retailUAT" />
+        <package android:name="com.finx.vikki" />
+        <package android:name="com.hdbank.dihdbank" />
+        <package android:name="com.mbmobile" />
+        <package android:name="com.msb.digibank.retail" />
+        <package android:name="com.ncb.bank" />
+        <package android:name="com.ocb.liobank" />
+        <package android:name="com.pvcombank.retail" />
+        <package android:name="com.sacombank.ewallet" />
+        <package android:name="com.shinhan.global.vn.bank" />
+        <package android:name="com.sunshine.ksbank" />
+        <package android:name="com.tpb.mb.gprsandroid" />
+        <package android:name="com.vib.myvib2" />
         <package android:name="com.vietinbank.ipay" />
         <package android:name="com.vnpay.Agribank3g" />
-        <package android:name="com.mbmobile" />
+        <package android:name="com.vnpay.EximBankOmni" />
+        <package android:name="com.vnpay.SCB" />
+        <package android:name="com.vnpay.bidv" />
+        <package android:name="com.vnpay.coopbank" />
+        <package android:name="com.vnpay.hdbank" />
+        <package android:name="com.vnpay.vpbankonline" />
+        <package android:name="io.lifestyle.plus" />
+        <package android:name="mobile.acb.com.vn" />
+        <package android:name="ops.namabank.com.vn" />
+        <package android:name="src.com.sacombank" />
+        <package android:name="vn.banvietbank.mobilebanking" />
+        <package android:name="vn.com.agribank.ebanking.ru" />
+        <package android:name="vn.com.lpb.lienviet24h" />
+        <package android:name="vn.com.lpbank.digibank" />
+        <package android:name="vn.com.msb.smartBanking" />
+        <package android:name="vn.com.ocb.awe" />
+        <package android:name="vn.com.seabank.mb1" />
         <package android:name="vn.com.techcombank.bb.app" />
+        <package android:name="vn.hoicon.demobank" />
+        <package android:name="vn.shb.saha.mbanking" />
+        <package android:name="vn.tnex.consumer" />
+        <package android:name="xyz.be.cake" />
+        <package android:name="com.fss.tcbs.mobiletrading" />
+        <package android:name="org.ssi.iBoardSSI.Pro" />
+        <package android:name="vn.com.mbs.m24np" />
+        <package android:name="vn.com.vndirect.stocks" />
+        <package android:name="vn.com.vpbs.smartone" />
+        <package android:name="com.beeasy.toppay" />
+        <package android:name="com.bplus.vtpay" />
+        <package android:name="com.mobifone.mmdt" />
         <package android:name="com.mservice.momotransfer" />
         <package android:name="vn.com.vng.zalopay" />
+        <package android:name="vnpay.smartacccount" />
+        <package android:name="vnptpay.vnptmedia.vnpt.com.vnptpay" />
+        <!-- END bank_apps -->
+        <!--
+          Luật R5 (Spec 022, ý tưởng I1): app điều khiển điện thoại từ xa, khớp ĐÚNG tên gói (rules/RemoteControlCatalog.kt).
+          Cũng không cần QUERY_ALL_PACKAGES. RemoteControlCatalogTest chặn lệch giữa hai danh sách.
+        -->
+        <package android:name="com.anydesk.anydeskandroid" />
+        <package android:name="com.teamviewer.teamviewer.market.mobile" />
+        <package android:name="com.teamviewer.quicksupport.market" />
+        <package android:name="com.teamviewer.host.market" />
+        <package android:name="com.carriez.flutter_hbb" />
+        <package android:name="com.google.chromeremotedesktop" />
         <!-- Bộ đọc TTS trên máy (Android 11+ phải khai báo để kết nối engine). -->
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
@@ -65,9 +122,32 @@
             </intent-filter>
         </activity>
 
+        <!-- Lần đầu: E1 Chào mừng → E2 Ghép đôi → E3 Công bố nổi bật → E4 Cấp quyền; MainActivity chuyển tới đây khi chưa xong. -->
+        <activity
+            android:name=".OnboardingActivity"
+            android:exported="false" />
+
+        <!-- E11 Luyện tập nhận biết lừa đảo (spec 028): chỉ mở bằng cách chạm thông báo mời luyện tập, không nhận intent ngoài, không full-screen. -->
+        <activity
+            android:name=".DrillActivity"
+            android:exported="false" />
+
+        <!-- E10 Kiểm tra số hay đường link (spec 026): chỉ mở từ E6 trong app, không nhận intent ngoài. -->
+        <activity
+            android:name=".LookupActivity"
+            android:exported="false" />
+
         <!-- Task riêng (taskAffinity rỗng): nằm trên task của app ngân hàng, không chen vào task đó. -->
         <activity
             android:name=".pause.SafePauseActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="" />
+
+        <!-- Màn hình E8: Câu hỏi nhanh cho người cao tuổi (task riêng, không hiện trong Recents). -->
+        <activity
+            android:name=".pause.ElderQuestionActivity"
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTask"
@@ -89,8 +169,15 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Anti-scam risk window for elderly users: runs only during a call with a number not in contacts and up to 10 minutes after it; checks which banking app is in the foreground so an on-device safety pause can be shown. Stops automatically; no data leaves the device." />
+                android:value="Anti-scam risk window for elderly users: runs only during a call with a number not in contacts and up to 10 minutes after it; checks which banking app is in the foreground so an on-device safety pause can be shown. Stops automatically. The pause itself needs no network; only pseudonymised event metadata (hashed caller, no call content) is queued and sent later to the paired family." />
         </service>
+        <!--
+          WorkManager chỉ chạy việc gửi nền (OutboxWorker, HeartbeatWorker), không có "việc chạy nổi" (setForeground):
+          bỏ dịch vụ nền mặc định của thư viện để Play không đòi khai báo thêm một loại foreground service.
+        -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            tools:node="remove" />
     </application>
 
 </manifest>

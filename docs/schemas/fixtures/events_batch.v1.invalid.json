@@ -1,0 +1,1740 @@
+[
+  {
+    "_why": "events rỗng",
+    "events": []
+  },
+  {
+    "_why": "quá 50 sự kiện",
+    "events": [
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      },
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      }
+    ]
+  },
+  {
+    "_why": "thiếu events"
+  },
+  {
+    "_why": "trường lạ ở gốc",
+    "events": [
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      }
+    ],
+    "family_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f"
+  },
+  {
+    "_why": "số điện thoại thô thay cho h1",
+    "events": [
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "0900000001",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      }
+    ]
+  },
+  {
+    "_why": "sự kiện có trường lạ (số điện thoại thô)",
+    "events": [
+      {
+        "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f",
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01",
+        "caller_phone": "0900000001"
+      }
+    ]
+  },
+  {
+    "_why": "sự kiện thiếu id",
+    "events": [
+      {
+        "schema_version": 1,
+        "type": "banking_app_foreground",
+        "occurred_at": "2026-12-01T02:15:30.120Z",
+        "rule_id": "R1",
+        "rule_floor": "high",
+        "caller": {
+          "h1": "3f1c9a5e2b7d4c8a6e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6a",
+          "last3": "000",
+          "in_contacts": false,
+          "trusted": false,
+          "flagged": false
+        },
+        "call": {
+          "direction": "incoming",
+          "active": true,
+          "duration_s": 212
+        },
+        "app": {
+          "category": "bank",
+          "package": "vn.hoicon.demobank"
+        },
+        "timing": {
+          "detect_ms": 940,
+          "pause_ms": 1610
+        },
+        "is_drill": false,
+        "app_version": "0.1.0",
+        "rules_version": "rules-2026.12.01"
+      }
+    ]
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "_name": "3 bucket 22 bit",
+    "version": "0123456789abcdef",
+    "bucket_bits": 22,
+    "count": 3,
+    "buckets_b64": "AAABAAAmAD//",
+    "generated_at": "2026-10-16T08:00:00Z"
+  },
+  {
+    "_name": "danh sách rỗng",
+    "version": "fedcba9876543210",
+    "bucket_bits": 24,
+    "count": 0,
+    "buckets_b64": "",
+    "generated_at": "2026-10-16T08:00:00+07:00"
+  }
+]

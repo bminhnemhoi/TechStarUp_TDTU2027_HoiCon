@@ -1,0 +1,37 @@
+{
+  "case_id": "investment_crypto_mentor_002",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "critical",
+        "tactic": "investment_job",
+        "reasons": [
+          "Mời đầu tư tiền số",
+          "Đòi chuyển tiền"
+        ],
+        "ask_question": "q_asked_transfer"
+      },
+      {
+        "level": "critical",
+        "tactic": "investment_job",
+        "reasons": [
+          "Bị đòi chuyển tiền"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "Nhắn qua telegram nhóm 12345 để chốt đầu tư gấp.",
+        "action": "call_now"
+      }
+    ]
+  },
+  "notes": "Tóm tắt chứa tên kênh chat và chữ số; phải bị thay bằng câu mẫu."
+}

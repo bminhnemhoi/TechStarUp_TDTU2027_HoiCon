@@ -1,0 +1,22 @@
+id: benign_relative_friend_phone_002
+category: benign_relative_new_number
+is_benign: true
+twin_of: deepfake_relative_grandchild_accident_002
+region: north
+channel: phone_call
+script_vi: |
+  Con gái mượn máy đồng nghiệp gọi báo về muộn, dặn bác ăn cơm trước. Sau đó bác mở ví điện tử nạp tiền điện
+  thoại như thường lệ.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: lt_1m, app_category: wallet}
+elder_answers: {knows_caller: "yes", asks_transfer: "no"}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Cuộc gọi không đòi tiền, không thúc ép"
+source_ref: "VietnamPlus 27/03/2026 – Bảo vệ người cao tuổi trước chiêu lừa đảo (mật khẩu gia đình, gọi lại số quen): https://www.vietnamplus.vn/bao-ve-nguoi-cao-tuoi-truoc-cac-chieu-lua-dao-tinh-vi-tren-khong-gian-mang-post1101437.vnp"
+draft: true

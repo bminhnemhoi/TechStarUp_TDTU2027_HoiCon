@@ -1,0 +1,40 @@
+[
+  {
+    "_name": "completed",
+    "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "completed",
+    "answers": [
+      {
+        "step": 0,
+        "choice_id": "b"
+      },
+      {
+        "step": 1,
+        "choice_id": "a"
+      },
+      {
+        "step": 2,
+        "choice_id": "b"
+      }
+    ],
+    "started_at": "2026-10-20T09:00:00+07:00",
+    "completed_at": "2026-10-20T09:03:00+07:00"
+  },
+  {
+    "_name": "declined_no_answers",
+    "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "declined",
+    "answers": []
+  },
+  {
+    "_name": "aborted_partial",
+    "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "aborted",
+    "answers": [
+      {
+        "step": 0,
+        "choice_id": "a"
+      }
+    ]
+  }
+]

@@ -5,11 +5,10 @@ description: Kiểm thử app Lính gác HỏiCon trên máy ảo Android (AVD h
 
 # android-emulator-test
 
-Công cụ (đường dẫn tuyệt đối, Bash):
-- `ADB=D:/Android/Sdk/platform-tools/adb.exe`
-- `EMU=D:/Android/Sdk/emulator/emulator.exe`
-- `ACLI=D:/Android/Sdk/cmdline-tools/latest/bin/android.exe` (Android CLI: `layout`, `screen capture|resolve`, `docs`).
-  **Không** dùng `android emulator start|list` — nó không đọc `ANDROID_AVD_HOME` (AVD nằm ở `D:/Android/avd`).
+Công cụ (Bash): `. scripts/android-env.sh` đặt sẵn `$ADB`, `$EMU`, `$ACLI` theo hệ điều hành
+(Windows/Git Bash: `D:/Android/Sdk/…/*.exe`, AVD `D:/Android/avd`; Linux: `~/Android/Sdk/…`, AVD `~/.android/avd`;
+biến `ANDROID_HOME`/`ANDROID_AVD_HOME` có sẵn thì thắng). `$ACLI` = Android CLI (`layout`, `screen capture|resolve`, `docs`).
+**Không** dùng `android emulator start|list` — nó không đọc `ANDROID_AVD_HOME`.
 
 Chi tiết và lý do ở `docs/EMULATOR.md`.
 

@@ -1,0 +1,22 @@
+id: benign_family_son_rent_002
+category: benign_family
+is_benign: true
+twin_of: fake_police_grandchild_case_004
+region: south
+channel: phone_call
+script_vi: |
+  Con trai gọi từ số công ty nhờ bác chuyển tiền nhà như đã bàn từ tuần trước; bác nhận ra giọng và hỏi lại
+  chuyện riêng trước khi chuyển.
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: 1_5m, app_category: bank}
+elder_answers: {knows_caller: "yes", asks_transfer: "yes"}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Đã bàn trước + xác minh chuyện riêng là cách làm đúng"
+source_ref: "VietnamPlus 27/03/2026 – Bảo vệ người cao tuổi trước chiêu lừa đảo (mật khẩu gia đình, gọi lại số quen): https://www.vietnamplus.vn/bao-ve-nguoi-cao-tuoi-truoc-cac-chieu-lua-dao-tinh-vi-tren-khong-gian-mang-post1101437.vnp"
+draft: true

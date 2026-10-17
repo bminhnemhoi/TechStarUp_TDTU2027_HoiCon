@@ -38,4 +38,10 @@ tasks.test {
     inputs.files(appStrings, appNotifications).withPathSensitivity(PathSensitivity.NONE)
     systemProperty("hoicon.appStrings", appStrings.asFile.absolutePath)
     systemProperty("hoicon.appNotifications", appNotifications.asFile.absolutePath)
+    // Generated bank catalog + manifest <queries> must match the source list (BankAppCatalogTest).
+    val bankApps = layout.projectDirectory.file("../../../data/bank_apps.vn.json")
+    val appManifest = layout.projectDirectory.file("../app/src/main/AndroidManifest.xml")
+    inputs.files(bankApps, appManifest).withPathSensitivity(PathSensitivity.NONE)
+    systemProperty("hoicon.bankApps", bankApps.asFile.absolutePath)
+    systemProperty("hoicon.appManifest", appManifest.asFile.absolutePath)
 }

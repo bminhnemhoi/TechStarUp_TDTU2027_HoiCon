@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/pair_response.v1.json",
+  "title": "PairResponse v1",
+  "description": "Kết quả ghép đôi thành công từ `POST /v1/pair` (spec 020). Cấp token truy cập thiết bị (JWT) và định danh gia đình.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "device_id",
+    "family_id",
+    "member_id",
+    "family_name",
+    "access_token",
+    "refresh_token",
+    "token_type",
+    "expires_in"
+  ],
+  "properties": {
+    "device_id": { "type": "string", "format": "uuid" },
+    "family_id": { "type": "string", "format": "uuid" },
+    "member_id": { "type": "string", "format": "uuid" },
+    "family_name": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "access_token": { "type": "string", "minLength": 1 },
+    "refresh_token": { "type": "string", "minLength": 1 },
+    "token_type": { "type": "string", "const": "bearer" },
+    "expires_in": { "type": "integer", "minimum": 1 }
+  }
+}

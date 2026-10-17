@@ -1,0 +1,20 @@
+[
+  {
+    "_name": "thiếu trường decision",
+    "note": "an toàn"
+  },
+  {
+    "_name": "decision sai enum",
+    "decision": "unknown_decision"
+  },
+  {
+    "_name": "note vượt quá 256 ký tự",
+    "decision": "safe",
+    "note": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+    "_name": "thêm trường lạ",
+    "decision": "safe",
+    "extra_field": "forbidden"
+  }
+]

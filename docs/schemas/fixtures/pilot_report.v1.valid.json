@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-12-14T03:00:00+00:00",
+  "days": 7,
+  "families": [
+    {
+      "alias": "Nhà thử nghiệm A",
+      "incidents": 2,
+      "false_alarms": 1,
+      "devices": [
+        {
+          "device": "0a1b2c3d",
+          "coverage": 0.93,
+          "protected_ratio": 1.0,
+          "last_heartbeat_at": "2026-12-14T02:45:00+00:00",
+          "app_version": "0.3.0",
+          "revoked": false,
+          "permissions_off": ["battery_unrestricted"],
+          "slots_expected": 672,
+          "slots_seen": 625
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "_name": "mở sự cố mới",
+    "accepted": 2,
+    "duplicates": 0,
+    "incident_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e80",
+    "incident_opened": true
+  },
+  {
+    "_name": "gửi lại cả lô",
+    "accepted": 0,
+    "duplicates": 2,
+    "incident_id": null,
+    "incident_opened": false
+  }
+]

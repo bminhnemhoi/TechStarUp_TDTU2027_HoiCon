@@ -87,6 +87,7 @@ def run(settings: Settings) -> list[tuple[str, str]]:
         ("Zalo Bot token", settings.zalo_bot_token, check_zalo),
         ("Zalo webhook secret (8–256)", settings.zalo_webhook_secret, check_webhook_secret),
         ("Pepper băm số điện thoại", settings.phone_pepper_1, check_pepper),
+        ("Khóa mã hóa dữ liệu (AES-256)", settings.data_key_1, check_pepper),  # cùng dạng: hex 64 ký tự
     ]
     results: list[tuple[str, str]] = []
     for name, value, check in checks:

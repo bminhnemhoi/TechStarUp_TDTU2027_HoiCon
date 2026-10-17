@@ -1,0 +1,41 @@
+[
+  {
+    "_name": "một chỉ báo tối thiểu (số hư cấu)",
+    "version": "2026.10.15-test",
+    "is_demo": true,
+    "indicators": [
+      {
+        "h1": "aa1b1fcd5c51853e998738c59cffa5a4d95bd39ef7ef3b6d905c9c6c3af987e4",
+        "source": "demo",
+        "confidence": 0.9
+      }
+    ]
+  },
+  {
+    "_name": "đủ trường tùy chọn, hai chỉ báo",
+    "version": "2026.10.15-test",
+    "is_demo": true,
+    "_note": "ghi chú cho người đọc",
+    "indicators": [
+      {
+        "h1": "aa1b1fcd5c51853e998738c59cffa5a4d95bd39ef7ef3b6d905c9c6c3af987e4",
+        "source": "demo",
+        "confidence": 1,
+        "tactic": "impersonation_authority",
+        "last3": "002",
+        "expires_at": "2027-01-01T00:00:00Z"
+      },
+      {
+        "h1": "0000000000000000000000000000000000000000000000000000000000000001",
+        "source": "demo",
+        "confidence": 0.5
+      }
+    ]
+  },
+  {
+    "_name": "danh sách rỗng hợp lệ",
+    "version": "2026.10.15-empty",
+    "is_demo": false,
+    "indicators": []
+  }
+]

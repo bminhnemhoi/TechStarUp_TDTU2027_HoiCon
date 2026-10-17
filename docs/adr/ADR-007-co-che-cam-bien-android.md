@@ -49,7 +49,7 @@ trong đường găng (bản spike) — đường găng không thể dùng mạn
 - **p95 phát hiện → SafePause ≤ 3 s chưa đạt trên máy ảo** (p95 5–10 s ở lô n=10; p50 ấm 1,0–1,5 s, nguội 1,7–4,2 s)
   trong khi đối chứng mở một app tầm thường trên cùng máy ảo mất 4–6 s ⇒ môi trường thổi phồng độ trễ, **không dùng số
   này để kết luận**. Phải đo lại trên **máy vật lý** (Firebase Test Lab — test instrumentation, hoặc máy mượn/mua) trước
-  G1 (08/11). Nếu máy thật vẫn trượt: làm ấm UI SafePause khi mở cửa sổ rủi ro, chọn View thuần, quét 500 ms.
+  G1 (08/11). Bộ đo đã sẵn sàng: module `:latency` + `scripts/ftl-latency.sh` (ADR-008). Nếu máy thật vẫn trượt: làm ấm UI SafePause khi mở cửa sổ rủi ro, chọn View thuần, quét 500 ms.
 - Ứng viên dự phòng chưa thử: `ACTION_POST_CALL` (Telecom gửi tới app sàng lọc sau cuộc gọi).
 - Chưa kiểm: TalkBack với thao tác giữ 3 s; âm thanh TTS trong lúc đang gọi; diệt tác vụ nền của từng hãng (máy ảo
   không tái hiện được — không tuyên bố tương thích hãng nào).

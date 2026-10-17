@@ -3,7 +3,9 @@
 HỏiCon là trợ lý **Agentic AI chống lừa đảo cho cả nhà**: app Android "Lính gác" phát hiện chuỗi hành vi rủi ro
 (đang nghe số lạ → mở app ngân hàng), bật **khoảng dừng an toàn** bằng giọng nói tiếng Việt, rồi 5 tác tử AI trên máy chủ
 chấm rủi ro, báo con cháu qua Zalo, xác minh, lập hồ sơ vụ việc và huấn luyện. Dự thi **Tech Startup Challenger 2027**
-(TDTU). Minh là người code duy nhất; bạn và các subagent là "đội chuyên gia". Báo cáo cho Minh **bằng tiếng Việt**.
+(TDTU). Đội người: **Minh** (chủ dự án, quyết định phạm vi) và **Tiến** (@Towfienes, đồng phát triển từ 14/10/2026);
+bạn và các subagent là "đội chuyên gia". Báo cáo **bằng tiếng Việt** cho người đang làm việc với bạn. Bàn giao, kế
+hoạch gần, tài khoản: `docs/HANDOFF.md`.
 
 Mốc cứng: nộp Vòng 1 **15/11/2026** · MVP Vòng 2 **10/01/2027** (đóng băng code 06/01) · chung kết **27/02/2027**.
 
@@ -11,7 +13,9 @@ Mốc cứng: nộp Vòng 1 **15/11/2026** · MVP Vòng 2 **10/01/2027** (đóng
 
 | Tài liệu | Nội dung |
 |---|---|
+| `docs/HANDOFF.md` | Bàn giao: trạng thái, dựng môi trường, quy trình, kế hoạch từng tuần, tài khoản, rủi ro |
 | `docs/ROADMAP.md` | Khối STATUS, mã task (P0-xx…), gate, danh sách cắt — **chỉ làm task trong đây** |
+| `docs/MASTER-PLAN.md`, `.specify/memory/constitution.md` | Bản đồ tính năng ↔ spec ↔ phụ thuộc, quy trình Spec Kit + worktree; 9 nguyên tắc |
 | `docs/PRD.md` | User story (US-xx), tiêu chí chấp nhận |
 | `docs/ARCHITECTURE.md`, `docs/adr/` | Kiến trúc, quyết định đã chốt (ADR-001…) |
 | `docs/DATA-MODEL.md`, `docs/API.md`, `docs/schemas/` | Bảng, state machine sự cố, hợp đồng API/sự kiện |
@@ -23,7 +27,7 @@ Mốc cứng: nộp Vòng 1 **15/11/2026** · MVP Vòng 2 **10/01/2027** (đóng
 
 ## Stack
 
-- **Android** (`apps/android`): Kotlin 2.4, Compose + Material 3, AGP 9.4, minSdk 29, target/compileSdk 36. Module `:app`, `:rules` (JVM thuần, luật tất định), `:demobank` (app ngân hàng giả để thử/demo). Gradle chạy bằng JDK 21 (`D:/Android/jdk-21`), SDK ở `D:/Android/Sdk`.
+- **Android** (`apps/android`): Kotlin 2.4, Compose + Material 3, AGP 9.4, minSdk 29, target/compileSdk 36. Module `:app`, `:rules` (JVM thuần, luật tất định), `:demobank` (app ngân hàng giả để thử/demo). Gradle chạy bằng JDK 21, SDK theo `scripts/android-env.sh` (Windows `D:/Android/{jdk-21,Sdk}`, Linux `~/Android/{jdk-21,Sdk}`).
 - **Backend** (`backend/`, một dự án `uv`, Python 3.12): FastAPI, Pydantic v2, SQLAlchemy 2 + Alembic, psycopg 3, LangGraph (`AsyncPostgresSaver`), FastMCP gắn tại `/mcp/*`, hàng đợi job bằng Postgres. **Đọc skill `claude-api` trước khi viết code gọi Claude/Anthropic SDK.**
 - **Web** (`apps/web`): Next.js, Tailwind v4, shadcn/ui, client TS sinh từ OpenAPI.
 - **Hạ tầng**: `infra/compose.dev.yml` — Postgres pgvector **cổng 15432**; API **18000**; web **3100** (các cổng 5432/6379/8000/3000 thuộc dự án khác).
@@ -76,10 +80,16 @@ Chạy CLI bằng **tool Bash** (để RTK nén output). Cần output đầy đ�
 
 ## Quy trình làm việc
 1. Đọc STATUS (SessionStart hiện sẵn), chọn **một** task. Việc lớn: vào Plan mode, hỏi đúng chuyên gia (`android-engineer`, `agent-architect`, `backend-db`, `web-ux`).
-2. Làm theo skill `feature-slice` (hợp đồng → DB → domain → API → Android/web → test → docs).
+2. Tính năng/đổi hành vi: **Spec Kit** theo `docs/MASTER-PLAN.md` §6 (`/speckit-specify` → `clarify` → `plan` → `tasks` →
+   `analyze` → `checklist` → `implement` → `converge` → `evidence.md`), số spec lấy ở §3, thứ tự lát dọc như skill
+   `feature-slice` (hợp đồng → DB → domain → API → Android/web → test → docs). Việc ≤ 1 ngày không đổi hành vi: làn lite
+   (task ROADMAP + PR). Trước PR: `python3 scripts/check-spec-trace.py`.
 3. Review: `security-privacy-reviewer` (dữ liệu cá nhân/LLM/manifest/Zalo), `ux-elder-reviewer` (màn hình, câu chữ), `/ponytail-review`.
-4. **Chỉ commit khi Minh yêu cầu**; nhánh `feat/<task-id>-<slug>`, PR qua `gh`. Cuối tuần chạy `phase-gate`.
-5. Workflow/đa tác tử song song chỉ dùng khi Minh yêu cầu rõ. Tối đa 2 worktree (android / phần còn lại).
+4. **Chỉ commit khi người dùng (Minh hoặc Tiến) yêu cầu**; nhánh `feat/<task-id>-<slug>`, PR qua `gh`, người còn lại
+   duyệt rồi squash merge. Không push thẳng `main`. Cuối tuần chạy `phase-gate`.
+5. Làm song song bằng git worktree: tối đa 2 worktree (làn A android / làn B backend+web), theo luật ở
+   `docs/MASTER-PLAN.md` §5 (sở hữu theo đường dẫn, chỉ làn B tạo migration, chỉ làn A dùng máy ảo, mỗi worktree một
+   phiên Claude). Minh đồng ý 15/10/2026. Đa tác tử song song khác vẫn chỉ dùng khi được yêu cầu rõ.
 
 ## Kiểm soát phạm vi
 - Ý tưởng ngoài task ⇒ ghi vào mục "Ghi chú" của ROADMAP, không làm.

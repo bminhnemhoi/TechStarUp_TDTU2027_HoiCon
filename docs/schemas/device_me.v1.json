@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/device_me.v1.json",
+  "title": "DeviceMe v1",
+  "description": "Kết quả `GET /v1/devices/me` (spec 020): thông tin thiết bị đang gọi và trạng thái đồng ý HIỆN TẠI (dòng mới nhất của mỗi purpose trong sổ consents). Không chứa token, băm bí mật hay số điện thoại.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "consents"],
+  "properties": {
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device_id",
+        "family_id",
+        "member_id",
+        "family_name",
+        "platform",
+        "app_version",
+        "rules_version",
+        "created_at",
+        "last_heartbeat_at"
+      ],
+      "properties": {
+        "device_id": { "type": "string", "format": "uuid" },
+        "family_id": { "type": "string", "format": "uuid" },
+        "member_id": { "type": "string", "format": "uuid" },
+        "family_name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "platform": { "type": "string", "enum": ["android", "ios", "web"] },
+        "label": { "type": ["string", "null"], "maxLength": 64 },
+        "app_version": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "rules_version": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "threat_list_version": { "type": ["string", "null"], "maxLength": 32 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "last_heartbeat_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "consents": {
+      "type": "array",
+      "description": "Mỗi purpose tối đa một phần tử (trạng thái mới nhất); purpose chưa từng ghi thì vắng mặt.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["purpose", "granted", "consent_version", "recorded_at"],
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "core_protection",
+              "call_screening",
+              "usage_monitoring",
+              "overlay_pause",
+              "guardian_alerts",
+              "llm_processing",
+              "voice_input",
+              "drills",
+              "pilot_research",
+              "lookups"
+            ]
+          },
+          "granted": { "type": "boolean" },
+          "consent_version": { "type": "string", "minLength": 1, "maxLength": 16 },
+          "recorded_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

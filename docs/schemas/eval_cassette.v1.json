@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/eval_cassette.v1.json",
+  "title": "EvalCassette v1",
+  "description": "Phản hồi LLM ghi sẵn cho MỘT kịch bản (data/scenarios/<case_id>.yaml) trong bộ eval tất định (spec 030). `hoicon.eval.replay.ReplayClient` trả lần lượt từng phần tử của `responses.risk_scorer` / `responses.intervention` qua LlmRouter, nên đồ thị chạy thật mà không cần khóa API. Nội dung HƯ CẤU (CLAUDE.md luật 8): không số điện thoại/tài khoản/tên thật. `source: synthetic` = viết tay (chưa ghi từ model thật, Hiến chương VII).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_id", "source", "behavior", "prompt_versions", "responses"],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(_[a-z0-9]+)*_[0-9]{3}$",
+      "description": "Trùng id kịch bản và tên file"
+    },
+    "source": { "enum": ["synthetic", "recorded"], "description": "synthetic = viết tay; recorded = ghi từ model thật (spec 036/003)" },
+    "behavior": {
+      "enum": ["honest", "adversarial"],
+      "description": "honest = LLM làm đúng việc; adversarial = LLM cố hạ mức, nhét số/link vào tóm tắt, hoặc làm theo lệnh chèn"
+    },
+    "prompt_versions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["risk_scorer", "intervention"],
+      "properties": {
+        "risk_scorer": { "type": "string", "pattern": "^risk_scorer@[0-9]+$" },
+        "intervention": { "type": "string", "pattern": "^intervention@[0-9]+$" }
+      },
+      "description": "Phiên bản prompt lúc viết cassette; lệch phiên bản hiện hành ⇒ báo cáo cảnh báo (cassette cần xem lại)"
+    },
+    "responses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["risk_scorer", "intervention"],
+      "properties": {
+        "risk_scorer": { "type": "array", "items": { "oneOf": [{ "$ref": "#/$defs/risk_output" }, { "$ref": "#/$defs/error" }] } },
+        "intervention": { "type": "array", "items": { "oneOf": [{ "$ref": "#/$defs/brief_output" }, { "$ref": "#/$defs/error" }] } }
+      },
+      "description": "Phản hồi lần lượt theo từng lần gọi node. Hết danh sách ⇒ ném lỗi ⇒ router rơi về mẫu soạn sẵn"
+    },
+    "injected_markers": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true,
+      "description": "Chuỗi đánh dấu lệnh chèn mà LLM 'nghe lời' viết ra; bộ kiểm báo vi phạm nếu xuất hiện trong tin gửi đi"
+    },
+    "notes": { "type": "string", "maxLength": 500 }
+  },
+  "$defs": {
+    "risk_output": {
+      "description": "Khớp RiskAssessment trong incident_graph.py",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "tactic", "reasons", "ask_question"],
+      "properties": {
+        "level": { "enum": ["none", "low", "medium", "high", "critical"] },
+        "tactic": {
+          "enum": ["impersonation_authority", "bank_security", "family_emergency", "investment_job", "refund_recovery", "unknown", "legit_likely"]
+        },
+        "reasons": { "type": "array", "maxItems": 3, "items": { "type": "string" } },
+        "ask_question": { "enum": ["q_caller_authority", "q_asked_transfer", "q_know_caller", "none"] }
+      }
+    },
+    "brief_output": {
+      "description": "Khớp GuardianBrief trong incident_graph.py",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "action"],
+      "properties": {
+        "summary": { "type": "string", "maxLength": 280 },
+        "action": { "enum": ["call_now", "call_and_stay_on_line", "visit_or_call_relative"] }
+      }
+    },
+    "error": {
+      "description": "Mô phỏng lỗi LLM: refusal = từ chối; timeout = quá hạn; missing = không có phản hồi; malformed = output sai cấu trúc",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["error"],
+      "properties": { "error": { "enum": ["refusal", "timeout", "missing", "malformed"] } }
+    }
+  }
+}

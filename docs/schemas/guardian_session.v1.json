@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/guardian_session.v1.json",
+  "title": "GuardianSession v1",
+  "description": "Phiên web của người giám hộ (spec 027, FR-001/FR-003). $defs/request = thân POST /v1/guardian/session (token đăng nhập một lần nhận qua Zalo); $defs/response = thân trả về (và GET /v1/guardian/me). Token phiên CHỈ nằm trong cookie HttpOnly `hc_guardian`, không bao giờ trong thân; không có số điện thoại, Zalo ID hay tên thật.",
+  "oneOf": [{ "$ref": "#/$defs/request" }, { "$ref": "#/$defs/response" }],
+  "$defs": {
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["token"],
+      "properties": {
+        "token": { "type": "string", "pattern": "^[A-Za-z0-9_-]{32,64}$" }
+      }
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["member_id", "family_id", "family_name", "expires_at"],
+      "properties": {
+        "member_id": { "type": "string", "format": "uuid" },
+        "family_id": { "type": "string", "format": "uuid" },
+        "family_name": { "type": "string", "maxLength": 64 },
+        "expires_at": { "type": "string", "format": "date-time", "description": "Hết hạn của phiên (7 ngày kể từ lúc đăng nhập)" }
+      }
+    }
+  }
+}

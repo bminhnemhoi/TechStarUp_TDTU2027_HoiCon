@@ -1,0 +1,29 @@
+{
+  "case_id": "fake_health_insurance_refund_001",
+  "source": "synthetic",
+  "behavior": "honest",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "critical",
+        "tactic": "impersonation_authority",
+        "reasons": [
+          "Người gọi xưng cơ quan bảo hiểm",
+          "Cuộc gọi dài",
+          "Mở app ngân hàng"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "{alias} vừa nghe người xưng cơ quan bảo hiểm gọi khá lâu rồi mở ứng dụng ngân hàng, kẻ gian thường đòi nộp phí để nhận tiền.",
+        "action": "call_and_stay_on_line"
+      }
+    ]
+  }
+}
