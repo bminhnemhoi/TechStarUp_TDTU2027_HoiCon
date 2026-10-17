@@ -56,6 +56,8 @@ class OutboxWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 TokenStorage.create(applicationContext).needsRepair = true
                 Result.success()
             }
+            // A consent was withdrawn: the pairing is fine, so keep the token (no "reconnect") and let the queue wait.
+            FlushOutcome.CONSENT_REQUIRED -> Result.success()
             FlushOutcome.RETRY -> Result.retry()
         }
     } catch (e: Exception) {
@@ -117,6 +119,8 @@ class HeartbeatWorker(context: Context, params: WorkerParameters) : CoroutineWor
                     TokenStorage.create(applicationContext).needsRepair = true
                     Result.success()
                 }
+                // Consent withdrawn: keep the pairing as it is; the next period tries again once consent is given.
+                HeartbeatResult.ConsentWithdrawn -> Result.success()
                 // Refused body: a retry cannot fix it; the next period tries again.
                 HeartbeatResult.Ok, HeartbeatResult.Rejected -> {
                     askForDrill(session.accessToken)

@@ -14,7 +14,7 @@ URL = "postgresql+psycopg://x:y@127.0.0.1:15432/hoicon_eval"
 @pytest.fixture(autouse=True)
 def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("HOICON_EVAL_DATABASE_URL", raising=False)
-    monkeypatch.delenv("HOICON_ENV", raising=False)
+    monkeypatch.setenv("HOICON_ENV", "test")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

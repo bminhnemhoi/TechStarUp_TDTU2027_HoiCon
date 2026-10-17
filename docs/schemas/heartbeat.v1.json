@@ -2,20 +2,25 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hoicon.vn/schemas/heartbeat.v1.json",
   "title": "Heartbeat v1",
-  "description": "Thân `POST /v1/heartbeat` (spec 029, P2-14): đúng thân `PairingApiClient.sendHeartbeat` của Android. Chỉ số phiên bản và cờ quyền (đúng/sai), không văn bản tự do, không định danh. Mọi trường mới là dữ liệu mới và phải sửa văn bản đồng ý.",
+  "description": "Thân yêu cầu POST /v1/heartbeat (spec 029, P2-14): app Lính gác báo mỗi 15 phút các phiên bản đang chạy và quyền nào đang bật, để gia đình biết khi mất bảo vệ. Đúng thân PairingApiClient.sendHeartbeat; không thêm trường mới (mọi trường mới là dữ liệu mới và phải sửa văn bản đồng ý). Thiết bị/gia đình lấy từ token, không có trong thân. Không số điện thoại, không tên, không vị trí.",
   "type": "object",
   "additionalProperties": false,
   "required": ["app_version", "rules_version", "permission_state"],
   "properties": {
-    "app_version": { "$ref": "https://hoicon.vn/schemas/risk_event.v1.json#/properties/app_version" },
-    "rules_version": { "$ref": "https://hoicon.vn/schemas/risk_event.v1.json#/properties/rules_version" },
-    "threat_list_version": { "type": "string", "pattern": "^[0-9a-f]{16}$", "description": "Cùng dạng với `threat_list.v1`.`version`" },
+    "app_version": { "$ref": "risk_event.v1.json#/properties/app_version" },
+    "rules_version": { "$ref": "risk_event.v1.json#/properties/rules_version" },
+    "threat_list_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "description": "Phiên bản danh sách mối đe dọa (cùng dạng với threat_list.v1.json hoặc hex 16 ký tự)"
+    },
     "permission_state": {
       "type": "object",
       "maxProperties": 16,
       "propertyNames": { "pattern": "^[a-z_]{1,32}$" },
       "additionalProperties": { "type": "boolean" },
-      "description": "Tên quyền (chữ thường) → đã cấp hay chưa. Quyền lõi (`protected`): call_screening_role và usage_access."
+      "description": "Tên quyền (SensorPermission, chữ thường) → đang cấp hay không. Quyền lõi (protected): call_screening_role và usage_access."
     }
   }
 }

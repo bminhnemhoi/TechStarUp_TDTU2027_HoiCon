@@ -15,6 +15,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 import vn.hoicon.sentinel.data.consent.ConsentItem
 import vn.hoicon.sentinel.data.remote.ConsentResult
+import vn.hoicon.sentinel.data.remote.EventsResult
+import vn.hoicon.sentinel.data.remote.HeartbeatResult
+import vn.hoicon.sentinel.data.remote.HeartbeatStatus
 import vn.hoicon.sentinel.data.remote.PairResult
 import vn.hoicon.sentinel.data.remote.PairingApiClient
 
@@ -187,5 +190,54 @@ class PairingApiClientTest {
     @Test
     fun consentServerErrorsAreServerError() {
         assertEquals(ConsentResult.ServerError, serve(500, "{}").recordConsents("t", listOf(item)))
+    }
+
+    // Spec 029 FR-001: a 403 `consent_withdrawn` is "consent needed again", never a refused token.
+
+    private val heartbeat = HeartbeatStatus("0.3.0", "0.2.0", null, mapOf("usage_access" to true))
+    private val oneEvent = listOf(JSONObject().put("id", "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e7f"))
+    private val withdrawnBodies = listOf(
+        """{"detail":"consent_withdrawn"}""",
+        """{"detail":{"code":"consent_withdrawn","message":"Cần đồng ý lại"}}""",
+        """consent_withdrawn""",
+    )
+
+    @Test
+    fun aWithdrawnConsentOnHeartbeatIsNotARefusedToken() {
+        for (reply in withdrawnBodies) {
+            server?.stop(0)
+            assertEquals(HeartbeatResult.ConsentWithdrawn, serve(403, reply).sendHeartbeat("t", heartbeat), reply)
+        }
+    }
+
+    @Test
+    fun aWithdrawnConsentOnEventsIsNotARefusedToken() {
+        for (reply in withdrawnBodies) {
+            server?.stop(0)
+            assertEquals(EventsResult.ConsentWithdrawn, serve(403, reply).sendEvents("t", oneEvent), reply)
+        }
+    }
+
+    @Test
+    fun anyOther403StaysARefusedToken() {
+        for (reply in listOf("", "{}", """{"detail":"forbidden"}""", """{"detail":"consent_required"}""")) {
+            server?.stop(0)
+            assertEquals(HeartbeatResult.Unauthorized, serve(403, reply).sendHeartbeat("t", heartbeat), "heartbeat: $reply")
+            server?.stop(0)
+            assertEquals(EventsResult.Unauthorized, serve(403, reply).sendEvents("t", oneEvent), "events: $reply")
+        }
+    }
+
+    @Test
+    fun theConsentCodeOnlyCountsOnA403() {
+        for (status in listOf(401, 422, 500)) {
+            server?.stop(0)
+            val reply = """{"detail":"consent_withdrawn"}"""
+            val beat = serve(status, reply).sendHeartbeat("t", heartbeat)
+            assertTrue(beat != HeartbeatResult.ConsentWithdrawn, "heartbeat HTTP $status")
+            server?.stop(0)
+            val events = serve(status, reply).sendEvents("t", oneEvent)
+            assertTrue(events != EventsResult.ConsentWithdrawn, "events HTTP $status")
+        }
     }
 }

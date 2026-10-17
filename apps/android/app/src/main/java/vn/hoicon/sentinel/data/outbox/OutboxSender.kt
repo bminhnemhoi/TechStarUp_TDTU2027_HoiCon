@@ -15,6 +15,9 @@ enum class FlushOutcome {
     /** The server refused the device token: events wait, and the phone must be paired again. */
     TOKEN_REFUSED,
 
+    /** The family withdrew a consent (403 `consent_withdrawn`): events wait; the token stays and no re-pairing is asked. */
+    CONSENT_REQUIRED,
+
     /** Offline or the server is down: the rest stays queued; retry with backoff. */
     RETRY,
 }
@@ -60,6 +63,10 @@ class OutboxSender(
                 outbox.release(ids)
                 FlushOutcome.TOKEN_REFUSED
             }
+            EventsResult.ConsentWithdrawn -> {
+                outbox.release(ids)
+                FlushOutcome.CONSENT_REQUIRED
+            }
             EventsResult.NetworkError, EventsResult.ServerError -> {
                 outbox.markRetry(ids)
                 FlushOutcome.RETRY
@@ -78,12 +85,16 @@ class OutboxSender(
                 }
                 EventsResult.Rejected -> refused += item.id
                 else -> {
-                    // Stop at the first transient failure or refused token; what was not tried yet goes back untouched.
+                    // Stop at the first transient failure, refused token or withdrawn consent; what was not tried yet goes back untouched.
                     settleRefused(refused, accepted)
                     val rest = batch.drop(index).map { it.id }
                     if (result == EventsResult.Unauthorized) {
                         outbox.release(rest)
                         return FlushOutcome.TOKEN_REFUSED
+                    }
+                    if (result == EventsResult.ConsentWithdrawn) {
+                        outbox.release(rest)
+                        return FlushOutcome.CONSENT_REQUIRED
                     }
                     outbox.markRetry(rest.take(1))
                     outbox.release(rest.drop(1))

@@ -1,9 +1,21 @@
 [
-  { "_name": "thiếu permission_state", "app_version": "0.3.0", "rules_version": "r1" },
-  { "_name": "trường lạ (nhãn máy)", "app_version": "0.3.0", "rules_version": "r1", "permission_state": {}, "label": "may cua ba" },
-  { "_name": "quyền không phải boolean", "app_version": "0.3.0", "rules_version": "r1", "permission_state": { "usage_access": "yes" } },
-  { "_name": "tên quyền sai dạng", "app_version": "0.3.0", "rules_version": "r1", "permission_state": { "Usage Access": true } },
-  { "_name": "phiên bản dài như số điện thoại", "app_version": "0900000123456", "rules_version": "r1", "permission_state": {} },
-  { "_name": "threat_list_version không phải băm 16 hex", "app_version": "0.3.0", "rules_version": "r1", "threat_list_version": "v1", "permission_state": {} },
-  { "_name": "quá 16 quyền", "app_version": "0.3.0", "rules_version": "r1", "permission_state": { "a":true,"b":true,"c":true,"d":true,"e":true,"f":true,"g":true,"h":true,"i":true,"j":true,"k":true,"l":true,"m":true,"n":true,"o":true,"p":true,"q":true } }
+  { "_name": "thiếu permission_state", "_why": "thiếu permission_state", "app_version": "0.3.0", "rules_version": "0.2.0" },
+  { "_name": "thiếu app_version", "_why": "thiếu app_version", "rules_version": "0.2.0", "permission_state": {} },
+  { "_name": "thiếu rules_version", "_why": "thiếu rules_version", "app_version": "0.3.0", "permission_state": {} },
+  { "_name": "trường lạ ở gốc", "_why": "trường lạ ở gốc (dữ liệu mới ngoài hợp đồng)", "app_version": "0.3.0", "rules_version": "0.2.0", "permission_state": {}, "device_label": "Máy của bà" },
+  { "_name": "app_version sai mẫu", "_why": "app_version sai mẫu đã siết ở risk_event.v1", "app_version": "phiên bản mới nhất", "rules_version": "0.2.0", "permission_state": {} },
+  { "_name": "rules_version dài quá 32 ký tự", "_why": "rules_version dài quá 32 ký tự", "app_version": "0.3.0", "rules_version": "0.2.0-0123456789abcdef0123456789abcdef", "permission_state": {} },
+  { "_name": "threat_list_version rỗng", "_why": "threat_list_version rỗng", "app_version": "0.3.0", "rules_version": "0.2.0", "threat_list_version": "", "permission_state": {} },
+  { "_name": "threat_list_version dài quá 32 ký tự", "_why": "threat_list_version dài quá 32 ký tự", "app_version": "0.3.0", "rules_version": "0.2.0", "threat_list_version": "0123456789abcdef0123456789abcdef0", "permission_state": {} },
+  { "_name": "giá trị quyền không phải boolean", "_why": "giá trị quyền không phải boolean", "app_version": "0.3.0", "rules_version": "0.2.0", "permission_state": { "usage_access": "yes" } },
+  { "_name": "tên quyền chữ hoa", "_why": "tên quyền chữ hoa", "app_version": "0.3.0", "rules_version": "0.2.0", "permission_state": { "USAGE_ACCESS": true } },
+  { "_name": "tên quyền chứa số", "_why": "tên quyền chứa số (không được dùng khóa làm chỗ giấu số điện thoại)", "app_version": "0.3.0", "rules_version": "0.2.0", "permission_state": { "p0900000000": true } },
+  { "_name": "permission_state không phải object", "_why": "permission_state không phải object", "app_version": "0.3.0", "rules_version": "0.2.0", "permission_state": [true] },
+  {
+    "_name": "hơn 16 quyền",
+    "_why": "hơn 16 quyền",
+    "app_version": "0.3.0",
+    "rules_version": "0.2.0",
+    "permission_state": { "a": true, "b": true, "c": true, "d": true, "e": true, "f": true, "g": true, "h": true, "i": true, "j": true, "k": true, "l": true, "m": true, "n": true, "o": true, "p": true, "q": true }
+  }
 ]

@@ -67,7 +67,10 @@ async def test_a_valid_body_returns_200_and_updates_the_device(paired: dict[str,
 
 
 async def test_the_contract_fixture_is_accepted_as_is(paired: dict[str, Any]) -> None:
-    resp = await call("POST", "/v1/heartbeat", token=paired["token"], json=json.loads(FIXTURE.read_text("utf-8")))
+    data = json.loads(FIXTURE.read_text("utf-8"))
+    raw = data[0] if isinstance(data, list) else data
+    clean = {k: v for k, v in raw.items() if not k.startswith("_")}
+    resp = await call("POST", "/v1/heartbeat", token=paired["token"], json=clean)
     assert resp.status_code == 200
     (row,) = await heartbeats(paired["device_id"])
     assert row.protected is True  # fixture: pin không giới hạn tắt nhưng cả hai quyền lõi bật

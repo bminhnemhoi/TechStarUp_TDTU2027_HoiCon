@@ -46,6 +46,12 @@ sealed interface EventsResult {
     /** The device token was refused: the events stay queued. */
     data object Unauthorized : EventsResult
 
+    /**
+     * 403 `consent_withdrawn`: the family withdrew a consent, so the server accepts nothing until it is given again.
+     * The pairing is fine: keep the token and the queue, and do not ask the person to connect again.
+     */
+    data object ConsentWithdrawn : EventsResult
+
     /** No connection, timeout or TLS failure. */
     data object NetworkError : EventsResult
 
@@ -65,6 +71,9 @@ sealed interface HeartbeatResult {
     data object Ok : HeartbeatResult
     data object Rejected : HeartbeatResult
     data object Unauthorized : HeartbeatResult
+
+    /** 403 `consent_withdrawn`: consent is needed again; the pairing and the token stay as they are. */
+    data object ConsentWithdrawn : HeartbeatResult
     data object NetworkError : HeartbeatResult
     data object ServerError : HeartbeatResult
 }
@@ -76,7 +85,7 @@ interface EventUploader {
 
 /**
  * `POST /v1/pair`, `/v1/consents`, `/v1/events` and `/v1/heartbeat` (docs/API.md; bodies follow
- * docs/schemas/pair_*.v1.json, consent_record.v1.json and risk_event.v1.json). Blocking: call from a background
+ * docs/schemas/pair_*.v1.json, consent_record.v1.json, risk_event.v1.json and heartbeat.v1.json). Blocking: call from a background
  * thread. Never used on the safe-pause path. Nothing here is logged: codes and tokens are secrets, error bodies
  * are server text.
  */
@@ -142,6 +151,7 @@ class PairingApiClient(
         } catch (_: IOException) {
             return EventsResult.NetworkError
         }
+        if (reply.isConsentWithdrawn()) return EventsResult.ConsentWithdrawn
         return when (reply.status) {
             in 200..299 -> EventsResult.Accepted
             400, 413, 422 -> EventsResult.Rejected
@@ -152,18 +162,12 @@ class PairingApiClient(
 
     /** `POST /v1/heartbeat`: permission state and versions, so the family sees when protection was lost. */
     fun sendHeartbeat(accessToken: String, status: HeartbeatStatus): HeartbeatResult {
-        val permissions = JSONObject()
-        status.permissionState.forEach { (name, granted) -> permissions.put(name, granted) }
-        val body = JSONObject()
-            .put("app_version", status.appVersion.take(MAX_VERSION))
-            .put("rules_version", status.rulesVersion.take(MAX_VERSION))
-            .put("permission_state", permissions)
-        status.threatListVersion?.let { body.put("threat_list_version", it.take(MAX_VERSION)) }
         val reply = try {
-            post("/v1/heartbeat", body, bearer = accessToken)
+            post("/v1/heartbeat", heartbeatBody(status), bearer = accessToken)
         } catch (_: IOException) {
             return HeartbeatResult.NetworkError
         }
+        if (reply.isConsentWithdrawn()) return HeartbeatResult.ConsentWithdrawn
         return when (reply.status) {
             in 200..299 -> HeartbeatResult.Ok
             400, 413, 422 -> HeartbeatResult.Rejected
@@ -172,7 +176,10 @@ class PairingApiClient(
         }
     }
 
-    private class Reply(val status: Int, val body: String)
+    private class Reply(val status: Int, val body: String) {
+        /** 403 with the `consent_withdrawn` code (spec 034): not a refused token, so never mapped to Unauthorized. */
+        fun isConsentWithdrawn() = status == 403 && body.contains(CONSENT_WITHDRAWN)
+    }
 
     private fun post(path: String, body: JSONObject, bearer: String?): Reply {
         val connection = URL(base + path).openConnection() as HttpURLConnection
@@ -231,6 +238,20 @@ class PairingApiClient(
     companion object {
         /** Batch limit of `POST /v1/events` (spec 021). */
         const val MAX_EVENTS_PER_BATCH = 50
+        private const val CONSENT_WITHDRAWN = "consent_withdrawn"
+
+        /** The body of `POST /v1/heartbeat`; follows docs/schemas/heartbeat.v1.json (a test pins its fixtures). */
+        internal fun heartbeatBody(status: HeartbeatStatus): JSONObject {
+            val permissions = JSONObject()
+            status.permissionState.forEach { (name, granted) -> permissions.put(name, granted) }
+            val body = JSONObject()
+                .put("app_version", status.appVersion.take(MAX_VERSION))
+                .put("rules_version", status.rulesVersion.take(MAX_VERSION))
+                .put("permission_state", permissions)
+            status.threatListVersion?.let { body.put("threat_list_version", it.take(MAX_VERSION)) }
+            return body
+        }
+
         private const val TIMEOUT_MS = 10_000
         private const val MAX_REPLY = 64 * 1024
         private const val MAX_VERSION = 32

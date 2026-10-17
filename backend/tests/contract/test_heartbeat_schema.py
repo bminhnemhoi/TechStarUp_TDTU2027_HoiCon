@@ -32,7 +32,11 @@ def _fixtures(name: str, kind: str):
 
 @pytest.mark.parametrize("name", ["heartbeat", "pilot_report"])
 def test_the_valid_fixture_passes(name: str) -> None:
-    assert not list(_validator(name).iter_errors(_fixtures(name, "valid")))
+    data = _fixtures(name, "valid")
+    cases = data if isinstance(data, list) else [data]
+    for case in cases:
+        doc = {k: v for k, v in case.items() if not k.startswith("_")}
+        assert not list(_validator(name).iter_errors(doc)), f"lỗi ở fixture {case.get('_name') or case.get('_why')}"
 
 
 @pytest.mark.parametrize("name", ["heartbeat", "pilot_report"])
@@ -40,8 +44,8 @@ def test_every_invalid_fixture_is_rejected(name: str) -> None:
     cases = _fixtures(name, "invalid")
     assert len(cases) >= 4
     for case in cases:
-        doc = {k: v for k, v in case.items() if k != "_name"}
-        assert list(_validator(name).iter_errors(doc)), f"phải bị từ chối: {case['_name']}"
+        doc = {k: v for k, v in case.items() if not k.startswith("_")}
+        assert list(_validator(name).iter_errors(doc)), f"phải bị từ chối: {case.get('_name') or case.get('_why')}"
 
 
 def test_the_heartbeat_fixture_has_exactly_the_keys_android_sends() -> None:
@@ -49,7 +53,10 @@ def test_the_heartbeat_fixture_has_exactly_the_keys_android_sends() -> None:
     schema = _load(SCHEMAS / "heartbeat.v1.json")
     assert set(schema["properties"]) == {"app_version", "rules_version", "threat_list_version", "permission_state"}
     assert schema["additionalProperties"] is False
-    assert set(_fixtures("heartbeat", "valid")) == set(schema["properties"])
+    valid = _fixtures("heartbeat", "valid")
+    first = valid[0] if isinstance(valid, list) else valid
+    clean = {k: v for k, v in first.items() if not k.startswith("_")}
+    assert set(clean) == set(schema["properties"])
 
 
 def test_the_pilot_report_cannot_carry_member_names_or_secrets() -> None:
