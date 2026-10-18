@@ -27,8 +27,10 @@ android {
 
     buildTypes {
         // Địa chỉ máy chủ ghép đôi (spec 020). Debug: máy chủ dev trên máy chủ của AVD (10.0.2.2); ghi đè bằng
-        // -PhoiconApiBaseUrl=... Release: HTTPS (cleartext bị chặn từ API 28). Đường dừng an toàn KHÔNG dùng mạng.
+        // -PhoiconApiBaseUrl=... (http:// chỉ áp dụng cho debug). Release: HTTPS (cleartext bị chặn từ API 28); yêu cầu
+        // dựng release kèm địa chỉ http:// thì build dừng ngay, không lặng lẽ đổi địa chỉ. Đường dừng an toàn KHÔNG dùng mạng.
         val apiBaseUrl = providers.gradleProperty("hoiconApiBaseUrl")
+        val releaseRequested = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
         fun checked(url: String, schemes: List<String>): String {
             require(Regex("^[A-Za-z0-9:/._-]+$").matches(url) && schemes.any(url::startsWith)) {
                 "hoiconApiBaseUrl must start with ${schemes.joinToString(" or ")} and contain no quotes/spaces: $url"
@@ -40,7 +42,12 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"$url\"")
         }
         release {
-            val url = checked(apiBaseUrl.getOrElse("https://api.hoicon.vn"), listOf("https://"))
+            val override = apiBaseUrl.orNull
+            val url = if (override != null && !releaseRequested && !override.startsWith("https://")) {
+                "https://api.hoicon.vn" // chỉ để cấu hình debug xong; không bao giờ đóng gói
+            } else {
+                checked(override ?: "https://api.hoicon.vn", listOf("https://"))
+            }
             buildConfigField("String", "API_BASE_URL", "\"$url\"")
         }
     }
@@ -106,9 +113,5 @@ tasks.withType<Test>().configureEach {
     systemProperty("hoicon.appStrings", strings.asFile.absolutePath)
 }
 
-// Release is HTTPS only: packaging refuses anything else, instead of failing at run time on the elder's phone.
-// (Debug builds accept http:// too; the debug-only network config lets them reach 10.0.2.2 only.)
-val releaseApiBaseUrl = providers.gradleProperty("hoiconApiBaseUrl").getOrElse("https://api.hoicon.vn")
-tasks.matching { it.name in setOf("assembleRelease", "bundleRelease", "packageRelease") }.configureEach {
-    doFirst { require(releaseApiBaseUrl.startsWith("https://")) { "release needs an https:// hoiconApiBaseUrl, got $releaseApiBaseUrl" } }
-}
+// Release is HTTPS only: the check lives in the release buildType above (at configuration time, so it also works with the
+// configuration cache). Debug builds accept http:// too; the debug-only network config lets them reach 10.0.2.2 only.
