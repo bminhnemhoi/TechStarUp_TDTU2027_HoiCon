@@ -13,6 +13,7 @@ import vn.hoicon.sentinel.data.remote.DrillStatus
 import vn.hoicon.sentinel.domain.drill.DrillFlow
 import vn.hoicon.sentinel.domain.drill.DrillTiming
 import vn.hoicon.sentinel.domain.drill.DrillUi
+import vn.hoicon.sentinel.pause.Speaker
 import vn.hoicon.sentinel.sensing.Notifications
 import vn.hoicon.sentinel.work.DrillResultScheduler
 
@@ -58,14 +59,37 @@ class DrillModel(private val app: Application) : AndroidViewModel(app) {
     var realCallOn: Boolean by mutableStateOf(false)
         private set
 
-    /** A real call started: the drill ends silently (`aborted`, answers so far) and gives the screen and the voice back. */
+    /** False until the risk window has been read once: until then the screen cannot know whether a call is going on, so it stays quiet. */
+    var riskWindowKnown: Boolean by mutableStateOf(false)
+        private set
+
+    /**
+     * The risk window changed. When a real call starts the drill ends silently and gives the screen and the voice back:
+     * a drill already begun reports `aborted` with its answers so far; one still on the invitation reports nothing and is
+     * offered again at a later beat, since the person never saw it.
+     */
     fun onRealCall(open: Boolean) {
+        val started = open && !realCallOn && riskWindowKnown
         realCallOn = open
+        riskWindowKnown = true
+        if (started) Speaker.stop() // only what this screen was saying: the safe pause cannot be speaking before the window opens
         if (open && (ui is DrillUi.Step || ui == DrillUi.Invite)) {
-            flow.interrupt()
+            val playing = flow.interrupt()
             ui = flow.ui
-            finish(DrillStatus.ABORTED)
+            if (playing) finish(DrillStatus.ABORTED) else offerAgainLater()
         }
+    }
+
+    private fun offerAgainLater() {
+        store.notifiedDrillId = null // the next beat may show the invitation again (it is still in its window)
+        Notifications.cancelDrillInvitation(app)
+    }
+
+    /** Back during the drill: on the last answer it goes to the debrief, otherwise it stops with the answers so far. */
+    fun back() {
+        flow.back()
+        ui = flow.ui
+        if (ui is DrillUi.Stopped) finish(DrillStatus.ABORTED)
     }
 
     /** "Dừng luyện tập": the answers so far still count as a result (`aborted`). */

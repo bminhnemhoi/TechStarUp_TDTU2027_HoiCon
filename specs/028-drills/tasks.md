@@ -117,7 +117,7 @@
 
 ## Giai đoạn Z: Gom & nghiệm thu
 
-- [ ] T019 [AB] [FR-012] E2E trên AVD `hc-api36` với backend dev và Zalo mock:
+- [x] T019 [AB] [FR-012] E2E trên AVD `hc-api36` với backend dev và Zalo mock:
   - `ops drills schedule` (khung 30 phút bắt đầu ngay);
   - ép `HeartbeatWorker` chạy ngay (`adb shell cmd jobscheduler run` hoặc broadcast debug sẵn có);
   - nhận thông báo, làm hết bài;
@@ -126,14 +126,14 @@
 
   Ghi các mốc thời gian.
   · Verify: log E2E trong evidence có đủ các mốc
-- [ ] T020 [AB] [FR-012] Review độc lập bằng `security-privacy-reviewer` (FR-003, đồng ý, nội dung hư cấu, quyền
+- [x] T020 [AB] [FR-012] Review độc lập bằng `security-privacy-reviewer` (FR-003, đồng ý, nội dung hư cấu, quyền
   Android). Sửa hết Critical/High.
   · Verify: báo cáo không còn Critical/High chưa xử lý
 - [ ] T021 [AB] [FR-011] (P2, chỉ khi 027 đã merge) Thêm `POST /v1/guardian/drills` + trang `/drills` trên web người giám
   hộ (đặt lịch, lịch sử, nhãn `[DIỄN TẬP]`), dùng chung `DrillService.schedule`, có test Playwright. Nếu 027 chưa merge
   thì đánh BLOCKED và ghi vào evidence.
   · Verify: `$PYTEST tests/integration/test_api_drills.py && pnpm --dir apps/web e2e drills`
-- [ ] T022 [AB] [FR-012] Chạy đủ bộ lệnh kiểm:
+- [x] T022 [AB] [FR-012] Chạy đủ bộ lệnh kiểm:
   - `$PYTEST`; `ruff check` và `ruff format --check`;
   - `$GRADLE :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`;
   - `hoicon-eval --suite smoke --compare baseline` (hồi quy, vì D2 đổi đường sự kiện);

@@ -37,6 +37,9 @@ enum class StopReason {
 
     /** No drill to play: it ran out of time, was answered already, or was never saved. */
     UNAVAILABLE,
+
+    /** A real call started: the drill gives way, and must not say "no one is calling" (someone is). */
+    CALL,
 }
 
 /**
@@ -87,9 +90,24 @@ class DrillFlow(script: DrillScript?) {
         if (ui == DrillUi.Invite || ui is DrillUi.Step) ui = DrillUi.Stopped(StopReason.BY_PERSON)
     }
 
-    /** A real call is on: same as stopping, but the reason is "no drill now", not "the person stopped". */
-    fun interrupt() {
-        if (ui == DrillUi.Invite || ui is DrillUi.Step) ui = DrillUi.Stopped(StopReason.UNAVAILABLE)
+    /**
+     * A real call is on: same as stopping, but the reason is the call, not "the person stopped". Returns true when the
+     * person had begun (a result with the answers so far is due); false when they had only the invitation in front of
+     * them, so the drill stays on offer for a later beat instead of being reported as aborted.
+     */
+    fun interrupt(): Boolean {
+        val playing = ui is DrillUi.Step
+        if (ui == DrillUi.Invite || playing) ui = DrillUi.Stopped(StopReason.CALL)
+        return playing
+    }
+
+    /**
+     * The Back button during the drill. On the last answer's feedback it goes on to the debrief (all the answers are in,
+     * so Back must not throw the result away); anywhere else it stops the drill.
+     */
+    fun back() {
+        val step = ui as? DrillUi.Step
+        if (step?.feedback?.isLastStep == true) next() else stop()
     }
 
     private fun stepUi(index: Int, feedback: DrillFeedback?): DrillUi.Step {

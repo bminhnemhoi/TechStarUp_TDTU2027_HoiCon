@@ -287,6 +287,7 @@
     <string name="drill_done">Đã hiểu — Xong</string>
     <string name="drill_stopped_title">Đã dừng luyện tập</string>
     <string name="drill_stopped_body">Không sao cả, bác có thể luyện tập lúc khác. Chưa có ai gọi bác thật.</string>
+    <string name="drill_call_body">Có cuộc gọi tới nên HỏiCon dừng bài luyện tập. Bác cứ lo cuộc gọi trước nhé, bài luyện tập để lúc khác.</string>
     <string name="drill_expired_body">Bài luyện tập này đã hết giờ hoặc bác đã làm xong rồi. Khi có bài mới, HỏiCon sẽ nhắc bác nhé.</string>
     <string name="drill_close">Xong</string>
     <string name="drill_listen">Nghe lại</string>

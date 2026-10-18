@@ -252,7 +252,13 @@ private fun StoppedBody(ui: DrillUi.Stopped) {
     Text(stringResource(R.string.drill_ai), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = DrillFg)
     Text(stringResource(R.string.drill_stopped_title), style = MaterialTheme.typography.headlineMedium, color = DrillFg, modifier = Modifier.semantics { heading() })
     Text(
-        stringResource(if (ui.reason == StopReason.UNAVAILABLE) R.string.drill_expired_body else R.string.drill_stopped_body),
+        stringResource(
+            when (ui.reason) {
+                StopReason.UNAVAILABLE -> R.string.drill_expired_body
+                StopReason.CALL -> R.string.drill_call_body
+                StopReason.BY_PERSON -> R.string.drill_stopped_body
+            },
+        ),
         style = MaterialTheme.typography.bodyLarge,
         color = DrillFg,
     )
