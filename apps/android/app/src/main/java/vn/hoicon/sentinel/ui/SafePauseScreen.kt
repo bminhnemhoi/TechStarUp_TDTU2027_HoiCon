@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -73,6 +74,9 @@ class SafePauseActions(
     val onConfirm: () -> Unit,
 )
 
+/** From this text scale (150%) E7 trims its chrome so the reading area keeps room. */
+const val LARGE_TEXT_SCALE = 1.5f
+
 /** The calm minute of E7 (docs/DESIGN-SYSTEM.md: no countdown that scares). Advisory: "Vẫn tiếp tục" is never locked. */
 const val PAUSE_COUNTDOWN_SECONDS = 60
 
@@ -94,6 +98,12 @@ fun SafePauseScreen(
     actions: SafePauseActions,
     modifier: Modifier = Modifier,
 ) {
+    // From 150% text the chrome is trimmed so the reading area keeps room (Spec 010 FR-013, found on the smallest AVD 1080×2340:
+    // at 200% the pinned bar took half the screen and the body showed less than one line). Buttons stay ≥ 64dp, at most
+    // two main actions, and "Vẫn tiếp tục" is still the quiet third, held 3 s. The words of the buttons do not change with
+    // the text size (the cancel button keeps "Hủy giao dịch" + "Về màn hình chính": the reviewer found no space gained).
+    val large = LocalDensity.current.fontScale >= LARGE_TEXT_SCALE
+    val gap = if (large) 8.dp else 16.dp
     Surface(modifier = modifier.fillMaxSize(), color = SurfaceWhite) {
       BoxWithConstraints(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
         // The action bar never takes more than 55% of the screen (it scrolls if it must, e.g. 200% font plus status
@@ -106,8 +116,8 @@ fun SafePauseScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(scroll)
-                        .padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                        .padding(start = 24.dp, top = gap, end = 24.dp, bottom = gap),
+                    verticalArrangement = Arrangement.spacedBy(gap),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -137,7 +147,9 @@ fun SafePauseScreen(
                     }
                     Text(
                         text = stringResource(if (kind == PauseKind.REMOTE_CONTROL) R.string.pause_title_remote else R.string.pause_title),
-                        style = MaterialTheme.typography.headlineSmall.copy(fontSize = 32.sp, lineHeight = 40.sp),
+                        style = MaterialTheme.typography.headlineSmall.let {
+                            if (large) it.copy(fontSize = 28.sp, lineHeight = 36.sp) else it.copy(fontSize = 32.sp, lineHeight = 40.sp)
+                        },
                         modifier = Modifier.semantics { heading() },
                     )
                     Text(
@@ -168,8 +180,8 @@ fun SafePauseScreen(
                 modifier = Modifier
                     .heightIn(max = barMax)
                     .verticalScroll(rememberScrollState())
-                    .padding(start = 24.dp, top = 12.dp, end = 24.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(start = 24.dp, top = if (large) 8.dp else 12.dp, end = 24.dp, bottom = if (large) 12.dp else 16.dp),
+                verticalArrangement = Arrangement.spacedBy(if (large) 6.dp else 8.dp),
             ) {
                 // Status + confirm ABOVE the buttons: growing text never moves the buttons under the finger (UX-2).
                 if (statusText.isNotEmpty()) {
@@ -192,7 +204,7 @@ fun SafePauseScreen(
                 }
                 PrimaryButton(text = stringResource(R.string.pause_ask_child), onClick = actions.onAskChild)
                 CancelButton(kind = kind, onClick = actions.onCancel)
-                HoldButton(progress = progress, actions = actions, modifier = Modifier.padding(top = 4.dp))
+                HoldButton(progress = progress, actions = actions, large = large, modifier = Modifier.padding(top = if (large) 0.dp else 4.dp))
             }
         }
       }
@@ -213,6 +225,7 @@ private fun CancelButton(kind: PauseKind, onClick: () -> Unit) {
                 text = stringResource(if (kind == PauseKind.REMOTE_CONTROL) R.string.pause_cancel_remote else R.string.pause_cancel_bank),
                 style = MaterialTheme.typography.labelLarge,
                 color = BrandNavy,
+                textAlign = TextAlign.Center,
             )
             if (kind == PauseKind.FINANCIAL) {
                 Text(text = stringResource(R.string.pause_cancel_sub), style = MaterialTheme.typography.bodyMedium, color = BrandNavy)
@@ -265,7 +278,7 @@ private fun CalmMinute(secondsLeft: Int) {
 
 /** "Vẫn tiếp tục": hold 3 s (touch) or the accessible countdown path (TalkBack / Switch Access). */
 @Composable
-private fun HoldButton(progress: Float, actions: SafePauseActions, modifier: Modifier = Modifier) {
+private fun HoldButton(progress: Float, actions: SafePauseActions, large: Boolean, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(36.dp)
     val label = stringResource(R.string.pause_continue)
     val spokenLabel = stringResource(R.string.pause_continue_a11y_desc)
@@ -297,11 +310,11 @@ private fun HoldButton(progress: Float, actions: SafePauseActions, modifier: Mod
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 20.dp),
+            modifier = Modifier.padding(start = 16.dp, top = if (large) 6.dp else 10.dp, end = 16.dp, bottom = if (large) 16.dp else 20.dp),
         ) {
             Text(text = label, style = MaterialTheme.typography.labelLarge, color = BrandNavy, textAlign = TextAlign.Center)
             Text(
-                text = stringResource(R.string.pause_continue_hint),
+                text = stringResource(if (large) R.string.pause_continue_hint_short else R.string.pause_continue_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = BrandNavy,
                 textAlign = TextAlign.Center,

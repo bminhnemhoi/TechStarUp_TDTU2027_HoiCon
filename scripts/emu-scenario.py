@@ -136,6 +136,9 @@ def has_mark(*names: str) -> bool:
     return any(n in marks for n in names)
 
 
+E7_MARKERS = ("khoan chuyển tiền đã", "gọi cho con", "hỏi con")
+
+
 def pause_visible() -> bool:
     # Ghi ra file rồi đọc UTF-8: stdout của android.exe trên console Windows làm vỡ dấu tiếng Việt.
     # File tạm bị xóa ngay (cây UI có thể chứa số gọi đến trong thông báo hệ thống).
@@ -147,8 +150,12 @@ def pause_visible() -> bool:
             timeout=60,
             check=False,
         )
-        # Nút chính của E7 là "Gọi cho con" ⇒ so khớp không phân biệt hoa thường.
-        return out.exists() and "gọi cho con" in out.read_text(encoding="utf-8", errors="replace").lower()
+        # E7 nhận ra bằng tiêu đề "khoan chuyển tiền đã" (cả hai bản giao diện) hoặc nút chính: "Gọi cho con" (bản View
+        # của spec 001) / "Hỏi con" (bản Compose đang phát hành) ⇒ so khớp không phân biệt hoa thường.
+        if not out.exists():
+            return False
+        tree = out.read_text(encoding="utf-8", errors="replace").lower()
+        return any(marker in tree for marker in E7_MARKERS)
 
 
 def prepare(prep: str) -> None:
@@ -271,7 +278,7 @@ def fake_police_once(prep: str) -> dict[str, int | bool] | None:
     print(
         f"  phát hiện {run['detect']} ms · mở {run.get('open', '—')} ms · SafePause {run['pause']} ms"
         f" · câu nói đầu {run.get('speech', '—')} ms"
-        f" · cây UI {'có' if visible else 'KHÔNG'} 'gọi cho con'{tts_note}"
+        f" · cây UI {'có' if visible else 'KHÔNG'} màn E7{tts_note}"
     )
     return run
 

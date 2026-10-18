@@ -2,11 +2,11 @@
 
 **Spec**: `specs/010-design-system/spec.md` · **Mã ROADMAP**: P1-05 · **Nhánh/PR**: feat/010-design-system · chưa commit/PR (Tiến merge vào `tien-collab-dev` sau) · **Ngày**: 15/10/2026
 
-> **Spec CHƯA đủ điều kiện ☑:** FR-013 chỉ đạt một phần. `ux-elder-reviewer` còn 2 mục **High** về E7 ở cỡ chữ 200% trên màn nhỏ
-> (xem "Còn tồn"). Chúng là vấn đề bố cục E7 có sẵn từ spec 001 và nặng thêm khoảng 10% vùng cuộn do chữ Be Vietnam Pro rộng hơn
-> Roboto. **BLOCKED: FR-013 "không còn mục High"** — đã chuyển P2-05 (ROADMAP "Ghi chú"). Mọi số đo bên dưới là số **máy ảo**
-> (Linux headless, bản debug), trừ khi ghi khác. Ảnh, APK, log nằm ngoài repo: `~/hoicon-evidence/010-design-system/{shots,apk,tokens}`
-> (viết tắt `$EV`).
+> **Cập nhật 18/10/2026 (Làn A Android):** 2 mục **High** của E7 ở 200% trên màn nhỏ (xem "Còn tồn") đã được xử lý trên bản **Compose đang phát hành**
+> (ảnh 15/10 là bản View đời đầu): `ux-elder-reviewer` đọc ảnh mới trên hc-api34 (1080×2340) và hc-api36 ⇒ **không còn High cho biến thể ngân hàng**;
+> biến thể "điều khiển từ xa" CHƯA có ảnh (không dựng được trên máy ảo) nên chưa kết luận được cho toàn bộ E7. Còn 3 Medium + 3 Low (mục
+> "E7 sửa 18/10"). Mọi số đo bên dưới là số **máy ảo** (Linux headless, bản debug), trừ khi ghi khác. Ảnh, APK, log nằm ngoài repo:
+> `~/hoicon-evidence/010-design-system/{shots,apk,tokens,e7-w1}` (viết tắt `$EV`).
 
 ## Tiêu chí thành công (SC) ↔ số đo
 
@@ -65,6 +65,32 @@
 ## `/speckit-converge`
 
 Lượt 1: 2 finding (cả hai FR-013 partial) ⇒ T025–T026 (ghi vào ROADMAP, đã làm). Ngoài ra một finding LOW xử lý ngay: `ic_launcher_*` còn hex chép tay ⇒ trỏ token. Lượt 2: 0 finding mới ngoài FR-013 đã ghi BLOCKED.
+
+## E7 sửa 18/10/2026 (T016)
+
+**Vấn đề (thấy trên ảnh `before-api34-e7-200*.png`, bản Compose, hc-api34):** ở chữ 200% thanh nút ghim chiếm gần nửa màn, thân chữ còn chưa tới 1
+dòng (0 dòng khi giữ nút "Vẫn tiếp tục"); hàng "Đây là trợ lý AI HỏiCon + Nghe lại" 3 dòng.
+**Sửa (`SafePauseScreen.kt`, chỉ từ cỡ chữ ≥ 150%):** bớt khoảng cách dọc, tiêu đề 28sp thay 32sp, gợi ý nút giữ rút còn "Giữ 3 giây".
+Giữ nguyên: nút ≥ 64dp, ≤ 2 hành động chính, "Vẫn tiếp tục" giữ 3 giây (`HOLD_MS` 3 000 ms), nhãn "Hủy giao dịch" + "Về màn hình chính" ở mọi cỡ chữ.
+(Thử đổi nhãn nút hủy thành "Về màn hình chính" ở chữ lớn: reviewer thấy không tiết kiệm chỗ và lệch DESIGN-SYSTEM ⇒ đã hoàn lại.)
+
+| Đo trên ảnh (hc-api34, 200%) | Trước | Sau |
+|---|---|---|
+| Thân chữ nhìn thấy, không giữ nút | ≈ 0,5 dòng | ≈ 1,5–2 dòng |
+| Thân chữ nhìn thấy, đang giữ nút | 0 dòng | ≈ 1 dòng |
+
+`ux-elder-reviewer` (lượt cuối): **0 High** cho biến thể ngân hàng đã chụp. Còn lại, để theo dõi: **Medium** — phần đầu (AI 3 dòng + "Rất cần cẩn thận" 2 dòng + tiêu đề)
+vẫn ăn phần lớn vùng đọc ở 200%; dòng "Giữ yên nhé…" chiếm 1 dòng khi giữ (gợi ý: đưa vào chính nút); phần "mật khẩu gia đình"/"nghỉ một phút" luôn dưới nếp
+gập. **Low** — "Vẫn tiếp tục" trông giống "Hủy giao dịch" (chưa "lặng" hơn); viền "Nghe lại" nhạt; khoảng cách nút ≈ 8dp.
+**Chưa kiểm:** biến thể điều khiển từ xa (tiêu đề dài, có thể 5–6 dòng ở 200%; cần chụp bằng Preview Compose `kind = REMOTE_CONTROL`, `fontScale = 2f` hoặc cài
+app điều khiển từ xa); TalkBack; máy thật. Việc đổi chữ nút chỉ làm theo một cỡ, không đổi hành vi.
+
+**Hạn E7 sau sửa (máy ảo, `emu-scenario.py --scenario fake_police --runs 10`, mã cuối cùng):**
+- hc-api36: 10/10 hiện SafePause; phát hiện p50/p95 310/805 ms; SafePause p50/p95 852/1 603 ms ⇒ ĐẠT (≤ 3 000 ms).
+- hc-api34: 10/10 hiện SafePause; lần chạy đầu ngay sau khi khởi động máy ảo: SafePause p95 2 777 ms nhưng script báo TRƯỢT vì một lần cây UI không thấy màn E7 lúc
+  đo; chạy lại: phát hiện p50/p95 578/627 ms, SafePause p50/p95 674/725 ms ⇒ ĐẠT. (Số p95 dao động nhiều giữa các lượt; không kết luận về máy thật.)
+- Script `emu-scenario.py` cũng được sửa để nhận ra E7 bản Compose (trước đó tìm chữ "gọi cho con" của bản View nên báo TRƯỢT dù 10/10 hiện SafePause).
+Ảnh: `$EV/e7-w1/{before,final}-api{34,36}-e7-{100,200}[-giu].png`.
 
 ## Còn tồn / hoãn có chủ đích
 

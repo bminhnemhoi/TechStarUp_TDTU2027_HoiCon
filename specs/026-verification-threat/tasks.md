@@ -149,7 +149,7 @@
 
 ## Làn A: Android
 
-- [ ] T020 [A] [FR-003] [FR-010] Viết `apps/android/rules/src/main/kotlin/vn/hoicon/rules/ThreatBucketIndex.kt` (JVM
+- [x] T020 [A] [FR-003] [FR-010] Viết `apps/android/rules/src/main/kotlin/vn/hoicon/rules/ThreatBucketIndex.kt` (JVM
   thuần): `bucket(h1, bits)`, `fromPacked(bytes, bits)` (kiểm `count × 3`, đã sắp xếp, bits trong khoảng 16–24),
   `contains(h1)`. Viết test JVM:
   - vectơ khớp với `test_threat_bucket.py`;
@@ -158,7 +158,7 @@
   - tỉ lệ khớp nhầm trên 100.000 h1 hư cấu nằm trong ±30% của `N/2^b`.
 
   · Verify: `$GRADLE :rules:test`
-- [ ] T021 [A] [FR-010] Đưa Room `sentinel.db` lên v2: xóa `threat_hashes`, thêm `ThreatSnapshotEntity` (một dòng) và
+- [x] T021 [A] [FR-010] Đưa Room `sentinel.db` lên v2: xóa `threat_hashes`, thêm `ThreatSnapshotEntity` (một dòng) và
   `ThreatSnapshotDao`. Viết `Migration(1, 2)`, xuất `app/schemas/.../2.json`. Không dùng `fallbackToDestructiveMigration`
   vì nó xóa luôn outbox đang chờ gửi.
   - App hiện chưa có Robolectric, `room-testing` hay thư mục `androidTest`, nên test migration chạy dạng instrumentation
@@ -167,7 +167,7 @@
   - Viết `app/src/androidTest/.../SentinelMigrationTest.kt` dùng `MigrationTestHelper`, chứng minh `outbox_events` còn
     nguyên sau 1→2.
   · Verify: `$GRADLE :app:testDebugUnitTest` và (máy ảo `hc-api36` đang chạy) `$GRADLE :app:connectedDebugAndroidTest`
-- [ ] T022 [A] [FR-010] Viết `ThreatSyncWorker` trong `work/Workers.kt`:
+- [x] T022 [A] [FR-010] Viết `ThreatSyncWorker` trong `work/Workers.kt`:
   - chạy định kỳ 12 giờ, và một lần khi mở app hoặc ghép đôi xong (`KEEP`), cần mạng, backoff;
   - `GET /v1/threat-list?since=`, `304` thì chỉ cập nhật `fetched_at`;
   - kiểm hợp lệ, ghi Room, rồi `ThreatBucketIndex` swap (`@Volatile`).
@@ -175,15 +175,15 @@
   Nạp chỉ mục khi tiến trình khởi động ở `SentinelServices`, ngoài main thread. `LocalLists.isFlagged` dùng chỉ mục, giữ
   h1 demo cứng của bản debug. Test: phản hồi hỏng thì giữ ảnh cũ; `304`; chưa nạp xong thì trả `false`.
   · Verify: `$GRADLE :app:testDebugUnitTest`
-- [ ] T023 [A] [FR-011] Viết `data/remote/LookupApiClient.kt` theo mẫu `ElderApiClient`: dựng thân theo
+- [x] T023 [A] [FR-011] Viết `data/remote/LookupApiClient.kt` theo mẫu `ElderApiClient`: dựng thân theo
   `lookup_request.v1`, đọc `lookup_result.v1`, ánh xạ lỗi 401/403/429/5xx/mất mạng. Viết test với fixture hợp đồng; số
   thô không xuất hiện trong thân request hay trong log.
   · Verify: `$GRADLE :app:testDebugUnitTest`
-- [ ] T024 [A] [FR-011] Màn đồng ý đúng lúc cho mục đích `lookups`: chuỗi tiếng Việt mới, ghi qua `ConsentLedger` với
+- [x] T024 [A] [FR-011] Màn đồng ý đúng lúc cho mục đích `lookups`: chuỗi tiếng Việt mới, ghi qua `ConsentLedger` với
   `text_sha256`. Không buộc đồng ý lại các mục đích đã có (test). Chạy skill `consent-copy` nếu đã có trong repo; nếu
   chưa có thì ghi vào evidence.
   · Verify: `$GRADLE :app:testDebugUnitTest`
-- [ ] T025 [A] [FR-011] Viết `ui/LookupScreen.kt` (nhập số), `ui/LookupResultScreen.kt` (5 trạng thái: nguy hiểm, cảnh
+- [x] T025 [A] [FR-011] Viết `ui/LookupScreen.kt` (nhập số), `ui/LookupResultScreen.kt` (5 trạng thái: nguy hiểm, cảnh
   báo, chưa có thông tin, an toàn [chỉ bản xem trước], mất mạng) và `LookupActivity.kt` (`exported=false`).
   - Dùng token `risk.*`, luôn kèm biểu tượng + chữ.
   - Chữ ≥ 20sp, nút ≥ 64dp, 200% vẫn thấy đủ hai nút (nút ghim đáy, nội dung cuộn).
@@ -193,11 +193,11 @@
 
   Dùng skill `ui-screen`.
   · Verify: `$GRADLE :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`
-- [ ] T026 [A] [FR-011] Chụp ảnh E10 trên AVD `hc-api36` ở cỡ chữ 100% và 200% cho 5 trạng thái, lưu tại
+- [x] T026 [A] [FR-011] Chụp ảnh E10 trên AVD `hc-api36` ở cỡ chữ 100% và 200% cho 5 trạng thái, lưu tại
   `~/hoicon-evidence/026-verification-threat/`. Gửi `ux-elder-reviewer` và sửa hết mục chặn. Đo từ lúc bấm tới lúc có kết
   quả (SC-001) qua log mốc thời gian, nối backend dev.
   · Verify: ảnh có đủ 10 tệp; báo cáo reviewer không còn mục chặn
-- [ ] T027 [A] [FR-012] (P3) Viết `domain/qr/VietQrParser.kt` (EMVCo TLV, CRC, GUID `A000000727`, tag 59) kèm test JVM
+- [x] T027 [A] [FR-012] (P3) Viết `domain/qr/VietQrParser.kt` (EMVCo TLV, CRC, GUID `A000000727`, tag 59) kèm test JVM
   với payload hư cấu. Thêm "Quét mã QR" bằng Google Code Scanner (tra phiên bản bằng `documentation-lookup`, nêu lý do
   thêm thư viện, không thêm quyền `CAMERA`, ẩn nút khi không có GMS). Thêm "Dán đường link" (bỏ truy vấn/mảnh/thông tin
   đăng nhập trên máy trước khi gửi). VietQR chỉ hiện trên máy, không gửi gì lên máy chủ.
@@ -205,7 +205,7 @@
 
 ## Giai đoạn Z: Gom & nghiệm thu (checkout chính)
 
-- [ ] T028 [AB] [FR-013] E2E trên máy ảo: `python3 scripts/emu-scenario.py --avd hc-api36 --scenario fake_police` rồi
+- [x] T028 [AB] [FR-013] E2E trên máy ảo: `python3 scripts/emu-scenario.py --avd hc-api36 --scenario fake_police` rồi
   chạy lại với `--avd hc-api34`. Backend dev có seed demo đã nạp lại để có `bucket_enc`. Kiểm số hư cấu
   `flagged_caller` khớp bucket qua đồng bộ thật (không chỉ qua h1 cứng của bản debug), và SafePause hiện biến thể
   `critical`.

@@ -2,6 +2,7 @@ package vn.hoicon.sentinel.domain.drill
 
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -83,15 +84,42 @@ class DrillFlowTest {
     }
 
     @Test
-    fun aRealCallEndsTheDrillAsUnavailableAndKeepsTheAnswers() {
+    fun aRealCallEndsTheDrillWithTheCallAsReasonAndKeepsTheAnswers() {
         val flow = DrillFlow(script).also { it.start() }
         flow.choose("a")
-        flow.interrupt()
-        assertEquals(DrillUi.Stopped(StopReason.UNAVAILABLE), flow.ui)
+        assertTrue(flow.interrupt()) // begun: a result with the answers so far is due
+        assertEquals(DrillUi.Stopped(StopReason.CALL), flow.ui)
         assertEquals(listOf(DrillAnswer(0, "a")), flow.answers)
         val debriefed = DrillFlow(script).also { f -> f.start(); f.choose("a"); f.next(); f.choose("a"); f.next() }
-        debriefed.interrupt()
+        assertFalse(debriefed.interrupt())
         assertIs<DrillUi.Debrief>(debriefed.ui) // the debrief is not cut off: the drill was over already
+    }
+
+    @Test
+    fun aRealCallOverTheInvitationReportsNothingToSend() {
+        val flow = DrillFlow(script)
+        assertFalse(flow.interrupt()) // never seen: not "aborted", the drill is offered again at a later beat
+        assertEquals(DrillUi.Stopped(StopReason.CALL), flow.ui)
+        assertTrue(flow.answers.isEmpty())
+    }
+
+    @Test
+    fun backOnTheLastFeedbackGoesToTheDebriefInsteadOfThrowingTheResultAway() {
+        val flow = DrillFlow(script).also { f -> f.start(); f.choose("a"); f.next(); f.choose("a") }
+        flow.back()
+        assertIs<DrillUi.Debrief>(flow.ui)
+        assertEquals(2, flow.answers.size)
+    }
+
+    @Test
+    fun backBeforeTheLastAnswerStopsTheDrillWithTheAnswersSoFar() {
+        val choosing = DrillFlow(script).also { it.start() }
+        choosing.back()
+        assertEquals(DrillUi.Stopped(StopReason.BY_PERSON), choosing.ui)
+        val midway = DrillFlow(script).also { it.start(); it.choose("a") } // feedback of step 1 of 2
+        midway.back()
+        assertEquals(DrillUi.Stopped(StopReason.BY_PERSON), midway.ui)
+        assertEquals(listOf(DrillAnswer(0, "a")), midway.answers)
     }
 
     @Test

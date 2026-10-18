@@ -184,4 +184,40 @@ class OutboxSenderTest {
         assertEquals(2, dao.deliverableCount())
         assertEquals(OutboxStatus.SENT, dao.rows.getValue(ids[0]).status)
     }
+
+    // Spec 024 T013: the incident the server linked a stored batch to is handed on, so the phone can pull its question.
+
+    @Test
+    fun aStoredBatchLinkedToAnIncidentHandsTheIncidentOn() = runBlocking {
+        val ids = queue(3)
+        val seen = ArrayList<String>()
+        val server = FakeUploader { EventsResult.AcceptedWithIncident("0192aaaa-0000-7000-8000-000000000001", opened = true) }
+        assertEquals(FlushOutcome.EMPTY, OutboxSender(repo, server, onIncident = { seen += it }) { token }.flush())
+        assertEquals(listOf("0192aaaa-0000-7000-8000-000000000001"), seen)
+        assertEquals(ids.toSet(), server.stored)
+        assertTrue(statuses().all { it == OutboxStatus.SENT })
+    }
+
+    @Test
+    fun aRefusedOrUnreachableBatchHandsNothingOn() = runBlocking {
+        queue(2)
+        val seen = ArrayList<String>()
+        for (answer in listOf(EventsResult.NetworkError, EventsResult.ServerError, EventsResult.Unauthorized, EventsResult.ConsentWithdrawn)) {
+            OutboxSender(repo, FakeUploader { answer }, onIncident = { seen += it }) { token }.flush()
+        }
+        assertTrue(seen.isEmpty())
+    }
+
+    @Test
+    fun anIncidentFoundWhileIsolatingABadBatchIsStillHandedOn() = runBlocking {
+        queue(2)
+        val seen = ArrayList<String>()
+        var calls = 0
+        val server = FakeUploader {
+            calls++
+            if (calls == 1) EventsResult.Rejected else EventsResult.AcceptedWithIncident("0192aaaa-0000-7000-8000-000000000002", opened = false)
+        }
+        OutboxSender(repo, server, onIncident = { seen += it }) { token }.flush()
+        assertTrue(seen.isNotEmpty() && seen.all { it == "0192aaaa-0000-7000-8000-000000000002" })
+    }
 }

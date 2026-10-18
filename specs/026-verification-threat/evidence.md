@@ -1,7 +1,9 @@
 # Bằng chứng nghiệm thu Spec 026: Tác tử xác minh, tra cứu E10 & danh sách đe dọa trên máy
 
-- **Trạng thái (16/10/2026)**: Làn B (server, T001–T019) đã triển khai, chưa commit. Làn A (Android T020–T027) và giai
-  đoạn Z (T028–T031) CHƯA làm; các dòng SC-001/004/005 phần máy ảo vẫn CHƯA ĐO.
+- **Trạng thái (18/10/2026)**: Làn B (server, T001–T019) và Làn A (Android, T020–T027) đã xong và đã gộp vào `tien-collab-dev`;
+  18/10 Làn A được đối chiếu lại với mã, hoàn thiện (màn đồng ý hiện đủ câu đã băm, sửa 2 vòng review UX) và đo trên AVD
+  `hc-api36` nối backend thật (mục "Làn A Android" bên dưới). Giai đoạn Z: T028 đã chạy cả `hc-api36` và `hc-api34`; T029–T031
+  chưa làm.
 - **Số đo Làn B (máy dev, Postgres 15432, không phải máy thật)**:
   - `pytest` toàn bộ 1501 passed; `ruff check` và `ruff format --check` sạch; `check-spec-trace` 17 spec, 0 lỗi.
   - `hoicon-eval --suite smoke --compare baseline --shared-db-ok`: 20 ca, recall 100%, báo nhầm 0%, vi phạm 0, công khai
@@ -21,11 +23,11 @@
 
 | Tiêu chí | Ngưỡng | Cách đo | Kết quả | Trạng thái |
 |---|---|---|---|---|
-| SC-001 độ trễ tra cứu | API p95 ≤ 300 ms (n ≥ 50); E10 bấm → kết quả p95 ≤ 2 s (AVD 36) | `test_api_lookups.py` (đo thời gian) + log mốc thời gian trên AVD (T026) | chưa chạy | CHƯA ĐO |
+| SC-001 độ trễ tra cứu | API p95 ≤ 300 ms (n ≥ 50); E10 bấm → kết quả p95 ≤ 2 s (AVD 36) | `test_api_lookups.py` (đo thời gian) + log mốc `lookup_tapped` → `lookup_result` trên AVD (T026) | API: xem trên. E10 trên AVD nối backend thật: n = 10 lần, 504–521 ms (cả 10 lần ≤ 2 s). Mất mạng (bucket trên máy): 5–17 ms (n = 5). **Lưu ý:** 10/10 lần cùng ≈ 505 ms, đều một cách đáng ngờ; chưa tìm ra nguồn của "sàn" 500 ms (không thấy `delay`/`sleep` ở app hay ở đường `/v1/lookups`), nên đây là số máy ảo, không dùng làm cam kết | ĐẠT (máy ảo) |
 | SC-002 riêng tư | 0 SĐT thô / h1 / URL trong DB, jobs, `agent_steps`, log; `threat-list` chỉ có bucket; chỉ lưu `bucket_enc`; ≥ 80 số/bucket ở b = 22 | quét DB + `caplog` (T013, T015, T018) + phép tính ở plan D1 + `security-privacy-reviewer` (T030) | chưa chạy | CHƯA ĐO |
 | SC-003 kết luận & nâng mức | bảng plan §4 đúng 100%; phone không `safe`; mức không giảm, ≥ `rule_floor`; eval smoke ≥ baseline, 0 vi phạm, công khai AI 100% | `test_verification_rules.py`, `test_graph_verification.py`, `test_incident_service.py`, `hoicon-eval smoke --compare baseline` | chưa chạy | CHƯA ĐO |
-| SC-004 ngoại tuyến | tra bucket p99 ≤ 5 ms / 100.000 bucket; đồng bộ lần 2 ⇒ 304; khớp nhầm trong ±30% của `N/2^b` | `:rules:test` (T020), `test_threat_list.py` (T015), E2E `fake_police` API 36 + 34 (T028) | chưa chạy | CHƯA ĐO |
-| SC-005 E10 | 10 ảnh (5 trạng thái × 100%/200%); ≥ 20sp, ≥ 64dp, ≥ 7:1, công khai AI được đọc to; reviewer không còn mục chặn | ảnh ở `~/hoicon-evidence/026-verification-threat/` + `ux-elder-reviewer` (T026) | chưa chạy | CHƯA ĐO |
+| SC-004 ngoại tuyến | tra bucket p99 ≤ 5 ms / 100.000 bucket; đồng bộ lần 2 ⇒ 304; khớp nhầm trong ±30% của `N/2^b` | `:rules:test` (T020), `test_threat_list.py` (T015), E2E `fake_police` API 36 + 34 (T028) | `:rules:test` 81 test xanh (p99 ≈ 0,00025 ms); đồng bộ thật trên AVD: lần đầu 200, lần sau `since=` 304, bản mới 200. `fake_police` hc-api36: 10/10 hiện SafePause (phát hiện p50/p95 354/488 ms, SafePause p50/p95 508/614 ms). Số **chỉ có trong danh sách đồng bộ từ máy chủ** (không nằm trong h1 cứng của bản debug) cho SafePause "Rất cần cẩn thận" (CRITICAL) và máy chủ ghi `R1 critical`. hc-api34 (mã cuối): `fake_police` 10/10, SafePause p50/p95 674/725 ms ⇒ ĐẠT (lần chạy đầu sau khi khởi động có 1 lần UI-tree trượt, chạy lại đạt); chưa lặp kiểm "số chỉ có trong danh sách" trên hc-api34 | ĐẠT (máy ảo) |
+| SC-005 E10 | 10 ảnh (5 trạng thái × 100%/200%); ≥ 20sp, ≥ 64dp, ≥ 7:1, công khai AI được đọc to; reviewer không còn mục chặn | ảnh ở `~/hoicon-evidence/026-verification-threat/` + `ux-elder-reviewer` (T026) | 10 ảnh trạng thái (nguy hiểm, cảnh báo, chưa có thông tin, mất mạng có/không trong danh sách × 100%/200%) + đồng ý ×2 + nhập ×3 ở `w1/`, chụp trên backend thật; `ux-elder-reviewer` lượt 2: **0 High**; 2 Medium đã sửa và chụp lại; còn 5 Low (bên dưới). Ảnh "an toàn" chỉ là bản xem trước (ảnh cũ ở `shots/`). Chưa đo tương phản trên ảnh, chưa thử TalkBack/giọng đọc thật | ĐẠT (máy ảo) |
 | SC-006 chống lạm dụng | 429 đúng ngưỡng (kể cả 25 request đồng thời ⇒ 20 lọt); 403 khi chưa đồng ý; 404 nhà khác; ≤ 1 tin bằng chứng/sự cố; `threat-list` ≤ 24/ngày | `test_api_lookups.py`, `test_threat_list.py`, `test_graph_verification.py` | chưa chạy | CHƯA ĐO |
 
 ## Lệnh đã chạy
@@ -49,7 +51,34 @@
 - Lỗ hổng còn lại của #2: lần tra `dangerous` ĐẦU TIÊN rơi vào lúc đồ thị chưa tới `await_guardian` vẫn có thể không
   sinh tin `evidence` nếu không có lần tra nguy hiểm sau đó.
 
-Chưa chạy: `ux-elder-reviewer` cho E10 (thuộc Làn A, T026) và lượt đọc lại của reviewer sau các sửa trên.
+`ux-elder-reviewer` cho E10 đã chạy 2 lượt ở Làn A (xem mục "Làn A Android"); lượt đọc lại của reviewer cho các sửa của làn B vẫn chưa có.
+
+## Làn A Android (T020–T027, đối chiếu và hoàn thiện 18/10/2026)
+
+Đối chiếu từng task với mã thật rồi chạy lệnh Verify của task đó; chỉ tick khi xanh. Cổng cuối: `:rules:test` 81 + `:app:testDebugUnitTest` 248
+test, 0 lỗi; `:app:lintDebug`, `:app:assembleDebug` xanh; `gitleaks dir --config .gitleaks.toml apps/android specs` sạch.
+
+| Task | Mã | Verify đã chạy |
+|---|---|---|
+| T020 | `rules/.../ThreatBucketIndex.kt` + `ThreatBucketIndexTest` | `:rules:test` xanh (81) |
+| T021 | Room v2, `Migration(1,2)`, `schemas/…/2.json`, `SentinelMigrationTest` (androidTest) | unit xanh + `:app:connectedDebugAndroidTest` trên hc-api36: 1/1 (outbox còn nguyên sau 1→2) |
+| T022 | `ThreatSyncer`, `ThreatSyncWorker`, `LocalLists.isFlagged` dùng chỉ mục | unit xanh; đồng bộ thật trên AVD 200 → 304 → 200 |
+| T023 | `LookupApiClient`, `UrlSanitizer` | unit xanh (`LookupApiClientTest`…) |
+| T024 | mục đích `lookups`: chuỗi, hash ghim, màn đồng ý đúng lúc | unit xanh; **sửa 18/10:** `lookups_consent_summary` ("…có thể báo cho con bác biết") được băm vào sổ nhưng KHÔNG hiện trên màn (reviewer đánh High); nay hiện, kèm `LookupDisclosureTest` (mọi chuỗi `lookups_consent_*` của `ConsentTexts` phải có trên màn; đã thử đột biến: bỏ dòng ⇒ test đỏ) |
+| T025 | `LookupScreen`/`LookupResultScreen`/`LookupActivity` + nút ở E6 | `:app:testDebugUnitTest :app:lintDebug :app:assembleDebug` xanh |
+| T026 | ảnh E10 100%/200% + reviewer | ≥ 10 ảnh ở `w1/`; reviewer lượt 2 không còn High |
+| T027 | `VietQrParser`, Google Code Scanner 16.1.0, "Dán đường link" | unit xanh; `grep -c "android.permission.CAMERA"` manifest = 0 |
+
+**Sửa theo review UX (lượt 1 → 2):** màn nhập không tự mở bàn phím (tiêu đề, hướng dẫn, "Quay lại" thấy ngay ở 200%); nút Dán/Quét vào
+phần cuộn; bàn phím số; ô nhập ≥ 64dp, nhãn gắn vào ô cho TalkBack; chỉ câu "Đây là trợ lý AI HỏiCon." in đậm và đứng đầu,
+phần "Kết quả chỉ để tham khảo…" xuống sau câu hành động; câu hành động rút gọn, ghi "(OTP)"; bỏ câu phủ định lồng nhau
+("chưa có trong danh sách không có nghĩa là an toàn") bằng câu khẳng định; nhãn nút canh giữa.
+**Còn lại (Low, để theo dõi):** tiêu đề chồng đồng hồ khi cuộn với bàn phím mở; "kiểm tra lại khi có mạng" không có nút riêng;
+câu phản hồi sau "Hỏi con" chưa chụp; lý do máy chủ có thể còn chữ "OTP" trần (làn B); ảnh "an toàn" cần chụp lại trước khi bật;
+màn nhập không đọc to.
+
+**Chưa kiểm:** quét QR thật (máy ảo không quét được; chỉ có test JVM); TalkBack/giọng đọc; hc-api29; máy thật;
+phần cuộn của màn đồng ý (thẻ 2–3); màn lỗi/hết lượt.
 
 ## Còn mở (không đánh ☑)
 

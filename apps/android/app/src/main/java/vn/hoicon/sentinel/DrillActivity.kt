@@ -18,6 +18,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 import vn.hoicon.sentinel.domain.rules.RiskWindowManager
 import vn.hoicon.sentinel.domain.drill.DrillUi
+import vn.hoicon.sentinel.domain.drill.StopReason
 import vn.hoicon.sentinel.pause.Speaker
 import vn.hoicon.sentinel.ui.DrillScreen
 import vn.hoicon.sentinel.ui.theme.HoiConTheme
@@ -40,7 +41,7 @@ class DrillActivity : ComponentActivity() {
                 // Back: on the invitation it is "Để lúc khác"; during the drill "Dừng luyện tập"; on the debrief "Xong".
                 when (ui) {
                     DrillUi.Invite -> BackHandler(onBack = ::decline)
-                    is DrillUi.Step -> BackHandler(onBack = model::stop)
+                    is DrillUi.Step -> BackHandler(onBack = model::back)
                     is DrillUi.Debrief -> BackHandler(onBack = ::complete)
                     else -> Unit
                 }
@@ -54,7 +55,7 @@ class DrillActivity : ComponentActivity() {
                     onStop = model::stop,
                     onDone = ::complete,
                     onClose = ::finish,
-                    onListen = { if (!model.realCallOn) speak(ui) },
+                    onListen = { if (model.riskWindowKnown && !model.realCallOn) speak(ui) },
                 )
             }
         }
@@ -103,7 +104,18 @@ class DrillActivity : ComponentActivity() {
             add(getString(R.string.drill_debrief_family))
             add(getString(R.string.drill_debrief_speech_end))
         }
-        is DrillUi.Stopped -> listOf(getString(R.string.drill_ai), getString(R.string.drill_stopped_title), getString(R.string.drill_stopped_body))
+        is DrillUi.Stopped -> listOf(
+            getString(R.string.drill_ai),
+            getString(R.string.drill_stopped_title),
+            // The same words as the screen: "no one is calling" must never be said over a real call.
+            getString(
+                when (ui.reason) {
+                    StopReason.UNAVAILABLE -> R.string.drill_expired_body
+                    StopReason.CALL -> R.string.drill_call_body
+                    StopReason.BY_PERSON -> R.string.drill_stopped_body
+                },
+            ),
+        )
     }
 
     private fun speak(ui: DrillUi) = Speaker.speak(this, sentences(ui))
@@ -115,10 +127,12 @@ class DrillActivity : ComponentActivity() {
             is DrillUi.Step -> Triple(ui.index, ui.feedback?.chosenId, "step")
             else -> ui
         }
-        LaunchedEffect(key) {
+        // Wait until the risk window has been read once: speaking first and learning of a call afterwards talks over it.
+        val known = model.riskWindowKnown
+        LaunchedEffect(key, known) {
             // TalkBack users already hear the screen; two voices at once is worse than one.
             val screenReader = getSystemService(AccessibilityManager::class.java).isTouchExplorationEnabled
-            if (!screenReader && !model.realCallOn && model.lastSpoken != key) {
+            if (known && !screenReader && !model.realCallOn && model.lastSpoken != key) {
                 model.lastSpoken = key
                 speak(ui)
             }

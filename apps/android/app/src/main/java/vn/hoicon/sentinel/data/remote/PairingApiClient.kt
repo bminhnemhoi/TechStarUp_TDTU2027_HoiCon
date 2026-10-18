@@ -40,6 +40,12 @@ sealed interface EventsResult {
     /** The whole batch is stored (a re-sent id counts as stored: the server de-duplicates). */
     data object Accepted : EventsResult
 
+    /**
+     * Stored like [Accepted], and the batch linked to an incident (`incident_id` of `events_result.v1.json`). [opened] is true
+     * when this batch opened it: the phone then asks the server whether the AI has a question for the person (E8).
+     */
+    data class AcceptedWithIncident(val incidentId: String, val opened: Boolean) : EventsResult
+
     /** The server refuses this batch for good (400/413/422): sending it again can never succeed. */
     data object Rejected : EventsResult
 
@@ -153,11 +159,22 @@ class PairingApiClient(
         }
         if (reply.isConsentWithdrawn()) return EventsResult.ConsentWithdrawn
         return when (reply.status) {
-            in 200..299 -> EventsResult.Accepted
+            in 200..299 -> incidentOf(reply.body) ?: EventsResult.Accepted
             400, 413, 422 -> EventsResult.Rejected
             401, 403 -> EventsResult.Unauthorized
             else -> EventsResult.ServerError
         }
+    }
+
+    /** `incident_id` / `incident_opened` of the reply; null when absent, null or not a UUID (the batch is stored either way). */
+    private fun incidentOf(text: String): EventsResult.AcceptedWithIncident? {
+        val json = try {
+            JSONObject(text)
+        } catch (_: JSONException) {
+            return null
+        }
+        val id = if (json.isNull("incident_id")) null else json.optString("incident_id").takeIf { runCatching { UUID.fromString(it) }.isSuccess }
+        return id?.let { EventsResult.AcceptedWithIncident(it, json.optBoolean("incident_opened", false)) }
     }
 
     /** `POST /v1/heartbeat`: permission state and versions, so the family sees when protection was lost. */

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,11 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -64,6 +61,8 @@ fun LookupConsentScreen(
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.semantics { heading() },
         )
+        // The one sentence that says the family may be told: it is hashed into the ledger, so the person must see it.
+        Text(text = stringResource(R.string.lookups_consent_summary), style = MaterialTheme.typography.bodyLarge)
         ListenButton(text = stringResource(R.string.onboarding_listen_again), onClick = onListen)
         InfoCard(stringResource(R.string.lookups_consent_1_title), stringResource(R.string.lookups_consent_1_body))
         InfoCard(stringResource(R.string.lookups_consent_2_title), stringResource(R.string.lookups_consent_2_body))
@@ -90,26 +89,20 @@ fun LookupScreen(
     onScan: () -> Unit = {},
     onPaste: () -> Unit = {},
 ) {
-    val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focus.requestFocus() }
     OnboardingScaffold(
         modifier = modifier,
         pinned = {
-            // Small inline controls, not action-bar buttons: the screen keeps its one main action. They stay pinned so the
-            // keyboard never hides them. No scanner without Play services.
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ListenButton(text = stringResource(R.string.lookup_paste), onClick = onPaste)
-                if (canScan) ListenButton(text = stringResource(R.string.lookup_scan), onClick = onScan)
-            }
-            Text(text = stringResource(R.string.lookup_field_label), style = MaterialTheme.typography.bodyMedium)
+            // Only the box and its message stay above the keyboard. The keyboard opens when the person touches the box, so the
+            // title, the hint and "Quay lại" are all in view on arrival (at 200% text an open keyboard hid them).
             OutlinedTextField(
                 value = text,
                 onValueChange = onTextChange,
                 singleLine = true,
+                label = { Text(text = stringResource(R.string.lookup_field_label), style = MaterialTheme.typography.bodyMedium) },
                 textStyle = MaterialTheme.typography.bodyLarge,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onCheck() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(focus),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
             )
             if (error != null) NoticePanel(text = stringResource(error.message))
         },
@@ -130,6 +123,11 @@ fun LookupScreen(
             modifier = Modifier.semantics { heading() },
         )
         Text(text = stringResource(R.string.lookup_hint), style = MaterialTheme.typography.bodyLarge)
+        // Small inline controls, not action-bar buttons: the screen keeps its one main action. No scanner without Play services.
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ListenButton(text = stringResource(R.string.lookup_paste), onClick = onPaste)
+            if (canScan) ListenButton(text = stringResource(R.string.lookup_scan), onClick = onScan)
+        }
     }
 }
 

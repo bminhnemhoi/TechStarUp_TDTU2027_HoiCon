@@ -31,6 +31,7 @@ import vn.hoicon.sentinel.domain.rules.RiskWindowManager
 import vn.hoicon.sentinel.pause.Dialer
 import vn.hoicon.sentinel.sensing.CallSignalStore
 import vn.hoicon.sentinel.sensing.HcSpikeLog
+import vn.hoicon.sentinel.work.ElderQuestionScheduler
 import vn.hoicon.sentinel.work.OutboxScheduler
 
 /**
@@ -105,7 +106,11 @@ class SentinelServices private constructor(private val app: Context) {
     suspend fun flushOutbox(): FlushOutcome = flushLock.withLock {
         val tokens = TokenStorage.create(app)
         // Nothing leaves the phone unless the CURRENT disclosure is accepted and its ledger row is recorded.
-        OutboxSender(outbox, PairingApiClient(BuildConfig.API_BASE_URL)) {
+        OutboxSender(
+            outbox,
+            PairingApiClient(BuildConfig.API_BASE_URL),
+            onIncident = { ElderQuestionScheduler.pull(app, it) },
+        ) {
             if (mayShare()) tokens.load()?.accessToken else null
         }.flush()
     }

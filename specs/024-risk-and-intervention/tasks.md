@@ -12,4 +12,4 @@
 - [x] T010 [FR-009] Hiện thực `ElderApiClient` trên Android gửi câu trả lời `POST /v1/incidents/{id}/answers`; gửi qua `ElderAnswerWorker` (WorkManager, cần mạng, backoff, KEEP theo sự cố).
 - [x] T011 [FR-010] Viết test hợp đồng schemas, test tích hợp API elder questions/answers và test đồ thị LangGraph với chuỗi hẹn giờ T1/T2/T3.
 - [x] T012 [FR-010] Chạy toàn bộ testsuite pytest, ruff check, gitleaks, `hoicon-eval smoke` và cập nhật bằng chứng `evidence.md`.
-- [ ] T013 [FR-002] Nối đường mở E8 trên máy: nhận FCM thật (chờ Firebase P0-08) hoặc tự kéo `pending-question` sau khi gửi sự kiện mở sự cố.
+- [x] T013 [FR-002] Nối đường mở E8 trên máy: nhận FCM thật (chờ Firebase P0-08) hoặc tự kéo `pending-question` sau khi gửi sự kiện mở sự cố. — đã làm đường tự kéo; FCM thật chờ P0-08.

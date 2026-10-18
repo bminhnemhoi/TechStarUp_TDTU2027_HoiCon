@@ -53,6 +53,7 @@
     <string name="pause_call_child">Gọi cho con</string>
     <string name="pause_continue">Vẫn tiếp tục</string>
     <string name="pause_continue_hint">Giữ ngón tay 3 giây</string>
+    <string name="pause_continue_hint_short">Giữ 3 giây</string>
     <string name="pause_continue_holding">Giữ yên nhé…</string>
     <string name="pause_continue_too_short">Chưa đủ 3 giây. Bác đặt ngón tay lên nút và giữ yên đến khi thanh màu chạy hết.</string>
     <string name="pause_continue_long_click_label">giữ 3 giây để tiếp tục</string>
@@ -211,7 +212,7 @@
     </string-array>
 
     <string name="lookup_title">Kiểm tra số hay đường link</string>
-    <string name="lookup_hint">Bác gõ số điện thoại lạ, hoặc dán đường link người ta gửi. HỏiCon sẽ xem có trong danh sách cảnh báo không.</string>
+    <string name="lookup_hint">Bác gõ số điện thoại lạ vào ô. Nếu người ta gửi đường link, bác bấm “Dán đường link”.</string>
     <string name="lookup_field_label">Số điện thoại hoặc đường link</string>
     <string name="lookup_check">Kiểm tra</string>
     <string name="lookup_checking">Đang kiểm tra…</string>
@@ -223,18 +224,18 @@
     <string name="lookup_subject_phone">Số đuôi …%1$s</string>
     <string name="lookup_subject_link">Trang %1$s</string>
     <string name="lookup_dangerous_title">Nguy hiểm, bác đừng làm theo</string>
-    <string name="lookup_dangerous_action">Bác đừng chuyển tiền, đừng đọc mã xác thực, đừng cài ứng dụng họ bảo. Bác bấm “Hỏi con”, rồi bấm số của con để gọi nhé.</string>
+    <string name="lookup_dangerous_action">Bác đừng chuyển tiền, đừng đọc mã xác thực (OTP), đừng cài ứng dụng. Bác bấm “Hỏi con”, rồi bấm số của con nhé.</string>
     <string name="lookup_warning_title">Cẩn thận, có dấu hiệu đáng ngờ</string>
     <string name="lookup_warning_action">Bác chưa nên làm theo. Bác hỏi con trước khi chuyển tiền hoặc bấm vào nhé.</string>
     <string name="lookup_unknown_title">Chưa có thông tin</string>
-    <string name="lookup_unknown_action">Chưa có trong danh sách không có nghĩa là an toàn. Ai bảo chuyển tiền gấp, bác vẫn hỏi con trước nhé.</string>
+    <string name="lookup_unknown_action">HỏiCon chưa thấy số này trong danh sách cảnh báo, nhưng chưa chắc là số an toàn. Ai giục bác chuyển tiền gấp, bác cứ hỏi con trước nhé.</string>
     <string name="lookup_safe_title">Khớp trang chính thức đã kiểm</string>
     <string name="lookup_safe_action">Dù vậy, ai giục bác đọc mã xác thực hay chuyển tiền gấp, bác vẫn dừng lại hỏi con nhé.</string>
     <string name="lookup_offline_ai">Đây là trợ lý AI HỏiCon. Kết quả này chỉ để tham khảo.</string>
     <string name="lookup_offline_listed_title">Có thể nằm trong danh sách cảnh báo</string>
-    <string name="lookup_offline_listed_action">Điện thoại đang không có mạng nên HỏiCon chỉ so được sơ bộ. Số này có thể nằm trong danh sách cảnh báo, bác chưa nên làm theo và hỏi con nhé.</string>
+    <string name="lookup_offline_listed_action">Điện thoại đang không có mạng nên HỏiCon chỉ so nhanh được. Số này có thể nằm trong danh sách cảnh báo. Bác chưa nên làm theo. Bác hỏi con nhé.</string>
     <string name="lookup_offline_unknown_title">Chưa kiểm tra được</string>
-    <string name="lookup_offline_unknown_action">Điện thoại đang không có mạng nên HỏiCon chưa kiểm tra đầy đủ được. Chưa kiểm tra được không có nghĩa là an toàn. Bác hỏi con, hoặc kiểm tra lại khi có mạng nhé.</string>
+    <string name="lookup_offline_unknown_action">Điện thoại đang không có mạng nên HỏiCon chưa kiểm tra được. Bác chưa nên tin số này. Bác hỏi con, hoặc có mạng rồi bác bấm Xong và gõ lại số để kiểm tra nhé.</string>
     <string name="lookup_sources_title">Nguồn của kết quả</string>
         <string name="lookup_demo_label">Dữ liệu mẫu, không phải kết quả thật.</string>
     <string name="lookup_notice_rate">Bác đã kiểm tra nhiều lần rồi. HỏiCon xin nghỉ một lát, bác thử lại sau nhé.</string>
@@ -287,6 +288,7 @@
     <string name="drill_done">Đã hiểu — Xong</string>
     <string name="drill_stopped_title">Đã dừng luyện tập</string>
     <string name="drill_stopped_body">Không sao cả, bác có thể luyện tập lúc khác. Chưa có ai gọi bác thật.</string>
+    <string name="drill_call_body">Có cuộc gọi tới nên HỏiCon dừng bài luyện tập. Bác cứ lo cuộc gọi trước nhé, bài luyện tập để lúc khác.</string>
     <string name="drill_expired_body">Bài luyện tập này đã hết giờ hoặc bác đã làm xong rồi. Khi có bài mới, HỏiCon sẽ nhắc bác nhé.</string>
     <string name="drill_close">Xong</string>
     <string name="drill_listen">Nghe lại</string>

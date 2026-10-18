@@ -117,7 +117,10 @@ fun LookupResultScreen(
             is LookupOutcome.Answer -> outcome.answer.disclaimer.ifBlank { stringResource(R.string.lookup_offline_ai) }
             else -> stringResource(R.string.lookup_offline_ai)
         }
-        Text(text = disclosure, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        // Only the AI sentence is bold and first (it is also read first); the rest of the disclaimer goes after the advice, so at
+        // 200% text the verdict and what to do are not pushed below the fold by a long preamble.
+        val (aiSentence, disclaimerRest) = splitDisclosure(disclosure)
+        Text(text = aiSentence, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
         if (outcome is LookupOutcome.Answer && outcome.answer.isDemo) DemoLabel()
         when {
             look != null -> VerdictCard(look, subject(outcome))
@@ -129,12 +132,19 @@ fun LookupResultScreen(
             Text(text = stringResource(look.action), style = MaterialTheme.typography.bodyLarge)
             ListenButton(text = stringResource(R.string.onboarding_listen_again), onClick = onListen)
         }
+        if (disclaimerRest.isNotEmpty()) Text(text = disclaimerRest, style = MaterialTheme.typography.bodyMedium)
         if (outcome is LookupOutcome.Answer) {
             visibleReasons(outcome.answer.kind, outcome.answer.reasons.map { it.text })
                 .forEach { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
             Sources(outcome.answer.sources)
         }
     }
+}
+
+/** "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo…" ⇒ the first sentence and the rest ("" if there is only one). */
+internal fun splitDisclosure(text: String): Pair<String, String> {
+    val cut = text.indexOf(". ")
+    return if (cut < 0) text to "" else text.substring(0, cut + 1) to text.substring(cut + 2).trim()
 }
 
 /**

@@ -12,8 +12,8 @@ android {
         applicationId = "vn.hoicon.sentinel"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 3
+        versionName = "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -25,10 +25,29 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Ký bản phát hành bằng biến môi trường (tệp khóa và mật khẩu KHÔNG nằm trong repo). Không đặt đủ bốn biến ⇒ bản release
+    // không ký (APK `-unsigned`, AAB không chữ ký): đủ để chạy release-gate, nhưng không tải lên Play được.
+    val signingFile = providers.environmentVariable("HOICON_KEYSTORE_FILE").orNull
+    val signingStorePass = providers.environmentVariable("HOICON_KEYSTORE_PASSWORD").orNull
+    val signingAlias = providers.environmentVariable("HOICON_KEY_ALIAS").orNull
+    val signingKeyPass = providers.environmentVariable("HOICON_KEY_PASSWORD").orNull
+    val releaseSigning = if (signingFile != null && signingStorePass != null && signingAlias != null && signingKeyPass != null) {
+        signingConfigs.create("release") {
+            storeFile = file(signingFile)
+            storePassword = signingStorePass
+            keyAlias = signingAlias
+            keyPassword = signingKeyPass
+        }
+    } else {
+        null
+    }
+
     buildTypes {
         // Địa chỉ máy chủ ghép đôi (spec 020). Debug: máy chủ dev trên máy chủ của AVD (10.0.2.2); ghi đè bằng
-        // -PhoiconApiBaseUrl=... Release: HTTPS (cleartext bị chặn từ API 28). Đường dừng an toàn KHÔNG dùng mạng.
+        // -PhoiconApiBaseUrl=... (http:// chỉ áp dụng cho debug). Release: HTTPS (cleartext bị chặn từ API 28); yêu cầu
+        // dựng release kèm địa chỉ http:// thì build dừng ngay, không lặng lẽ đổi địa chỉ. Đường dừng an toàn KHÔNG dùng mạng.
         val apiBaseUrl = providers.gradleProperty("hoiconApiBaseUrl")
+        val releaseRequested = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
         fun checked(url: String, schemes: List<String>): String {
             require(Regex("^[A-Za-z0-9:/._-]+$").matches(url) && schemes.any(url::startsWith)) {
                 "hoiconApiBaseUrl must start with ${schemes.joinToString(" or ")} and contain no quotes/spaces: $url"
@@ -40,8 +59,19 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"$url\"")
         }
         release {
-            val url = checked(apiBaseUrl.getOrElse("https://api.hoicon.vn"), listOf("https://"))
+            val override = apiBaseUrl.orNull
+            val url = if (override != null && !releaseRequested && !override.startsWith("https://")) {
+                "https://api.hoicon.vn" // chỉ để cấu hình debug xong; không bao giờ đóng gói
+            } else {
+                checked(override ?: "https://api.hoicon.vn", listOf("https://"))
+            }
             buildConfigField("String", "API_BASE_URL", "\"$url\"")
+            // R8 rút gọn + che tên lớp, bỏ tài nguyên thừa; BuildConfig.DEBUG = false ⇒ nhật ký chẩn đoán (HC_TIMING/HC_SPIKE)
+            // bị loại khỏi dex. Cổng release-gate.sh kiểm các điều này trên chính tệp phát hành.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            releaseSigning?.let { signingConfig = it }
         }
     }
 
@@ -106,9 +136,5 @@ tasks.withType<Test>().configureEach {
     systemProperty("hoicon.appStrings", strings.asFile.absolutePath)
 }
 
-// Release is HTTPS only: packaging refuses anything else, instead of failing at run time on the elder's phone.
-// (Debug builds accept http:// too; the debug-only network config lets them reach 10.0.2.2 only.)
-val releaseApiBaseUrl = providers.gradleProperty("hoiconApiBaseUrl").getOrElse("https://api.hoicon.vn")
-tasks.matching { it.name in setOf("assembleRelease", "bundleRelease", "packageRelease") }.configureEach {
-    doFirst { require(releaseApiBaseUrl.startsWith("https://")) { "release needs an https:// hoiconApiBaseUrl, got $releaseApiBaseUrl" } }
-}
+// Release is HTTPS only: the check lives in the release buildType above (at configuration time, so it also works with the
+// configuration cache). Debug builds accept http:// too; the debug-only network config lets them reach 10.0.2.2 only.
