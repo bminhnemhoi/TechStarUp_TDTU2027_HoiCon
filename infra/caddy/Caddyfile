@@ -1,0 +1,102 @@
+# Caddy cho HỏiCon (spec 012): HTTPS tự động (Let's Encrypt), một tên miền cho cả web và API.
+#   {$HOICON_DOMAIN}      — tên miền (A/AAAA đã trỏ về VPS, cổng 80/443 mở). `*.localhost` ⇒ chứng chỉ nội bộ (thử cục bộ).
+#   {$HOICON_ACME_EMAIL}  — email nhận cảnh báo hết hạn chứng chỉ.
+#   {$HOICON_BACKEND_UPSTREAM}, {$HOICON_WEB_UPSTREAM} — tùy chọn, chỉ để thử cục bộ; mặc định là tên dịch vụ trong compose.
+# Định tuyến:
+#   /v1/*, /webhooks/zalo/*, /healthz, /readyz  → backend (FastAPI)
+#   /v1/runs/<id>/stream                        → backend, KHÔNG đệm (SSE trace của người giám hộ, spec 025)
+#   /mcp/*, /docs, /redoc, /openapi.json        → 404 (không phơi ra Internet: MCP đóng mặc định nhưng không cần mở)
+#   còn lại                                     → web người giám hộ (Next.js)
+# Nhật ký truy cập CHE token một lần nằm trong đường dẫn (/login/<token>, /a/<token>, /v1/action/<token>) và bỏ tiêu đề
+# bí mật (docs/ROADMAP.md, ghi chú spec 027): nhật ký proxy không bao giờ chứa thứ đăng nhập được.
+(redact_logs) {
+	output stdout
+	format filter {
+		wrap json
+		fields {
+			request>uri regexp "^(/+(?:login|a|v1/action)/)[^/?#]+" "${1}REDACTED"
+			resp_headers>Location delete
+			resp_headers>Refresh delete
+			resp_headers>Content-Location delete
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+			request>headers>X-Bot-Api-Secret-Token delete
+			request>headers>Referer delete
+			resp_headers>Set-Cookie delete
+		}
+	}
+}
+
+{
+	email {$HOICON_ACME_EMAIL}
+	# Chống Slowloris/kết nối treo làm Caddy (giới hạn RAM) bị OOM rồi restart (review bảo mật 012 M-2). Không đặt `write`/`read`
+	# vì luồng SSE giữ kết nối dài; chỉ giới hạn thời gian đọc tiêu đề và thân yêu cầu.
+	servers {
+		timeouts {
+			read_header 10s
+			read_body 30s
+			idle 2m
+		}
+		max_header_size 16KB
+	}
+	# Logger mặc định: nhật ký LỖI (upstream chết, 502…) in cả `request` với URI và tiêu đề, không đi qua log của site.
+	log {
+		import redact_logs
+	}
+}
+
+# Cổng 80 tự khai báo thay vì để Caddy tự tạo máy chủ chuyển hướng: máy chủ tự tạo KHÔNG nhận `servers { timeouts }` (đã đo:
+# nửa tiêu đề rồi im lặng vẫn không bị ngắt sau 25 giây). Xác thực ACME http-01 vẫn do Caddy xử lý trước route này.
+http://{$HOICON_DOMAIN} {
+	redir https://{host}{uri} 308
+}
+
+{$HOICON_DOMAIN} {
+	log {
+		import redact_logs
+	}
+
+	# Trần thân yêu cầu (API tự giới hạn 256 KB, webhook Zalo 64 KB): chặn sớm ở cửa vào.
+	request_body {
+		max_size 300KB
+	}
+
+	header {
+		# Không includeSubDomains/preload: tên miền con khác chưa chắc đã có HTTPS.
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		# Next.js nhúng script khởi tạo trong HTML nên cần 'unsafe-inline' (chưa dùng nonce).
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		# `?` = chỉ đặt khi upstream chưa đặt (Next đặt no-referrer cho trang có token).
+		?Referrer-Policy strict-origin-when-cross-origin
+		-Server
+		-X-Powered-By
+	}
+
+	@hidden path /mcp /mcp/* /docs /docs/* /redoc /redoc/* /openapi.json
+	handle @hidden {
+		respond 404
+	}
+
+	# SSE: không nén, tắt đệm (flush ngay từng dòng) để `: ping` và bước trace tới trình duyệt tức thì.
+	@sse path /v1/runs/*/stream
+	handle @sse {
+		reverse_proxy {$HOICON_BACKEND_UPSTREAM:backend:18000} {
+			flush_interval -1
+			header_down X-Accel-Buffering no
+		}
+	}
+
+	@api path /v1/* /webhooks/zalo/* /healthz /readyz
+	handle @api {
+		encode zstd gzip
+		reverse_proxy {$HOICON_BACKEND_UPSTREAM:backend:18000}
+	}
+
+	handle {
+		encode zstd gzip
+		reverse_proxy {$HOICON_WEB_UPSTREAM:web:3100}
+	}
+}

@@ -176,6 +176,76 @@ async def test_a_tampered_row_is_skipped_instead_of_failing_the_endpoint(token: 
     assert bucket_of("bravo") in buckets
 
 
+@pytest.mark.parametrize(
+    ("skipped", "total", "expected"),
+    [
+        (0, 0, False),
+        (0, 50, False),
+        (1, 2, False),
+        (2, 10, False),
+        (1, 1, True),
+        (2, 2, True),
+        (3, 60, False),
+        (3, 50, True),
+        (5, 100, False),
+        (6, 100, True),
+        (50, 50, True),
+    ],
+)
+def test_undecodable_threshold(skipped: int, total: int, expected: bool) -> None:
+    assert threat_list_service.too_many_undecodable(skipped, total) is expected
+
+
+TAMPERED = "1.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+
+async def tamper(*labels: str) -> None:
+    async with get_sessionmaker().begin() as session:
+        for label in labels:
+            await session.execute(
+                text("update threat_indicators set bucket_enc = :b where value_hmac = :h"),
+                {"b": TAMPERED, "h": hmac_h1(fake_h1(label))[1]},
+            )
+
+
+async def test_when_most_rows_cannot_be_decoded_the_endpoint_fails_instead_of_serving_an_empty_list(token: str) -> None:
+    """Sai khóa dữ liệu ⇒ mọi dòng hỏng. Không được phát ảnh chụp rỗng hợp lệ (máy sẽ thay danh sách tốt bằng nó)."""
+    await load(*(indicator(label) for label in LABELS))
+    good = await get(token)
+    assert good.status_code == 200 and len(decode(good.json())) == len(LABELS)
+    await tamper(*LABELS)
+    threat_list_service.reset_cache()
+    resp = await get(token)
+    assert resp.status_code == 503, resp.text
+    assert resp.json()["detail"] == "Dịch vụ chưa sẵn sàng"
+    assert TAMPERED not in resp.text
+    assert lookups._threat_list_hits[next(iter(lookups._threat_list_hits))] is not None  # còn theo dõi thiết bị
+
+
+async def test_a_failed_snapshot_is_not_cached_and_the_failure_does_not_use_up_the_day(token: str) -> None:
+    await load(*(indicator(label) for label in LABELS))
+    await tamper(*LABELS)
+    threat_list_service.reset_cache()
+    for _ in range(lookups.THREAT_LIST_PER_DAY + 3):  # lỗi phía ta không tốn lượt trong ngày của máy
+        assert (await get(token)).status_code == 503
+    await load(*(indicator(label) for label in LABELS))  # nạp lại bản mã đúng ⇒ hồi phục ngay, không chờ hết đệm
+    assert (await get(token)).status_code == 200
+
+
+async def test_a_few_stray_bad_rows_among_many_are_still_skipped(token: str) -> None:
+    labels = [f"row{i:02d}" for i in range(60)]
+    await load(*(indicator(label) for label in labels))
+    await tamper(labels[0], labels[1])  # 2 dòng: dưới ngưỡng 3 ⇒ chỉ bỏ qua
+    threat_list_service.reset_cache()
+    resp = await get(token)
+    assert resp.status_code == 200, resp.text
+    buckets = set(decode(resp.json()))
+    assert bucket_of(labels[2]) in buckets and bucket_of(labels[0]) not in buckets
+    await tamper(labels[2], labels[3])  # 4/60 > 5% và ≥ 3 ⇒ lỗi
+    threat_list_service.reset_cache()
+    assert (await get(token)).status_code == 503
+
+
 async def test_production_never_ships_demo_rows(token: str, monkeypatch: pytest.MonkeyPatch) -> None:
     await load(indicator("alpha"), is_demo=True)
     await load(indicator("bravo"), is_demo=False)

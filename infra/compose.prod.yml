@@ -1,0 +1,180 @@
+# Hạ tầng PROD của HỏiCon trên một VPS (spec 012, P2-04; ADR-002 một tiến trình API + worker, ADR-004 Postgres 17).
+# KHÔNG chạy trực tiếp: dùng `bash scripts/deploy-vps.sh` (kiểm biến, sao lưu trước migrate, migrate, nạp container, kiểm
+# /readyz). Hướng dẫn đầy đủ: docs/setup/VPS-DEPLOYMENT.md.
+#
+# Bí mật nằm trong infra/.env.prod (gitignore, chmod 600) — mẫu: infra/env.prod.example. Compose chỉ đưa vào container
+# những biến mà dịch vụ đó THẬT SỰ dùng (khóa sao lưu chỉ ở máy chủ, không vào container ứng dụng).
+#
+# Mạng:
+#   api  — caddy, backend. Có đường ra Internet (backend gọi Zalo/Anthropic). Chỉ Caddy có cổng ra ngoài (80/443).
+#   web  — caddy, web. `internal: true`: web KHÔNG có đường tới backend, Postgres hay Internet (review bảo mật 012 M-1:
+#          chiếm được container web không được thành bàn đạp bỏ qua các chặn ở Caddy).
+#   db   — postgres, backend. `internal: true`: Postgres KHÔNG có đường ra Internet và không có cổng nào xuất ra máy chủ.
+name: hoicon-prod
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    # Tên cố định: scripts/backup.sh chạy pg_dump bằng `docker exec` vào container này (HOICON_BACKUP_CONTAINER).
+    container_name: hoicon-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hoicon
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Thiếu POSTGRES_PASSWORD trong infra/.env.prod}
+      POSTGRES_DB: hoicon
+      TZ: UTC
+    # Không có `ports:` ⇒ cổng 5432 không ra ngoài. Extension (vector, pgcrypto) do migration 0001 tạo.
+    volumes:
+      - hoicon_pgdata:/var/lib/postgresql/data
+    # Không bật log_statement: câu lệnh SQL có thể chứa dữ liệu cá nhân (CLAUDE.md luật 1).
+    command: ["postgres", "-c", "shared_buffers=256MB", "-c", "max_connections=50", "-c", "log_min_duration_statement=-1",
+               "-c", "log_error_verbosity=terse", "-c", "log_min_error_statement=panic"]
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hoicon -d hoicon"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+    networks: [db]
+    stop_grace_period: 60s
+    logging: *logging
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 1g }
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    image: hoicon-backend:${HOICON_RELEASE:-latest}
+    restart: unless-stopped
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      # Cố định, KHÔNG đọc từ infra/.env.prod: quên/gõ sai không làm prod chạy ở chế độ dev (spec 034 FR-006).
+      HOICON_ENV: prod
+      HOICON_RUN_WORKER: "true"
+      HOICON_ZALO_MODE: live
+      HOICON_WEB_BASE_URL: https://${HOICON_DOMAIN:?Thiếu HOICON_DOMAIN trong infra/.env.prod}
+      HOICON_DATABASE_URL: postgresql+psycopg://hoicon:${POSTGRES_PASSWORD}@postgres:5432/hoicon
+      # Khóa bắt buộc (thiếu ⇒ /readyz 503 nêu TÊN biến).
+      HOICON_PHONE_PEPPER_KID: ${HOICON_PHONE_PEPPER_KID:-1}
+      HOICON_PHONE_PEPPER_1: ${HOICON_PHONE_PEPPER_1:?Thiếu HOICON_PHONE_PEPPER_1}
+      HOICON_DATA_KEY_KID: ${HOICON_DATA_KEY_KID:-1}
+      HOICON_DATA_KEY_1: ${HOICON_DATA_KEY_1:?Thiếu HOICON_DATA_KEY_1}
+      HOICON_DEVICE_JWT_SECRET: ${HOICON_DEVICE_JWT_SECRET:?Thiếu HOICON_DEVICE_JWT_SECRET}
+      HOICON_ZALO_BOT_TOKEN: ${HOICON_ZALO_BOT_TOKEN:?Thiếu HOICON_ZALO_BOT_TOKEN}
+      HOICON_ZALO_WEBHOOK_SECRET: ${HOICON_ZALO_WEBHOOK_SECRET:?Thiếu HOICON_ZALO_WEBHOOK_SECRET}
+      HOICON_ZALO_BOT_ID: ${HOICON_ZALO_BOT_ID:-hoicon-dev}
+      # Tùy chọn: không đặt ⇒ chuỗi rỗng, mà mã coi là "không có" (LlmRouter.from_settings, candidate_hmacs dùng
+      # phép thử đúng/sai; không có khóa Anthropic ⇒ rơi về mẫu soạn sẵn).
+      HOICON_PHONE_PEPPER_2: ${HOICON_PHONE_PEPPER_2:-}
+      HOICON_ANTHROPIC_API_KEY: ${HOICON_ANTHROPIC_API_KEY:-}
+      HOICON_MCP_THREAT_CLIENTS: ${HOICON_MCP_THREAT_CLIENTS:-{}}
+    # Không có `ports:`: chỉ Caddy (cùng mạng api) gọi được. Rootfs chỉ đọc; /tmp là tmpfs.
+    expose: ["18000"]
+    read_only: true
+    tmpfs: ["/tmp:size=64m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      # /readyz: DB + khóa bắt buộc + kênh Zalo live. 503 ⇒ urlopen ném lỗi ⇒ unhealthy. Không cần curl trong ảnh.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request as u; u.urlopen('http://127.0.0.1:18000/readyz', timeout=6)"
+      interval: 15s
+      timeout: 8s
+      retries: 5
+      start_period: 60s
+    networks: [api, db]
+    stop_grace_period: 30s
+    logging: *logging
+    deploy:
+      resources:
+        limits: { cpus: "1.5", memory: 768m }
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        HOICON_API_URL: http://backend:18000
+    image: hoicon-web:${HOICON_RELEASE:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    expose: ["3100"]
+    read_only: true
+    tmpfs: ["/tmp:size=64m", "/app/apps/web/.next/cache:size=128m,uid=1000,gid=1000"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3100/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 8s
+      retries: 5
+      start_period: 30s
+    networks: [web]
+    logging: *logging
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 512m }
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    depends_on:
+      backend: { condition: service_healthy }
+      web: { condition: service_healthy }
+    environment:
+      HOICON_DOMAIN: ${HOICON_DOMAIN}
+      HOICON_ACME_EMAIL: ${HOICON_ACME_EMAIL:?Thiếu HOICON_ACME_EMAIL trong infra/.env.prod}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    volumes:
+      # Mount THƯ MỤC, không mount từng tệp: `git pull` thay tệp bằng inode mới, mount từng tệp sẽ giữ nội dung cũ mãi.
+      # deploy-vps.sh chạy `caddy reload` sau mỗi lần nạp container.
+      - ./caddy:/etc/caddy:ro
+      - caddy_data:/data # chứng chỉ Let's Encrypt: mất volume là phải xin lại (có giới hạn tần suất)
+      - caddy_config:/config
+    read_only: true
+    tmpfs: ["/tmp:size=16m"]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks: [web, api]
+    logging: *logging
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 192m }
+
+networks:
+  api: {}
+  web:
+    internal: true
+  db:
+    internal: true
+
+volumes:
+  hoicon_pgdata:
+  caddy_data:
+  caddy_config:

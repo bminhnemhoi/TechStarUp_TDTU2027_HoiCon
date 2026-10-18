@@ -417,6 +417,92 @@ async def test_limits_are_per_actor(consented: World) -> None:
     assert (await post(consented.guardian_token, phone_body("b"))).status_code == 200
 
 
+# --- trần cuộn 30 ngày (review bảo mật 026 #1) -----------------------------------------------------------------------
+
+
+async def test_device_monthly_cap_is_600_even_when_hour_and_day_are_quiet(consented: World) -> None:
+    await seed_history(consented, "device", consented.device_id, lookups.DEVICE_PER_MONTH, ago="10 days")
+    resp = await post(consented.device_token, phone_body("n601"))
+    assert resp.status_code == 429, resp.text
+    assert int(resp.headers["Retry-After"]) > 86400  # đợi theo mốc dòng cũ nhất trôi khỏi cửa sổ 30 ngày
+    async with get_sessionmaker().begin() as session:  # dòng cách đây hơn 30 ngày thôi không tính
+        await session.execute(text("update verifications set at = now() - interval '31 days'"))
+    assert (await post(consented.device_token, phone_body("n602"))).status_code == 200
+
+
+async def test_just_under_the_monthly_cap_is_still_allowed(consented: World) -> None:
+    await seed_history(consented, "device", consented.device_id, lookups.DEVICE_PER_MONTH - 1, ago="10 days")
+    assert (await post(consented.device_token, phone_body("n1"))).status_code == 200
+    assert (await post(consented.device_token, phone_body("n2"))).status_code == 429
+
+
+async def test_guardian_monthly_cap(consented: World) -> None:
+    await seed_history(consented, "guardian", consented.guardian_id, lookups.GUARDIAN_PER_MONTH, ago="10 days")
+    assert (await post(consented.guardian_token, phone_body("g1"))).status_code == 429
+
+
+async def test_family_monthly_cap_counts_every_person_but_not_the_system(consented: World) -> None:
+    remaining = lookups.FAMILY_PER_MONTH - 1
+    while remaining:  # chia cho nhiều người khác nhau để không chạm trần cá nhân (600/tháng)
+        chunk = min(remaining, lookups.DEVICE_PER_MONTH - 1)
+        await seed_history(consented, "device", new_id(), chunk, ago="10 days")
+        remaining -= chunk
+    await seed_history(consented, "system", new_id(), 50, ago="10 days")  # dòng hệ thống không tính vào trần gia đình
+    assert (await post(consented.guardian_token, phone_body("f1"))).status_code == 200  # còn đúng 1 chỗ của nhà
+    assert (await post(consented.guardian_token, phone_body("f2"))).status_code == 429
+
+
+# --- rút đồng ý `lookups` làm sạch dấu vết tra cứu (review bảo mật 026 #3) ------------------------------------------
+
+
+async def own_rows(world: World) -> list[Verification]:
+    return [r for r in await verifications(world.family_id) if r.actor == "device"]
+
+
+async def test_withdrawing_lookups_scrubs_identifying_columns_but_keeps_the_quota_rows(consented: World) -> None:
+    for label in ("a", "b", "c"):
+        assert (await post(consented.device_token, phone_body(label))).status_code == 200
+    before = await own_rows(consented)
+    assert len(before) == 3 and all(r.last3 == "123" and r.subject_hmac != "0" * 64 for r in before)
+
+    resp = await call("POST", "/v1/consents", token=consented.device_token, json={"items": [item("lookups", False)]})
+    assert resp.status_code == 200, resp.text
+
+    after = await own_rows(consented)
+    assert len(after) == 3  # dòng vẫn còn: sổ đếm hạn mức
+    assert {r.id for r in after} == {r.id for r in before}
+    for row in after:
+        assert row.subject_hmac == "0" * 64 and row.last3 is None and row.sources == [] and row.list_version is None
+        assert row.verdict and row.at is not None  # chỉ phần nhận diện bị xóa
+    assert (await post(consented.device_token, phone_body("d"))).status_code == 403  # đã rút đồng ý
+
+
+async def test_withdrawing_lookups_cannot_reset_the_hourly_quota(consented: World) -> None:
+    await seed_history(consented, "device", consented.device_id, lookups.DEVICE_PER_HOUR, ago="1 minute")
+    await call("POST", "/v1/consents", token=consented.device_token, json={"items": [item("lookups", False)]})
+    await call("POST", "/v1/consents", token=consented.device_token, json={"items": [item("lookups", True)]})
+    assert (await post(consented.device_token, phone_body("again"))).status_code == 429
+
+
+async def test_other_purposes_and_other_people_are_not_scrubbed(consented: World) -> None:
+    assert (await post(consented.device_token, phone_body("mine"))).status_code == 200
+    assert (await post(consented.guardian_token, phone_body("theirs"))).status_code == 200
+    await call("POST", "/v1/consents", token=consented.device_token, json={"items": [item("drills", False)]})
+    assert all(
+        r.subject_hmac != "0" * 64 for r in await verifications(consented.family_id)
+    )  # đổi mục đích khác: không đụng
+    await call("POST", "/v1/consents", token=consented.device_token, json={"items": [item("lookups", False)]})
+    rows = {r.actor: r for r in await verifications(consented.family_id)}
+    assert rows["device"].subject_hmac == "0" * 64
+    assert rows["guardian"].subject_hmac != "0" * 64 and rows["guardian"].last3 == "123"  # người khác giữ nguyên
+
+
+async def test_granting_lookups_does_not_scrub(consented: World) -> None:
+    assert (await post(consented.device_token, phone_body("keep"))).status_code == 200
+    await call("POST", "/v1/consents", token=consented.device_token, json={"items": [item("lookups", True)]})
+    assert all(r.subject_hmac != "0" * 64 for r in await own_rows(consented))
+
+
 # --- nâng mức sự cố (FR-006) -------------------------------------------------------------------------------------
 
 

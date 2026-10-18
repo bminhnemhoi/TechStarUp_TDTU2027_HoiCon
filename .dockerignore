@@ -1,0 +1,31 @@
+# Build context của infra/compose.prod.yml là GỐC repo (backend cần data/ và docs/schemas/, web cần pnpm-lock.yaml).
+# Loại mọi thứ không vào ảnh: giảm thời gian build và, quan trọng hơn, không để bí mật hay dữ liệu cục bộ lọt vào ảnh.
+.git
+.github
+.claude
+.specify
+.handover
+apps/android
+design-system
+specs
+scripts
+node_modules
+**/node_modules
+**/.next
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/*.tsbuildinfo
+**/test-results
+**/playwright-report
+backend/tests
+backend/eval
+apps/web/e2e
+**/.env*
+**/*.pem
+**/*.key
+**/*.jks
+**/*.keystore
+docs/proposal
+docs/spikes

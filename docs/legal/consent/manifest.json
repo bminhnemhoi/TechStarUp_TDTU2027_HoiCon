@@ -1,0 +1,76 @@
+{
+  "version_scheme": "YYYY.MM-vN",
+  "released": [],
+  "purposes": [
+    {
+      "purpose": "core_protection",
+      "file": "core_protection.vi.md",
+      "version": "2026.10-v3",
+      "sha256": "1576099e185a6208837d7dd2588b8dcc8d332f4f700add3e559cf41e805d666a",
+      "status": "draft"
+    },
+    {
+      "purpose": "call_screening",
+      "file": "call_screening.vi.md",
+      "version": "2026.10-v3",
+      "sha256": "5765f61167f68549fa7de8ab4c7787082924ff7e095a72ac23699d24bde85643",
+      "status": "draft"
+    },
+    {
+      "purpose": "usage_monitoring",
+      "file": "usage_monitoring.vi.md",
+      "version": "2026.10-v3",
+      "sha256": "d69403e4a13874f99d236ab67a8f4f0153c8755e3b45f17a32395736dc4e114f",
+      "status": "draft"
+    },
+    {
+      "purpose": "overlay_pause",
+      "file": "overlay_pause.vi.md",
+      "version": "2026.10-v3",
+      "sha256": "d98935d94ed0ced77f7f788600489f09cc0e32d472d55dbe9e303f7075300fce",
+      "status": "draft"
+    },
+    {
+      "purpose": "guardian_alerts",
+      "file": "guardian_alerts.vi.md",
+      "version": "2026.10-v3",
+      "sha256": "4ba8653ecdce7a02d64c7d547807587d410acb96baaef7a47b3473cd6337d981",
+      "status": "draft"
+    },
+    {
+      "purpose": "llm_processing",
+      "file": "llm_processing.vi.md",
+      "version": "2026.10-v3",
+      "sha256": "00bd60e3e3d6f5ae03e3f55b8862c6babc733a175d839bbc49ce2343a43b2f9b",
+      "status": "draft"
+    },
+    {
+      "purpose": "voice_input",
+      "file": "voice_input.vi.md",
+      "version": "2026.10-v3",
+      "sha256": "4729274fdcf38cb613b1dad6ea7ede7a3e54ab04b8fb044e3f47e3ee5d3bba24",
+      "status": "draft"
+    },
+    {
+      "purpose": "drills",
+      "file": "drills.vi.md",
+      "version": "2026.10-v3",
+      "sha256": "6a182f00d88b4ba9121af29937032020de070919e01a5cd527a65a0aafb9bb4d",
+      "status": "draft"
+    },
+    {
+      "purpose": "pilot_research",
+      "file": "pilot_research.vi.md",
+      "version": "2026.10-v3",
+      "sha256": "5e41d874539a9e411df7a5854634a94a4395f9a47badb80fce10b317f4bf64d9",
+      "status": "draft"
+    },
+    {
+      "purpose": "lookups",
+      "file": "lookups.vi.md",
+      "version": "2026.10-v3",
+      "sha256": "b94c6648f8109a4f634fcf8f2c27c7c2d5033f38ac2427cf64b62d4f3b4b8218",
+      "status": "draft"
+    }
+  ]
+}
