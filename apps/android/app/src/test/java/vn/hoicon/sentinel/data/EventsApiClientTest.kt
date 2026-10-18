@@ -125,4 +125,36 @@ class EventsApiClientTest {
             assertEquals(expected, serve(code).sendHeartbeat("t", status), "HTTP $code")
         }
     }
+
+    // Spec 024 T013: `incident_id` / `incident_opened` of events_result.v1.json.
+
+    @Test
+    fun aReplyWithAnIncidentCarriesItOn() {
+        val reply = """{"accepted":3,"duplicates":0,"incident_id":"0192aaaa-0000-7000-8000-000000000001","incident_opened":true}"""
+        assertEquals(
+            EventsResult.AcceptedWithIncident("0192aaaa-0000-7000-8000-000000000001", opened = true),
+            serve(200, reply).sendEvents("t", events),
+        )
+        server?.stop(0)
+        val joined = """{"accepted":1,"duplicates":0,"incident_id":"0192aaaa-0000-7000-8000-000000000001","incident_opened":false}"""
+        assertEquals(
+            EventsResult.AcceptedWithIncident("0192aaaa-0000-7000-8000-000000000001", opened = false),
+            serve(200, joined).sendEvents("t", events),
+        )
+    }
+
+    @Test
+    fun noIncidentOrAnUnreadableOneIsStillJustAccepted() {
+        val replies = listOf(
+            """{"accepted":3,"duplicates":0,"incident_id":null,"incident_opened":false}""",
+            """{"accepted":3,"duplicates":0}""",
+            """{"accepted":3,"incident_id":"not-a-uuid","incident_opened":true}""",
+            "not json",
+            "",
+        )
+        for (reply in replies) {
+            server?.stop(0)
+            assertEquals(EventsResult.Accepted, serve(200, reply).sendEvents("t", events), reply)
+        }
+    }
 }

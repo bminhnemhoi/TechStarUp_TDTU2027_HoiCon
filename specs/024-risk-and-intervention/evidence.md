@@ -52,10 +52,27 @@ chuẩn đã cài lại; `am start` từ shell giờ bị từ chối như mong 
 - DB dev còn 87 job `start_graph` cũ mang `h1` (từ lượt chạy code trước khi sửa, dữ liệu test hư cấu) ⇒ đã xóa; sau
   lượt pytest đầy đủ: 0 job mang `h1`.
 
+## T013: đường tự kéo `pending-question` (Android, 18/10/2026)
+
+- **Cách làm:** `POST /v1/events` trả `incident_id`/`incident_opened` (`events_result.v1.json`); `PairingApiClient` đọc ra
+  `EventsResult.AcceptedWithIncident`; `OutboxSender` gọi `onIncident(id)` sau khi đánh dấu lô đã gửi;
+  `SentinelServices.flushOutbox` xếp `ElderQuestionWorker` (cần mạng, KEEP theo sự cố); worker hỏi
+  `GET /v1/incidents/{id}/pending-question` (thử lại tới 6 lần cách 2 giây vì đồ thị tới `ask_elder` chậm hơn lô một chút), rồi mở
+  `ElderQuestionActivity` bằng đúng cách SafePause mở từ nền (quyền "hiển thị trên ứng dụng khác"). Mỗi câu hỏi chỉ mở một lần
+  (`ElderQuestionStore`, chỉ lưu id). Chỗ cắm FCM: một push chỉ cần gọi cùng đường `claim` + `createIntent`.
+- **Test JVM (đỏ nếu hỏng):** `EventsApiClientTest` (có/không/hỏng `incident_id`), `OutboxSenderTest` (chuyển tiếp incident; không chuyển
+  khi lỗi/từ chối/rút đồng ý; vẫn chuyển khi tách lô hỏng), `ElderQuestionPollerTest` (tìm thấy sau vài lần 404; không chờ sau lần cuối; lỗi
+  mạng ⇒ thử lại; token bị từ chối ⇒ dừng; một câu hỏi không mở hai lần). Cổng: `:app:testDebugUnitTest` 248 test, 0 lỗi.
+- **Chạy thật trên hc-api36** (backend dev cổng 18001, Zalo mock): giả lập cuộc gọi lạ (số hư cấu) → mở app ngân hàng mẫu → sự kiện lên
+  máy chủ (`POST /v1/events` 200) → `GET …/pending-question` 404, 404, 404 rồi **200** → `ElderQuestionActivity` tự mở (04:49 UTC) →
+  bấm KHÔNG → `POST …/answers` 200, log máy chủ `elder_answer … answer=no`. Ảnh: `~/hoicon-evidence/024-risk-and-intervention/e8-pull-{100,200}.png`.
+- **Chưa kiểm:** FCM thật; E8 mở khi chưa cấp quyền "hiển thị trên ứng dụng khác" (Android chặn mở từ nền, chưa có thông báo dự phòng);
+  hc-api34/29; máy thật; E8 hiện 3 nút ngang hàng (CÓ/KHÔNG/KHÔNG RÕ) trong khi luật 15 nói ≤ 2 hành động chính (có sẵn từ T009, chưa xử lý ở đây).
+
 ## Còn mở (không đánh ☑)
 
-- **E8 chưa có đường mở trên máy**: chưa có FCM (Firebase, P0-08) và app chưa tự kéo `pending-question`, nên
-  `ElderQuestionActivity` chưa được gọi từ đâu. Máy chủ chỉ có FCM mock.
+- **E8 mở trên máy bằng đường tự kéo, chưa có FCM thật** (T013, 18/10/2026): xem mục "T013" bên dưới. FCM thật chờ P0-08 (Firebase);
+  máy chủ chỉ có FCM mock.
 - SC-001 với LLM thật; mức rủi ro đồ thị nâng (sau E8) chưa ghi ngược vào `incidents.level` (trang `/a/` vẫn hiện mức do luật đặt).
 - FR-006 "nâng mức ⇒ đánh thức đồ thị": đồ thị khởi động khi sự cố đạt `high`/`critical` (mở mới hoặc được nâng), chưa
   đánh thức lượt đang chạy khi mức tăng thêm.

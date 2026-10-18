@@ -19,6 +19,10 @@ import vn.hoicon.sentinel.SentinelServices
 import vn.hoicon.sentinel.data.local.TokenStorage
 import vn.hoicon.sentinel.data.outbox.FlushOutcome
 import vn.hoicon.sentinel.data.drill.DrillCheck
+import vn.hoicon.sentinel.data.elder.ElderQuestionPoller
+import vn.hoicon.sentinel.data.elder.PollOutcome
+import vn.hoicon.sentinel.data.elder.PrefsElderQuestionStore
+import vn.hoicon.sentinel.data.elder.claim
 import vn.hoicon.sentinel.data.drill.DrillInvitation
 import vn.hoicon.sentinel.data.drill.PrefsDrillStore
 import vn.hoicon.sentinel.data.remote.DrillApiClient
@@ -37,6 +41,7 @@ import vn.hoicon.sentinel.domain.drill.DrillTiming
 import vn.hoicon.sentinel.domain.rules.RiskWindowManager
 import vn.hoicon.sentinel.sensing.Notifications
 import vn.hoicon.sentinel.sensing.SensorPermission
+import vn.hoicon.sentinel.pause.ElderQuestionActivity
 import vn.hoicon.sentinel.sensing.SensorPermissions
 
 private val needsNetwork = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
@@ -362,4 +367,57 @@ object DrillResultScheduler {
     }
 
     private const val BACKOFF_SECONDS = 30L
+}
+
+/**
+ * Spec 024 T013: after the events we sent opened (or joined) an incident, fetch the AI's pending question and open E8
+ * (the same way the safe pause opens from the background: the "display over apps" grant). No push needed; see
+ * [ElderQuestionPoller]. Only ids travel; the question text comes from the server and is never logged.
+ */
+class ElderQuestionWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result = try {
+        val incidentId = inputData.getString(INCIDENT_ID)
+        val session = TokenStorage.create(applicationContext).load()
+        if (incidentId == null || session == null || !SentinelServices.of(applicationContext).mayShare()) {
+            Result.success()
+        } else {
+            val api = ElderApiClient(BuildConfig.API_BASE_URL)
+            when (val outcome = ElderQuestionPoller({ api.getPendingQuestion(session.accessToken, it) }).poll(incidentId)) {
+                is PollOutcome.Ask -> {
+                    val q = outcome.question
+                    if (PrefsElderQuestionStore(applicationContext).claim(q)) {
+                        applicationContext.startActivity(
+                            ElderQuestionActivity.createIntent(applicationContext, q.incidentId, q.questionId, q.text, q.isDrill),
+                        )
+                    }
+                    Result.success()
+                }
+                PollOutcome.None -> Result.success()
+                PollOutcome.Unauthorized -> {
+                    TokenStorage.create(applicationContext).needsRepair = true
+                    Result.success()
+                }
+                PollOutcome.Retry -> Result.retry()
+            }
+        }
+    } catch (e: Exception) {
+        if (e is kotlin.coroutines.cancellation.CancellationException) throw e
+        Result.retry()
+    }
+
+    companion object {
+        const val INCIDENT_ID = "incident_id"
+    }
+}
+
+object ElderQuestionScheduler {
+    /** KEEP per incident: the same incident reported by several batches is asked about once at a time. */
+    fun pull(context: Context, incidentId: String) {
+        val request = OneTimeWorkRequestBuilder<ElderQuestionWorker>()
+            .setInputData(workDataOf(ElderQuestionWorker.INCIDENT_ID to incidentId))
+            .setConstraints(needsNetwork)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS)
+            .build()
+        WorkManager.getInstance(context).enqueueUniqueWork("hoicon-elder-question-$incidentId", ExistingWorkPolicy.KEEP, request)
+    }
 }

@@ -32,6 +32,8 @@ enum class FlushOutcome {
 class OutboxSender(
     private val outbox: OutboxRepository,
     private val uploader: EventUploader,
+    /** Called with the id of an incident the server linked a stored batch to (Spec 024 T013: pull its question). */
+    private val onIncident: (String) -> Unit = {},
     private val accessToken: () -> String?,
 ) {
     suspend fun flush(): FlushOutcome {
@@ -48,9 +50,14 @@ class OutboxSender(
     /** Null = this batch is settled, keep going. */
     private suspend fun send(token: String, batch: List<OutboxItem>): FlushOutcome? {
         val ids = batch.map { it.id }
-        return when (uploader.sendEvents(token, batch.map { it.json })) {
+        return when (val result = uploader.sendEvents(token, batch.map { it.json })) {
             EventsResult.Accepted -> {
                 outbox.markSent(ids)
+                null
+            }
+            is EventsResult.AcceptedWithIncident -> {
+                outbox.markSent(ids)
+                onIncident(result.incidentId)
                 null
             }
             EventsResult.Rejected -> if (batch.size == 1) {
@@ -82,6 +89,11 @@ class OutboxSender(
                 EventsResult.Accepted -> {
                     outbox.markSent(listOf(item.id))
                     accepted++
+                }
+                is EventsResult.AcceptedWithIncident -> {
+                    outbox.markSent(listOf(item.id))
+                    accepted++
+                    onIncident(result.incidentId)
                 }
                 EventsResult.Rejected -> refused += item.id
                 else -> {

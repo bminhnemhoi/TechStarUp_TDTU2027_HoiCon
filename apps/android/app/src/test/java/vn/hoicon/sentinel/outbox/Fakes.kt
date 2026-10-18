@@ -96,7 +96,7 @@ class FakeUploader(private val answer: (List<JSONObject>) -> EventsResult) : Eve
         lastToken = accessToken
         batches += events.map { it.getString("id") }
         val result = answer(events)
-        if (result == EventsResult.Accepted) events.forEach { stored += it.getString("id") }
+        if (result == EventsResult.Accepted || result is EventsResult.AcceptedWithIncident) events.forEach { stored += it.getString("id") }
         return result
     }
 }
