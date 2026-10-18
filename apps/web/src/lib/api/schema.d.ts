@@ -1988,6 +1988,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Thiếu/sai khóa dữ liệu hoặc phần lớn `bucket_enc` không giải mã được (không đệm) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     get_offer_v1_drills_offer_get: {

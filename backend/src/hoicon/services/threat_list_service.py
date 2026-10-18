@@ -4,8 +4,9 @@ Dựng từ `threat_indicators.bucket_enc` (giải mã bằng khóa dữ liệu 
 sắp xếp, đóng gói 3 byte/bucket (uint24 big-endian). `version = sha256(bits ‖ nội dung)[:16]` nên nạp lại cùng danh sách
 (bản mã mới, cùng bucket) KHÔNG đổi phiên bản ⇒ máy nhận 304. Phản hồi không có h1, HMAC hay last3.
 
-Dòng bị loại: hết hạn; thiếu `bucket_enc` (chưa nạp lại sau migration 0007); không giải mã được (khóa sai/dữ liệu hỏng:
-bỏ qua và đếm, không làm hỏng cả danh sách); dòng `is_demo` ở mọi môi trường ngoài dev/test/ci (bản prod không phát số
+Dòng bị loại: hết hạn; thiếu `bucket_enc` (chưa nạp lại sau migration 0007); không giải mã được (vài dòng hỏng lẻ: bỏ
+qua và đếm; hỏng toàn bộ hoặc ≥ 3 dòng và > 5% ⇒ lỗi khóa/dữ liệu: KHÔNG phát, route trả 503, không đệm); dòng
+`is_demo` ở mọi môi trường ngoài dev/test/ci (bản prod không phát số
 hư cấu xuống máy thật). Bộ nhớ đệm trong tiến trình 5 phút (ADR-002): danh sách đằng nào cũng phát cho mọi máy.
 """
 
@@ -28,6 +29,12 @@ logger = logging.getLogger(__name__)
 
 CACHE_TTL_S = 300
 BUCKET_BYTES = 3
+MIN_UNDECODABLE = 3  # dưới số này coi là vài dòng hỏng lẻ, không phải lỗi khóa
+MAX_UNDECODABLE_RATIO = 0.05
+
+
+class SnapshotUndecodableError(RuntimeError):
+    """Phần lớn `bucket_enc` không giải mã được (sai khóa dữ liệu hoặc dữ liệu hỏng): không phát danh sách."""
 
 
 @dataclass(frozen=True)
@@ -68,9 +75,22 @@ async def build_snapshot(session: AsyncSession, bits: int, *, demo: bool) -> Sna
         query = query.where(ThreatIndicator.is_demo.is_(False))
     rows = [(value_hmac, bucket_enc) for value_hmac, bucket_enc in (await session.execute(query)).all()]
     buckets, skipped = await asyncio.to_thread(_decode_rows, rows, bits)  # N lần AES-GCM: không chặn event loop
+    if too_many_undecodable(skipped, len(rows)):
+        # Sai/mất khóa dữ liệu (xoay khóa nhầm, khôi phục DB lệch khóa): KHÔNG phát ảnh chụp rỗng/thiếu hợp lệ, vì máy
+        # sẽ thay danh sách tốt bằng danh sách rỗng mà không ai hay (review bảo mật 026 #2). RuntimeError ⇒ route trả
+        # 503, không đệm.
+        logger.error("threat-list: %d/%d chỉ báo không giải mã được bucket_enc — kiểm khóa dữ liệu", skipped, len(rows))
+        raise SnapshotUndecodableError(f"{skipped}/{len(rows)} chỉ báo không giải mã được")
     if skipped:
         logger.warning("threat-list: bỏ %d chỉ báo không giải mã được bucket_enc", skipped)
     return make_snapshot(bits, buckets)
+
+
+def too_many_undecodable(skipped: int, total: int) -> bool:
+    """Vài dòng hỏng lẻ thì bỏ qua (cảnh báo). Hỏng toàn bộ, hoặc ≥ 3 dòng và > 5% ⇒ lỗi khóa/dữ liệu, không phát."""
+    if total == 0 or skipped == 0:
+        return False
+    return skipped == total or (skipped >= MIN_UNDECODABLE and skipped / total > MAX_UNDECODABLE_RATIO)
 
 
 def _decode_rows(rows: list[tuple[str, str]], bits: int) -> tuple[set[int], int]:

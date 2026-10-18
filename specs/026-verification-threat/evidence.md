@@ -51,6 +51,34 @@
 
 Chưa chạy: `ux-elder-reviewer` cho E10 (thuộc Làn A, T026) và lượt đọc lại của reviewer sau các sửa trên.
 
+## Review bảo mật lượt 2 — T029/T030 (18/10/2026, nhánh `feat/w1-server`)
+
+- **T029** `bash scripts/gen-api-client.sh && pnpm --dir apps/web typecheck`: client sinh lại sạch (sau khi thêm mã 503 của
+  `threat-list` vào OpenAPI), typecheck xanh. `docs/API.md`, `DATA-MODEL.md`, `AGENTS.md`, `DESIGN-SYSTEM.md` đã có nội dung 026 từ trước;
+  `API.md` được cập nhật cho 3 thay đổi dưới đây. Chưa sửa `DATA-MODEL.md` §6 (còn dòng cũ "chưa có job retention" — ngoài quyền của lượt này).
+- **T030** `security-privacy-reviewer` đọc mã server 026 (chỉ đọc, không chạy test): **0 Critical, 0 High, 3 Medium, 14 Low**.
+  8 mục đối chiếu đều ĐẠT: PII (không số thô/h1/URL trong DB/log/job/trace), `bucket_enc` (nonce ngẫu nhiên mỗi lần, AAD gắn `value_hmac`),
+  đồng ý `lookups` đọc DB mỗi lần, IDOR, nâng mức chỉ qua `raise_level`, MCP `threat` (Caddy chặn `/mcp*`).
+- **Đã sửa 3 Medium (test viết cùng lúc):**
+  - **#1 dò danh sách đe dọa qua `/v1/lookups`**: thêm trần cuộn 30 ngày — thiết bị 600, người giám hộ 600, cả gia đình 3.000 (dòng
+    `actor = system` không tính). Ngưỡng là con số tôi chọn (≈ 10 lần cách dùng thật), **Tiến cần xác nhận**. Chưa giới hạn theo IP:
+    Caddy chuẩn không có `rate_limit`. Phản hồi vẫn có `confidence` và tên nguồn (đổi cần đổi hợp đồng `docs/schemas`, ngoài quyền).
+  - **#2 giải mã `bucket_enc` hỏng**: hỏng toàn bộ, hoặc ≥ 3 dòng và > 5% ⇒ `threat-list` trả 503, không đệm, không tốn lượt ngày
+    (trước đó phát ảnh chụp RỖNG hợp lệ, máy sẽ thay danh sách tốt bằng nó). Vài dòng lẻ vẫn chỉ bị bỏ qua.
+  - **#3 rút đồng ý `lookups`**: trong cùng giao dịch ghi sổ đồng ý, các lượt tra cứu của thiết bị người đó mất `subject_hmac` (64 số 0),
+    `last3`, `sources`, `list_version`; GIỮ dòng để làm sổ đếm hạn mức (xóa hẳn thì rút rồi cấp lại thành cách đặt lại hạn mức).
+- **Kết quả test:** `test_api_lookups.py` + `test_threat_list.py` 104 passed (mới: 4 trần 30 ngày, 4 làm sạch khi rút đồng ý,
+  11 ngưỡng giải mã + 3 qua endpoint). Hạn mức giờ/ngày hiện có vẫn xanh.
+- **14 Low để lại** (ghi lại để Tiến quyết, không sửa trong lượt này): k-ẩn danh chỉ đúng với dải di động (#4); `bucket_bits` 23–24 làm k
+  tụt dưới 80 mà không cảnh báo (#5); `bucket_enc` dùng chung khóa với `chat_id` (#6); người giám hộ dùng chung trần gia đình 200/ngày (#7);
+  yêu cầu bị từ chối không tính hạn mức (#8); hạn mức `threat-list` đếm trong bộ nhớ (#9); máy chủ chưa kiểm (phiên bản, sha256) văn bản đồng ý (#10);
+  `verifications` thiếu `is_drill` và chỉ mục `(family_id, at)` (#11); `.gitignore` chưa chặn tệp seed thật có h1 (#12); tài liệu cũ (#13);
+  `unflag` chưa xóa đệm 5 phút (#14); heuristic URL `thue`/`%252E` (#15); đường người giám hộ chết vì chưa có đường ghi đồng ý (#16);
+  số `0912345678` trong test (#17).
+- **ADR-011:** reviewer đánh giá, **không chấp nhận hộ** (chờ Tiến). Điều kiện đề nghị nếu chấp nhận: ghi rõ k chỉ cho dải di động, guardrail
+  `bucket_bits`, tách khóa/HKDF, trần 30 ngày (đã làm), cập nhật DPIA (đã làm ở spec 011).
+- Chưa có reviewer đọc lại các bản sửa trên. T031 (bộ kiểm đủ, gồm Android + máy ảo) vẫn thuộc người tích hợp.
+
 ## Còn mở (không đánh ☑)
 
 - Số đo trên máy thật cho E10 và cho `onScreenCall` với bucket.

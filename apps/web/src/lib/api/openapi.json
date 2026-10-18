@@ -1007,6 +1007,9 @@
      "429": {
       "description": "Quá 24 lần/ngày/thiết bị"
      },
+     "503": {
+      "description": "Thiếu/sai khóa dữ liệu hoặc phần lớn `bucket_enc` không giải mã được (không đệm)"
+     },
      "422": {
       "description": "Validation Error",
       "content": {

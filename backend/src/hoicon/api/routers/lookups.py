@@ -47,10 +47,17 @@ _bearer = HTTPBearer(auto_error=False)
 
 HOUR = timedelta(hours=1)
 DAY = timedelta(days=1)
+MONTH = timedelta(days=30)
 DEVICE_PER_HOUR = 20
 DEVICE_PER_DAY = 60
 GUARDIAN_PER_HOUR = 60
 FAMILY_PER_DAY = 200
+# Trần cuộn 30 ngày (review bảo mật 026 #1): trần giờ/ngày không chặn được việc dò danh sách đe dọa kéo dài (mỗi
+# bucket bị gắn cờ chỉ còn ≈ 86 ứng viên ở b = 22, ADR-011). Ngưỡng rộng gấp ~10 lần cách dùng thật (vài lần/tuần);
+# Tiến xác nhận.
+DEVICE_PER_MONTH = 600
+GUARDIAN_PER_MONTH = 600
+FAMILY_PER_MONTH = 3000
 LOCK_TIMEOUT_MS = 3000
 BUSY = "Hệ thống đang bận, vui lòng thử lại sau ít giây."
 TOO_MANY = "Bạn đã tra cứu nhiều lần, vui lòng thử lại sau."
@@ -211,16 +218,18 @@ async def _wait_seconds(session: AsyncSession, window: timedelta, limit: int, *w
 async def _check_quota(session: AsyncSession, actor: Actor) -> None:
     """Gọi SAU khi giữ khóa theo người gọi và gia đình. Vượt mức ⇒ 429 + Retry-After (lớn nhất trong các mức vượt)."""
     mine = Verification.actor_id == actor.actor_id
+    family = (Verification.family_id == actor.family_id, Verification.actor != "system")
     waits = [
-        await _wait_seconds(
-            session, DAY, FAMILY_PER_DAY, Verification.family_id == actor.family_id, Verification.actor != "system"
-        )
+        await _wait_seconds(session, DAY, FAMILY_PER_DAY, *family),
+        await _wait_seconds(session, MONTH, FAMILY_PER_MONTH, *family),
     ]
     if actor.kind == "device":
         waits.append(await _wait_seconds(session, HOUR, DEVICE_PER_HOUR, mine))
         waits.append(await _wait_seconds(session, DAY, DEVICE_PER_DAY, mine))
+        waits.append(await _wait_seconds(session, MONTH, DEVICE_PER_MONTH, mine))
     else:
         waits.append(await _wait_seconds(session, HOUR, GUARDIAN_PER_HOUR, mine))
+        waits.append(await _wait_seconds(session, MONTH, GUARDIAN_PER_MONTH, mine))
     exceeded = [w for w in waits if w is not None]
     if exceeded:
         logger.info("lookups: %s vượt hạn mức", actor.kind)
@@ -348,6 +357,7 @@ def _threat_list_refund(device_id: UUID) -> None:
         304: {"description": "`since` trùng phiên bản hiện tại: không có thân"},
         401: {"description": "Thiếu hoặc sai token thiết bị"},
         429: {"description": "Quá 24 lần/ngày/thiết bị"},
+        503: {"description": "Thiếu/sai khóa dữ liệu hoặc phần lớn `bucket_enc` không giải mã được (không đệm)"},
     },
 )
 async def get_threat_list(

@@ -210,7 +210,7 @@
   `flagged_caller` khớp bucket qua đồng bộ thật (không chỉ qua h1 cứng của bản debug), và SafePause hiện biến thể
   `critical`.
   · Verify: cả hai AVD đều ĐẠT trong log của script
-- [ ] T029 [AB] [FR-013] Chạy `bash scripts/gen-api-client.sh && pnpm --dir apps/web typecheck`. Cập nhật:
+- [x] T029 [AB] [FR-013] Chạy `bash scripts/gen-api-client.sh && pnpm --dir apps/web typecheck`. Cập nhật:
   - `docs/API.md` (`/v1/lookups`, `/v1/threat-list`);
   - `docs/DATA-MODEL.md` (`verifications`, `bucket_enc`, Room v2 thay `threat_hashes`, hạn lưu);
   - `docs/AGENTS.md` (node `verification` không LLM, `evidence`);
@@ -218,7 +218,7 @@
   - ROADMAP "Ghi chú" (`verifying`/`rescore` chưa dùng; `account` để dành).
 
   · Verify: `bash scripts/gen-api-client.sh && pnpm --dir apps/web typecheck`
-- [ ] T030 [AB] [FR-013] Review độc lập bằng `security-privacy-reviewer` (PII, manifest, đồng ý, `bucket_enc`, hạn mức).
+- [x] T030 [AB] [FR-013] Review độc lập bằng `security-privacy-reviewer` (PII, manifest, đồng ý, `bucket_enc`, hạn mức).
   Sửa mọi mục Critical/High và ghi kết quả vào evidence.
   · Verify: báo cáo reviewer không còn Critical/High chưa xử lý
 - [ ] T031 [AB] [FR-013] Chạy đủ bộ lệnh kiểm:

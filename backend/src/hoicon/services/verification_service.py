@@ -29,11 +29,12 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
+from sqlalchemy import or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hoicon.db.ids import new_id
-from hoicon.db.models import Verification
+from hoicon.db.models import Device, Verification
 from hoicon.domain.pii import hmac_h1
 from hoicon.mcp_servers.threat import NO_LIST_VERSION, ThreatVerdict, lookup_h1
 
@@ -336,3 +337,24 @@ def result_payload(verification_id: uuid.UUID, decision: Decision, incident_leve
     if incident_level is not None:
         payload["incident_level"] = incident_level
     return payload
+
+
+SCRUBBED_HMAC = "0" * 64  # hợp lệ với CHECK subject_hmac_hex nhưng không còn chỉ tới chủ thể nào
+
+
+async def scrub_member_lookups(session: AsyncSession, member_id: uuid.UUID) -> int:
+    """Rút đồng ý `lookups` (review bảo mật 026 #3): xóa phần NHẬN DIỆN của các lượt tra cứu do thiết bị của người này
+    (hoặc chính người này) gây ra — HMAC chủ thể, 3 số cuối, nguồn, phiên bản danh sách. GIỮ dòng (mốc thời gian, kết
+    luận) vì đó là sổ đếm hạn mức: xóa hẳn thì rút rồi cấp lại đồng ý sẽ thành cách đặt lại hạn mức. Dòng tự động của
+    hệ thống (`actor = system`, thuộc sự cố) không đụng tới. Trả số dòng đã làm sạch."""
+    devices = select(Device.id).where(Device.member_id == member_id)
+    result = await session.execute(
+        update(Verification)
+        .where(
+            Verification.actor != "system",
+            or_(Verification.actor_id.in_(devices), Verification.actor_id == member_id),
+            Verification.subject_hmac != SCRUBBED_HMAC,
+        )
+        .values(subject_hmac=SCRUBBED_HMAC, last3=None, sources=[], list_version=None)
+    )
+    return int(result.rowcount or 0)

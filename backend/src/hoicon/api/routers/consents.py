@@ -13,7 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from hoicon.api.auth import DeviceClaims, get_current_device
 from hoicon.db.models import Consent
 from hoicon.db.session import get_sessionmaker
-from hoicon.services import consent_gate
+from hoicon.services import consent_gate, verification_service
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +86,9 @@ async def record_consents(
                 for i in batch.items
             )
             await session.flush()  # INSERT ngay để lỗi DB hiện ở đây, trước khi đọc mốc thời gian
+            if any(i.purpose == "lookups" and not i.granted for i in batch.items):
+                scrubbed = await verification_service.scrub_member_lookups(session, device.member_id)
+                logger.info("rút đồng ý lookups: làm sạch %d lượt tra cứu", scrubbed)  # chỉ số đếm
             recorded_at = await session.scalar(select(func.now()))  # cùng giao dịch ⇒ đúng mốc `server_default now()`
     except SQLAlchemyError as exc:
         logger.error("ghi sổ đồng ý lỗi (%s)", type(exc).__name__)  # không kèm thông điệp: có thể chứa tham số
