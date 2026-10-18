@@ -14,7 +14,7 @@
 
 ## Giai đoạn 1: Làm được ngay
 
-- [ ] T001 [AB] (phần B xong 17/10: 2 schema + fixture + `test_heartbeat_schema.py`; CÒN test Android ghim fixture — làn A) [FR-001] Viết `docs/schemas/heartbeat.v1.json` (đúng thân `PairingApiClient.sendHeartbeat`, dùng `$ref`
+- [x] T001 [AB] (phần B xong 17/10: 2 schema + fixture + `test_heartbeat_schema.py`; test Android ghim fixture `HeartbeatContractTest` xong, làn A) [FR-001] Viết `docs/schemas/heartbeat.v1.json` (đúng thân `PairingApiClient.sendHeartbeat`, dùng `$ref`
   tới mẫu phiên bản của `risk_event.v1`) và `pilot_report.v1.json`, kèm fixture. Fixture valid của heartbeat sinh từ
   chính hàm dựng thân của Android; thêm test Android ghim fixture đó.
   · Verify: `$PYTEST tests/contract/test_heartbeat_schema.py && $GRADLE :app:testDebugUnitTest`
@@ -39,7 +39,7 @@
   - quét DB: không lưu trường ngoài hợp đồng.
 
   · Verify: như T003
-- [ ] T005 [A] [FR-001] Trong `PairingApiClient`, phân biệt 403 có mã `consent_withdrawn` cho `sendHeartbeat` và
+- [x] T005 [A] [FR-001] Trong `PairingApiClient`, phân biệt 403 có mã `consent_withdrawn` cho `sendHeartbeat` và
   `sendEvents` thành trạng thái "cần đồng ý lại" (không xóa token, không hiện "Kết nối lại"). Test ánh xạ.
   · Verify: `$GRADLE :app:testDebugUnitTest`
 - [x] T006 [B] [FR-004] Viết `ops/pilot.py` (`enroll --confirm-adult`, `report --days --json`, `gate-m2`) theo plan D2/D4.
@@ -54,7 +54,7 @@
   - đầu ra không chứa bí danh thành viên, HMAC hay số.
 
   · Verify: như T006
-- [ ] T008 [AB] [FR-005] Viết `scripts/release-gate.sh` theo plan D3 và `scripts/tests/test_release_gate.py`. Test: chạy
+- [x] T008 [AB] [FR-005] Viết `scripts/release-gate.sh` theo plan D3 và `scripts/tests/test_release_gate.py`. Test: chạy
   trên APK debug dựng bằng `$GRADLE :app:assembleDebug` ⇒ TRƯỢT ở mục R8 và log chẩn đoán; manifest không có quyền cấm ⇒
   mục quyền ĐẠT; script thoát ≠ 0.
   · Verify: `$GRADLE :app:assembleDebug && python3 -m unittest scripts/tests/test_release_gate.py`
@@ -67,7 +67,7 @@
 
 ## Giai đoạn 2: Có điều kiện vào (012 + 034 + W0-3)
 
-- [ ] T011 [A] [FR-007] Đặt `versionName 0.3.0` và tăng `versionCode`. Build AAB bằng buildType của 012 và chạy
+- [ ] T011 [A] [FR-007] (**MỘT PHẦN 18/10/2026**: bản release 0.3.0 + R8 + gate ĐẠT cục bộ, AAB chưa ký, chưa tải lên Play; xem evidence.md "T011 cục bộ") Đặt `versionName 0.3.0` và tăng `versionCode`. Build AAB bằng buildType của 012 và chạy
   `scripts/release-gate.sh` ⇒ mọi mục tự động phải ĐẠT. Soạn ghi chú phát hành tiếng Việt. Tiến/Minh tải lên kênh
   internal testing.
   · Verify: `scripts/release-gate.sh apps/android/app/build/outputs/bundle/release/app-release.aab` thoát 0

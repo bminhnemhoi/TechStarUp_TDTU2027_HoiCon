@@ -12,8 +12,8 @@ android {
         applicationId = "vn.hoicon.sentinel"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 3
+        versionName = "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -23,6 +23,23 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // Ký bản phát hành bằng biến môi trường (tệp khóa và mật khẩu KHÔNG nằm trong repo). Không đặt đủ bốn biến ⇒ bản release
+    // không ký (APK `-unsigned`, AAB không chữ ký): đủ để chạy release-gate, nhưng không tải lên Play được.
+    val signingFile = providers.environmentVariable("HOICON_KEYSTORE_FILE").orNull
+    val signingStorePass = providers.environmentVariable("HOICON_KEYSTORE_PASSWORD").orNull
+    val signingAlias = providers.environmentVariable("HOICON_KEY_ALIAS").orNull
+    val signingKeyPass = providers.environmentVariable("HOICON_KEY_PASSWORD").orNull
+    val releaseSigning = if (signingFile != null && signingStorePass != null && signingAlias != null && signingKeyPass != null) {
+        signingConfigs.create("release") {
+            storeFile = file(signingFile)
+            storePassword = signingStorePass
+            keyAlias = signingAlias
+            keyPassword = signingKeyPass
+        }
+    } else {
+        null
     }
 
     buildTypes {
@@ -49,6 +66,12 @@ android {
                 checked(override ?: "https://api.hoicon.vn", listOf("https://"))
             }
             buildConfigField("String", "API_BASE_URL", "\"$url\"")
+            // R8 rút gọn + che tên lớp, bỏ tài nguyên thừa; BuildConfig.DEBUG = false ⇒ nhật ký chẩn đoán (HC_TIMING/HC_SPIKE)
+            // bị loại khỏi dex. Cổng release-gate.sh kiểm các điều này trên chính tệp phát hành.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            releaseSigning?.let { signingConfig = it }
         }
     }
 
