@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import vn.hoicon.sentinel.R
 import vn.hoicon.sentinel.ui.theme.BrandNavy
@@ -114,7 +115,7 @@ internal fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier
         colors = ButtonDefaults.buttonColors(containerColor = BrandNavy, contentColor = SurfaceWhite),
         modifier = modifier.fillMaxWidth().heightIn(min = ButtonHeight),
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelLarge)
+        Text(text = text, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
     }
 }
 
@@ -126,7 +127,7 @@ internal fun SecondaryButton(text: String, onClick: () -> Unit, modifier: Modifi
         border = BorderStroke(2.dp, BrandNavy),
         modifier = modifier.fillMaxWidth().heightIn(min = TouchMin),
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelLarge, color = BrandNavy)
+        Text(text = text, style = MaterialTheme.typography.labelLarge, color = BrandNavy, textAlign = TextAlign.Center)
     }
 }
 

@@ -91,6 +91,12 @@ lựa chọn và hai mốc giờ; `is_drill`/`[DIỄN TẬP]` ở cả 4 màn; c
 | 1 | Medium | **Chưa sửa, cần Tiến/Minh quyết** (không phải lỗi mã): app chưa có mục đích `drills` (văn bản, phiên bản, ghi/rút). Đồng ý hiện chỉ do máy chủ kiểm; thí điểm ghi bằng văn bản theo PILOT-PROTOCOL. Cần chốt nơi đồng ý (app/Zalo/văn bản) trước khi thí điểm; khi thêm vào `ConsentLedger` phải đưa `drills` vào `granted`/`texts`, nếu không `changes()` sẽ tự sinh dòng rút đồng ý |
 | 5–13 | Low | Để lại, ghi để theo dõi: race hẹp `markHandled`/`savePending` (#5); worker kết quả thử lại vô hạn (#6); `reconnect()` chưa hủy công việc gửi kết quả đang chờ (#7); `ConsentWithdrawn` chưa xóa thông báo/script đã lưu (#8); thông báo không hết hạn khi đồng hồ máy sai (#9); thông báo bị vuốt đi thì không còn lối vào bài (#10); xoay màn hình ngắt giọng (#11); `optString` với `null` (#12, hiện không xảy ra vì schema và 3 kịch bản đều có giá trị); chưa `setHideOverlayWindows` (#13) |
 
+**Kiểm lại trên máy ảo sau khi sửa (18/10/2026, hc-api36 nối backend thật cổng 18001, DB `hoicon_android`):**
+- #2: mở lời mời rồi giả lập cuộc gọi lạ thật (04:07): không có `POST /v1/drills/…/result`, bài vẫn `offered`, thông báo bị gỡ,
+  dấu "đã mời" được xóa; nhịp heartbeat kế tiếp (04:22:14) mời lại. Chưa chụp được màn "Có cuộc gọi tới…" (bị che bởi bảng cuộc gọi); chỉ có test JVM cho lý do `CALL`.
+- #4: làm đủ 3 câu, bấm Back ở phản hồi câu cuối ⇒ sang màn tổng kết "3 trong 3" (ảnh `12`, `13` ở `~/hoicon-evidence/028-drills/e2e/`), không hủy kết quả.
+- **Nhánh `passed` đã chạy E2E:** "Đã hiểu — Xong" 04:23:03 ⇒ `POST …/result` 200, `drills.status = passed`, `score = 3`, 1 tin `debrief` ở `messages_out` (`error = mock`). Đóng điểm 3 của mục "Điều cần biết" ở trên.
+
 ## Bộ lệnh T022 (18/10/2026)
 
 | Lệnh | Kết quả |
