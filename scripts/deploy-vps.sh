@@ -85,9 +85,11 @@ HEX64='^[0-9a-fA-F]{64}$'
 need POSTGRES_PASSWORD '^[A-Za-z0-9]{24,}$' "chữ và số, ≥ 24 ký tự (sinh: openssl rand -hex 24)"
 need HOICON_DOMAIN '^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]*[a-z0-9])?$' "tên miền chữ thường, vd app.hoicon.vn (không kèm https://)"
 need HOICON_ACME_EMAIL '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' "email nhận cảnh báo chứng chỉ"
-need HOICON_DEVICE_JWT_SECRET '^.{32,}$' "≥ 32 ký tự (sinh: openssl rand -hex 32)"
-need HOICON_ZALO_WEBHOOK_SECRET '^[^<>]{8,256}$' "8–256 ký tự, đúng giá trị đã đặt khi setWebhook"
-need HOICON_ZALO_BOT_TOKEN '^[^<>[:space:]]{8,}$' "token bot Zalo thật (docs/setup/ACCOUNTS.md)"
+# Chỉ ký tự an toàn: Compose đọc tệp theo quy tắc dotenv nên `$`, `#` hay khoảng trắng làm giá trị bị cắt/nội suy âm thầm
+# (review bảo mật 012 L-7), còn script này kiểm giá trị thô và sẽ cho qua.
+need HOICON_DEVICE_JWT_SECRET '^[A-Za-z0-9_-]{32,}$' "≥ 32 ký tự chữ/số/_/- (sinh: openssl rand -hex 32)"
+need HOICON_ZALO_WEBHOOK_SECRET '^[A-Za-z0-9_-]{8,256}$' "8–256 ký tự chữ/số/_/-, đúng giá trị đã đặt khi setWebhook"
+need HOICON_ZALO_BOT_TOKEN '^[A-Za-z0-9_:.-]{8,}$' "token bot Zalo thật, chỉ chữ/số/_/-/:/. (docs/setup/ACCOUNTS.md)"
 
 # Pepper, khóa dữ liệu, khóa sao lưu: hex 64 ký tự, đúng `kid` đang dùng; compose luôn đòi khóa 1.
 pepper_kid=$(get HOICON_PHONE_PEPPER_KID); pepper_kid=${pepper_kid:-1}
@@ -195,6 +197,9 @@ dc run --rm --no-deps -T backend alembic upgrade head
 # ---------------------------------------------------------------------------------------------------------------------
 step "Nạp container"
 dc up -d --wait --wait-timeout 300 --remove-orphans
+# Container Caddy không bị tạo lại khi chỉ Caddyfile đổi: nạp lại êm (không cắt kết nối). Cấu hình sai ⇒ lệnh lỗi, Caddy giữ
+# cấu hình đang chạy và script dừng ở đây.
+dc exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 
 # ---------------------------------------------------------------------------------------------------------------------
 # 6. Chỉ hoàn tất khi /readyz QUA Caddy trả đúng 200 (chứng chỉ có thể mất vài chục giây ở lần đầu)
@@ -219,9 +224,12 @@ echo "  /readyz: HTTP 200 ${body}"
 web_code=$("${CURL[@]}" -o /dev/null -w '%{http_code}' "${CHECK_URL}/login" || true)
 [ "$web_code" = 200 ] || die "trang web /login trả HTTP ${web_code} (mong 200) — kiểm container web và Caddy"
 echo "  web /login: HTTP 200"
-docs_code=$("${CURL[@]}" -o /dev/null -w '%{http_code}' "${CHECK_URL}/docs" || true)
-[ "$docs_code" = 404 ] || die "/docs trả HTTP ${docs_code} (mong 404): tài liệu API không được phơi ra Internet"
-echo "  /docs: HTTP 404 (đã đóng)"
+# Các đường KHÔNG được phơi ra Internet (Caddyfile @hidden). Sửa Caddyfile về sau mà lỡ mở /mcp thì deploy phải đỏ (review 012 L-8).
+for hidden in /docs /redoc /openapi.json /mcp/threat/; do
+  hidden_code=$("${CURL[@]}" -o /dev/null -w '%{http_code}' "${CHECK_URL}${hidden}" || true)
+  [ "$hidden_code" = 404 ] || die "${hidden} trả HTTP ${hidden_code} (mong 404): không được phơi ra Internet"
+  echo "  ${hidden}: HTTP 404 (đã đóng)"
+done
 
 trap - ERR
 echo

@@ -7,7 +7,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-run() { uv run --directory backend python -m hoicon.ops.backup "$@"; }
+# --frozen --no-dev: trên VPS không tự giải lại lockfile và không cài nhóm dev khi chỉ để sao lưu (review 012 L-6).
+run() { uv run --frozen --no-dev --directory backend python -m hoicon.ops.backup "$@"; }
 
 case "${1:-backup}" in
   backup)

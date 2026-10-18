@@ -14,10 +14,13 @@ giám hộ + Caddy lo HTTPS. Tệp liên quan:
 
 ```
 Internet ──80/443──▶ caddy ──┬── /v1/*, /webhooks/zalo/*, /healthz, /readyz ──▶ backend :18000 ──▶ postgres :5432
-                             └── còn lại (trang người giám hộ) ───────────────▶ web :3100          (mạng `db`, không ra Internet)
+          (mạng `api`)       └── còn lại (trang người giám hộ) ───────────────▶ web :3100          (mạng `db`, không ra Internet)
+                                                                                 (mạng `web`, internal)
 ```
-Chỉ Caddy có cổng ra ngoài (80, 443 TCP; 443 UDP cho HTTP/3). Backend và web không có `ports:`; Postgres nằm trên mạng
-docker `internal: true` nên **không có cổng nào xuất ra máy chủ và cũng không có đường ra Internet**.
+Chỉ Caddy có cổng ra ngoài (80, 443 TCP; 443 UDP cho HTTP/3). Backend và web không có `ports:`. Ba mạng docker:
+`api` (caddy, backend; backend ra Internet qua đây để gọi Zalo/Anthropic), `web` (caddy, web; `internal: true`) và `db`
+(postgres, backend; `internal: true`). Nên **Postgres không có cổng nào xuất ra và không có đường ra Internet; container web không có đường
+tới backend, Postgres hay Internet** — chiếm được web cũng không thể bỏ qua các chặn ở Caddy để gọi thẳng `backend:18000`.
 
 ## 1. Chuẩn bị VPS
 
@@ -69,9 +72,11 @@ Thứ tự script làm, mỗi bước dừng ngay nếu lỗi:
 4. **Nếu DB đã có dữ liệu:** sao lưu mã hóa ngay (`backup-vps.sh`). Sao lưu thất bại ⇒ **không migrate**. Lần đầu (DB trống)
    bỏ qua bước này. `--skip-backup` chỉ dùng khi bạn đã tự sao lưu.
 5. `alembic upgrade head` bằng ảnh mới, *trước khi* nạp container mới.
-6. `docker compose up -d --wait`: chờ cả bốn dịch vụ healthy (backend healthy nghĩa là `/readyz` 200).
+6. `docker compose up -d --wait`: chờ cả bốn dịch vụ healthy (backend healthy nghĩa là `/readyz` 200), rồi `caddy reload`
+   (nạp lại êm Caddyfile; thư mục `infra/caddy` được mount nguyên thư mục nên `git pull` có hiệu lực mà không cần tạo lại
+   container; Caddyfile sai ⇒ lệnh lỗi, Caddy giữ cấu hình cũ và script dừng).
 7. **Chỉ coi là xong khi** `https://<tên miền>/readyz` trả đúng HTTP 200 *qua Caddy* (thử tối đa 24 lần × 5 giây vì chứng
-   chỉ lần đầu cần vài chục giây), `/login` (web) trả 200 và `/docs` trả 404.
+   chỉ lần đầu cần vài chục giây), `/login` (web) trả 200, và `/docs`, `/redoc`, `/openapi.json`, `/mcp/threat/` đều trả 404.
 
 Thất bại ở bước nào thì script in 40 dòng nhật ký backend gần nhất (đã bỏ dòng healthcheck) cùng gợi ý quay lui, rồi thoát
 mã khác 0. Chạy lại script là an toàn (lũy đẳng).
@@ -105,7 +110,10 @@ hc exec backend python -m hoicon.ops.zalo_webhook info
 - Nhật ký docker xoay vòng (10 MB × 5 tệp mỗi dịch vụ). Xem: `hc logs -f --tail=100 backend`.
 - **Caddy che token trong nhật ký** (cả nhật ký truy cập lẫn nhật ký *lỗi*): `/login/<token>`, `/a/<token>` và
   `/v1/action/<token>` ghi thành `.../REDACTED`; bỏ hẳn các tiêu đề `Cookie`, `Authorization`, `X-Bot-Api-Secret-Token`,
-  `Referer` và `Set-Cookie`. Đã thử bằng yêu cầu thật và bằng lỗi 502 (xem mục 11).
+  `Referer`; bỏ cả `Set-Cookie`, `Location`, `Refresh`, `Content-Location` của phản hồi (Next đặt `Refresh: 0;url=/login/<token>`
+  khi chuẩn hóa `//login/<token>`: đã thấy token lọt vào log và đã sửa). Đã thử bằng yêu cầu thật, bằng `//login/…` và bằng lỗi 502 (mục 11).
+- Caddy có timeout: đọc tiêu đề 10 giây, đọc thân 30 giây, rỗi 2 phút, tiêu đề ≤ 16 KB (chống Slowloris làm Caddy bị OOM). Cổng 80 được khai báo
+  tường minh trong Caddyfile để nhận cùng timeout (máy chủ chuyển hướng tự tạo của Caddy không nhận). Không đặt timeout ghi/đọc toàn bộ vì SSE giữ kết nối dài.
 - Địa chỉ IP khách vẫn có trong nhật ký truy cập (cần để điều tra lạm dụng). Nếu DPIA yêu cầu che, thêm bộ lọc `ip_mask` vào
   `redact_logs` trong Caddyfile.
 - Postgres không bật `log_statement` (câu SQL có thể chứa dữ liệu cá nhân).
@@ -195,7 +203,10 @@ Job hạn lưu dữ liệu chạy mỗi ngày trong worker, không cần lịch 
 - Triển khai lần đầu từ DB trống và lần hai (lũy đẳng, có sao lưu trước migrate): cả hai kết thúc bằng `/readyz` 200 qua
   Caddy, `zalo_mode: live`, web `/login` 200, `/docs` 404. Migration chạy 0001 → 0010.
 - Backend chạy bằng uid 10001, rootfs chỉ đọc, bỏ hết capability; không có khóa sao lưu trong môi trường container.
-- Postgres không ra được Internet, không có cổng xuất ra; backend ra được Internet (Zalo/Anthropic cần).
+- Postgres không ra được Internet, không có cổng xuất ra; backend ra được Internet (Zalo/Anthropic cần). Container web:
+  không phân giải được `backend`/`postgres` và không ra được Internet; Caddy tới được cả web lẫn backend.
+- Caddy: Slowloris (nửa tiêu đề rồi im lặng) bị ngắt đúng 10,0 giây ở cổng 80; `//login/<token>` và `/login/<token>` đều được che trong log (0 lần lộ),
+  không còn `Server`/`X-Powered-By`; sửa Caddyfile rồi deploy ⇒ `caddy reload` nạp êm (container không bị tạo lại); Caddyfile hỏng ⇒ deploy thoát 1 và Caddy vẫn phục vụ cấu hình cũ.
 - Sao lưu mã hóa tạo bản `0600` rồi `restore-check` đạt (24 bảng, trigger bất biến còn nguyên, DB tạm đã xóa).
 - Caddy: định tuyến đúng; `/mcp/*`, `/docs`, `/redoc`, `/openapi.json` trả 404; chống giả mạo `X-Forwarded-For`; thân
   quá 300 KB bị chặn 413 (cả chunked); SSE giữ nguyên nhịp (4 sự kiện cách nhau 0,5 s, không bị gộp); nhật ký che token.

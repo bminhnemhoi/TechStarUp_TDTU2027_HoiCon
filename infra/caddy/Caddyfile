@@ -14,7 +14,10 @@
 	format filter {
 		wrap json
 		fields {
-			request>uri regexp "^(/login/|/a/|/v1/action/)[^/?#]+" "${1}REDACTED"
+			request>uri regexp "^(/+(?:login|a|v1/action)/)[^/?#]+" "${1}REDACTED"
+			resp_headers>Location delete
+			resp_headers>Refresh delete
+			resp_headers>Content-Location delete
 			request>headers>Cookie delete
 			request>headers>Authorization delete
 			request>headers>X-Bot-Api-Secret-Token delete
@@ -26,10 +29,26 @@
 
 {
 	email {$HOICON_ACME_EMAIL}
+	# Chống Slowloris/kết nối treo làm Caddy (giới hạn RAM) bị OOM rồi restart (review bảo mật 012 M-2). Không đặt `write`/`read`
+	# vì luồng SSE giữ kết nối dài; chỉ giới hạn thời gian đọc tiêu đề và thân yêu cầu.
+	servers {
+		timeouts {
+			read_header 10s
+			read_body 30s
+			idle 2m
+		}
+		max_header_size 16KB
+	}
 	# Logger mặc định: nhật ký LỖI (upstream chết, 502…) in cả `request` với URI và tiêu đề, không đi qua log của site.
 	log {
 		import redact_logs
 	}
+}
+
+# Cổng 80 tự khai báo thay vì để Caddy tự tạo máy chủ chuyển hướng: máy chủ tự tạo KHÔNG nhận `servers { timeouts }` (đã đo:
+# nửa tiêu đề rồi im lặng vẫn không bị ngắt sau 25 giây). Xác thực ACME http-01 vẫn do Caddy xử lý trước route này.
+http://{$HOICON_DOMAIN} {
+	redir https://{host}{uri} 308
 }
 
 {$HOICON_DOMAIN} {
@@ -53,6 +72,7 @@
 		# `?` = chỉ đặt khi upstream chưa đặt (Next đặt no-referrer cho trang có token).
 		?Referrer-Policy strict-origin-when-cross-origin
 		-Server
+		-X-Powered-By
 	}
 
 	@hidden path /mcp /mcp/* /docs /docs/* /redoc /redoc/* /openapi.json

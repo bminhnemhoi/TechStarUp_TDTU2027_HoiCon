@@ -33,6 +33,6 @@ WORKDIR /app/backend
 USER 10001
 EXPOSE 18000
 # --proxy-headers: IP khách thật từ X-Forwarded-For của Caddy (giới hạn tần suất ghép đôi theo nguồn, pairing.py).
-# `*` chấp nhận được vì cổng 18000 KHÔNG xuất ra ngoài: chỉ Caddy và web nằm cùng mạng `edge` với backend.
+# `*` chấp nhận được vì cổng 18000 KHÔNG xuất ra ngoài và chỉ Caddy nằm cùng mạng `api` với backend (web ở mạng riêng).
 CMD ["uvicorn", "hoicon.api.main:app", "--host", "0.0.0.0", "--port", "18000", \
      "--proxy-headers", "--forwarded-allow-ips", "*", "--timeout-graceful-shutdown", "20"]
