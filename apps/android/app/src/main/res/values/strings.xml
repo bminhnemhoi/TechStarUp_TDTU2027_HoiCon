@@ -53,6 +53,7 @@
     <string name="pause_call_child">Gọi cho con</string>
     <string name="pause_continue">Vẫn tiếp tục</string>
     <string name="pause_continue_hint">Giữ ngón tay 3 giây</string>
+    <string name="pause_continue_hint_short">Giữ 3 giây</string>
     <string name="pause_continue_holding">Giữ yên nhé…</string>
     <string name="pause_continue_too_short">Chưa đủ 3 giây. Bác đặt ngón tay lên nút và giữ yên đến khi thanh màu chạy hết.</string>
     <string name="pause_continue_long_click_label">giữ 3 giây để tiếp tục</string>

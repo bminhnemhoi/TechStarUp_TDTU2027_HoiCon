@@ -65,7 +65,7 @@ Cấm sửa `backend/**`.
 - [x] T013 [US2] Đo APK sau, SC-005 (≤ +1 MB so với T001) và SC-002 (0 mã hex chép tay trong `apps/android/app/src/main/java/**` ngoài `Tokens.kt`) — SC-002, SC-005 · Verify: `grep -rEn "0x[0-9A-Fa-f]{8}|#[0-9A-Fa-f]{6}" apps/android/app/src/main/java --include=*.kt | grep -v Tokens.kt` (rỗng) và `stat -c %s apps/android/app/build/outputs/apk/debug/app-debug.apk`
 - [x] T014 [US2] Chụp ảnh "SAU" E7 + màn quyền 100%/200% × `hc-api36`/`hc-api34` ⇒ `~/hoicon-evidence/010-design-system/shots/after-*.png`; xem từng ảnh: không chữ cắt/chồng, nút ≥ 64dp, đúng Be Vietnam Pro — FR-013, SC-004 · Verify: `ls ~/hoicon-evidence/010-design-system/shots/ | grep -c after-` (≥ 8, hoặc `BLOCKED`)
 - [x] T015 [US2] Đo lại hạn E7: `python3 scripts/emu-scenario.py --avd hc-api36 --scenario fake_police --runs 10` ⇒ 10/10, p95 ≤ 3 000 ms; ghi cạnh spec 001 (p95 1 724 ms) chỉ để tham khảo (ADR-008) — FR-014, SC-006 · Verify: output của lệnh, lưu `~/hoicon-evidence/010-design-system/tokens/emu-fake-police.txt`
-- [ ] T016 [US2] Gọi `ux-elder-reviewer` trên ảnh T014 — FR-013 · Verify: báo cáo không còn mục mức cao — **BLOCKED**: đã chạy, còn 2 High (E7 200% màn nhỏ, có sẵn từ spec 001) ⇒ P2-05; xem evidence.md
+- [x] T016 [US2] Gọi `ux-elder-reviewer` trên ảnh T014 — FR-013 · Verify: báo cáo không còn mục mức cao — **ĐẠT cho biến thể ngân hàng (18/10/2026)**: 0 High trên ảnh E7 Compose mới (hc-api34/36); biến thể điều khiển từ xa chưa có ảnh; xem evidence.md "E7 sửa 18/10/2026"
 
 **Checkpoint**: US2 xong; US1 không vỡ (`--check` vẫn 0).
 

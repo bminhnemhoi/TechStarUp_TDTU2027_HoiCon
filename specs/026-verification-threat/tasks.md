@@ -205,7 +205,7 @@
 
 ## Giai đoạn Z: Gom & nghiệm thu (checkout chính)
 
-- [ ] T028 [AB] [FR-013] E2E trên máy ảo: `python3 scripts/emu-scenario.py --avd hc-api36 --scenario fake_police` rồi
+- [x] T028 [AB] [FR-013] E2E trên máy ảo: `python3 scripts/emu-scenario.py --avd hc-api36 --scenario fake_police` rồi
   chạy lại với `--avd hc-api34`. Backend dev có seed demo đã nạp lại để có `bucket_enc`. Kiểm số hư cấu
   `flagged_caller` khớp bucket qua đồng bộ thật (không chỉ qua h1 cứng của bản debug), và SafePause hiện biến thể
   `critical`.
