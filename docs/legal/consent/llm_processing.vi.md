@@ -7,8 +7,8 @@
 Nhờ AI hiểu rõ hơn
 Để hiểu tình huống của bác, HỏiCon có thể nhờ một dịch vụ AI (trí tuệ nhân tạo) ở nước ngoài đọc một bản tóm tắt ngắn.
 Bản tóm tắt chỉ nói chuyện gì đang xảy ra, ví dụ có cuộc gọi lạ, bác mở ứng dụng ngân hàng. HỏiCon che số điện thoại, tên và số tài khoản trước khi gửi.
-Nếu bác chưa đồng ý, HỏiCon không gửi gì ra ngoài và vẫn nhắc bác dừng lại bằng những câu viết sẵn. AI chỉ giúp lời nhắc kỹ hơn, không bao giờ làm lời nhắc bớt đi.
-Bác đổi ý bất cứ lúc nào.
+Nếu bác chưa đồng ý, HỏiCon không gửi bản tóm tắt cho dịch vụ AI và vẫn nhắc bác dừng lại bằng những câu viết sẵn. AI chỉ giúp lời nhắc kỹ hơn, không bao giờ làm lời nhắc bớt đi.
+Bác đổi ý bất cứ lúc nào, chỉ cần nhờ người đã hướng dẫn bác cài HỏiCon.
 <!-- END-TEXT -->
 
 ## Nguồn của từng con số (không hiển thị cho người dùng)

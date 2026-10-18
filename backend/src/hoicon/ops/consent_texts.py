@@ -43,6 +43,8 @@ MAX_SENTENCE_WORDS = 40
 _LAW = re.compile(r"Điều\s*\d|Nghị định|Thông tư|Khoản\s*\d|Luật\s+(?:số|bảo|trí)", re.IGNORECASE)
 _LONG_DIGITS = re.compile(r"\d{4,}")
 _SENTENCE_END = re.compile(r"[.!?]+")
+# Cụm cho biết người đọc từ chối/rút/tắt/dừng được. Cố ý KHÔNG tính chữ "nhờ" (xuất hiện ở "khi bác nhờ" nghĩa khác).
+_EXIT = re.compile(r"tắt|rút|đổi ý|chưa đồng ý|từ chối|muốn dừng|dừng giữa chừng", re.IGNORECASE)
 
 
 def purposes() -> tuple[str, ...]:
@@ -86,6 +88,8 @@ def style_problems(text: str, purpose: str) -> list[str]:
         out.append(f"{purpose}: có điều luật/văn bản pháp lý (chưa có nguồn đã kiểm, người cao tuổi cũng không cần)")
     if _LONG_DIGITS.search(text):
         out.append(f"{purpose}: có dãy số ≥ 4 chữ số (giống số điện thoại/tài khoản)")
+    if not _EXIT.search(text):
+        out.append(f"{purpose}: không nói cách từ chối/rút lại/tắt (FR-006: người đọc phải biết mình thoát được)")
     if "bác" not in text.lower():
         out.append(f"{purpose}: không xưng 'bác' (Hiến chương VI)")
     lowered = text.lower()

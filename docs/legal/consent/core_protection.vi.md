@@ -5,9 +5,9 @@
 <!-- BEGIN-TEXT -->
 Đây là trợ lý AI HỏiCon.
 Nhờ HỏiCon trông chừng giúp bác
-Sau cuộc gọi với số lạ (gọi tới hay gọi đi), HỏiCon để ý 10 phút xem bác có mở ứng dụng ngân hàng, ví điện tử, chứng khoán hay ứng dụng điều khiển điện thoại từ xa không. Lúc khác HỏiCon không theo dõi gì.
+Sau cuộc gọi với số lạ, HỏiCon để ý 10 phút. HỏiCon xem bác có mở ứng dụng ngân hàng, ví điện tử, chứng khoán hay ứng dụng điều khiển điện thoại từ xa không. Ngoài lúc đó, HỏiCon không xem bác dùng ứng dụng nào.
 Nếu thấy dấu hiệu đáng ngờ, HỏiCon nhắc bác dừng lại một chút. Bác vẫn là người quyết định.
-HỏiCon không nghe, không ghi âm cuộc gọi, không đọc tin nhắn và danh bạ. HỏiCon không biết số dư, giao dịch hay mã OTP của bác.
+HỏiCon không nghe, không ghi âm cuộc gọi, không đọc tin nhắn và danh bạ. HỏiCon không biết số dư, giao dịch hay mã xác thực (OTP) của bác.
 HỏiCon giữ thông tin về từng cuộc gọi lạ tối đa 90 ngày, ghi chép các lần nhắc dừng lại tối đa 12 tháng. HỏiCon không bán thông tin của bác.
 Muốn dừng hay xóa thông tin, bác nhờ người đã hướng dẫn bác hoặc con bác. Bác chưa đồng ý cũng không sao.
 <!-- END-TEXT -->

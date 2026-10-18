@@ -143,8 +143,26 @@ def test_style_rules_accept_warm_short_text() -> None:
     assert ct.style_problems(GOOD, "drills") == []
 
 
+@pytest.mark.parametrize(
+    "exit_phrase",
+    [
+        "Bác tắt quyền này.",
+        "Bác đổi ý bất cứ lúc nào.",
+        "Bác chưa đồng ý cũng không sao.",
+        "Bác từ chối cũng được.",
+        "Muốn dừng, bác nhờ con bác.",
+        "Bác rút lại lúc nào cũng được.",
+    ],
+)
+def test_every_text_must_say_how_to_decline_or_stop(exit_phrase: str) -> None:
+    """FR-006: người đọc phải biết mình từ chối/rút lại được (`lookups` từng mất câu này khi rút gọn cho đủ 160 từ)."""
+    assert ct.style_problems(f"Bác ơi, HỏiCon xin phép làm việc này. {exit_phrase}", "overlay_pause") == []
+    missing = ct.style_problems("Bác ơi, HỏiCon xin phép làm việc này giúp bác.", "overlay_pause")
+    assert any("cách từ chối" in p for p in missing)
+
+
 def test_ai_opening_required_only_for_ai_purposes() -> None:
-    no_ai = "HỏiCon xin phép bác một việc nhỏ."
+    no_ai = "HỏiCon xin phép bác một việc nhỏ. Bác tắt được bất cứ lúc nào."
     assert any("Đây là trợ lý AI HỏiCon" in p for p in ct.style_problems(no_ai, "lookups"))
     assert ct.style_problems(no_ai, "overlay_pause") == []
     assert set(ct.AI_PURPOSES) <= set(PURPOSES)

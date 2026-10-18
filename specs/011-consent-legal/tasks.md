@@ -37,3 +37,14 @@
 - [ ] T010 [FR-004, SC-007] Minh duyệt văn bản (`draft` → `approved`, ghi `released` khi đưa cho người thật). **BLOCKED**: Minh.
 - [ ] T011 [SC-008] Người cao tuổi thật đọc thử, ghi chỗ khó hiểu. **BLOCKED**: cần thí điểm (029 giai đoạn 2).
 - [ ] T012 [FR-011] *Làn A:* đồng bộ chuỗi Android với văn bản đã duyệt và nâng `ConsentLedger.VERSION`. **BLOCKED**: sau T010.
+
+## Phase 4: Convergence
+- [ ] T013 CRITICAL-for-release: thực thi đồng ý `llm_processing` ở `llm_router` (thiếu đồng ý ⇒ rơi về mẫu soạn sẵn, kèm test) hoặc bỏ lời hứa khỏi `llm_processing.vi.md` per SC-006 (partial). **Cần Tiến quyết** (đổi hành vi tác tử, phải chạy eval).
+  · Verify: test "thiếu đồng ý ⇒ không gọi LLM" xanh; `hoicon-eval --suite smoke --compare baseline` không lệch
+- [ ] T014 Thực thi đồng ý `pilot_research` cho heartbeat/báo cáo, hoặc đổi chữ "gộp chung nhiều người" cho đúng `ops pilot report` hiện tại per SC-006 (partial). **Cần Tiến quyết.**
+  · Verify: test heartbeat 403/bỏ qua khi thiếu `pilot_research` (nếu thực thi); `consent_texts check` đạt
+- [ ] T015 Giữ `voice_input.vi.md` ở trạng thái chặn phát hành cho tới khi tính năng trả lời bằng giọng nói tồn tại (spec 004) và sửa chữ theo thực tế per FR-006 (partial). **BLOCKED**: 004.
+- [x] T016 Sửa `lookups.vi.md` để nói cách từ chối/rút, và thêm luật máy kiểm "mỗi văn bản có cụm thoát" vào `style_problems` per FR-006 (partial).
+  · Verify: `$PYTEST tests/contract/test_consent_texts.py` xanh; đột biến bỏ cụm thoát ⇒ đỏ; `consent_texts check` rc = 0
+- [x] T017 Chạy lại `ux-elder-reviewer` trên các văn bản đã sửa per SC-006 (partial).
+  · Verify: báo cáo ghi vào `evidence.md`, 0 mục Chặn mới

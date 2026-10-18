@@ -7,7 +7,7 @@ Biết ứng dụng nào vừa được mở
 HỏiCon xin phép bác cho xem tên ứng dụng vừa được mở, chỉ trong 10 phút sau một cuộc gọi với số lạ.
 Nhờ vậy HỏiCon biết khi bác mở ứng dụng ngân hàng hay ứng dụng cho người khác điều khiển điện thoại từ xa (như AnyDesk, TeamViewer), để nhắc bác dừng lại.
 HỏiCon chỉ biết tên ứng dụng. HỏiCon không xem được bên trong, không biết số dư hay giao dịch của bác.
-Bác tắt quyền này trong Cài đặt của điện thoại bất cứ lúc nào. Khi đó HỏiCon thôi làm việc này, và con bác có thể biết để hỏi thăm bác.
+Bác tắt quyền này trong Cài đặt của điện thoại bất cứ lúc nào. Khi đó HỏiCon thôi làm việc này.
 <!-- END-TEXT -->
 
 ## Nguồn của từng con số (không hiển thị cho người dùng)

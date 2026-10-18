@@ -5,11 +5,12 @@
 <!-- BEGIN-TEXT -->
 Đây là trợ lý AI HỏiCon.
 Nhờ HỏiCon kiểm tra giúp bác
-Khi bác nhờ, HỏiCon kiểm tra một số điện thoại hay một đường link xem có trong danh sách cảnh báo lừa đảo không.
-HỏiCon không gửi số đầy đủ, chỉ gửi 3 số cuối và một mã thay cho số. Với đường link, HỏiCon chỉ gửi địa chỉ trang web, bỏ phần có thể chứa thông tin riêng của bác.
+Khi bác nhờ, HỏiCon kiểm tra số điện thoại hay đường link xem có trong danh sách cảnh báo lừa đảo không.
+HỏiCon không gửi số đầy đủ, chỉ gửi 3 số cuối và một mã thay cho số. Với đường link, HỏiCon chỉ gửi địa chỉ trang web, bỏ phần có thông tin riêng của bác.
 HỏiCon không bao giờ nói một số là "an toàn". Chưa có trong danh sách chỉ nghĩa là chưa có thông tin. Còn băn khoăn, bác gọi hỏi con bác trước khi làm theo.
 Mỗi lần kiểm tra được ghi lại tối đa 90 ngày để không bị kẻ xấu lợi dụng. HỏiCon không bán thông tin của bác.
 Nếu con bác đang được báo về một cuộc gọi lạ và kết quả đáng lo, con bác sẽ biết bác vừa kiểm tra.
+Bác chưa đồng ý cũng không sao.
 <!-- END-TEXT -->
 
 ## Nguồn của từng con số (không hiển thị cho người dùng)

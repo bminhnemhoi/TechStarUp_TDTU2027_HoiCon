@@ -6,9 +6,9 @@
 Hiện lời nhắc lên trên ứng dụng khác
 HỏiCon xin phép bác cho hiện màn nhắc "Khoan chuyển tiền đã" lên trên ứng dụng bác đang dùng.
 Nhờ vậy lời nhắc hiện ra kịp lúc, ngay cả khi bác đang ở trong ứng dụng khác.
-Màn nhắc chỉ để bác dừng lại một chút, không khóa máy của bác. Muốn đi tiếp, bác giữ nút tiếp tục 3 giây.
+Màn nhắc chỉ để bác dừng lại một chút, không khóa máy của bác. Muốn đi tiếp, bác giữ nút "Vẫn tiếp tục" 3 giây.
 HỏiCon không tự bấm hay làm gì thay bác trong ứng dụng khác.
-Bác tắt quyền này trong Cài đặt của điện thoại bất cứ lúc nào. Khi đó HỏiCon thôi làm việc này, và con bác có thể biết để hỏi thăm bác.
+Bác tắt quyền này trong Cài đặt của điện thoại bất cứ lúc nào. Khi đó HỏiCon thôi làm việc này.
 <!-- END-TEXT -->
 
 ## Nguồn của từng con số (không hiển thị cho người dùng)

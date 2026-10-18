@@ -7,7 +7,7 @@ Nhận biết cuộc gọi số lạ
 HỏiCon xin phép được biết khi có số chưa lưu trong danh bạ gọi tới, hoặc khi bác gọi cho số chưa lưu.
 HỏiCon biết có cuộc gọi, lúc nào và bao lâu. HỏiCon không nghe cuộc gọi, không chặn cuộc gọi và không đọc danh bạ của bác.
 HỏiCon không giữ số đầy đủ của bác, chỉ giữ 3 số cuối và một mã thay cho số đó, để nhận ra số đã gặp.
-Bác tắt quyền này trong Cài đặt của điện thoại bất cứ lúc nào. Khi đó HỏiCon thôi làm việc này, và con bác có thể biết để hỏi thăm bác.
+Bác tắt quyền này trong Cài đặt của điện thoại bất cứ lúc nào. Khi đó HỏiCon thôi làm việc này.
 <!-- END-TEXT -->
 
 ## Nguồn của từng con số (không hiển thị cho người dùng)

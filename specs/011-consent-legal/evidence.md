@@ -83,6 +83,19 @@ Chưa có reviewer đọc lại các bản sửa chữ.
 7. `data/remote/PairingApiClient.kt:128`, `data/consent/ConsentSync.kt`, `ConsentLedger.changes()` — logic gửi lô đồng ý (không cần đổi nếu giữ nguyên `purpose/version/sha256`).
 8. Test Android nên ghim `sha256` của `manifest.json` (hiện chỉ có `AiDisclosureCopyTest` cho câu công khai AI).
 
+## `ux-elder-reviewer` lượt 2 (18/10/2026)
+
+Đọc lại sau các bản sửa: **0 Chặn, 4 Cao, 13 Trung bình, 9 Thấp** (không tính 3 văn bản bị chặn phát hành vì mã). Mục Cao đã xử lý:
+
+| Mục Cao | Xử lý |
+|---|---|
+| Câu "con bác có thể biết" ở 3 văn bản quyền nghe như đe dọa và **chưa có mã thực thi** (`heartbeat_service.py` chỉ lưu `permission_state` để đo độ phủ) | ĐÃ bỏ khỏi 3 văn bản; bỏ cả câu "thỉnh thoảng báo họ biết quyền còn bật" ở `guardian_alerts`; sửa dòng tương ứng ở `PILOT-PROTOCOL.md` §4; ghi điểm chờ trong `guardian_alerts.vi.md` |
+| `guardian_alerts` và `llm_processing` hứa "tắt/đổi ý" mà không nói cách | ĐÃ thêm "nhờ người đã hướng dẫn bác cài HỏiCon" |
+| `llm_processing`: "không gửi gì ra ngoài" quá rộng | ĐÃ đổi thành "không gửi bản tóm tắt cho dịch vụ AI" |
+| `core_protection`: câu đầu 39 từ | ĐÃ tách; kèm bỏ "Lúc khác không theo dõi gì" (mâu thuẫn với màn quét cuộc gọi), "mã OTP" → "mã xác thực (OTP)", tên nút "Vẫn tiếp tục" ở `overlay_pause` |
+
+Chữ hiển thị đổi nên `sha256` trong `manifest.json` đổi theo (các văn bản chưa phát hành, chưa có dòng đồng ý nào dùng chúng nên không tăng version). **Android phải ghim lại sha mới khi làn A đồng bộ (T012).** Còn mở, chờ Minh hoặc làn A: 13 Trung bình và 9 Thấp (hạn lưu "rồi xóa" rõ hơn, "đường link", thêm cách rút cho `voice_input`, `lookups`, `drills`, số hỗ trợ thật…). Reviewer không kiểm được: nghe TTS, chữ 200%, điều khoản nhà cung cấp LLM.
+
 ## Còn mở (không đánh ☑)
 
 T010 (Minh duyệt), T011 (người thật đọc thử), T012 (làn A đồng bộ). Thực thi `llm_processing`, `voice_input`, `pilot_research` ở mã. Nhờ người có chuyên môn pháp lý rà soát và đối chiếu luật gốc.
