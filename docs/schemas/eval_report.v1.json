@@ -18,9 +18,26 @@
     "by_region": { "type": "object", "additionalProperties": { "$ref": "#/$defs/group" } },
     "cases": { "type": "array", "items": { "$ref": "#/$defs/case" } },
     "baseline_diff": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/baseline_diff" }] },
-    "passed": { "type": "boolean" }
+    "passed": { "type": "boolean" },
+    "gate": { "$ref": "#/$defs/gate" }
   },
   "$defs": {
+    "gate": {
+      "type": "object",
+      "description": "Spec 036 (tùy chọn, chỉ bộ full): phán quyết Gate M3. `pass` chỉ khi ≥ 100 ca chính thức (không draft, không stale) chạy trên cassette `recorded` và đạt 4 ngưỡng; cassette `synthetic` cho tối đa `provisional` (số rào tất định, CHƯA PHẢI SỐ M3).",
+      "additionalProperties": false,
+      "required": ["name", "verdict", "reasons", "official_cases", "provisional_cases", "stale_cases", "metrics_official"],
+      "properties": {
+        "name": { "const": "M3" },
+        "verdict": { "enum": ["pass", "fail", "provisional", "blocked"] },
+        "reasons": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 200 } },
+        "official_cases": { "type": "integer", "minimum": 0 },
+        "provisional_cases": { "type": "integer", "minimum": 0, "description": "Ca từ kịch bản draft:true" },
+        "stale_cases": { "type": "integer", "minimum": 0, "description": "Cassette có prompt_versions khác prompt hiện tại" },
+        "metrics_official": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/metrics" }], "description": "null khi chưa có ca chính thức (không giả 0)" },
+        "twin_pairs_both_correct": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/rate" }] }
+      }
+    },
     "rate": { "type": "number", "minimum": 0, "maximum": 1 },
     "level": { "enum": ["none", "low", "medium", "high", "critical"] },
     "metrics": {
@@ -98,7 +115,9 @@
         "fallbacks": { "type": "integer", "minimum": 0 },
         "duration_ms": { "type": "integer", "minimum": 0 },
         "outcome": { "enum": ["resolved_safe", "resolved_prevented", "case_open", "resolved_no_response", "no_incident", "error"] },
-        "passed": { "type": "boolean" }
+        "passed": { "type": "boolean" },
+        "stale": { "type": "boolean", "description": "Spec 036: cassette ghi cho phiên bản prompt khác" },
+        "cassette_source": { "enum": ["synthetic", "recorded"], "description": "Spec 036" }
       }
     },
     "baseline_diff": {

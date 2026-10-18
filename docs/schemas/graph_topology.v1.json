@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/graph_topology.v1.json",
+  "title": "GraphTopology v1",
+  "description": "GET /v1/graphs/incident (spec 033): nút + cạnh của đồ thị sự cố, sinh từ đồ thị LangGraph đã biên dịch (không chép tay). Chỉ mô tả cấu trúc mã, không có dữ liệu người dùng. `step_nodes` là các giá trị agent_steps.node mà nút ghi ra (để /trace tô đúng nút).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["graph", "version", "nodes", "edges"],
+  "properties": {
+    "graph": { "enum": ["incident"] },
+    "version": { "type": "string", "pattern": "^[0-9a-f]{12}$", "description": "12 ký tự đầu SHA-256 của danh sách nút + cạnh đã sắp xếp" },
+    "nodes": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label_vi", "kind", "step_nodes"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^(__start__|__end__|[a-z_]{1,32})$" },
+          "label_vi": { "type": "string", "minLength": 1, "maxLength": 60 },
+          "kind": { "enum": ["start", "end", "node", "interrupt"] },
+          "step_nodes": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z_]{1,32}$" } }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "target", "conditional"],
+        "properties": {
+          "source": { "type": "string", "pattern": "^(__start__|__end__|[a-z_]{1,32})$" },
+          "target": { "type": "string", "pattern": "^(__start__|__end__|[a-z_]{1,32})$" },
+          "conditional": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

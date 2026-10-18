@@ -144,3 +144,23 @@
   Cập nhật `docs/DESIGN-SYSTEM.md` (E11) và ROADMAP "Ghi chú" (chỉ số PILOT-PROTOCOL ★, lựa chọn B để sau, chờ Minh duyệt
   3 kịch bản). Điền `evidence.md`. Đặt `P2-13` ◐ cho tới khi Minh duyệt kịch bản.
   · Verify: mọi lệnh xanh; `python3 scripts/check-spec-trace.py` ⇒ 0 lỗi
+
+## Wave 2 (18/10/2026 — tồn đọng Wave 1)
+
+- [ ] T023 [A] [FR-008] Màn đồng ý `drills` **đúng lúc** trên Android (review bảo mật 028, Medium #1; 011 `privacy-audit`: "không ai
+  được mời"). Cần 011 T018 xong trước (chuỗi `drills` theo `docs/legal/consent/drills.vi.md` v3).
+  - Đường vào: một hàng phụ (không phải hành động chính thứ ba) trên E6 "Đang bảo vệ": "Luyện tập nhận biết lừa đảo cùng con", vùng
+    chạm ≥ 64dp; E6 vẫn ≤ 2 hành động chính.
+  - Màn đồng ý: chữ của `drills.vi.md` (đọc to được), hai nút "Đồng ý luyện tập" / "Để sau"; đã đồng ý thì màn hiện "Ngừng luyện
+    tập" (rút đồng ý, ghi dòng `granted=false`).
+  - `ConsentLedger`: thêm `drills` vào `granted`/`texts` (nếu không, `changes()` tự sinh dòng **rút** đồng ý — ghi chú evidence 028
+    mục 1); ghi qua `ConsentSync` như các mục đích khác, sha khớp `manifest.json`.
+  - Test JVM: đồng ý ⇒ `changes()` có đúng một dòng `drills` granted với `version`/`sha256` của manifest; rút ⇒ một dòng
+    `granted=false`; các mục đích khác không đổi.
+  - E2E AVD `hc-api36`: đồng ý trên máy ⇒ `ops drills schedule` thành công (trước đó trả `consent_required`) ⇒ nhận lời mời; rút ⇒
+    lịch mới bị từ chối. Ảnh 100% + 200%; `ux-elder-reviewer` 0 Chặn.
+
+  · Verify: `$GRADLE :app:testDebugUnitTest :app:lintDebug`; log E2E + ảnh + báo cáo reviewer trong `evidence.md`;
+  `python3 scripts/emu-scenario.py --avd hc-api36 --scenario fake_police` vẫn ĐẠT
+- T021 giữ **P2** (web `/drills`, cần 027 — 027 đã merge nên không còn BLOCKED; làm sau 033 nếu còn thời gian, không chặn ☑ của
+  P2-13 vì FR-011 là P2).

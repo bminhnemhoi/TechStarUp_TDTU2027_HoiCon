@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/sim_scenarios.v1.json",
+  "title": "SimScenarios v1",
+  "description": "GET /v1/sim/scenarios (spec 033): kịch bản chọn được trên /sim. Trích từ data/scenarios/*.yaml (scenario.v1), không có lời kể, không có nguồn.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scenarios"],
+  "properties": {
+    "scenarios": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "category", "is_benign", "injection", "draft", "script_vi"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(_[a-z0-9]+)*_[0-9]{3}$" },
+          "category": { "$ref": "scenario.v1.json#/properties/category" },
+          "is_benign": { "type": "boolean" },
+          "injection": { "type": "boolean" },
+          "draft": { "type": "boolean", "description": "Kịch bản chưa qua duyệt (005) ⇒ web gắn nhãn 'kịch bản nháp'" },
+          "script_vi": { "type": "string", "minLength": 20, "maxLength": 1200, "description": "Mô tả tình huống hư cấu (script_vi của kịch bản)" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/case_file_action.v1.json",
+  "title": "CaseFileAction v1",
+  "description": "Thân POST /v1/guardian/incidents/{id}/case-file (spec 031). Không có trường nội dung: người giám hộ chỉ duyệt/bỏ/đánh dấu đã nộp; ô tự điền (số điện thoại, số tài khoản, số tiền) KHÔNG bao giờ gửi về máy chủ.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["action"],
+  "properties": {
+    "action": { "enum": ["approve", "discard", "mark_sent"] }
+  }
+}

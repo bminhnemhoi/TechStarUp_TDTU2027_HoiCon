@@ -1,0 +1,19 @@
+[
+  {
+    "_name": "một kịch bản nháp",
+    "scenarios": [
+      {
+        "id": "fake_police_safe_account_002",
+        "category": "fake_police",
+        "is_benign": false,
+        "injection": true,
+        "draft": true,
+        "script_vi": "Người gọi xưng điều tra viên (hư cấu), nói tài khoản của bác bị dùng rửa tiền."
+      }
+    ]
+  },
+  {
+    "_name": "rỗng",
+    "scenarios": []
+  }
+]

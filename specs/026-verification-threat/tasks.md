@@ -233,3 +233,13 @@
   Sau đó điền `evidence.md` bằng số thật có nguồn, và đặt ROADMAP `P2-11` ở ◐ (☑ chỉ khi có số máy thật hoặc Minh chấp
   nhận số máy ảo).
   · Verify: mọi lệnh trên xanh; `python3 scripts/check-spec-trace.py` ⇒ 0 lỗi
+
+## Wave 2 (18/10/2026 — tồn đọng Wave 1)
+
+- [ ] T032 [A] [FR-011] Bỏ chuỗi giống số điện thoại khỏi chú thích trong **mã sản phẩm** (CLAUDE.md luật 1–2: số hư cấu chỉ ở
+  `tests/` hoặc `data/`): `data/lookup/LookupChecker.kt:37` (`"0912345678a"`) ⇒ mô tả bằng lời ("một số gõ kèm chữ cái thừa ở
+  cuối"); cùng loại ở `apps/android/rules/src/main/kotlin/vn/hoicon/rules/PiiMasker.kt:14` (ví dụ dạng `+84 …`, `091-…`, `(028) …`)
+  ⇒ mô tả các dạng phân cách bằng lời. Ví dụ cụ thể, nếu cần, chuyển vào test (`src/test/`) dùng số trong `data/fixtures/phones.json`.
+  Không đổi hành vi.
+  · Verify: `grep -rnE "(\+?84|0)[35789][0-9]{8}|(\+?84|0)[35789][0-9][ .-]?[0-9]{3}[ .-]?[0-9]{3,4}|\(0[0-9]{2}\) ?[0-9]{4}" apps/android/app/src/main apps/android/rules/src/main apps/android/demobank/src/main`
+  không còn kết quả; `$GRADLE :rules:test :app:testDebugUnitTest`

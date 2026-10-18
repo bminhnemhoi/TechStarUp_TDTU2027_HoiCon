@@ -57,8 +57,10 @@ phần "chạy trên VPS": 003 (MCP `threat` "chưa mở ra Internet — 012 quy
 - **(FR-009)** `docs/setup/VPS-DEPLOYMENT.md`: hướng dẫn từ VPS trắng tới chạy, cập nhật, quay lui, sao lưu, sự cố, và mục
   "đã kiểm / chưa kiểm / giới hạn".
 - **(FR-010)** `infra/env.prod.example` chỉ chứa khóa rỗng và hướng dẫn sinh khóa; tệp thật `infra/.env.prod` bị `.gitignore`.
-- **(FR-011)** *[Làn A — ngoài phạm vi làn B]* buildType `demo`/`release` (R8, tắt log chẩn đoán, baseline profile), AAB lên
-  Play internal testing + Google Group, đo khởi động nguội. Xem `specs/029-pilot-kit/evidence.md` (SC-003 `release-block`).
+- **(FR-011)** *[Làn A]* buildType `demo`/`release` (R8, tắt log chẩn đoán, baseline profile), AAB lên Play internal testing +
+  Google Group, đo khởi động nguội. `release` + R8 đã có (commit `3129dd3`, 029 T011); phần còn lại: T015 (BLOCKED Play Console),
+  T016 (`demo` + baseline profile), T018 (đo AVD). Xem `specs/029-pilot-kit/evidence.md` (SC-003 `release-block`).
+  *(Sửa 18/10 theo `/speckit-analyze`: MASTER-PLAN §3 đặt P1-08 trong 012, nên FR-011 thuộc phạm vi spec này, làn A.)*
 
 ## 4. Tiêu chí thành công
 
@@ -72,10 +74,10 @@ phần "chạy trên VPS": 003 (MCP `threat` "chưa mở ra Internet — 012 quy
 | **(SC-006)** | Thất bại an toàn | Thiếu/sai biến, `/readyz` không 200, backend unhealthy, migrate hỏng ⇒ thoát 1, kèm hướng dẫn, không "XONG"; sao lưu hỏng ⇒ không migrate | 4 ca hỏng cố ý |
 | **(SC-007)** | Sao lưu → khôi phục | Sao lưu mã hóa tạo tệp 0600; `restore-check` khớp manifest + trigger bất biến | `backup-vps.sh`, `restore-check` |
 | **(SC-008)** | VPS thật | Chứng chỉ Let's Encrypt thật, `https://<tên-miền>/healthz` = 200, `setWebhook` Zalo đạt, đo thời gian build/khôi phục | **BLOCKED** (VPS, tên miền, bot Zalo thật) |
-| **(SC-009)** | Android phát hành | AAB lên Play internal testing; khởi động nguội đo lại | **Làn A / BLOCKED** (Play Console, W0-3) |
+| **(SC-009)** | Android phát hành | AAB lên Play internal testing (**BLOCKED** Play Console, W0-3); khởi động nguội đo lại trên AVD: `onScreenCall` p95 < 5 s (T018) | AVD + Play Console |
 
 ## 5. Ngoài phạm vi
 
-Phần Android (FR-011), giám sát/cảnh báo ngoài (uptime), chép sao lưu ra ngoài máy, áp `infra/postgres/roles.sql` ở prod
+Giám sát/cảnh báo ngoài (uptime), chép sao lưu ra ngoài máy, áp `infra/postgres/roles.sql` ở prod
 (cần chạy `AsyncPostgresSaver.setup()` bằng role chủ trước — mục #8 review 034), tự động cập nhật bản vá hệ điều hành,
 nhiều bản backend song song (hạn mức đếm trong bộ nhớ, ADR-002).

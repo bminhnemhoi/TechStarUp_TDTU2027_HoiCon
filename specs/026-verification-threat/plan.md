@@ -272,3 +272,24 @@ hai làn.
 | Node mới làm lệch eval (thêm bước, đổi mức) | TB | Rescore chỉ nâng từ dòng xác minh có thật; ca eval không có dòng nào ⇒ mức không đổi; chạy `--compare baseline` |
 | Resume `evidence` đến khi đồ thị chưa chờ ⇒ bị bỏ qua | Thấp | `verification` gom ở lượt đi qua; đã ghi rõ trong D2 |
 | Google Code Scanner không có trên máy không có GMS | Thấp | Ẩn nút; P3 cắt được |
+
+## 10. Quyết định bổ sung (18/10/2026, Opus rà theo lệnh Tiến) — trần cuộn 30 ngày của `/v1/lookups`
+
+**Bối cảnh.** Review bảo mật T030 mục #1: hạn mức giờ/ngày không chặn được việc dò danh sách đe dọa chậm rãi qua `/v1/lookups`. Làn B
+đã thêm trần cuộn 30 ngày: thiết bị 600, người giám hộ 600, cả gia đình 3.000 (`routers/lookups.py`, dòng `actor = system` không
+tính). Evidence ghi "con số tôi chọn, **Tiến cần xác nhận**", nhưng chú thích trong mã đã ghi "Tiến xác nhận" — chưa có dấu vết
+xác nhận nào trong repo.
+
+**Đánh giá (số từ ADR-011 và mã, không đo):**
+
+| Câu hỏi | Tính | Kết luận |
+|---|---|---|
+| Có chặn được gì so với trần ngày? | Trần ngày 60/thiết bị ⇒ tối đa 1.800 lượt/30 ngày; trần tháng 600 ⇒ giảm 3 lần với kẻ dò bền bỉ | Có tác dụng, chỉ với kiểu dò chậm |
+| Một thiết bị dò được bao nhiêu? | ≈ 86 ứng viên/bucket gắn cờ ở b = 22 ⇒ 600 lượt ≈ 7 bucket (tệ nhất) đến ≈ 14 bucket (trung bình) mỗi tháng | Dò cả danh sách N = 10.000 cần ≈ 430.000–860.000 lượt ⇒ ≥ 140 "gia đình-tháng" |
+| Có cản người dùng thật? | Cách dùng dự kiến: vài lần/tuần (≈ 10–20/tháng) | 600 rộng gấp ~30 lần; không cản |
+| Còn hở gì? | Nhiều gia đình giả (Sybil) cộng dồn trần | Mỗi gia đình cần người giám hộ có Zalo + mã ghép đôi có hạn mức ⇒ có chi phí thật; ghi ở ADR-011 "Hướng giảm" |
+
+**Đề xuất:** giữ nguyên 600 / 600 / 3.000. Không cần thêm cơ chế. Thêm (P3, không chặn) một dòng cảnh báo trong `ops` khi một actor
+dùng ≥ 50% trần tháng, để thấy sớm kiểu dò Sybil. **Trạng thái: chờ Tiến ký** (ngưỡng kỹ thuật, thuộc quyền Tiến). Khi Tiến ký: ghi
+tên + ngày vào đây; nếu Tiến chọn số khác thì sửa hằng số trong `routers/lookups.py` (task lite làn B) và test trần 30 ngày. Chú thích
+"Tiến xác nhận" trong mã chỉ đúng sau bước này.

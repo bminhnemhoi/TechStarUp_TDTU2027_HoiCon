@@ -295,3 +295,16 @@ Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi
 1. ★ I1, I2 vào 022/023; I3 spike sau M1; I4 gộp 032; I5 chỉ ở thuyết minh.
 2. ★ B1 (tạo skill thiếu), B2 (bỏ mục cắt T2), B8 (cắt P1-S6 ngay).
 3. ★ B4: hạ cam kết 50–100 gia đình hay nâng gate. ★ B6: cách chấm eval.
+   (Spec 036 chấm hoàn toàn tất định + bộ kiểm thô `unsafe_advice`; LLM-judge để sau — đổi được nếu Minh chọn khác.)
+4. ★ **Phạm vi `guardian_alerts` (DPIA)** — thêm 18/10/2026 khi dựng 031/032 và rà 011: một mục đích đồng ý có bao gồm cả (a) người
+   giám hộ xem lại lịch sử trên web (027 — văn bản nháp nói "có"), (b) hồ sơ vụ việc soạn sẵn để con cháu mang đi trình báo (031 Q4),
+   (c) bản tin tuần + báo "mất bảo vệ" dựa trên heartbeat (032 Q5)? **Đề xuất: có cả ba** (cùng người nhận, cùng dữ liệu, HỏiCon
+   không chia sẻ thêm cho bên thứ ba), kèm câu chữ rõ trong văn bản. Nếu Minh tách: thêm giá trị enum + văn bản (luật 7); mã đã
+   gom tên mục đích vào một hằng số (011 D9) nên đổi rẻ. Liên quan: rút `guardian_alerts` thì web còn hiện sự cố cũ không (011 T021,
+   mặc định: không).
+5. ★ **I4 trong 032**: Tiến giao 032 "gồm I4" (18/10) trong khi mục 1 (I1–I5) chưa có ý kiến Minh. Phần "mất bảo vệ" nằm sau cờ
+   `HOICON_PROTECTION_WATCH` (mặc định bật) — Minh từ chối thì tắt cờ, không gỡ mã.
+6. ★ **Kịch bản eval mới (036)** ≥ 40 ca do tác tử soạn, `draft: true`; gate M3 chỉ là `pass` khi ≥ 100 ca được Minh duyệt (005) **và**
+   có cassette LLM thật (P0-08). Để kịp M3 (09/01): khóa Anthropic cần có trước ~26/12.
+7. **Tiến** (kỹ thuật, không phải ★): ký ngưỡng trần cuộn 30 ngày của `/v1/lookups` (600 / 600 / 3.000) — đánh giá ở
+   `specs/026-verification-threat/plan.md` §10, đề xuất giữ nguyên.

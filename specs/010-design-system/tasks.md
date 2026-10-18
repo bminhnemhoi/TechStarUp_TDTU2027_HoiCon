@@ -118,3 +118,22 @@ Cấm sửa `backend/**`.
 
 - [x] T025 HIGH — Ghi vào `docs/ROADMAP.md` mục "Ghi chú" (không làm trong spec này) 2 mục High của `ux-elder-reviewer` về E7 ở 200% trên màn nhỏ: (a) hàng "Đây là trợ lý AI HỏiCon + Nghe lại" ép chữ công khai AI thành 3 dòng hẹp, (b) vùng cuộn chỉ còn ~1–2 dòng thân khi đang giữ nút; chuyển sang P2-05 (E7 thuộc P2-05), và ghi `BLOCKED: FR-013 chưa đạt "không còn mục High"` vào evidence.md per FR-013 (partial)
 - [x] T026 MEDIUM — Ghi vào mục "Ghi chú" của ROADMAP các mục Medium/Low do đổi font cần quyết định thiết kế (khoảng cách từ hẹp ở "như một", cân nhắc đóng gói thêm Medium 500, tên mục quyền dài thành 2 dòng, nhắc "vuốt lên để đọc tiếp", chụp trạng thái "✗ Chưa bật" của màn quyền) per FR-013 (partial)
+
+---
+
+## Phase 9: Wave 2 (18/10/2026 — tồn đọng Wave 1)
+
+- [ ] T027 [A] Chụp E7 biến thể **điều khiển từ xa** (`PauseKind.REMOTE_CONTROL`, luật R5) ở cỡ chữ 100% và 200% trên `hc-api36` và
+  `hc-api34`, rồi gọi `ux-elder-reviewer` — đóng phần "chưa có ảnh" của FR-013 (evidence: "biến thể điều khiển từ xa CHƯA có ảnh, không
+  dựng được trên máy ảo"). Cách dựng trên máy ảo, theo tiền lệ `vn.hoicon.demobank` trong `BankAppCatalog`:
+  - thêm gói hư cấu `vn.hoicon.demoremote` vào `RemoteControlCatalog` (tăng `VERSION`) và `<queries>` của manifest (giữ
+    `RemoteControlCatalogTest` xanh);
+  - `:demobank` thêm một product flavor `remote` với `applicationId "vn.hoicon.demoremote"`, nhãn "Điều khiển từ xa (mẫu)", màn
+    hình đơn giản (không có chức năng điều khiển thật);
+  - `scripts/emu-scenario.py --scenario remote_control`: cài flavor đó, giả lập cuộc gọi lạ, mở app ⇒ SafePause REMOTE_CONTROL; chụp
+    ở `font_scale` 1.0 và 2.0 (`adb shell settings put system font_scale 2.0`, đặt lại 1.0 sau khi chụp).
+
+  Tiêu đề dài có thể 5–6 dòng ở 200%: nếu reviewer báo High thì sửa bố cục như biến thể ngân hàng (vùng đọc rộng hơn ở ≥ 150%,
+  commit `ad2f2b7`). FR-013 · Verify: `apps/android/gradlew -p apps/android :rules:test :app:testDebugUnitTest :app:lintDebug`;
+  `python3 scripts/emu-scenario.py --avd hc-api36 --scenario remote_control` và `--avd hc-api34` ĐẠT; 8 ảnh (2 AVD × 2 cỡ × trước/sau
+  nếu sửa) ở `~/hoicon-evidence/010-design-system/`; báo cáo reviewer 0 High trong `evidence.md`

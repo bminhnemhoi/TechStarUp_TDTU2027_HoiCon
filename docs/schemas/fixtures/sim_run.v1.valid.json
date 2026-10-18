@@ -1,0 +1,58 @@
+[
+  {
+    "_name": "đang chờ con quyết định",
+    "scenario_id": "fake_police_safe_account_002",
+    "is_demo": true,
+    "llm_mode": "replay",
+    "incident_id": "5b0c1f3e-0000-4000-8000-000000000001",
+    "run_id": "5b0c1f3e-0000-4000-8000-0000000000aa",
+    "state": "awaiting_guardian",
+    "level": "critical",
+    "pending_question": null,
+    "guardian_messages": [
+      {
+        "at": "2026-12-20T09:00:05Z",
+        "template": "fast_alert",
+        "text": "Đây là trợ lý AI HỏiCon. Mẹ vừa nghe một số lạ (đuôi 123) rồi mở ứng dụng ngân hàng."
+      }
+    ],
+    "note": null
+  },
+  {
+    "_name": "đang chờ bác trả lời E8",
+    "scenario_id": "fake_police_safe_account_002",
+    "is_demo": true,
+    "llm_mode": "replay",
+    "incident_id": "5b0c1f3e-0000-4000-8000-000000000001",
+    "run_id": "5b0c1f3e-0000-4000-8000-0000000000aa",
+    "state": "assessing",
+    "level": "high",
+    "pending_question": {
+      "incident_id": "01851bd2-0000-7000-8000-000000000001",
+      "question_id": "q_caller_authority",
+      "text": "Đây là trợ lý AI HỏiCon. Người đang gọi có tự xưng là công an, viện kiểm sát, tòa án hoặc cán bộ cơ quan nhà nước không ạ?",
+      "is_drill": false,
+      "answers": [
+        "yes",
+        "no",
+        "unsure"
+      ],
+      "expires_at": "2026-10-16T12:01:00Z"
+    },
+    "guardian_messages": [],
+    "note": null
+  },
+  {
+    "_name": "kịch bản không kích hoạt luật",
+    "scenario_id": "benign_family_vegetables_001",
+    "is_demo": true,
+    "llm_mode": "replay",
+    "incident_id": null,
+    "run_id": null,
+    "state": null,
+    "level": "none",
+    "pending_question": null,
+    "guardian_messages": [],
+    "note": "Máy không bật nhắc dừng lại với tình huống này"
+  }
+]

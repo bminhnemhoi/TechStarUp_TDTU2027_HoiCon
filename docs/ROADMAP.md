@@ -8,11 +8,11 @@
 
 <!-- STATUS -->
 Phase 1 — Spike + hồ sơ Vòng 1 (15/10–13/11) · G0 ĐẠT 08/10 · Gate G1: 08/11 · Đội: Minh + Tiến (@Towfienes)
-15/10: Spec Kit + Master Plan (docs/MASTER-PLAN.md) · Đợt 0: W0-1 env Linux, W0-2 Spec Kit (chờ PR) · W0-3 tài khoản ⏸ Minh
-Đợt 1 (MASTER-PLAN §3): spec 001 an toàn máy thật (làn A) · 002 Zalo (làn B) · 004 giọng nói · 003/005 lite · hồ sơ H-1
-Rủi ro: hồ sơ Vòng 1 chưa bắt đầu (còn 30 ngày) · Play Console + Firebase chưa có ⇒ chặn 001 và M2
-Chờ Minh quyết: B1–B8 + ý tưởng I1–I5 (MASTER-PLAN §1, §4, §8)
-Cập nhật: 15/10/2026
+18/10: Wave 1 đã gom vào `tien-collab-dev` (020–030, 034, 012 hạ tầng chạy trên máy dev, 011 bản nháp) · Đợt 5: spec 036/033/031/032 đã dựng, chưa code
+Wave 2 (tasks.md): 011 đồng bộ chuỗi Android + chặn phát hành · 012 `demo`/baseline profile/khởi động nguội · 028 đồng ý `drills` · 010 E7 điều khiển từ xa
+Rủi ro: hồ sơ Vòng 1 chưa có commit trong `docs/proposal` (còn 28 ngày) · Play Console + Firebase + khóa API (W0-3/P0-08) chặn 001, M2, số M3
+Chờ Minh: MASTER-PLAN §8 (B1–B8, I1–I5, phạm vi `guardian_alerts`, kịch bản eval) · Chờ Tiến: trần tra cứu 30 ngày (026 plan §10)
+Cập nhật: 18/10/2026
 <!-- /STATUS -->
 
 ## Mốc cứng
@@ -69,8 +69,8 @@ Cập nhật: 15/10/2026
 | P1-05 | Design system: ui-ux-pro-max → `docs/DESIGN-SYSTEM.md` + `design-system/hoicon/tokens.json` (Be Vietnam Pro) | 14–22/11 | | ◐ spec [`specs/010-design-system/`](../specs/010-design-system/) (kéo sớm 15/10): **đã làm** `tokens.json` → `Tokens.kt` + `colors.xml` + `tokens.css` (26 cặp ≥ 7:1/3:1 có test), font đóng gói trong APK, E7 vẫn 10/10 trên máy ảo; **còn** FR-013 (`ux-elder-reviewer` còn 2 High về E7 ở 200% màn nhỏ ⇒ P2-05, xem Ghi chú) — chưa hoàn tất |
 | P1-06 | Văn bản đồng ý v1, DPIA rút gọn, quy trình thí điểm | 14–22/11 | `docs/legal/consent/`, `PRIVACY-DPIA.md`, `PILOT-PROTOCOL.md` | ◐ spec [`011-consent-legal`](../specs/011-consent-legal/) (18/10): **bản nháp** 10 văn bản (1/mục đích) + `manifest.json` (phiên bản, sha256) + `ops/consent_texts.py` + test enum↔văn bản↔sha256 (41 test, đột biến 14/14), DPIA rút gọn, PILOT-PROTOCOL; `ux-elder-reviewer` 4 Chặn (đều là `llm_processing`/`voice_input`/`pilot_research`: **hứa điều mã chưa thực thi**), 6 Cao đã sửa chữ; **chờ Minh duyệt**, người thật đọc thử, làn A đồng bộ chuỗi Android (danh sách ở `evidence.md`) |
 | P1-07 | ~60 kịch bản lừa đảo (tác tử soạn, Minh duyệt) | 14–22/11 | `data/scenarios/*.yaml` | ◐ bản nháp 60 ca (40 lừa đảo / 20 hợp lệ song sinh = 33%, 10 chèn lệnh, 3 miền, nguồn báo chí đã kiểm) + schema `scenario.v1.json` + test hợp đồng — **chờ Minh duyệt** (`draft: true`) |
-| P1-08 | Kênh Play internal testing + Google Group tester | 14–22/11 | | ☐ |
-| P1-09 | VPS + tên miền + Caddy | 14–22/11 | | ☐ |
+| P1-08 | Kênh Play internal testing + Google Group tester | 14–22/11 | | ◐ spec [`012-release-and-hosting`](../specs/012-release-and-hosting/) (FR-011, làn A; sửa phạm vi 18/10 theo `/speckit-analyze`): bản `release` 0.3.0 có R8 + `release-gate.sh` ĐẠT cục bộ (`3129dd3`); **còn**: buildType `demo` + baseline profile (T016), đo khởi động nguội AVD (T018); **BLOCKED**: AAB đã ký lên Play internal + Google Group (T015, Play Console W0-3) |
+| P1-09 | VPS + tên miền + Caddy | 14–22/11 | | ◐ spec [`012-release-and-hosting`](../specs/012-release-and-hosting/): Caddy + `compose.prod.yml` + script triển khai **dựng và thử trên máy dev** (xem P2-04); **BLOCKED**: VPS + tên miền + Let's Encrypt thật (T010) |
 
 **Gate G1 (08/11):** 5 báo cáo spike trong `docs/spikes/` (đi tiếp/không, có số đo); ADR-007…010; video xong.
 **Cắt theo thứ tự:** P1-S6 → thu nhỏ P1-S5 → chỉ so 1 nhà cung cấp STT.
@@ -93,11 +93,11 @@ Cập nhật: 15/10/2026
 | P2-12 | W4 | Web tối thiểu: danh sách/chi tiết sự cố cho người giám hộ | ☑ spec [`027-guardian-web`](../specs/027-guardian-web/) (16/10, chưa commit): đăng nhập bằng liên kết một lần qua Zalo (lệnh "4", **Zalo mock**), cookie `hc_guardian` + CSRF, `/v1/guardian/*`, 4 trang web + trace trực tiếp (`EventSource`); 6/6 SC đạt trên localhost (pytest 1597, Playwright 58 + live 264 ms ≤ 1 s, axe 0 lỗi); review bảo mật 0 High, UX 0 Chặn (4 Cao đã sửa); **còn**: Zalo thật, Caddy/012, các mục Medium ở Ghi chú (g–k) |
 | P2-13 | W4 | Diễn tập v1 (E11, bảng `drills`) | ◐ spec [`028-drills`](../specs/028-drills/) (16/10): Làn A (E11 Compose, DrillEngine, workers) và Làn B (migration 0008, drill_service, API drills, guard D2) đã xong code & test; chờ E2E và Minh duyệt 3 kịch bản |
 | P2-14 | W4 | Bộ thí điểm + Play internal v0.3 → **M2** | ◐ spec [`029-pilot-kit`](../specs/029-pilot-kit/) (17/10): **làn B giai đoạn 1 XONG** (migration 0010 `device_heartbeats`, `POST /v1/heartbeat`, hạn lưu 90 ngày, `ops pilot enroll/report/gate-m2`, schema `heartbeat.v1`/`pilot_report.v1`, client TS, docs); pytest 2017 xanh; **còn**: làn A (T005 phân biệt 403 `consent_withdrawn`, test ghim fixture), T008 `release-gate.sh`, T009 tài liệu thí điểm, giai đoạn 2 chờ 012 + W0-3 |
-| P2-15 | W5 21–27/12 | CLI `hoicon-eval` + ≥ 100 ca + chạy full lần đầu | ◐ 15/10: xong CLI `hoicon-eval` + 20 ca smoke tất định (O1/B3, `specs/030-eval-smoke`, bằng chứng ở `evidence.md`; còn chờ CI xanh trên PR — SC-006); ≥ 100 ca + full ở spec 036 |
-| P2-16 | W5 | Nhánh hồ sơ vụ việc (`case_file`, interrupt duyệt) | ☐ |
-| P2-17 | W5 | Đồ thị Coach hằng tuần | ☐ |
-| P2-18 | W6 28/12–03/01 | Bộ eval injection + lặp prompt | ☐ |
-| P2-19 | W6 | Web `/trace`, `/eval`, `/sim` | ☐ |
+| P2-15 | W5 21–27/12 | CLI `hoicon-eval` + ≥ 100 ca + chạy full lần đầu | ◐ 15/10: xong CLI `hoicon-eval` + 20 ca smoke tất định (O1/B3, `specs/030-eval-smoke`, bằng chứng ở `evidence.md`; còn chờ CI xanh trên PR — SC-006); ≥ 100 ca + full ở spec 036 · spec [`036-eval-full`](../specs/036-eval-full/) (18/10, **chưa code**): ≥ 100 ca (≥ 30% hợp lệ song sinh, ≥ 10 chèn lệnh), `--suite full`, baseline-full, verdict M3 `pass/fail/provisional/blocked`; số M3 thật **BLOCKED** P0-08 + Minh duyệt kịch bản |
+| P2-16 | W5 | Nhánh hồ sơ vụ việc (`case_file`, interrupt duyệt) | ◐ spec [`031-case-file`](../specs/031-case-file/) (18/10, **chưa code**): nhánh `case_file` + interrupt `await_case_approval`, nội dung tất định + tóm tắt LLM tùy chọn, ô tự điền chỉ trên trình duyệt, tự đóng `case_open` sau 30 ngày; ★ Minh: phạm vi `guardian_alerts` (MASTER-PLAN §8 mục 4) |
+| P2-17 | W5 | Đồ thị Coach hằng tuần | ◐ spec [`032-coach-weekly`](../specs/032-coach-weekly/) (18/10, **chưa code**): bản tin tuần + báo "mất bảo vệ" từ heartbeat (I4, sau cờ), không LLM, hạn mức đếm `messages_out`; ★ Minh: I4 + phạm vi `guardian_alerts` (MASTER-PLAN §8 mục 4–5) |
+| P2-18 | W6 28/12–03/01 | Bộ eval injection + lặp prompt | ◐ spec [`036-eval-full`](../specs/036-eval-full/) (18/10, **chưa code**): `--suite injection`, đột biến 6 rào, PROMPT-LOG; lặp prompt với LLM thật **BLOCKED** P0-08 |
+| P2-19 | W6 | Web `/trace`, `/eval`, `/sim` | ◐ spec [`033-web-sim-eval`](../specs/033-web-sim-eval/) (18/10, **chưa code**): `/sim` (gia đình demo, phát lại tất định) + `/trace` (xyflow + bản chữ) ưu tiên cho video; `/eval` P3 (danh sách cắt) |
 | P2-20 | W6 | Gia cố: `privacy-audit`, review bảo mật, job xóa theo hạn lưu, sao lưu, Crashlytics | ◐ spec [`034-hardening-core`](../specs/034-hardening-core/) (16/10): **phần lõi XONG** (migration 0009, mặc định `prod`, `/readyz`, trần 256 KB, đồng ý ở máy chủ, hạn lưu, xóa gia đình + ẩn danh, sao lưu mã hóa, `roles.sql`); pytest 1958 xanh; review: 0 Crit, 1 High đã sửa, Medium còn mở ở `evidence.md`; **BLOCKED bởi 012** (lịch sao lưu/nơi lưu ngoài máy/áp role ở prod/đo khôi phục trên VPS); Crashlytics ở 037 |
 | P2-21 | W7 04–09/01 | Đóng băng 06/01; báo cáo thí điểm; poster; video 5 phút; **nộp 09/01** → **M3** | ☐ |
 

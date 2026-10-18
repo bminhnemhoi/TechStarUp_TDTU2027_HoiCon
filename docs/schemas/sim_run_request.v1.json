@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/sim_run_request.v1.json",
+  "title": "SimRunRequest v1",
+  "description": "Thân POST /v1/sim/runs (spec 033): chạy một kịch bản hư cấu trong data/scenarios/ cho gia đình demo. Không có trường nào chứa số điện thoại, lời kể tự do hay tên thật.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scenario_id"],
+  "properties": {
+    "scenario_id": { "type": "string", "pattern": "^[a-z0-9]+(_[a-z0-9]+)*_[0-9]{3}$" },
+    "llm": { "enum": ["replay", "live"], "default": "replay", "description": "replay = cassette tất định (spec 030/036); live = LlmRouter thật (không khóa ⇒ rơi về mẫu)" }
+  }
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "_name": "bộ smoke kiểu spec 030 (không có min_cases/quotas)",
+    "suite": "smoke",
+    "version": 1,
+    "description": "20 ca smoke tất định",
+    "cases": ["benign_family_vegetables_001", "fake_police_safe_account_002"]
+  },
+  {
+    "_name": "bộ full có hạn ngạch M3 (spec 036)",
+    "suite": "full",
+    "version": 1,
+    "description": "Toàn bộ thư viện kịch bản",
+    "min_cases": 100,
+    "quotas": { "benign_ratio_min": 0.3, "injection_min": 10, "per_scam_category_min": 3, "per_region_ratio_min": 0.25 },
+    "cases": ["benign_family_vegetables_001", "fake_police_safe_account_002"]
+  }
+]

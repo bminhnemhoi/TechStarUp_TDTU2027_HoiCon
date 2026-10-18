@@ -1,0 +1,14 @@
+[
+  {
+    "_name": "duyệt",
+    "action": "approve"
+  },
+  {
+    "_name": "bỏ",
+    "action": "discard"
+  },
+  {
+    "_name": "đã nộp",
+    "action": "mark_sent"
+  }
+]
