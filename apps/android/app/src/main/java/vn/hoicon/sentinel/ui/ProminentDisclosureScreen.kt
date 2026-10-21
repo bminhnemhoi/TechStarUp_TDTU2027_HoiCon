@@ -29,18 +29,12 @@ fun ProminentDisclosureScreen(
 ) {
     OnboardingScaffold(
         modifier = modifier,
+        scrollHint = true,
         actions = {
             PrimaryButton(text = stringResource(R.string.disclosure_accept), onClick = onAccept)
             SecondaryButton(text = stringResource(R.string.disclosure_decline), onClick = onDecline)
         },
     ) {
-        if (familyName.isNotBlank()) {
-            Text(
-                text = stringResource(R.string.disclosure_connected, familyName),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
         // The two purposes this one tap agrees to, word for word what the ledger hashes (data/consent/ConsentTexts.kt).
         // The AI sentence opens both texts; it is shown once, at the top.
         val core = rememberConsentParts(ConsentLedger.CORE_PROTECTION)
@@ -48,6 +42,13 @@ fun ProminentDisclosureScreen(
         ConsentTextBlock(core)
         ListenButton(text = stringResource(R.string.onboarding_listen_again), onClick = onListen)
         InfoCard(guardian.title, guardian.body)
+        if (familyName.isNotBlank()) {
+            Text(
+                text = stringResource(R.string.disclosure_connected, familyName),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
         Text(text = stringResource(R.string.disclosure_next), style = MaterialTheme.typography.bodyMedium)
     }
 }

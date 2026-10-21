@@ -9,6 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import vn.hoicon.sentinel.data.consent.ConsentLedger
 import vn.hoicon.sentinel.data.consent.ConsentSync
+import vn.hoicon.sentinel.data.consent.DrillConsent
 import vn.hoicon.sentinel.data.local.DeviceSession
 import vn.hoicon.sentinel.data.local.TokenStorage
 import vn.hoicon.sentinel.data.remote.PairingApiClient
@@ -37,6 +38,7 @@ class ConsentSyncTest {
         "usage_monitoring" to "usage",
         "overlay_pause" to "overlay",
         "lookups" to "lookups",
+        "drills" to "drills",
     )
 
     @After
@@ -71,6 +73,28 @@ class ConsentSyncTest {
         storage.acceptedDisclosureVersion = "an-older-version"
         sync.run(setOf(SensorPermission.DISPLAY_OVER_APPS), texts)
         assertEquals(listOf("overlay_pause" to true), purposesSent(0))
+    }
+
+    @Test
+    fun drillsAreRecordedOnlyAfterTheAdultAgreedToThem() {
+        sync.run(emptySet(), texts)
+        assertEquals(listOf("core_protection" to true, "guardian_alerts" to true), purposesSent(0))
+        assertEquals(DrillConsent.Result.NEEDS_ADULT_CONFIRMATION, DrillConsent(storage).accept(adultConfirmed = false))
+        sync.run(emptySet(), texts)
+        assertEquals(1, bodies.size, "no 18+ tick, nothing recorded")
+        assertEquals(DrillConsent.Result.AGREED, DrillConsent(storage).accept(adultConfirmed = true))
+        sync.run(emptySet(), texts)
+        assertEquals(listOf("drills" to true), purposesSent(1))
+    }
+
+    @Test
+    fun twoSyncObjectsRunningTogetherRecordAGrantOnlyOnce() {
+        // E6 and the consent screens each make their own ConsentSync: the lock must be shared, or both send the same row.
+        val other = ConsentSync(storage, PairingApiClient("http://127.0.0.1:${server.address.port}", timeoutMs = 2_000))
+        val threads = listOf(sync, other).map { s -> Thread { s.run(emptySet(), texts) } }
+        threads.forEach { it.start() }
+        threads.forEach { it.join() }
+        assertEquals(1, bodies.size, "the second run must find the grant already recorded")
     }
 
     @Test

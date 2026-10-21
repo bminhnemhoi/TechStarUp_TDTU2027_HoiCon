@@ -51,6 +51,7 @@ fun LookupConsentScreen(
 ) {
     OnboardingScaffold(
         modifier = modifier,
+        scrollHint = true,
         actions = {
             PrimaryButton(text = stringResource(R.string.lookups_consent_accept), onClick = onAccept)
             SecondaryButton(text = stringResource(R.string.lookups_consent_decline), onClick = onDecline)

@@ -188,6 +188,20 @@
         <item>Bác đọc phần còn lại trên màn hình nhé. Bác bấm Đồng ý khi đã rõ, hoặc bấm Để sau.</item>
     </string-array>
 
+    <!-- Đồng ý tập nhận biết lừa đảo (Spec 028). Chữ đồng ý nằm ở consent_texts.xml (consent_drills). -->
+    <string name="onboarding_scroll_hint">Kéo xuống đọc tiếp ↓</string>
+    <string name="e6_drills">Tập nhận biết lừa đảo</string>
+    <string name="drills_consent_accept">Đồng ý để HỏiCon mời tập</string>
+    <string name="drills_consent_decline">Để lúc khác</string>
+    <string name="drills_consent_adult">Tôi từ 18 tuổi trở lên.</string>
+    <string name="drills_consent_adult_needed">Bác kéo xuống, tích ô 18 tuổi rồi bấm lại nhé.</string>
+    <string-array name="drills_consent_speech">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>HỏiCon xin phép thỉnh thoảng mời bác tập nhận biết cuộc gọi lừa đảo.</item>
+        <item>Đó chỉ là diễn tập, không có cuộc gọi thật. Trên màn hình luôn có chữ ĐÂY LÀ DIỄN TẬP.</item>
+        <item>Bác từ chối hay dừng giữa chừng lúc nào cũng được. Bác đọc phần còn lại trên màn hình nhé.</item>
+    </string-array>
+
     <string name="lookup_title">Kiểm tra số hay đường link</string>
     <string name="lookup_hint">Bác gõ số điện thoại lạ vào ô. Nếu người ta gửi đường link, bác bấm “Dán đường link”.</string>
     <string name="lookup_field_label">Số điện thoại hoặc đường link</string>

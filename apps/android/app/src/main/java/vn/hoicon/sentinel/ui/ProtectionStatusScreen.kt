@@ -49,6 +49,8 @@ data class ProtectionUiState(
     val dialerFailed: Boolean = false,
     /** The server refused the device token: the family cannot be reached until the phone is paired again. */
     val needsRepair: Boolean = false,
+    /** The person has not agreed to practice calls yet: a small link offers it (Spec 028); it disappears once agreed. */
+    val drillsOffer: Boolean = false,
 )
 
 /**
@@ -64,6 +66,7 @@ fun ProtectionStatusScreen(
     modifier: Modifier = Modifier,
     onReconnect: () -> Unit = {},
     onLookup: () -> Unit = {},
+    onDrills: () -> Unit = {},
 ) {
     OnboardingScaffold(
         modifier = modifier,
@@ -104,7 +107,8 @@ fun ProtectionStatusScreen(
             body = stringResource(R.string.e6_family_body, state.familyName),
         )
         // A small inline control, not a third action-bar button: E6 keeps its two main actions (Spec 026 FR-011).
-        ListenButton(text = stringResource(R.string.e6_lookup), onClick = onLookup)
+        ListenButton(text = stringResource(R.string.e6_lookup), onClick = onLookup, modifier = Modifier.fillMaxWidth())
+        if (state.drillsOffer) ListenButton(text = stringResource(R.string.e6_drills), onClick = onDrills, modifier = Modifier.fillMaxWidth())
     }
 }
 

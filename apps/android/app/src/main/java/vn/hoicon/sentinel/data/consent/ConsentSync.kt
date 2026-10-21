@@ -13,7 +13,11 @@ import vn.hoicon.sentinel.sensing.SensorPermission
 class ConsentSync(private val storage: TokenStorage, private val api: PairingApiClient) {
     enum class Outcome { UP_TO_DATE, PENDING, SKIPPED }
 
-    private val lock = Any()
+    // One lock for the whole process: E6 (onResume) and the just-in-time consent screens each build their own ConsentSync, and two
+    // runs that read `recordedConsents` before either wrote it appended the same grant twice (seen on the AVD for `drills`).
+    private companion object {
+        val lock = Any()
+    }
 
     // One run at a time, and a second caller WAITS and then sees what the first one recorded (it finds nothing left to send):
     // E10 presses "Kiểm tra" right after "Đồng ý", and must not read "still running" as "not recorded".
@@ -27,6 +31,8 @@ class ConsentSync(private val storage: TokenStorage, private val api: PairingApi
                 }
                 // E10, asked just in time on first use: recorded under the current words, never forces the others again.
                 if (storage.acceptedLookupsVersion == ConsentLedger.VERSION) add(ConsentLedger.LOOKUPS)
+                // Practice calls, asked just in time from E6; the server invites a drill only while this grant stands.
+                if (storage.acceptedDrillsVersion == ConsentLedger.VERSION) add(ConsentLedger.DRILLS)
                 granted.mapNotNullTo(this) { ConsentLedger.purposeOf(it) }
             }
             val items = ConsentLedger.changes(storage.recordedConsents, purposes, texts)
