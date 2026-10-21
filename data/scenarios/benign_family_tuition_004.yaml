@@ -6,7 +6,7 @@ region: south
 channel: phone_call
 script_vi: |
   Con gái đã bàn từ trước chuyện gửi học phí cho cháu; hôm nay gọi nhắc, bác nhận ra giọng và hỏi lại chuyện riêng rồi mới chuyển.
-device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: bank}
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: 1_5m, app_category: bank}
 elder_answers: {knows_caller: 'yes', asks_transfer: 'yes'}
 expected:
   min_risk_level: high

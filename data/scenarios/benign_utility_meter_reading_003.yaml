@@ -6,7 +6,7 @@ region: north
 channel: phone_call
 script_vi: |
   Điện lực báo lịch ghi chỉ số công tơ định kỳ, không thu tiền và không yêu cầu chuyển khoản.
-device_signals: {caller_flag: unknown, in_call: false, duration_bucket: lt_1m, app_category: none}
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: lt_1m, app_category: none}
 elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
 expected:
   min_risk_level: none

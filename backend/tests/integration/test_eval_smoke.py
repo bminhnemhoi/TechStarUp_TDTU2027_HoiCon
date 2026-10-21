@@ -282,3 +282,32 @@ async def test_seed_refused_by_env_is_an_isolation_error_not_a_traceback(
     with pytest.raises(IsolationError, match="demo"):
         await run(target, [load_case(THREE[0])])
     get_settings.cache_clear()
+
+
+async def test_eval_leaves_no_replayed_cost_in_the_shared_budget_ledger(target: tuple[str, bool]) -> None:
+    """Sổ ngân sách LLM = SUM(agent_steps.cost_usd) của ngày (spec 003). Eval phát lại dùng usage cố định để router
+    tính được chi phí, nhưng chi phí GIẢ đó không được cộng dồn trong DB dùng chung (từng làm cạn ngân sách dev)."""
+    from sqlalchemy import func, select
+
+    from hoicon.db.models import AgentRun, AgentStep
+    from hoicon.eval.runner import make_sessionmaker
+
+    outcomes = await run(target, [load_case(c) for c in THREE])
+    run_ids = [o.result.run_id for o in outcomes if o.result.run_id not in ("", "no-incident")]
+    assert run_ids
+    sessions, engine = make_sessionmaker(target[0])
+    try:
+        async with sessions() as session:
+            cost, tokens = (
+                await session.execute(
+                    select(
+                        func.coalesce(func.sum(AgentStep.cost_usd), 0), func.coalesce(func.sum(AgentStep.tokens_in), 0)
+                    )
+                    .join(AgentRun, AgentRun.id == AgentStep.run_id)
+                    .where(AgentRun.id.in_([uuid.UUID(r) for r in run_ids]))
+                )
+            ).one()
+    finally:
+        await engine.dispose()
+    assert cost == 0, "chi phí phát lại phải về 0 sau lượt"
+    assert tokens > 0, "token vẫn được giữ (trace) — chỉ chi phí về 0"

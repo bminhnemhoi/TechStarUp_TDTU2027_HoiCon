@@ -10,6 +10,7 @@ Tất định: `RiskEvent.id` = UUID5 theo ca, `occurred_at` cố định, h1 t�
 
 import hashlib
 import json
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -68,7 +69,18 @@ class Case:
     expected: dict[str, Any]
 
 
+CASE_ID = re.compile(r"[a-z0-9]+(_[a-z0-9]+)*_[0-9]{3}")  # đúng mẫu id của scenario.v1.json
+
+
+def _checked(case_id: str) -> str:
+    """Id đi từ tệp suite vào đường dẫn tệp ⇒ chỉ nhận đúng mẫu hợp đồng (không `..`, không `/`)."""
+    if not CASE_ID.fullmatch(case_id):
+        raise ValueError(f"id ca không đúng mẫu hợp đồng: {case_id!r}")
+    return case_id
+
+
 def load_case(case_id: str) -> Case:
+    case_id = _checked(case_id)
     raw = yaml.safe_load((SCENARIOS_DIR / f"{case_id}.yaml").read_text(encoding="utf-8"))
     return Case(
         id=raw["id"],
@@ -98,6 +110,7 @@ def load_suite(name: str = "smoke") -> list[Case]:
 
 def find_cassette(case_id: str, suite: str) -> Path:
     """Cassette của ca theo thứ tự thư mục của suite; không có ⇒ FileNotFoundError nêu id."""
+    case_id = _checked(case_id)
     for directory in CASSETTE_DIRS[suite]:
         path = EVAL_DIR / "cassettes" / directory / f"{case_id}.json"
         if path.is_file():

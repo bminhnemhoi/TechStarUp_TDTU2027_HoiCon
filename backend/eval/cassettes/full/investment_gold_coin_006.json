@@ -9,17 +9,30 @@
   "responses": {
     "risk_scorer": [
       {
-        "error": "missing"
+        "level": "critical",
+        "tactic": "investment_job",
+        "reasons": [
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
+        ],
+        "ask_question": "q_asked_transfer"
       },
       {
-        "error": "missing"
+        "level": "critical",
+        "tactic": "investment_job",
+        "reasons": [
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
+        ],
+        "ask_question": "none"
       }
     ],
     "intervention": [
       {
-        "error": "missing"
+        "summary": "{alias} vừa nhận đường dẫn https://vi-du.example, anh/chị kiểm tra giúp nhé.",
+        "action": "call_and_stay_on_line"
       }
     ]
   },
-  "notes": "Mọi lời gọi LLM đều lỗi (missing); đồ thị phải rơi về mẫu soạn sẵn và giữ mức sàn."
+  "notes": "Tóm tắt chứa đường link; _UNSAFE_SUMMARY phải thay bằng câu mẫu."
 }

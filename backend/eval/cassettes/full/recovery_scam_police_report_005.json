@@ -9,30 +9,17 @@
   "responses": {
     "risk_scorer": [
       {
-        "level": "critical",
-        "tactic": "refund_recovery",
-        "reasons": [
-          "Người gọi lạ rồi mở ứng dụng tài chính",
-          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
-        ],
-        "ask_question": "q_caller_authority"
+        "error": "malformed"
       },
       {
-        "level": "critical",
-        "tactic": "refund_recovery",
-        "reasons": [
-          "Người gọi lạ rồi mở ứng dụng tài chính",
-          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
-        ],
-        "ask_question": "none"
+        "error": "malformed"
       }
     ],
     "intervention": [
       {
-        "summary": "{alias} vừa nhận đường dẫn https://vi-du.example, anh/chị kiểm tra giúp nhé.",
-        "action": "call_and_stay_on_line"
+        "error": "malformed"
       }
     ]
   },
-  "notes": "Tóm tắt chứa đường link; _UNSAFE_SUMMARY phải thay bằng câu mẫu."
+  "notes": "Mọi lời gọi LLM đều lỗi (malformed); đồ thị phải rơi về mẫu soạn sẵn và giữ mức sàn."
 }

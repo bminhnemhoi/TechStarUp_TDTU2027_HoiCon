@@ -5,7 +5,7 @@ twin_of: deepfake_relative_new_number_006
 region: north
 channel: phone_call
 script_vi: |
-  Con trai đổi số, đã báo trước cho cả nhà và gọi từ số đã lưu trong danh bạ của bác để nói chuyện bình thường.
+  Con trai đổi số, đã báo trước cho cả nhà và gọi từ số con đã báo trước và bác đã đánh dấu là người quen, nói chuyện bình thường.
 device_signals: {caller_flag: trusted, in_call: false, duration_bucket: lt_1m, app_category: bank}
 elder_answers: {knows_caller: 'yes', asks_transfer: 'no'}
 expected:
@@ -15,6 +15,6 @@ expected:
   must_call_tools: []
   must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
 red_flags: []
-teach_points: [Số đã lưu trong danh bạ và đã báo trước là số quen]
+teach_points: [Số đã được báo trước và đánh dấu là người quen thì là số quen]
 source_ref: 'VietnamPlus 27/03/2026 – Bảo vệ người cao tuổi trước chiêu lừa đảo (mật khẩu gia đình, gọi lại số quen): https://www.vietnamplus.vn/bao-ve-nguoi-cao-tuoi-truoc-cac-chieu-lua-dao-tinh-vi-tren-khong-gian-mang-post1101437.vnp'
 draft: true

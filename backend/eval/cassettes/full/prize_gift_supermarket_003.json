@@ -9,28 +9,17 @@
   "responses": {
     "risk_scorer": [
       {
-        "level": "none",
-        "tactic": "legit_likely",
-        "reasons": [
-          "Người cao tuổi nói mọi việc ổn"
-        ],
-        "ask_question": "q_asked_transfer"
+        "error": "timeout"
       },
       {
-        "level": "none",
-        "tactic": "legit_likely",
-        "reasons": [
-          "Người cao tuổi nói mọi việc ổn"
-        ],
-        "ask_question": "none"
+        "error": "timeout"
       }
     ],
     "intervention": [
       {
-        "summary": "{alias} đang nghe một cuộc gọi lạ rồi dùng ứng dụng tài chính; có thể chỉ là việc bình thường, anh/chị hỏi thăm nhẹ nhàng nhé.",
-        "action": "call_now"
+        "error": "timeout"
       }
     ]
   },
-  "notes": "LLM cố hạ mức xuống none; raise_only phải giữ mức sàn."
+  "notes": "Mọi lời gọi LLM đều lỗi (timeout); đồ thị phải rơi về mẫu soạn sẵn và giữ mức sàn."
 }

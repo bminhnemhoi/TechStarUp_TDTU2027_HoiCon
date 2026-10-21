@@ -325,3 +325,25 @@ def test_markdown_and_baseline_state_how_many_cases_are_provisional(tmp_path: Pa
     saved = json.loads((tmp_path / "b.json").read_text(encoding="utf-8"))
     assert saved["suite"] == "full" and saved["provisional_cases"] == 2
     assert not [e.message for e in Draft202012Validator(SCHEMA, format_checker=FormatChecker()).iter_errors(rep)]
+
+
+def test_gate_suites_fail_when_there_is_no_scam_case_at_all() -> None:
+    empty = {**current(), "cases_scam": 0}
+    assert any("lừa đảo" in f for f in report.absolute_failures(empty, "injection"))
+    assert report.absolute_failures({**current(), "cases_scam": 5}, "full") == []
+    assert report.absolute_failures(empty, "smoke") == []
+
+
+def test_limits_say_what_recall_and_false_alarm_actually_measure() -> None:
+    scam_at_floor = mk("fake_police_drug_ring_001", "critical")  # kỳ vọng critical = sàn critical? sàn của mk là high
+    outcomes = [scam_at_floor, BENIGN_OK(), mk("benign_official_tax_reminder_001", "none", notified=False)]
+    outcomes[2].result.incident_started = False
+    limits = report.measurement_limits(outcomes)
+    assert limits["scam_above_floor"] == 1 and limits["scam_incident"] == 1  # mk dùng sàn high, kỳ vọng critical
+    assert limits["benign_no_incident"] == 1 and limits["benign_no_incident_alarms"] == 0
+    assert limits["benign_incident"] == 1 and limits["benign_incident_over_max"] == 0
+    md = report.render_markdown(
+        report.build_report(outcomes, started_at=NOW, git_sha="g", baseline=None, baseline_ref="", suite="full"),
+        outcomes,
+    )
+    assert "Giới hạn của chỉ số" in md and "luật sàn" in md

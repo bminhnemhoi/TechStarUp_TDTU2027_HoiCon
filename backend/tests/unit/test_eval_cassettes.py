@@ -97,6 +97,15 @@ def test_error_kinds_fail_every_call_of_both_nodes(kind: str) -> None:
         assert {r["error"] for r in doc["responses"][node]} == {kind}
 
 
+def test_partial_kinds_fail_only_one_node() -> None:
+    down = build(SCAM, "scorer_down")
+    assert {r["error"] for r in down["responses"]["risk_scorer"]} == {"timeout"}
+    assert summaries(down), "tóm tắt vẫn trung thực khi chỉ node chấm rủi ro lỗi"
+    brief = build(SCAM, "brief_down")
+    assert levels(brief) == levels(build(SCAM, "honest")), "chấm rủi ro vẫn trung thực"
+    assert brief["responses"]["intervention"] == [{"error": "refusal"}]
+
+
 def test_no_incident_cases_have_empty_responses() -> None:
     doc = build(NO_INCIDENT, "honest")
     assert doc["responses"] == {"risk_scorer": [], "intervention": []}

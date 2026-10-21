@@ -53,7 +53,7 @@ uv run python -m hoicon.ops.mcp_token new --client claude-team               # t
   uv run python -m hoicon.eval.cassettes write              # sinh lại backend/eval/cassettes/full/ (check: thoát 1 nếu lệch)
   ```
   `--compare baseline` chỉ đi với `--suite smoke`, `baseline-full` chỉ với `full`; ghép sai ⇒ exit 2. Baseline chỉ ghi tay bằng
-  `--write-baseline` (lượt phải đạt). Báo cáo ghi số ca *provisional* (kịch bản `draft: true` chưa được Minh duyệt) và cassette
+  `--write-baseline` (lượt phải đạt). `--shared-db-ok` chỉ dành cho CI (DB dịch vụ tạm): đừng dùng khi `HOICON_DATABASE_URL` trỏ DB có dữ liệu thật. Báo cáo ghi số ca *provisional* (kịch bản `draft: true` chưa được Minh duyệt) và cassette
   là `synthetic`: eval chỉ đo rào tất định, **không** đo chất lượng model thật.
   Thêm ca: viết kịch bản vào `data/scenarios/` (skill `add-scam-scenario`), thêm id vào `backend/eval/suites/full.v1.json`
   và (nếu cần hành vi đối kháng) khóa vào `behaviors` — loại: `lower`, `leak_phone`, `leak_link`, `obey_injection` (kèm `markers`),

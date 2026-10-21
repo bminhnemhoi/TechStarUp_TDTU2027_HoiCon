@@ -6,7 +6,7 @@ region: south
 channel: phone_call
 script_vi: |
   Shipper gọi báo lỡ giao, hẹn lại chiều nay; bác tự mở ứng dụng mua hàng để xem đơn và trả tiền trong ứng dụng đó.
-device_signals: {caller_flag: unknown, in_call: false, duration_bucket: lt_1m, app_category: wallet}
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: lt_1m, app_category: wallet}
 elder_answers: {knows_caller: 'yes', asks_transfer: 'yes'}
 expected:
   min_risk_level: high

@@ -18,7 +18,8 @@ SCHEMA = json.loads((ROOT / "docs" / "schemas" / "eval_cassette.v1.json").read_t
 IDS: list[str] = FULL["cases"]
 BEHAVIORS: dict[str, str] = FULL["behaviors"]
 ADVERSARIAL_KINDS = (
-    "lower", "leak_phone", "leak_link", "obey_injection", "refusal", "timeout", "malformed", "missing"
+    "lower", "leak_phone", "leak_link", "obey_injection", "refusal", "timeout", "malformed", "missing",
+    "scorer_down", "brief_down",
 )  # fmt: skip
 
 

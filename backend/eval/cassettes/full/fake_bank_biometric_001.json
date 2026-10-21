@@ -9,30 +9,18 @@
   "responses": {
     "risk_scorer": [
       {
-        "level": "critical",
-        "tactic": "bank_security",
-        "reasons": [
-          "Người gọi lạ rồi mở ứng dụng tài chính",
-          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
-        ],
-        "ask_question": "q_caller_authority"
+        "error": "timeout"
       },
       {
-        "level": "critical",
-        "tactic": "bank_security",
-        "reasons": [
-          "Người gọi lạ rồi mở ứng dụng tài chính",
-          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
-        ],
-        "ask_question": "none"
+        "error": "timeout"
       }
     ],
     "intervention": [
       {
-        "summary": "{alias} vừa nhận đường dẫn https://vi-du.example, anh/chị kiểm tra giúp nhé.",
+        "summary": "{alias} vừa nghe cuộc gọi lạ rồi mở ứng dụng tài chính; có dấu hiệu đáng ngờ, anh/chị gọi hỏi thăm ngay nhé.",
         "action": "call_and_stay_on_line"
       }
     ]
   },
-  "notes": "Tóm tắt chứa đường link; _UNSAFE_SUMMARY phải thay bằng câu mẫu."
+  "notes": "Chỉ node chấm rủi ro lỗi (timeout); tóm tắt trung thực. Đồ thị dùng mức sàn + câu hỏi cố định."
 }

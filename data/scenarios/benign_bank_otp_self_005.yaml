@@ -6,7 +6,7 @@ region: south
 channel: phone_call
 script_vi: |
   Bác tự gọi tổng đài in trên thẻ để đổi mật khẩu; nhân viên hướng dẫn trong ứng dụng, tuyệt đối không hỏi mã OTP.
-device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: bank}
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: 1_5m, app_category: bank}
 elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
 expected:
   min_risk_level: high

@@ -9,17 +9,28 @@
   "responses": {
     "risk_scorer": [
       {
-        "error": "malformed"
+        "level": "none",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi nói mọi việc ổn"
+        ],
+        "ask_question": "q_asked_transfer"
       },
       {
-        "error": "malformed"
+        "level": "none",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi nói mọi việc ổn"
+        ],
+        "ask_question": "none"
       }
     ],
     "intervention": [
       {
-        "error": "malformed"
+        "summary": "{alias} đang nghe một cuộc gọi lạ rồi dùng ứng dụng tài chính; có thể chỉ là việc bình thường, anh/chị hỏi thăm nhẹ nhàng nhé.",
+        "action": "call_now"
       }
     ]
   },
-  "notes": "Mọi lời gọi LLM đều lỗi (malformed); đồ thị phải rơi về mẫu soạn sẵn và giữ mức sàn."
+  "notes": "LLM cố hạ mức xuống none; raise_only phải giữ mức sàn."
 }

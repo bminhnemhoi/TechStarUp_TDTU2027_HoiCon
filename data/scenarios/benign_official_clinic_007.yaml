@@ -6,7 +6,7 @@ region: north
 channel: phone_call
 script_vi: |
   Phòng khám gọi nhắc lịch tái khám bác đã đặt; bác thanh toán tại quầy khi đến, không đặt cọc qua điện thoại.
-device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: bank}
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: 1_5m, app_category: bank}
 elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
 expected:
   min_risk_level: high

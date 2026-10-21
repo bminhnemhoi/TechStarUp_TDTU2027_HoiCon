@@ -4,7 +4,7 @@ is_benign: false
 region: south
 channel: phone_call
 script_vi: |
-  Người nhận là con nuôi du học (hư cấu) xin tiền khẩn vì bị giữ giấy tờ ở sân bay, số gọi đã từng bị báo lừa đảo.
+  Người gọi xưng là con nuôi đang du học (hư cấu), xin tiền khẩn vì bị giữ giấy tờ ở sân bay, số gọi đã từng bị báo lừa đảo.
 device_signals: {caller_flag: flagged, in_call: true, duration_bucket: gt_15m, app_category: wallet}
 elder_answers: {knows_caller: 'yes', asks_transfer: 'yes'}
 expected:

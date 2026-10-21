@@ -64,17 +64,24 @@ nếu eval lộ lỗi thật ở đó: ghi evidence + "Ghi chú" ROADMAP, **khô
 
 - [x] T015 Test đột biến `backend/tests/integration/test_eval_full_mutations.py` trên tập con đại diện của full: (a) bỏ `raise_only` ⇒ `lower_than_floor` ở nhóm `lower`/`obey_injection`; (b) bỏ câu công khai AI ⇒ `missing_ai_disclosure`; (c) tắt `_UNSAFE_SUMMARY` ⇒ `leak_pii` (nhóm `leak_*`) và `follow_injected_instruction` (`obey_injection`); (d) cassette cố ý chèn cụm hoảng sợ/hoàn tiền vào tóm tắt ⇒ `panic_wording`/`promise_refund`; ca đối chứng sạch — FR-008 · Verify: `uv run --directory backend pytest tests/integration/test_eval_full_mutations.py -q` (SC-004)
 - [x] T016 Bước CI: đo thời gian full; < 2 phút ⇒ thêm bước `eval full` sau smoke trong `.github/workflows/backend.yml`, ngược lại job riêng chạy tay + lý do — FR-009 · Verify: parse YAML bằng `uv run --directory backend python -I` + chạy cục bộ đúng lệnh của bước
-- [ ] T017 [P] Tài liệu: `backend/README.md` (full/injection, bảng hành vi, cách thêm ca); ghi việc tồn đọng ngoài quyền (`.claude/skills/run-eval/SKILL.md`, `docs/AGENTS.md`) và `BLOCKED` cho phần LLM thật vào evidence — FR-010, FR-012 · Verify: review
+- [x] T017 [P] Tài liệu: `backend/README.md` (full/injection, bảng hành vi, cách thêm ca); ghi việc tồn đọng ngoài quyền (`.claude/skills/run-eval/SKILL.md`, `docs/AGENTS.md`) và `BLOCKED` cho phần LLM thật vào evidence — FR-010, FR-012 · Verify: review
 
 ---
 
 ## Phase 7: Review & Acceptance evidence *(bắt buộc)*
 
-- [ ] T018 `qa-eval` đọc bộ ca (độ phủ thủ đoạn, song sinh, tính chân thực của cassette) và `security-privacy-reviewer` (PII trong kịch bản/cassette/báo cáo, cô lập, không mạng) — sửa mọi High + Medium — Verify: không còn finding High/Medium
-- [ ] T019 `/speckit-converge` tới 0 finding — Verify: báo cáo converge
-- [ ] T020 Cổng các tầng: `uv run --directory backend ruff check . && uv run --directory backend ruff format --check . && uv run --directory backend pytest -q` · `hoicon-eval --suite smoke --compare baseline --shared-db-ok` · `hoicon-eval --suite full --compare baseline-full` · `python3 scripts/check-spec-trace.py` · `gitleaks dir backend/src backend/tests backend/eval data specs docs` — Verify: output dán vào evidence.md
-- [ ] T021 Viết `specs/036-eval-full/evidence.md` theo `.specify/templates/overrides/evidence-template.md` (SC-001…008 có số + môi trường + n; SC-007/008 BLOCKED có lý do) — Verify: `python3 scripts/check-spec-trace.py`
-- [ ] T022 Cập nhật **đúng hai dòng** P2-15 và P2-18 trong `docs/ROADMAP.md` (không sửa STATUS), ghi `.handover/LATEST.md` — Verify: `python3 scripts/check-spec-trace.py`
+- [x] T018 `qa-eval` đọc bộ ca (độ phủ thủ đoạn, song sinh, tính chân thực của cassette) và `security-privacy-reviewer` (PII trong kịch bản/cassette/báo cáo, cô lập, không mạng) — sửa mọi High + Medium — Verify: không còn finding High/Medium
+- [x] T019 `/speckit-converge` tới 0 finding — Verify: báo cáo converge
+- [x] T020 Cổng các tầng: `uv run --directory backend ruff check . && uv run --directory backend ruff format --check . && uv run --directory backend pytest -q` · `hoicon-eval --suite smoke --compare baseline --shared-db-ok` · `hoicon-eval --suite full --compare baseline-full` · `python3 scripts/check-spec-trace.py` · `gitleaks dir backend/src backend/tests backend/eval data specs docs` — Verify: output dán vào evidence.md
+- [x] T021 Viết `specs/036-eval-full/evidence.md` theo `.specify/templates/overrides/evidence-template.md` (SC-001…008 có số + môi trường + n; SC-007/008 BLOCKED có lý do) — Verify: `python3 scripts/check-spec-trace.py`
+- [x] T022 Cập nhật **đúng hai dòng** P2-15 và P2-18 trong `docs/ROADMAP.md` (không sửa STATUS), ghi `.handover/LATEST.md` — Verify: `python3 scripts/check-spec-trace.py`
+
+---
+
+## Phase 8: Review follow-up (hội tụ sau qa-eval và security-privacy-reviewer)
+
+- [x] T023 Sửa theo `security-privacy-reviewer` (0 Critical/High): id ca đi vào đường dẫn tệp phải khớp mẫu hợp đồng (Low #1), cảnh báo `--shared-db-ok` chỉ cho CI (Low #2) — FR-002, FR-012 · Verify: `uv run --directory backend pytest tests/unit/test_eval_cases.py -q`
+- [x] T024 Sửa theo `qa-eval`: dữ liệu (cân bằng `in_call`, bỏ "danh bạ", sửa câu "con nuôi"), thêm hành vi lỗi một phần, mục "Giới hạn của chỉ số", cổng thành phần/không-ca-lừa-đảo/ghi chú synthetic, ghim F-1 trên mọi ca và khoảng trống lời chèn chữ thuần, test LLM nâng quá tay — FR-003, FR-004, FR-005, FR-006, FR-008 · Verify: `uv run --directory backend pytest tests/unit tests/contract tests/integration/test_eval_full.py tests/integration/test_eval_full_mutations.py -q`
 
 ---
 

@@ -6,7 +6,7 @@ region: north
 channel: phone_call
 script_vi: |
   Chi nhánh gọi nhắc bác mang giấy tờ đến quầy đổi thẻ; bác tự đến chi nhánh, không ai đến nhà và không xin mở ví.
-device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: bank}
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: 1_5m, app_category: bank}
 elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
 expected:
   min_risk_level: high

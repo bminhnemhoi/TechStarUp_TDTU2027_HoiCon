@@ -5,7 +5,7 @@ twin_of: deepfake_relative_voice_hospital_005
 region: south
 channel: phone_call
 script_vi: |
-  Cháu ngoại gọi từ số đã lưu báo đang đi khám nhẹ, nhờ bác nấu cơm chiều, không nhắc chuyện tiền.
+  Cháu ngoại gọi từ số quen đã đánh dấu, báo đang đi khám nhẹ, nhờ bác nấu cơm chiều, không nhắc chuyện tiền.
 device_signals: {caller_flag: trusted, in_call: true, duration_bucket: 1_5m, app_category: bank}
 elder_answers: {knows_caller: 'yes', asks_transfer: 'no'}
 expected:

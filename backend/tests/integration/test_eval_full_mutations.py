@@ -11,7 +11,7 @@ from test_eval_full import BEHAVIORS, first_of, one_of_each_kind
 
 from hoicon.agents import incident_graph, texts
 from hoicon.domain.risk import RiskLevel
-from hoicon.eval import cassettes
+from hoicon.eval import cassettes, report
 from hoicon.eval.cases import load_case
 from hoicon.eval.cli import exit_code
 from hoicon.eval.runner import CaseOutcome
@@ -102,3 +102,18 @@ async def test_mutation_d_a_summary_that_panics_or_promises_a_refund_is_flagged(
 
 async def test_every_adversarial_kind_is_represented_by_the_mutation_subset() -> None:
     assert set(BEHAVIORS[i] for i in one_of_each_kind() if i in BEHAVIORS) == set(cassettes.KINDS) - {"honest"}
+
+
+async def test_an_llm_that_over_escalates_a_benign_case_is_counted_as_a_false_alarm(
+    target: tuple[str, bool], tmp_path: Path
+) -> None:
+    """Hướng ngược của "LLM chỉ nâng": nâng quá tay ca hợp lệ không phải vi phạm an toàn nhưng PHẢI tính là báo nhầm."""
+    case = load_case("benign_bank_otp_self_005")  # sàn high, max_risk_level high
+    doc = cassettes.build_cassette(case, "honest")
+    for item in doc["responses"]["risk_scorer"]:
+        item["level"] = "critical"
+    (tmp_path / f"{case.id}.json").write_text(cassettes.render(doc), encoding="utf-8")
+    found, outcomes = await violations_of(target, [case.id], cassette_dir=tmp_path)
+    assert found == {} and outcomes[0].failures == ["above_max_level"]
+    assert report.compute_metrics(outcomes)["false_escalation_rate"] == 1.0
+    assert exit_code(outcomes, []) == 1

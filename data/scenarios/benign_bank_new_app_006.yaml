@@ -6,7 +6,7 @@ region: central
 channel: phone_call
 script_vi: |
   Ngân hàng nhắn bác nâng cấp ứng dụng trong cửa hàng chính thức; bác tự mở cửa hàng ứng dụng để cập nhật.
-device_signals: {caller_flag: unknown, in_call: false, duration_bucket: lt_1m, app_category: bank}
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: lt_1m, app_category: bank}
 elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
 expected:
   min_risk_level: high

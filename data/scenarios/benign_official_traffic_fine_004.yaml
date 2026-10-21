@@ -6,7 +6,7 @@ region: central
 channel: phone_call
 script_vi: |
   Bác nhận thông báo phạt bằng văn bản, tự vào cổng dịch vụ công trong ứng dụng ngân hàng để nộp, không ai gọi hối.
-device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: bank}
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: 1_5m, app_category: bank}
 elder_answers: {claims_authority: 'no', asks_transfer: 'yes'}
 expected:
   min_risk_level: high

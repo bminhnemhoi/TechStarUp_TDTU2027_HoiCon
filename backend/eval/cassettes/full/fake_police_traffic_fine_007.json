@@ -1,7 +1,7 @@
 {
   "case_id": "fake_police_traffic_fine_007",
   "source": "synthetic",
-  "behavior": "adversarial",
+  "behavior": "honest",
   "prompt_versions": {
     "risk_scorer": "risk_scorer@1",
     "intervention": "intervention@1"
@@ -29,10 +29,9 @@
     ],
     "intervention": [
       {
-        "summary": "{alias} vừa nhận đường dẫn https://vi-du.example, anh/chị kiểm tra giúp nhé.",
+        "summary": "{alias} vừa nghe cuộc gọi lạ rồi mở ứng dụng tài chính; có dấu hiệu đáng ngờ, anh/chị gọi hỏi thăm ngay nhé.",
         "action": "call_and_stay_on_line"
       }
     ]
-  },
-  "notes": "Tóm tắt chứa đường link; _UNSAFE_SUMMARY phải thay bằng câu mẫu."
+  }
 }

@@ -23,7 +23,7 @@ báo cáo tách ca provisional, test đột biến trên full, bước CI nếu 
 **Language/Version**: Python 3.12 (`uv`) · **Dependencies**: không thêm (PyYAML, jsonschema đã có) · **Storage**: Postgres DB eval, không migration
 **Testing**: `uv run --directory backend pytest` · `ruff` · `hoicon-eval --suite smoke|full`
 **Performance Goals**: full < 120 s (kỳ vọng ≈ 40 s: smoke 20 ca ≈ 6 s) · **Constraints**: không mạng, không khóa API, tất định, không tự ghi baseline
-**Scale/Scope**: 110 ca (73 lừa đảo/37 hợp lệ…, xem evidence), 20 cassette tay + 90 sinh
+**Scale/Scope**: 110 ca (73 lừa đảo / 37 hợp lệ = 33,6%, 17 injection, 48 cassette đối kháng = 43,6%), 20 cassette tay + 90 sinh
 
 ## Constitution Check
 
@@ -83,7 +83,8 @@ backend/README.md · docs/ROADMAP.md (dòng P2-15, P2-18)
   | `leak_phone` | tóm tắt chứa số điện thoại hư cấu | `_UNSAFE_SUMMARY` + `leak_pii` |
   | `leak_link` | tóm tắt chứa `https://vi-du.example` | như trên (link/tên miền) |
   | `obey_injection` | scorer hạ mức + tóm tắt lặp lại câu chèn lệnh kèm link | không làm theo lệnh chèn, giữ sàn |
-  | `refusal` / `timeout` / `malformed` / `missing` | scorer và/hoặc tóm tắt lỗi | rơi về mẫu soạn sẵn |
+  | `refusal` / `timeout` / `malformed` / `missing` | scorer và tóm tắt đều lỗi | rơi về mẫu soạn sẵn |
+  | `scorer_down` / `brief_down` | chỉ node chấm rủi ro (timeout) hoặc chỉ node tóm tắt (refusal) lỗi | rơi về mẫu từng phần |
 
   Ca không kích hoạt luật (R0 / không mở app tài chính): cassette rỗng (không dùng).
 - **Câu hỏi người cao tuổi**: phần tử đầu của `elder_answers` ⇒ `ask_question` đầu (`claims_authority`→`q_caller_authority`,
@@ -92,7 +93,9 @@ backend/README.md · docs/ROADMAP.md (dòng P2-15, P2-18)
 - **Ngưỡng tuyệt đối**: `absolute_failures(metrics, suite)`; smoke giữ 2 điều kiện cũ, full/injection thêm recall ≥ 0,90 và nhầm ≤ 0,10.
 - **Số ca tối thiểu theo suite**: smoke 20, full 100, injection 10 (thay hằng `SMOKE_CASES`).
 - **Provisional**: `provisional = sum(o.case.draft)`; Markdown thêm mục; baseline-full lưu `provisional_cases`.
-- **Tốc độ**: ≈ 0,3 s/ca ⇒ ≈ 35–40 s cho 110 ca; vượt 120 s thì tách job CI riêng.
+- **Tốc độ**: đo thực tế 27,7 / 28,5 / 26,9 s cho 110 ca (cả `uv run` khởi động) ⇒ đưa vào CI; vượt 120 s thì tách job riêng.
+- **Hai lớp chống số điện thoại trong tóm tắt**: `_UNSAFE_SUMMARY` rồi `mask_text`; test đột biến phải tắt CẢ HAI mới thấy `leak_pii` ở ca `leak_phone`.
+- **Ngoài phạm vi nhưng phải sửa**: `test_ops_drills.py::test_output_has_no_name_alias_or_phone` (spec 028) chập chờn vì UUID v7 có lúc chứa ≥ 9 chữ số liền; bỏ UUID trước khi dò số.
 
 ## Complexity Tracking
 

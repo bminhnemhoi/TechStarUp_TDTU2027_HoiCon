@@ -224,6 +224,16 @@ async def _fail_unfinished_runs(sessions: async_sessionmaker, nonce: str) -> Non
         await session.execute(stmt)
 
 
+async def _zero_replayed_costs(sessions: async_sessionmaker, nonce: str) -> None:
+    """Chi phí phát lại là GIẢ (usage cố định): không để cộng dồn vào sổ ngân sách LLM của DB dùng chung.
+
+    Sổ ngân sách = SUM(agent_steps.cost_usd) của ngày (spec 003); nhiều lượt eval từng làm cạn ngân sách DB dev.
+    Token được giữ lại."""
+    runs = select(AgentRun.id).where(AgentRun.thread_id.startswith(f"eval-{nonce}-", autoescape=True))
+    async with sessions.begin() as session:
+        await session.execute(update(AgentStep).where(AgentStep.run_id.in_(runs)).values(cost_usd=0))
+
+
 async def _seed_threat_list(sessions: async_sessionmaker, settings: Settings) -> None:
     """Danh sách đe dọa nằm trong DB (spec 003) ⇒ DB eval phải có số demo để ca `flagged` ra `flagged` (idempotent)."""
     try:
@@ -289,5 +299,6 @@ async def run_suite(
     finally:
         await cancel_prefix(sessions, f"eval-{nonce}-")
         await _fail_unfinished_runs(sessions, nonce)
+        await _zero_replayed_costs(sessions, nonce)
         await engine.dispose()
     return outcomes

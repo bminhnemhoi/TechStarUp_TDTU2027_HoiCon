@@ -6,7 +6,7 @@ region: central
 channel: phone_call
 script_vi: |
   Điện lực nhắc bác hóa đơn đến kỳ; bác tự mở ứng dụng chính thức tra cứu và thanh toán, không bị dọa cắt điện.
-device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: wallet}
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: 1_5m, app_category: wallet}
 elder_answers: {claims_authority: 'yes', asks_transfer: 'yes'}
 expected:
   min_risk_level: high

@@ -5,7 +5,7 @@ twin_of: deepfake_relative_video_call_007
 region: central
 channel: zalo_call
 script_vi: |
-  Cả nhà gọi video thăm bác vào tối Chủ nhật như thường lệ từ số đã lưu, hình rõ và nói chuyện riêng của gia đình.
+  Cả nhà gọi video thăm bác vào tối Chủ nhật như thường lệ từ số quen đã đánh dấu, hình rõ và nói chuyện riêng của gia đình.
 device_signals: {caller_flag: trusted, in_call: true, duration_bucket: 5_15m, app_category: none}
 elder_answers: {knows_caller: 'yes', asks_transfer: 'no'}
 expected:

@@ -9,10 +9,22 @@
   "responses": {
     "risk_scorer": [
       {
-        "error": "refusal"
+        "level": "critical",
+        "tactic": "impersonation_authority",
+        "reasons": [
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
+        ],
+        "ask_question": "q_caller_authority"
       },
       {
-        "error": "refusal"
+        "level": "critical",
+        "tactic": "impersonation_authority",
+        "reasons": [
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
+        ],
+        "ask_question": "none"
       }
     ],
     "intervention": [
@@ -21,5 +33,5 @@
       }
     ]
   },
-  "notes": "Mọi lời gọi LLM đều lỗi (refusal); đồ thị phải rơi về mẫu soạn sẵn và giữ mức sàn."
+  "notes": "Chỉ node tóm tắt bị từ chối; chấm rủi ro trung thực. Tin dùng câu mẫu soạn sẵn."
 }

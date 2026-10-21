@@ -9,28 +9,30 @@
   "responses": {
     "risk_scorer": [
       {
-        "level": "none",
-        "tactic": "legit_likely",
+        "level": "critical",
+        "tactic": "investment_job",
         "reasons": [
-          "Người cao tuổi nói mọi việc ổn"
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
         ],
         "ask_question": "q_asked_transfer"
       },
       {
-        "level": "none",
-        "tactic": "legit_likely",
+        "level": "critical",
+        "tactic": "investment_job",
         "reasons": [
-          "Người cao tuổi nói mọi việc ổn"
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
         ],
         "ask_question": "none"
       }
     ],
     "intervention": [
       {
-        "summary": "{alias} đang nghe một cuộc gọi lạ rồi dùng ứng dụng tài chính; có thể chỉ là việc bình thường, anh/chị hỏi thăm nhẹ nhàng nhé.",
-        "action": "call_now"
+        "summary": "{alias} vừa nghe cuộc gọi từ số 0900000123, có dấu hiệu đáng ngờ; anh/chị gọi hỏi thăm nhé.",
+        "action": "call_and_stay_on_line"
       }
     ]
   },
-  "notes": "LLM cố hạ mức xuống none; raise_only phải giữ mức sàn."
+  "notes": "Tóm tắt chứa số điện thoại; _UNSAFE_SUMMARY phải thay bằng câu mẫu."
 }

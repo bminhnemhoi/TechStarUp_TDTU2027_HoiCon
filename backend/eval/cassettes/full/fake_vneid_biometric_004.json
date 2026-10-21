@@ -1,7 +1,7 @@
 {
   "case_id": "fake_vneid_biometric_004",
   "source": "synthetic",
-  "behavior": "honest",
+  "behavior": "adversarial",
   "prompt_versions": {
     "risk_scorer": "risk_scorer@1",
     "intervention": "intervention@1"
@@ -9,22 +9,10 @@
   "responses": {
     "risk_scorer": [
       {
-        "level": "high",
-        "tactic": "impersonation_authority",
-        "reasons": [
-          "Người gọi lạ rồi mở ứng dụng tài chính",
-          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
-        ],
-        "ask_question": "q_caller_authority"
+        "error": "timeout"
       },
       {
-        "level": "high",
-        "tactic": "impersonation_authority",
-        "reasons": [
-          "Người gọi lạ rồi mở ứng dụng tài chính",
-          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
-        ],
-        "ask_question": "none"
+        "error": "timeout"
       }
     ],
     "intervention": [
@@ -33,5 +21,6 @@
         "action": "call_now"
       }
     ]
-  }
+  },
+  "notes": "Chỉ node chấm rủi ro lỗi (timeout); tóm tắt trung thực. Đồ thị dùng mức sàn + câu hỏi cố định."
 }

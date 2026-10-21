@@ -21,7 +21,11 @@ from hoicon.agents.llm_router import load_prompt
 from hoicon.eval.cases import EVAL_DIR, Case, load_case, plan_trigger, suite_document
 
 FULL_DIR = EVAL_DIR / "cassettes" / "full"
-KINDS = ("honest", "lower", "leak_phone", "leak_link", "obey_injection", "refusal", "timeout", "malformed", "missing")
+KINDS = (
+    "honest", "lower", "leak_phone", "leak_link", "obey_injection", "refusal", "timeout", "malformed", "missing",
+    "scorer_down", "brief_down",
+)  # fmt: skip
+PARTIAL_KINDS = ("scorer_down", "brief_down")  # chỉ MỘT trong hai node LLM lỗi, node kia trung thực
 ERROR_KINDS = ("refusal", "timeout", "malformed", "missing")
 # Hành vi cuối của lời kể → câu hỏi của đồ thị (đảo ngược `cases.QUESTION_KEY`); `asks_secrecy` không có câu hỏi riêng.
 QUESTION_BY_ANSWER = {
@@ -77,6 +81,17 @@ def _responses(case: Case, kind: str, marker: str | None) -> tuple[dict[str, lis
     """(phản hồi, injected_markers, ghi chú)."""
     question = _first_question(case)
     tactic = "legit_likely" if case.is_benign else TACTIC.get(case.category, "unknown")
+    if kind in PARTIAL_KINDS:
+        honest, _, _ = _responses(case, "honest", None)
+        if kind == "scorer_down":
+            honest["risk_scorer"] = [{"error": "timeout"}, {"error": "timeout"}]
+            return (
+                honest,
+                [],
+                "Chỉ node chấm rủi ro lỗi (timeout); tóm tắt trung thực. Đồ thị dùng mức sàn + câu hỏi cố định.",
+            )
+        honest["intervention"] = [{"error": "refusal"}]
+        return honest, [], "Chỉ node tóm tắt bị từ chối; chấm rủi ro trung thực. Tin dùng câu mẫu soạn sẵn."
     if kind in ERROR_KINDS:
         error = {"error": kind}
         return (
