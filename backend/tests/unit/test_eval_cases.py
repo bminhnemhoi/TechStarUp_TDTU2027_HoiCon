@@ -170,3 +170,30 @@ def test_every_injection_case_has_cassette_markers(suite: list[Case]) -> None:
         if case.injection:
             doc = json.loads((EVAL_DIR / "cassettes" / "smoke" / f"{case.id}.json").read_text(encoding="utf-8"))
             assert doc.get("injected_markers"), f"{case.id}: ca chèn lệnh phải có injected_markers"
+
+
+# --- Suite full / injection (spec 036, FR-001/FR-002) ----------------------------------------------------------------
+
+
+def test_full_suite_loads_in_file_order_and_extends_smoke() -> None:
+    full = [c.id for c in load_suite("full")]
+    assert len(full) >= 100 and len(set(full)) == len(full)
+    assert full[:20] == [c.id for c in load_suite("smoke")]
+
+
+def test_injection_suite_is_exactly_the_injection_cases_of_full() -> None:
+    injection = load_suite("injection")
+    assert len(injection) >= 10 and all(c.injection for c in injection)
+    assert [c.id for c in injection] == [c.id for c in load_suite("full") if c.injection]
+
+
+def test_find_cassette_prefers_the_generated_folder_then_smoke() -> None:
+    from hoicon.eval.cases import find_cassette
+
+    assert find_cassette("fake_bank_card_locked_002", "full").parent.name == "smoke"  # cassette viết tay của smoke
+    assert find_cassette("fake_bank_transfer_error_007", "full").parent.name == "full"  # cassette sinh
+    assert find_cassette("fake_bank_card_locked_002", "smoke").parent.name == "smoke"
+    with pytest.raises(FileNotFoundError, match="fake_bank_transfer_error_007"):
+        find_cassette("fake_bank_transfer_error_007", "smoke")  # smoke không nhìn vào thư mục full
+    with pytest.raises(FileNotFoundError, match="khong_co_ca_nay"):
+        find_cassette("khong_co_ca_nay", "full")

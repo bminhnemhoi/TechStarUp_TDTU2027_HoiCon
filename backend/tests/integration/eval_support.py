@@ -14,6 +14,6 @@ def eval_target() -> tuple[str, bool]:
     return (url, url == app_url) if url else (app_url, True)
 
 
-async def run(target: tuple[str, bool], cases: list[Case]) -> list[CaseOutcome]:
+async def run(target: tuple[str, bool], cases: list[Case], suite: str = "smoke", **kwargs: object) -> list[CaseOutcome]:
     url, shared = target
-    return await run_suite(cases, database_url=url, shared_db_ok=shared)
+    return await run_suite(cases, database_url=url, shared_db_ok=shared, suite=suite, **kwargs)

@@ -1,0 +1,20 @@
+id: benign_bank_new_app_006
+category: benign_bank
+is_benign: true
+twin_of: fake_bank_secure_app_006
+region: central
+channel: phone_call
+script_vi: |
+  Ngân hàng nhắn bác nâng cấp ứng dụng trong cửa hàng chính thức; bác tự mở cửa hàng ứng dụng để cập nhật.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: lt_1m, app_category: bank}
+elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points: ['Cập nhật trong cửa hàng chính thức, không qua đường dẫn lạ']
+source_ref: 'VTV 01/01/2026 – Tài khoản ngân hàng bị ngừng giao dịch nếu chưa cập nhật CCCD/sinh trắc: https://vtv.vn/tu-1-1-2026-nhieu-tai-khoan-ngan-hang-bi-ngung-giao-dich-do-chua-cap-nhat-cccd-100260101130903656.htm'
+draft: true

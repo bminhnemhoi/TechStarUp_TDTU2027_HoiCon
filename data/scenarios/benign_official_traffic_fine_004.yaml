@@ -1,0 +1,20 @@
+id: benign_official_traffic_fine_004
+category: benign_official
+is_benign: true
+twin_of: fake_police_traffic_fine_007
+region: central
+channel: phone_call
+script_vi: |
+  Bác nhận thông báo phạt bằng văn bản, tự vào cổng dịch vụ công trong ứng dụng ngân hàng để nộp, không ai gọi hối.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: bank}
+elder_answers: {claims_authority: 'no', asks_transfer: 'yes'}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points: [Phạt nguội thật có văn bản và nộp qua cổng chính thức]
+source_ref: 'CAND 02/10/2026 – Ma trận lừa đảo nhắm vào người già (Hà Tĩnh): https://cand.vn/ma-tran-lua-dao-tren-khong-gian-mang-nham-vao-nguoi-gia-yeu-the-post823770.html'
+draft: true

@@ -1,0 +1,20 @@
+id: benign_bank_branch_visit_007
+category: benign_bank
+is_benign: true
+twin_of: fake_bank_staff_visit_008
+region: north
+channel: phone_call
+script_vi: |
+  Chi nhánh gọi nhắc bác mang giấy tờ đến quầy đổi thẻ; bác tự đến chi nhánh, không ai đến nhà và không xin mở ví.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: bank}
+elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points: ['Đổi thẻ tại quầy chi nhánh, không ai đến nhà']
+source_ref: 'Tuổi Trẻ 01/10/2026 – Nhân viên Agribank báo công an khi người phụ nữ rút tiền tỉ theo lời ''công an'' giả: https://tuoitre.vn/nguoi-phu-nu-di-rut-tien-ti-voi-thai-do-bat-thuong-nhan-vien-ngan-hang-bao-cong-an-100261001104136065.htm'
+draft: true

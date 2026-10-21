@@ -26,6 +26,9 @@ EVAL_DIR = ROOT / "backend" / "eval"
 SCENARIOS_DIR = ROOT / "data" / "scenarios"
 PHONES = ROOT / "data" / "fixtures" / "phones.json"
 SMOKE_SUITE = EVAL_DIR / "suites" / "smoke.v1.json"
+SUITES = ("smoke", "full", "injection")
+# Thư mục cassette theo suite, tra theo thứ tự: full dùng cassette sinh ở `full/` rồi cassette viết tay của smoke (036).
+CASSETTE_DIRS = {"smoke": ("smoke",), "full": ("full", "smoke"), "injection": ("full", "smoke")}
 
 OCCURRED_AT = datetime(2026, 10, 15, 9, 0, tzinfo=UTC)
 # Thời lượng đại diện cho từng khoảng (giây); `in_call=false` ⇒ cuộc gọi vừa kết thúc cách đây 60 s (trong cửa sổ R1).
@@ -82,9 +85,24 @@ def load_case(case_id: str) -> Case:
     )
 
 
+def suite_document(name: str) -> dict[str, Any]:
+    """Tệp suite thô. `injection` không có tệp riêng: là các ca `injection: true` của `full` (spec 036, FR-001)."""
+    file = "full" if name == "injection" else name
+    return json.loads((EVAL_DIR / "suites" / f"{file}.v1.json").read_text(encoding="utf-8"))
+
+
 def load_suite(name: str = "smoke") -> list[Case]:
-    path = EVAL_DIR / "suites" / f"{name}.v1.json"
-    return [load_case(case_id) for case_id in json.loads(path.read_text(encoding="utf-8"))["cases"]]
+    cases = [load_case(case_id) for case_id in suite_document(name)["cases"]]
+    return [c for c in cases if c.injection] if name == "injection" else cases
+
+
+def find_cassette(case_id: str, suite: str) -> Path:
+    """Cassette của ca theo thứ tự thư mục của suite; không có ⇒ FileNotFoundError nêu id."""
+    for directory in CASSETTE_DIRS[suite]:
+        path = EVAL_DIR / "cassettes" / directory / f"{case_id}.json"
+        if path.is_file():
+            return path
+    raise FileNotFoundError(case_id)
 
 
 def plan_trigger(signals: dict[str, Any]) -> tuple[str, RiskLevel] | None:

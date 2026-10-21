@@ -1,0 +1,37 @@
+{
+  "case_id": "fake_vneid_residence_005",
+  "source": "synthetic",
+  "behavior": "honest",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "critical",
+        "tactic": "impersonation_authority",
+        "reasons": [
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
+        ],
+        "ask_question": "q_caller_authority"
+      },
+      {
+        "level": "critical",
+        "tactic": "impersonation_authority",
+        "reasons": [
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "{alias} vừa nghe cuộc gọi lạ rồi mở ứng dụng tài chính; có dấu hiệu đáng ngờ, anh/chị gọi hỏi thăm ngay nhé.",
+        "action": "call_and_stay_on_line"
+      }
+    ]
+  }
+}

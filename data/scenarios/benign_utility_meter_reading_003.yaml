@@ -1,0 +1,20 @@
+id: benign_utility_meter_reading_003
+category: benign_utility
+is_benign: true
+twin_of: fake_evn_meter_swap_004
+region: north
+channel: phone_call
+script_vi: |
+  Điện lực báo lịch ghi chỉ số công tơ định kỳ, không thu tiền và không yêu cầu chuyển khoản.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: lt_1m, app_category: none}
+elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
+expected:
+  min_risk_level: none
+  max_risk_level: low
+  notify_guardian: false
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points: [Ghi chỉ số công tơ không thu tiền trước]
+source_ref: 'Thanh Niên 25/02/2025 – Thủ đoạn giả nhân viên điện lực đòi cắt điện: https://thanhnien.vn/ro-thu-doan-gia-nhan-vien-doi-cat-dien-diem-mat-cach-lua-dao-185250225200811774.htm'
+draft: true

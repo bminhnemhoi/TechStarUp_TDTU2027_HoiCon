@@ -80,7 +80,9 @@ async def test_output_has_no_name_alias_or_phone(family: dict[str, UUID], capsys
     await ops.execute(parse("list", "--family", str(family["family"])))
     out = capsys.readouterr().out
     assert "Bà Tư" not in out and "Tư" not in out
-    assert not re.search(r"\d{9,}", out)
+    # UUID v7 (id bài) có thể ngẫu nhiên chứa ≥ 9 chữ số liền nhau ⇒ bỏ UUID trước khi dò số điện thoại (hết chập chờn)
+    without_ids = re.sub(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", "<id>", out)
+    assert not re.search(r"\d{9,}", without_ids)
 
 
 async def test_list_shows_the_drills_newest_first(family: dict[str, UUID], capsys: pytest.CaptureFixture[str]) -> None:

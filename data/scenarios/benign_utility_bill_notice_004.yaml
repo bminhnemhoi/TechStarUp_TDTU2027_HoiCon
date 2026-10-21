@@ -1,0 +1,20 @@
+id: benign_utility_bill_notice_004
+category: benign_utility
+is_benign: true
+twin_of: fake_evn_bill_late_005
+region: central
+channel: phone_call
+script_vi: |
+  Điện lực nhắc bác hóa đơn đến kỳ; bác tự mở ứng dụng chính thức tra cứu và thanh toán, không bị dọa cắt điện.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: wallet}
+elder_answers: {claims_authority: 'yes', asks_transfer: 'yes'}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points: [Tự tra cứu hóa đơn trong ứng dụng chính thức]
+source_ref: 'Thanh Niên 25/02/2025 – Thủ đoạn giả nhân viên điện lực đòi cắt điện: https://thanhnien.vn/ro-thu-doan-gia-nhan-vien-doi-cat-dien-diem-mat-cach-lua-dao-185250225200811774.htm'
+draft: true

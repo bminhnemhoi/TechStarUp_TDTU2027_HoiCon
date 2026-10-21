@@ -1,0 +1,25 @@
+{
+  "case_id": "investment_gold_coin_006",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "error": "missing"
+      },
+      {
+        "error": "missing"
+      }
+    ],
+    "intervention": [
+      {
+        "error": "missing"
+      }
+    ]
+  },
+  "notes": "Mọi lời gọi LLM đều lỗi (missing); đồ thị phải rơi về mẫu soạn sẵn và giữ mức sàn."
+}

@@ -1,0 +1,38 @@
+{
+  "case_id": "fake_bank_otp_reset_005",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "high",
+        "tactic": "bank_security",
+        "reasons": [
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
+        ],
+        "ask_question": "q_caller_authority"
+      },
+      {
+        "level": "high",
+        "tactic": "bank_security",
+        "reasons": [
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "{alias} vừa nghe cuộc gọi từ số 0900000123, có dấu hiệu đáng ngờ; anh/chị gọi hỏi thăm nhé.",
+        "action": "call_now"
+      }
+    ]
+  },
+  "notes": "Tóm tắt chứa số điện thoại; _UNSAFE_SUMMARY phải thay bằng câu mẫu."
+}
