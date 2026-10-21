@@ -27,7 +27,7 @@ Cuộc gọi lạ → mở app ngân hàng (`:demobank`, ngân hàng mẫu) → 
 | 4 | 1:10–1:30 | Bác bấm **"Hỏi con"** → mở bàn phím gọi trống (không tự gọi) | `s4_hoi_con.mp4`, `s5_ban_phim_goi.mp4` | 11,4 s + 8 s | "Bác bấm Hỏi con. HỏiCon chỉ mở sẵn bàn phím, bác tự gọi cho con. HỏiCon không bao giờ tự bấm hay chặn thay bác." |
 | 5 | 1:30–1:55 | Tin Zalo tới người giám hộ (**MÔ PHỎNG**) | `s6_zalo_mo_phong.webm` + `.png` | ~17 s | "Cùng lúc đó, người con nhận một tin Zalo. Đây là trợ lý AI HỏiCon, kèm mức nguy cơ và cách trả lời 1, 2 hoặc 3." |
 | 6 | 1:55–2:30 | Trang `/a/[token]`: nội dung cảnh báo, "Gọi điện cho Bố/Mẹ", xác nhận "Đã gọi được, Bố/Mẹ an toàn" | `s7_trang_hanh_dong.webm`, `s7_*-1/2/xacnhan.png` | ~25 s | "Con mở trang cảnh báo, gọi cho bác, rồi xác nhận bác an toàn. HỏiCon ghi nhận và đóng cảnh báo." |
-| 7 | 2:30–2:50 | Thẻ chữ: số đo có nguồn (mục 4), ghi "đo trên máy ảo" | đồ họa | — | "Màn dừng an toàn không dùng mạng hay AI trên máy chủ. Trên máy ảo, nó hiện ra sau 0,9 giây (trung vị) và dưới 1,5 giây ở 10 lần thử." |
+| 7 | 2:30–2:50 | Thẻ chữ: số đo có nguồn (mục 4), ghi "đo trên máy ảo" | đồ họa | — | "Màn dừng an toàn không dùng mạng hay AI trên máy chủ. Trên máy ảo, nó hiện ra sau khoảng 0,9 giây (trung vị) và 1,4 giây (p95) trong 10 lần thử." |
 | 8 | 2:50–3:00 | Logo + câu kêu gọi | đồ họa | — | "HỏiCon — hỏi con trước khi chuyển tiền." |
 
 Tổng lời thoại ≈ 270 từ (còn dư thời gian cho nhạc và khoảng lặng; giữ ≤ 360 từ).
