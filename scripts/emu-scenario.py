@@ -34,7 +34,7 @@ EXE = ".exe" if os.name == "nt" else ""
 ADB = str(SDK / "platform-tools" / f"adb{EXE}")
 ACLI = str(SDK / "cmdline-tools" / "latest" / "bin" / f"android{EXE}")
 SENTINEL = "vn.hoicon.sentinel"
-DEMOBANK = "vn.hoicon.demobank"
+DEMOBANK = os.environ.get("HC_DEMOBANK_PACKAGE", "vn.hoicon.demobank")  # đổi để thử R5 bằng bản demobank mang tên gói điều khiển từ xa
 PAUSE_WAIT_S = 30
 PHONES = json.loads((ROOT / "data" / "fixtures" / "phones.json").read_text(encoding="utf-8"))
 

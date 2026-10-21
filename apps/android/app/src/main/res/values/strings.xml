@@ -194,7 +194,7 @@
     <string name="drills_consent_accept">Đồng ý để HỏiCon mời tập</string>
     <string name="drills_consent_decline">Để lúc khác</string>
     <string name="drills_consent_adult">Tôi từ 18 tuổi trở lên.</string>
-    <string name="drills_consent_adult_needed">Bác kéo xuống, tích ô 18 tuổi rồi bấm lại nhé.</string>
+    <string name="drills_consent_adult_needed">Bác tích ô 18 tuổi rồi bấm lại nhé.</string>
     <string-array name="drills_consent_speech">
         <item>Đây là trợ lý AI HỏiCon.</item>
         <item>HỏiCon xin phép thỉnh thoảng mời bác tập nhận biết cuộc gọi lừa đảo.</item>
