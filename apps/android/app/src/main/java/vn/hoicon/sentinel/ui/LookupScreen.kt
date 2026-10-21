@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import vn.hoicon.sentinel.R
+import vn.hoicon.sentinel.data.consent.ConsentLedger
 import vn.hoicon.sentinel.ui.theme.HoiConTheme
 
 /** Why the typed text was not checked; shown under the field as a calm sentence with the next step. */
@@ -55,18 +56,9 @@ fun LookupConsentScreen(
             SecondaryButton(text = stringResource(R.string.lookups_consent_decline), onClick = onDecline)
         },
     ) {
-        Text(text = stringResource(R.string.lookups_consent_ai), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-        Text(
-            text = stringResource(R.string.lookups_consent_title),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.semantics { heading() },
-        )
-        // The one sentence that says the family may be told: it is hashed into the ledger, so the person must see it.
-        Text(text = stringResource(R.string.lookups_consent_summary), style = MaterialTheme.typography.bodyLarge)
+        // Every line of docs/legal/consent/lookups.vi.md, as the ledger hashes it (the family sentence included).
+        ConsentTextBlock(rememberConsentParts(ConsentLedger.LOOKUPS))
         ListenButton(text = stringResource(R.string.onboarding_listen_again), onClick = onListen)
-        InfoCard(stringResource(R.string.lookups_consent_1_title), stringResource(R.string.lookups_consent_1_body))
-        InfoCard(stringResource(R.string.lookups_consent_2_title), stringResource(R.string.lookups_consent_2_body))
-        InfoCard(stringResource(R.string.lookups_consent_3_title), stringResource(R.string.lookups_consent_3_body))
     }
 }
 
@@ -116,7 +108,7 @@ fun LookupScreen(
             }
         },
     ) {
-        Text(text = stringResource(R.string.lookups_consent_ai), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Text(text = stringResource(R.string.lookup_ai), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
         Text(
             text = stringResource(R.string.lookup_title),
             style = MaterialTheme.typography.headlineMedium,

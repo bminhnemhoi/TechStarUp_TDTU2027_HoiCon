@@ -17,12 +17,6 @@
     <string name="perm_status_off">✗ Chưa bật</string>
     <string name="perm_open_settings">Mở cài đặt</string>
     <string name="perm_open_settings_for">Mở cài đặt cho mục %1$s</string>
-    <string name="perm_role_title">Nhận biết cuộc gọi số lạ</string>
-    <string name="perm_role_why">Cho HỏiCon biết khi có số không có trong danh bạ gọi tới. HỏiCon không chặn cuộc gọi và không đọc danh bạ.</string>
-    <string name="perm_overlay_title">Hiển thị trên ứng dụng khác</string>
-    <string name="perm_overlay_why">Để màn hình “Khoan chuyển tiền đã” mở được ngay cả khi đang dùng ứng dụng khác.</string>
-    <string name="perm_usage_title">Quyền truy cập dữ liệu sử dụng</string>
-    <string name="perm_usage_why">Để biết ứng dụng ngân hàng vừa được mở, chỉ trong 10 phút sau cuộc gọi số lạ. HỏiCon chỉ biết tên ứng dụng vừa mở. HỏiCon không xem được bên trong, không biết số dư hay giao dịch.</string>
     <string name="perm_notif_title">Thông báo</string>
     <string name="perm_notif_why">Để hiện dòng “HỏiCon đang để ý giúp bác” và nhắc nhở khi cần.</string>
     <string name="perm_battery_title">Không giới hạn pin</string>
@@ -145,17 +139,8 @@
     <string name="pairing_error_network">Điện thoại chưa kết nối được mạng. Bác kiểm tra Wi-Fi hoặc dữ liệu di động, rồi bấm nút Kết nối gia đình nhé.</string>
     <string name="pairing_error_server">HỏiCon đang bận một chút. Bác thử lại sau ít phút nhé.</string>
 
-    <!-- E3: công bố nổi bật (Google Play). Văn bản này được băm (SHA-256) vào sổ đồng ý: đổi chữ ⇒ đổi ConsentLedger.VERSION. -->
+    <!-- E3: công bố nổi bật (Google Play). Chữ đồng ý nằm ở consent_texts.xml (khớp docs/legal/consent/); ở đây chỉ còn nút, câu dẫn và bản đọc to tóm tắt (không băm). -->
     <string name="disclosure_connected">Đã kết nối với %1$s.</string>
-    <string name="disclosure_title">Trước khi bật quyền, HỏiCon xin nói rõ</string>
-    <string name="disclosure_1_title">Chỉ để ý quanh những cuộc gọi với số lạ</string>
-    <string name="disclosure_1_body">Khi có số không có trong danh bạ gọi tới hoặc bác gọi đi, HỏiCon xem trong 10 phút sau cuộc gọi đó bác có mở ứng dụng ngân hàng, ví điện tử, chứng khoán hay ứng dụng điều khiển điện thoại từ xa (như AnyDesk, TeamViewer) không. Lúc khác HỏiCon không theo dõi gì.</string>
-    <string name="disclosure_2_title">HỏiCon không nghe cuộc gọi của bác</string>
-    <string name="disclosure_2_body">HỏiCon không nghe và không ghi âm cuộc gọi, không đọc tin nhắn, không đọc danh bạ. HỏiCon không xem được bên trong ứng dụng ngân hàng, không biết số dư, giao dịch hay mã xác thực (OTP) của bác.</string>
-    <string name="disclosure_3_title">Chỉ gửi đi những gì cần để báo cho con</string>
-    <string name="disclosure_3_body">HỏiCon gửi cho con bác, qua máy chủ của HỏiCon, hai loại tin. Một: mỗi lần có cuộc gọi với số lạ, HỏiCon gửi dãy ký tự đại diện cho số đó (không gửi số đầy đủ, chỉ giữ 3 số cuối), cuộc gọi tới hay gọi đi và kéo dài bao lâu, ứng dụng vừa mở (ngân hàng, ví điện tử, chứng khoán hay điều khiển từ xa; riêng ứng dụng tài chính thì kèm tên ứng dụng), nút bác bấm trên màn nhắc và thời điểm. Hai: cứ 15 phút khi có mạng, HỏiCon gửi việc bác đang bật hay tắt các quyền và phiên bản ứng dụng. Tin chờ gửi nằm trong điện thoại, đã mã hóa.</string>
-    <string name="disclosure_4_title">Không bán dữ liệu, bác tắt được bất cứ lúc nào</string>
-    <string name="disclosure_4_body">HỏiCon không bán dữ liệu của bác và không đưa cho bên quảng cáo. Cảnh báo đi tới con bác qua Zalo; dữ liệu giữ trên máy chủ HỏiCon tối đa 90 ngày. Muốn dừng, bác tắt từng quyền trong Cài đặt của điện thoại: HỏiCon thôi canh chừng, nhưng vẫn báo cho con biết quyền nào đang tắt.</string>
     <string name="disclosure_decline">Chưa đồng ý</string>
     <string name="decline_title">Không sao bác ạ</string>
     <string name="decline_body">HỏiCon sẽ chưa gửi gì cho con bác. Khi nào bác muốn, bác mở lại HỏiCon và đọc lại các cam kết.</string>
@@ -165,15 +150,15 @@
     <string name="disclosure_accept">Đồng ý, tiếp tục</string>
     <string-array name="disclosure_speech">
         <item>Đây là trợ lý AI HỏiCon.</item>
-        <item>HỏiCon chỉ để ý quanh những cuộc gọi với số lạ.</item>
-        <item>HỏiCon không nghe lén, không ghi âm cuộc gọi.</item>
-        <item>HỏiCon chỉ gửi cho con bác những gì cần để báo cho con, và cho con biết quyền nào đang bật hay tắt.</item>
-        <item>HỏiCon không bán dữ liệu của bác. Bác tắt được bất cứ lúc nào.</item>
+        <item>HỏiCon chỉ để ý 10 phút sau một cuộc gọi với số lạ.</item>
+        <item>HỏiCon không nghe, không ghi âm cuộc gọi.</item>
+        <item>Nếu thấy dấu hiệu đáng ngờ, HỏiCon nhắc bác dừng lại và báo cho con bác qua Zalo.</item>
+        <item>HỏiCon không bán thông tin của bác. Bác chưa đồng ý cũng không sao.</item>
         <item>Phần còn lại bác đọc trên màn hình nhé.</item>
         <item>Bác bấm Đồng ý, tiếp tục khi bác đã nghe rõ, hoặc bấm Chưa đồng ý.</item>
     </string-array>
 
-    <!-- E4: mỗi quyền một bước. Tên và lý do từng quyền dùng lại perm_*_title / perm_*_why ở trên. -->
+    <!-- E4: mỗi quyền một bước. Tên và lý do của ba quyền cảm biến lấy từ consent_texts.xml; thông báo và pin dùng perm_notif_* / perm_battery_*. -->
     <string name="perm_step_counter">Bước %1$d trên %2$d</string>
     <!-- Mỗi quyền một cách làm khác nhau (hộp thoại hay trang cài đặt), nên mỗi quyền một câu hướng dẫn. -->
     <string name="perm_how_role">Điện thoại sẽ hiện một hộp hỏi. Bác chọn HỏiCon rồi bấm nút đồng ý. Nếu bác đang dùng ứng dụng nhận diện số khác, HỏiCon sẽ thay nó, bác đổi lại được trong Cài đặt.</string>
@@ -190,24 +175,16 @@
     <string name="perm_done_button">Hoàn tất</string>
     <string name="perm_consent_pending">Mạng đang yếu nên HỏiCon chưa báo được là bác đã đồng ý. Bác cứ dùng bình thường, HỏiCon sẽ thử lại lần sau khi bác mở ứng dụng.</string>
 
-    <!-- E10: Kiểm tra số hay đường link (Spec 026). lookups_consent_* được băm (SHA-256) vào sổ đồng ý, mục đích lookups: đổi chữ ⇒ đổi ConsentLedger.VERSION. -->
+    <!-- E10: Kiểm tra số hay đường link (Spec 026). Chữ đồng ý lookups nằm ở consent_texts.xml. -->
     <string name="e6_lookup">Kiểm tra số hay đường link</string>
-    <string name="lookups_consent_ai">Đây là trợ lý AI HỏiCon.</string>
-    <string name="lookups_consent_title">Nhờ HỏiCon kiểm tra giúp bác</string>
-    <string name="lookups_consent_summary">Nếu kết quả nguy hiểm, HỏiCon có thể báo cho con bác biết.</string>
-    <string name="lookups_consent_1_title">Chỉ gửi dãy ký tự, không gửi số thật</string>
-    <string name="lookups_consent_1_body">Với số điện thoại, HỏiCon không gửi số đầy đủ, chỉ gửi dãy ký tự đại diện và 3 số cuối. Với đường link, HỏiCon chỉ gửi tên trang web và đường dẫn, bỏ phần sau dấu chấm hỏi và tên đăng nhập.</string>
-    <string name="lookups_consent_2_title">So với danh sách cảnh báo lừa đảo</string>
-    <string name="lookups_consent_2_body">Máy chủ HỏiCon so với danh sách cảnh báo rồi trả lời kèm nguồn. HỏiCon không bao giờ nói một số điện thoại là “an toàn”: chưa có trong danh sách chỉ nghĩa là chưa có thông tin.</string>
-    <string name="lookups_consent_3_title">Chỉ kiểm tra khi bác nhờ, không bán dữ liệu</string>
-    <string name="lookups_consent_3_body">HỏiCon không tự kiểm tra gì thêm. Mỗi lần kiểm tra được ghi trên máy chủ HỏiCon tối đa 90 ngày để chống lạm dụng, không bán và không đưa cho bên quảng cáo. Nếu lúc đó HỏiCon đang báo một cuộc gọi lạ cho con bác và kết quả là nguy hiểm, HỏiCon có thể báo thêm cho con bác biết bác vừa kiểm tra (chỉ 3 số cuối, hoặc “một đường link”).</string>
+    <string name="lookup_ai">Đây là trợ lý AI HỏiCon.</string>
     <string name="lookups_consent_accept">Đồng ý, bắt đầu kiểm tra</string>
     <string name="lookups_consent_decline">Để sau</string>
     <string-array name="lookups_consent_speech">
         <item>Đây là trợ lý AI HỏiCon.</item>
-        <item>Bác nhờ HỏiCon kiểm tra một số điện thoại hay một đường link. HỏiCon không gửi số thật, chỉ gửi dãy ký tự đại diện.</item>
+        <item>Bác nhờ HỏiCon kiểm tra một số điện thoại hay một đường link. HỏiCon không gửi số đầy đủ, chỉ gửi 3 số cuối và một mã thay cho số.</item>
         <item>HỏiCon không bao giờ nói một số điện thoại là an toàn.</item>
-        <item>Mỗi lần kiểm tra được ghi tối đa 90 ngày. Nếu kết quả nguy hiểm, HỏiCon có thể báo cho con bác biết.</item>
+        <item>Mỗi lần kiểm tra được ghi tối đa 90 ngày. Nếu con bác đang được báo về một cuộc gọi lạ và kết quả đáng lo, con bác sẽ biết bác vừa kiểm tra.</item>
         <item>Bác đọc phần còn lại trên màn hình nhé. Bác bấm Đồng ý khi đã rõ, hoặc bấm Để sau.</item>
     </string-array>
 

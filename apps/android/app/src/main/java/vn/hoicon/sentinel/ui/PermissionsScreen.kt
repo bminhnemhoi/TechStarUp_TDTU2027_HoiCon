@@ -1,6 +1,5 @@
 package vn.hoicon.sentinel.ui
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +21,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -33,15 +33,31 @@ import vn.hoicon.sentinel.data.consent.ConsentLedger
 import vn.hoicon.sentinel.sensing.SensorPermission
 import vn.hoicon.sentinel.ui.theme.HoiConTheme
 
-private class PermissionRow(@StringRes val title: Int, @StringRes val why: Int, @StringRes val how: Int = 0)
+private class PermissionRow(val title: String, val why: String, val how: String)
 
-private val rows = mapOf(
-    SensorPermission.CALL_SCREENING_ROLE to PermissionRow(R.string.perm_role_title, R.string.perm_role_why, R.string.perm_how_role),
-    SensorPermission.DISPLAY_OVER_APPS to PermissionRow(R.string.perm_overlay_title, R.string.perm_overlay_why, R.string.perm_how_settings),
-    SensorPermission.USAGE_ACCESS to PermissionRow(R.string.perm_usage_title, R.string.perm_usage_why, R.string.perm_how_settings),
-    SensorPermission.NOTIFICATIONS to PermissionRow(R.string.perm_notif_title, R.string.perm_notif_why, R.string.perm_how_notif),
-    SensorPermission.BATTERY_UNRESTRICTED to PermissionRow(R.string.perm_battery_title, R.string.perm_battery_why, R.string.perm_how_battery),
-)
+/**
+ * The three sensing-chain permissions show the very words their consent purpose hashes (docs/legal/consent/, first line =
+ * title, the rest = why); notification and battery settings have no purpose and keep their own short strings.
+ */
+@Composable
+private fun permissionRows(): Map<SensorPermission, PermissionRow> {
+    @Composable
+    fun consent(permission: SensorPermission, how: Int): PermissionRow {
+        val parts = consentParts(LocalContext.current.resources, checkNotNull(ConsentLedger.purposeOf(permission)))
+        return PermissionRow(parts.title, parts.body, stringResource(how))
+    }
+    return mapOf(
+        SensorPermission.CALL_SCREENING_ROLE to consent(SensorPermission.CALL_SCREENING_ROLE, R.string.perm_how_role),
+        SensorPermission.DISPLAY_OVER_APPS to consent(SensorPermission.DISPLAY_OVER_APPS, R.string.perm_how_settings),
+        SensorPermission.USAGE_ACCESS to consent(SensorPermission.USAGE_ACCESS, R.string.perm_how_settings),
+        SensorPermission.NOTIFICATIONS to PermissionRow(
+            stringResource(R.string.perm_notif_title), stringResource(R.string.perm_notif_why), stringResource(R.string.perm_how_notif),
+        ),
+        SensorPermission.BATTERY_UNRESTRICTED to PermissionRow(
+            stringResource(R.string.perm_battery_title), stringResource(R.string.perm_battery_why), stringResource(R.string.perm_how_battery),
+        ),
+    )
+}
 
 /**
  * Dev screen for spike P1-S1: shows what the sensing chain has and opens the exact settings page for each item.
@@ -69,7 +85,7 @@ fun PermissionsScreen(
             )
             Text(text = stringResource(R.string.hello_ai_disclosure), style = MaterialTheme.typography.bodyLarge)
             Text(text = stringResource(R.string.perm_screen_intro), style = MaterialTheme.typography.bodyMedium)
-            for ((permission, row) in rows) {
+            for ((permission, row) in permissionRows()) {
                 HorizontalDivider()
                 PermissionItem(row = row, isGranted = permission in granted, onOpen = { onOpen(permission) })
             }
@@ -85,11 +101,11 @@ fun PermissionsScreen(
 private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = stringResource(row.title),
+            text = row.title,
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.semantics { heading() },
         )
-        Text(text = stringResource(row.why), style = MaterialTheme.typography.bodyMedium)
+        Text(text = row.why, style = MaterialTheme.typography.bodyMedium)
         // Status is words with a symbol, same navy colour (brand green is only ~5:1 on white, below 7:1).
         Text(
             text = stringResource(if (isGranted) R.string.perm_status_on else R.string.perm_status_off),
@@ -97,7 +113,7 @@ private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () ->
         )
         // UX-9: an item already on needs no action — only its status remains.
         if (!isGranted) {
-            val a11yLabel = stringResource(R.string.perm_open_settings_for, stringResource(row.title))
+            val a11yLabel = stringResource(R.string.perm_open_settings_for, row.title)
             OutlinedButton(
                 onClick = onOpen,
                 shape = RoundedCornerShape(32.dp),
@@ -149,9 +165,9 @@ fun PermissionStepScreen(
                 style = MaterialTheme.typography.bodyLarge,
             )
             for (permission in all) {
-                val row = rows.getValue(permission)
+                val row = permissionRows().getValue(permission)
                 InfoCard(
-                    title = stringResource(row.title),
+                    title = row.title,
                     body = stringResource(if (permission in granted) R.string.perm_status_on else R.string.perm_status_off),
                 )
             }
@@ -160,7 +176,7 @@ fun PermissionStepScreen(
         return
     }
     val permission = all[index]
-    val row = rows.getValue(permission)
+    val row = permissionRows().getValue(permission)
     OnboardingScaffold(
         modifier = modifier,
         actions = {
@@ -170,12 +186,12 @@ fun PermissionStepScreen(
     ) {
         Text(text = stringResource(R.string.perm_step_counter, index + 1, all.size), style = MaterialTheme.typography.bodyMedium)
         Text(
-            text = stringResource(row.title),
+            text = row.title,
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.semantics { heading() },
         )
-        Text(text = stringResource(row.why), style = MaterialTheme.typography.bodyLarge)
-        Text(text = stringResource(row.how), style = MaterialTheme.typography.bodyMedium)
+        Text(text = row.why, style = MaterialTheme.typography.bodyLarge)
+        Text(text = row.how, style = MaterialTheme.typography.bodyMedium)
         if (consentPending) NoticePanel(text = stringResource(R.string.perm_consent_pending))
     }
 }

@@ -99,3 +99,12 @@ Chữ hiển thị đổi nên `sha256` trong `manifest.json` đổi theo (các 
 ## Còn mở (không đánh ☑)
 
 T010 (Minh duyệt), T011 (người thật đọc thử), T012 (làn A đồng bộ). Thực thi `llm_processing`, `voice_input`, `pilot_research` ở mã. Nhờ người có chuyên môn pháp lý rà soát và đối chiếu luật gốc.
+
+## Android đã đồng bộ (Làn A Wave 2, 21/10/2026) — T012 MỘT PHẦN, không tick
+
+- `res/values/consent_texts.xml`: 10 mảng chuỗi, mỗi mục đích đúng một mảng, mỗi dòng = một dòng khối `BEGIN-TEXT` của `docs/legal/consent/<purpose>.vi.md`. `ConsentTexts.kt` đọc đúng các mảng này (nối `\n`), và E3, E4 (3 trang quyền), E10 vẽ chính các dòng đó, nên chữ băm vào sổ là chữ người dùng đọc.
+- `ConsentLedger.VERSION` = `2026.10-v3` (khớp manifest). Người đã đồng ý bản v2 sẽ thấy E3 lại (luật 7).
+- `ConsentManifestPinTest` (thay `ConsentTextsPinTest`): chữ app = chữ `.md` từng dòng; sha256 = manifest; version = `VERSION`; thêm ghim sha cứng. Đột biến (đổi một dấu `.` thành `!` trong XML) ⇒ đỏ, đã khôi phục. Test thứ hai cấm các câu hứa "quyền nào đang tắt".
+- Đã bỏ câu "cho con biết quyền nào đang bật hay tắt" ở E3 và ở bản đọc to; bản đọc to E3/E10 viết lại cho khớp chữ mới (3 số cuối + mã thay cho số, hạn 90 ngày).
+- App chỉ xin 7 trong 10 mục đích; `llm_processing`, `voice_input`, `pilot_research` có chữ trong app nhưng KHÔNG có màn nào xin và không bao giờ ghi vào sổ (mã chưa thực thi, xem trên).
+- Chưa làm: #16 tên người giám hộ thay "con bác", chia thẻ có "Nghe lại" cho `core_protection`; chưa chụp E3/E4 chữ 200% sau đổi; văn bản vẫn là BẢN NHÁP chờ Minh duyệt (T010) nên T012 không tick.

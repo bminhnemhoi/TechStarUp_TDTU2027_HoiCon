@@ -134,6 +134,13 @@ tasks.withType<Test>().configureEach {
     val strings = layout.projectDirectory.file("src/main/res/values/strings.xml")
     inputs.file(strings).withPathSensitivity(PathSensitivity.NONE)
     systemProperty("hoicon.appStrings", strings.asFile.absolutePath)
+    // Spec 011: the consent texts and manifest the app must match line for line (ConsentManifestPinTest).
+    val consentXml = layout.projectDirectory.file("src/main/res/values/consent_texts.xml")
+    val consentDocs = layout.projectDirectory.dir("../../../docs/legal/consent")
+    inputs.file(consentXml).withPathSensitivity(PathSensitivity.NONE)
+    inputs.dir(consentDocs).withPathSensitivity(PathSensitivity.RELATIVE)
+    systemProperty("hoicon.consentXml", consentXml.asFile.absolutePath)
+    systemProperty("hoicon.consentDocs", consentDocs.asFile.absolutePath)
 }
 
 // Release is HTTPS only: the check lives in the release buildType above (at configuration time, so it also works with the

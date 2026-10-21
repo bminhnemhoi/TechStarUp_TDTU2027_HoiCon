@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chữ đồng ý theo từng mục đích (Spec 011). MỖI DÒNG = một dòng trong khối BEGIN-TEXT/END-TEXT của
+  docs/legal/consent/<purpose>.vi.md, đúng thứ tự; nối bằng "\n" rồi băm SHA-256 ra đúng `sha256` trong manifest.json.
+  Đổi một chữ ở đây (hoặc ở tệp .md) mà không đồng bộ + nâng ConsentLedger.VERSION ⇒ ConsentManifestPinTest đỏ (CLAUDE.md luật 7).
+  Đây là BẢN NHÁP chờ Minh duyệt; ba mục đích llm_processing, voice_input, pilot_research CHƯA có màn hình xin đồng ý
+  (mã chưa thực thi điều văn bản hứa) nên app không bao giờ ghi các mục đó vào sổ.
+-->
+<resources>
+    <string-array name="consent_core_protection">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>Nhờ HỏiCon trông chừng giúp bác</item>
+        <item>Sau cuộc gọi với số lạ, HỏiCon để ý 10 phút. HỏiCon xem bác có mở ứng dụng ngân hàng, ví điện tử, chứng khoán hay ứng dụng điều khiển điện thoại từ xa không. Ngoài lúc đó, HỏiCon không xem bác dùng ứng dụng nào.</item>
+        <item>Nếu thấy dấu hiệu đáng ngờ, HỏiCon nhắc bác dừng lại một chút. Bác vẫn là người quyết định.</item>
+        <item>HỏiCon không nghe, không ghi âm cuộc gọi, không đọc tin nhắn và danh bạ. HỏiCon không biết số dư, giao dịch hay mã xác thực (OTP) của bác.</item>
+        <item>HỏiCon giữ thông tin về từng cuộc gọi lạ tối đa 90 ngày, ghi chép các lần nhắc dừng lại tối đa 12 tháng. HỏiCon không bán thông tin của bác.</item>
+        <item>Muốn dừng hay xóa thông tin, bác nhờ người đã hướng dẫn bác hoặc con bác. Bác chưa đồng ý cũng không sao.</item>
+    </string-array>
+    <string-array name="consent_call_screening">
+        <item>Nhận biết cuộc gọi số lạ</item>
+        <item>HỏiCon xin phép được biết khi có số chưa lưu trong danh bạ gọi tới, hoặc khi bác gọi cho số chưa lưu.</item>
+        <item>HỏiCon biết có cuộc gọi, lúc nào và bao lâu. HỏiCon không nghe cuộc gọi, không chặn cuộc gọi và không đọc danh bạ của bác.</item>
+        <item>HỏiCon không giữ số đầy đủ của bác, chỉ giữ 3 số cuối và một mã thay cho số đó, để nhận ra số đã gặp.</item>
+        <item>Bác tắt quyền này trong Cài đặt của điện thoại bất cứ lúc nào. Khi đó HỏiCon thôi làm việc này.</item>
+    </string-array>
+    <string-array name="consent_usage_monitoring">
+        <item>Biết ứng dụng nào vừa được mở</item>
+        <item>HỏiCon xin phép bác cho xem tên ứng dụng vừa được mở, chỉ trong 10 phút sau một cuộc gọi với số lạ.</item>
+        <item>Nhờ vậy HỏiCon biết khi bác mở ứng dụng ngân hàng hay ứng dụng cho người khác điều khiển điện thoại từ xa (như AnyDesk, TeamViewer), để nhắc bác dừng lại.</item>
+        <item>HỏiCon chỉ biết tên ứng dụng. HỏiCon không xem được bên trong, không biết số dư hay giao dịch của bác.</item>
+        <item>Bác tắt quyền này trong Cài đặt của điện thoại bất cứ lúc nào. Khi đó HỏiCon thôi làm việc này.</item>
+    </string-array>
+    <string-array name="consent_overlay_pause">
+        <item>Hiện lời nhắc lên trên ứng dụng khác</item>
+        <item>HỏiCon xin phép bác cho hiện màn nhắc \"Khoan chuyển tiền đã\" lên trên ứng dụng bác đang dùng.</item>
+        <item>Nhờ vậy lời nhắc hiện ra kịp lúc, ngay cả khi bác đang ở trong ứng dụng khác.</item>
+        <item>Màn nhắc chỉ để bác dừng lại một chút, không khóa máy của bác. Muốn đi tiếp, bác giữ nút \"Vẫn tiếp tục\" 3 giây.</item>
+        <item>HỏiCon không tự bấm hay làm gì thay bác trong ứng dụng khác.</item>
+        <item>Bác tắt quyền này trong Cài đặt của điện thoại bất cứ lúc nào. Khi đó HỏiCon thôi làm việc này.</item>
+    </string-array>
+    <string-array name="consent_guardian_alerts">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>Báo cho con bác biết khi bác cần giúp</item>
+        <item>Khi thấy dấu hiệu đáng ngờ, HỏiCon gửi tin qua Zalo cho con bác hoặc người thân bác đã chọn, để họ gọi hỏi thăm bác.</item>
+        <item>Họ biết có cuộc gọi lạ, gọi tới hay gọi đi, lúc nào và bao lâu. Họ biết bác vừa mở loại ứng dụng nào và chọn gì trên màn nhắc. Số điện thoại chỉ hiện 3 số cuối.</item>
+        <item>Họ cũng xem lại được các lần nhắc này trên trang web của HỏiCon.</item>
+        <item>HỏiCon giữ thông tin về từng cuộc gọi lạ tối đa 90 ngày, ghi chép các lần nhắc dừng lại tối đa 12 tháng. HỏiCon không bán thông tin của bác.</item>
+        <item>Muốn ngừng báo cho con bác, bác nhờ người đã hướng dẫn bác cài HỏiCon. HỏiCon vẫn nhắc bác dừng lại, chỉ là không báo con bác nữa. Bác chưa đồng ý cũng không sao.</item>
+    </string-array>
+    <string-array name="consent_llm_processing">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>Nhờ AI hiểu rõ hơn</item>
+        <item>Để hiểu tình huống của bác, HỏiCon có thể nhờ một dịch vụ AI (trí tuệ nhân tạo) ở nước ngoài đọc một bản tóm tắt ngắn.</item>
+        <item>Bản tóm tắt chỉ nói chuyện gì đang xảy ra, ví dụ có cuộc gọi lạ, bác mở ứng dụng ngân hàng. HỏiCon che số điện thoại, tên và số tài khoản trước khi gửi.</item>
+        <item>Nếu bác chưa đồng ý, HỏiCon không gửi bản tóm tắt cho dịch vụ AI và vẫn nhắc bác dừng lại bằng những câu viết sẵn. AI chỉ giúp lời nhắc kỹ hơn, không bao giờ làm lời nhắc bớt đi.</item>
+        <item>Bác đổi ý bất cứ lúc nào, chỉ cần nhờ người đã hướng dẫn bác cài HỏiCon.</item>
+    </string-array>
+    <string-array name="consent_voice_input">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>Nói với HỏiCon thay vì bấm nút</item>
+        <item>Bác có thể nói \"có\", \"không\" hay \"không biết\" thay vì bấm nút. Điện thoại chỉ nghe khi bác bấm nút nói.</item>
+        <item>Để đổi lời bác thành chữ, điện thoại dùng dịch vụ của Android, do Google làm. Dịch vụ này có thể gửi tiếng của bác ra ngoài điện thoại. HỏiCon không ghi âm và chỉ nhận lại chữ.</item>
+        <item>Bác chưa đồng ý cũng không sao. Bác cứ bấm nút như bình thường.</item>
+    </string-array>
+    <string-array name="consent_drills">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>Tập nhận biết lừa đảo (chỉ là diễn tập)</item>
+        <item>HỏiCon xin phép thỉnh thoảng mời bác tập nhận biết cuộc gọi lừa đảo. Tối đa 2 lần mỗi tháng, chỉ trong khung giờ con bác đã đặt, và HỏiCon báo trước cho bác.</item>
+        <item>Đó là cuộc gọi giả. Tên cơ quan và số điện thoại đều bịa ra, và trên màn hình luôn có chữ \"ĐÂY LÀ DIỄN TẬP\".</item>
+        <item>Bác từ chối hay dừng giữa chừng bất cứ lúc nào cũng không sao. HỏiCon không báo đó như một vụ lừa đảo thật.</item>
+        <item>Con bác sẽ biết bác đã chọn gì ở từng bước, để cùng trò chuyện với bác chứ không phải để chấm điểm.</item>
+        <item>Bác chưa đồng ý cũng không sao.</item>
+    </string-array>
+    <string-array name="consent_pilot_research">
+        <item>Giúp HỏiCon làm tốt hơn</item>
+        <item>HỏiCon đang được dùng thử cùng một nhóm nhỏ. HỏiCon xin phép ghi lại một số thông tin để biết ứng dụng có giúp được bác không.</item>
+        <item>Đó là: ứng dụng có chạy ổn không, bác còn bật các quyền bảo vệ không, và các buổi tập có giúp bác nhận ra lừa đảo dễ hơn không.</item>
+        <item>HỏiCon không ghi nội dung cuộc gọi hay tin nhắn. Khi báo cáo, các con số được gộp chung nhiều người, không có tên bác.</item>
+        <item>Bác muốn rút hay xóa thông tin, bác nhờ người đã hướng dẫn bác cài HỏiCon. Bác chưa đồng ý cũng không sao.</item>
+    </string-array>
+    <string-array name="consent_lookups">
+        <item>Đây là trợ lý AI HỏiCon.</item>
+        <item>Nhờ HỏiCon kiểm tra giúp bác</item>
+        <item>Khi bác nhờ, HỏiCon kiểm tra số điện thoại hay đường link xem có trong danh sách cảnh báo lừa đảo không.</item>
+        <item>HỏiCon không gửi số đầy đủ, chỉ gửi 3 số cuối và một mã thay cho số. Với đường link, HỏiCon chỉ gửi địa chỉ trang web, bỏ phần có thông tin riêng của bác.</item>
+        <item>HỏiCon không bao giờ nói một số là \"an toàn\". Chưa có trong danh sách chỉ nghĩa là chưa có thông tin. Còn băn khoăn, bác gọi hỏi con bác trước khi làm theo.</item>
+        <item>Mỗi lần kiểm tra được ghi lại tối đa 90 ngày để không bị kẻ xấu lợi dụng. HỏiCon không bán thông tin của bác.</item>
+        <item>Nếu con bác đang được báo về một cuộc gọi lạ và kết quả đáng lo, con bác sẽ biết bác vừa kiểm tra.</item>
+        <item>Bác chưa đồng ý cũng không sao.</item>
+    </string-array>
+</resources>
