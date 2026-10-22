@@ -92,6 +92,32 @@ app điều khiển từ xa); TalkBack; máy thật. Việc đổi chữ nút ch
 - Script `emu-scenario.py` cũng được sửa để nhận ra E7 bản Compose (trước đó tìm chữ "gọi cho con" của bản View nên báo TRƯỢT dù 10/10 hiện SafePause).
 Ảnh: `$EV/e7-w1/{before,final}-api{34,36}-e7-{100,200}[-giu].png`.
 
+## E7 biến thể "điều khiển từ xa" (R5) — Làn A Wave 2, 21/10/2026 (T016 vẫn ☑; MỘT PHẦN, xem "Chưa kiểm")
+
+**Cách dựng.** Máy ảo không có app điều khiển từ xa, nên `:demobank` có thể dựng với `-PdemobankApplicationId=com.anydesk.anydeskandroid` (bản giả, chỉ cài lên máy ảo, không phát hành); cuộc gọi số lạ giả
+(`adb emu gsm call`) rồi mở gói đó ⇒ luật R5 ⇒ E7 biến thể `REMOTE_CONTROL`. `emu-scenario.py` nhận `HC_DEMOBANK_PACKAGE` để đổi gói.
+Ảnh: `~/hoicon-evidence/010-design-system/w2/` (hc-api36, 1080×2400) và `w2-api34/` (hc-api34, 1080×2340), 100% và 200%.
+
+**Thấy trên ảnh và đã sửa (`SafePauseScreen.kt`, chỉ từ chữ ≥ 150%):**
+1. Câu "Đây là trợ lý AI HỏiCon" trải cả chiều ngang, "Nghe lại" xuống ngay dưới (viền xanh đậm cùng kiểu các nút khác).
+2. Nhãn mức rủi ro dùng cỡ nhỏ hơn; tiêu đề câu hỏi điều khiển từ xa 24sp (≥ 20sp).
+3. Dòng "Kéo xuống đọc tiếp ↓" trên nền đặc khi còn chữ phía dưới (lớp mờ một mình dễ bị đọc là "chữ bị tắt").
+4. Sau `ux-elder-reviewer` lượt 3 (xem dưới): ở ≥ 150% thứ tự là **câu AI → tiêu đề → nhãn mức rủi ro → "Nghe lại" → thân chữ**, để thông điệp chính nằm ngay đầu vùng đọc.
+Giữ nguyên: 3 nút ghim (≥ 64dp, ≤ 2 hành động chính), "Vẫn tiếp tục" giữ 3 giây, lời của mọi nút và đoạn chữ.
+
+**`ux-elder-reviewer`.** Lượt 1 (hc-api36): 0 Chặn, 0 Cao; 4 Trung bình/Thấp (chỉ thấy ≈ 1 dòng thân ở 200%; ảnh 100% chụp nhầm cuối trang ⇒ đã chụp lại đầu và cuối).
+Lượt 3 (thêm hc-api34): 0 Chặn; **1 Cao chỉ ở hc-api34, 200%**: tiêu đề bị cắt ở dòng 3 vì phần đầu (câu AI + "Nghe lại" + nhãn) chiếm hơn 1/3 vùng đọc.
+Đã sửa bằng mục 4. Ảnh sau sửa (hc-api34, 200%, `w2-api34/e7-remote-200-a.png`): tiêu đề hiện đủ 4 dòng "…của bác?", rồi nhãn mức rủi ro, rồi dòng "Kéo xuống đọc tiếp ↓".
+**Chưa có reviewer đọc lại ảnh sau mục 4** ⇒ chưa thể ghi "0 High" cho cả hai máy.
+Chưa đổi (đề xuất của reviewer, cần Tiến/Minh vì đụng lời): rút tiêu đề còn ≈ 8 từ ("Đừng để người lạ điều khiển điện thoại của bác"); đổi "Kẻ gian" thành "Người xấu"; nói đúng điều máy biết ("Bác vừa mở ứng dụng điều khiển từ xa khi đang nghe số lạ").
+
+**Hạn E7 (máy ảo, `emu-scenario.py --scenario fake_police --runs 10`, chữ 100%):**
+- hc-api36 (21/10, bản có gợi ý cuộn): lần 1 có một lần cây UI không thấy màn E7 nên script báo TRƯỢT dù 10/10 có mốc hiện SafePause; lần 2: **10/10 ĐẠT**, phát hiện p50/p95 418/945 ms, SafePause **p50 875 / p95 1 440 ms** (≤ 3 000).
+- hc-api34 sau khởi động nguội (bản trước khi đổi thứ tự phần đầu ở mục 4): **10/10 ĐẠT**, SafePause **p50 670 / p95 1 957 ms**.
+- hc-api34 với bản **cuối cùng** (có mục 4): 10/10 lần không có mốc nào (`Telecom không thấy cuộc gọi đến`): máy ảo, không phải ứng dụng; trước đó chính AVD này cũng trượt 10/10 theo cách y hệt cho tới khi khởi động nguội, và chạy tay `gsm call` vẫn
+  đổ chuông. Đã khởi động lại máy ảo 2 lần ⇒ dừng theo luật, **chưa có số đo cho bản cuối trên hc-api34**. Mục 4 chỉ đổi thứ tự hiển thị, không đụng cảm biến.
+- Số p95 dao động nhiều giữa các lượt; không kết luận về máy thật.
+
 ## Còn tồn / hoãn có chủ đích
 
 - **BLOCKED — FR-013 "không còn mục High"**: E7 ở 200% trên AVD API 34 (1080×2340): hàng "Đây là trợ lý AI HỏiCon + Nghe lại" ép chữ công khai AI thành 3 dòng; thanh nút ghim chiếm ~37% màn (trước đổi font ~31%); vùng cuộn còn ~2 dòng thân, ~1 dòng khi giữ nút (`after-hc-api34-e7-200-giu-1s.png`). Đây là bố cục E7 có sẵn, nặng thêm do font rộng hơn; sửa cần thiết kế riêng cho `fontScale ≥ 1,5` ⇒ P2-05 (E7), không mở rộng spec này. Cũng ghi ở ROADMAP "Ghi chú".

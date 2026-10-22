@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
@@ -62,6 +64,8 @@ private val Radius = HoiConTokens.Size.RadiusCardDp.dp
 internal fun OnboardingScaffold(
     modifier: Modifier = Modifier,
     pinned: (@Composable ColumnScope.() -> Unit)? = null,
+    /** Long consent texts: say "Kéo xuống để đọc tiếp" while more is below (the fade alone looked like a cut-off screen). */
+    scrollHint: Boolean = false,
     actions: @Composable ColumnScope.() -> Unit,
     body: @Composable ColumnScope.() -> Unit,
 ) {
@@ -79,13 +83,25 @@ internal fun OnboardingScaffold(
                 )
                 if (scroll.canScrollForward) {
                     // Fading edge: tells the reader there is more text below the pinned buttons.
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .background(Brush.verticalGradient(listOf(Color.Transparent, SurfaceWhite))),
-                    )
+                    Column(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(32.dp)
+                                .background(Brush.verticalGradient(listOf(Color.Transparent, SurfaceWhite))),
+                        )
+                        if (scrollHint) {
+                            // On a solid strip so it never prints over the faded words.
+                            Text(
+                                text = stringResource(R.string.onboarding_scroll_hint),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = BrandNavy,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().background(SurfaceWhite).padding(horizontal = 12.dp, vertical = 4.dp),
+                            )
+                        }
+                    }
                 }
             }
             if (pinned != null) {

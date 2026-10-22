@@ -20,15 +20,13 @@ class LookupDisclosureTest {
         assertEquals("Chưa có dấu chấm" to "", splitDisclosure("Chưa có dấu chấm"))
     }
 
-    /** Found on the AVD: `lookups_consent_summary` was hashed into the ledger but never drawn on the consent screen. */
+    /** Found on the AVD: a sentence was hashed into the ledger but never drawn. Now the screen draws the whole text, line for line. */
     @Test
-    fun everyLookupsConsentSentenceTheLedgerHashesIsOnTheConsentScreen() {
+    fun theLookupsConsentScreenDrawsTheWholeHashedText() {
         val main = File(checkNotNull(System.getProperty("hoicon.appStrings"))).parentFile.parentFile.parentFile // src/main
-        val texts = File(main, "java/vn/hoicon/sentinel/data/consent/ConsentTexts.kt").readText()
         val screen = File(main, "java/vn/hoicon/sentinel/ui/LookupScreen.kt").readText()
         val consentBody = screen.substringAfter("fun LookupConsentScreen(").substringBefore("fun LookupScreen(")
-        val hashed = Regex("""R\.string\.(lookups_consent_\w+)""").findAll(texts).map { it.groupValues[1] }.toSet()
-        assertTrue(hashed.isNotEmpty(), "ConsentTexts.kt no longer lists the lookups strings: update this test")
-        for (name in hashed) assertTrue("R.string.$name" in consentBody, "$name is hashed into the ledger but not shown on the consent screen")
+        assertTrue("rememberConsentParts(ConsentLedger.LOOKUPS)" in consentBody, "the consent screen no longer draws the lookups text")
+        assertTrue("ConsentTextBlock(" in consentBody, "paragraphs must be drawn by ConsentTextBlock")
     }
 }

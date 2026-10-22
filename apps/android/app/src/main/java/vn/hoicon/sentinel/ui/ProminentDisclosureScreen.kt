@@ -10,6 +10,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import vn.hoicon.sentinel.R
+import vn.hoicon.sentinel.data.consent.ConsentLedger
 import vn.hoicon.sentinel.ui.theme.HoiConTheme
 
 /**
@@ -28,11 +29,19 @@ fun ProminentDisclosureScreen(
 ) {
     OnboardingScaffold(
         modifier = modifier,
+        scrollHint = true,
         actions = {
             PrimaryButton(text = stringResource(R.string.disclosure_accept), onClick = onAccept)
             SecondaryButton(text = stringResource(R.string.disclosure_decline), onClick = onDecline)
         },
     ) {
+        // The two purposes this one tap agrees to, word for word what the ledger hashes (data/consent/ConsentTexts.kt).
+        // The AI sentence opens both texts; it is shown once, at the top.
+        val core = rememberConsentParts(ConsentLedger.CORE_PROTECTION)
+        val guardian = rememberConsentParts(ConsentLedger.GUARDIAN_ALERTS)
+        ConsentTextBlock(core)
+        ListenButton(text = stringResource(R.string.onboarding_listen_again), onClick = onListen)
+        InfoCard(guardian.title, guardian.body)
         if (familyName.isNotBlank()) {
             Text(
                 text = stringResource(R.string.disclosure_connected, familyName),
@@ -40,16 +49,6 @@ fun ProminentDisclosureScreen(
                 fontWeight = FontWeight.SemiBold,
             )
         }
-        Text(
-            text = stringResource(R.string.disclosure_title),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.semantics { heading() },
-        )
-        ListenButton(text = stringResource(R.string.onboarding_listen_again), onClick = onListen)
-        InfoCard(stringResource(R.string.disclosure_1_title), stringResource(R.string.disclosure_1_body))
-        InfoCard(stringResource(R.string.disclosure_2_title), stringResource(R.string.disclosure_2_body))
-        InfoCard(stringResource(R.string.disclosure_3_title), stringResource(R.string.disclosure_3_body))
-        InfoCard(stringResource(R.string.disclosure_4_title), stringResource(R.string.disclosure_4_body))
         Text(text = stringResource(R.string.disclosure_next), style = MaterialTheme.typography.bodyMedium)
     }
 }

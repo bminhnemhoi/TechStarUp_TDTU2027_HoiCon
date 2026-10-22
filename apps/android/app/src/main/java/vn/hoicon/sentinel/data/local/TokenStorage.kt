@@ -82,6 +82,13 @@ class TokenStorage(private val prefs: SharedPreferences?) {
             write { putString(LOOKUPS_VERSION, value) }
         }
 
+    /** Version of the "drills" consent text the person agreed to, 18+ confirmed, just in time from E6 (Spec 028), or null. */
+    var acceptedDrillsVersion: String?
+        get() = read { getString(DRILLS_VERSION, null) }
+        set(value) {
+            write { putString(DRILLS_VERSION, value) }
+        }
+
     /**
      * What the server's ledger already holds as granted, one `purpose|version|textHash` key per purpose, so a new
      * consent version or new wording is recorded again (see ConsentLedger.key).
@@ -119,6 +126,7 @@ class TokenStorage(private val prefs: SharedPreferences?) {
         private const val NEEDS_REPAIR = "needs_repair"
         private const val DISCLOSURE_VERSION = "disclosure_version"
         private const val LOOKUPS_VERSION = "lookups_version"
+        private const val DRILLS_VERSION = "drills_version"
         private const val RECORDED_CONSENTS = "recorded_consents"
         private const val MASTER_KEY_ALIAS = "_androidx_security_master_key_"
 

@@ -119,39 +119,68 @@ fun SafePauseScreen(
                         .padding(start = 24.dp, top = gap, end = 24.dp, bottom = gap),
                     verticalArrangement = Arrangement.spacedBy(gap),
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    // At 150%+ the AI sentence has the full width (3 lines beside the button → 1) and "Nghe lại" sits below it, still 64dp.
+                    val disclosure: @Composable (Modifier) -> Unit = {
                         Text(
                             text = stringResource(R.string.pause_disclosure),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f).padding(end = 12.dp),
+                            modifier = it,
                         )
-                        OutlinedButton(onClick = actions.onReplay, modifier = Modifier.heightIn(min = 64.dp)) {
+                    }
+                    val replay: @Composable () -> Unit = {
+                        OutlinedButton(
+                            onClick = actions.onReplay,
+                            border = BorderStroke(2.dp, BrandNavy),
+                            modifier = Modifier.heightIn(min = 64.dp),
+                        ) {
                             Text(text = stringResource(R.string.pause_replay), fontSize = 20.sp, color = BrandNavy)
                         }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_stat_shield),
-                            contentDescription = null,
-                            colorFilter = ColorFilter.tint(BrandOrange),
-                            modifier = Modifier.size(48.dp),
-                        )
+                    val levelRow: @Composable () -> Unit = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_stat_shield),
+                                contentDescription = null,
+                                colorFilter = ColorFilter.tint(BrandOrange),
+                                modifier = Modifier.size(48.dp),
+                            )
+                            Text(
+                                text = stringResource(
+                                    if (level == RiskLevel.CRITICAL) R.string.pause_level_critical else R.string.pause_level_high,
+                                ),
+                                style = if (large) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(start = 12.dp),
+                            )
+                        }
+                    }
+                    val title: @Composable () -> Unit = {
                         Text(
-                            text = stringResource(
-                                if (level == RiskLevel.CRITICAL) R.string.pause_level_critical else R.string.pause_level_high,
-                            ),
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(start = 12.dp),
+                            text = stringResource(if (kind == PauseKind.REMOTE_CONTROL) R.string.pause_title_remote else R.string.pause_title),
+                            style = MaterialTheme.typography.headlineSmall.let {
+                                // The remote-control question is twice as long as the bank one: 24sp (still ≥ 20sp) from 150% keeps it to 3 lines.
+                                if (large && kind == PauseKind.REMOTE_CONTROL) it.copy(fontSize = 24.sp, lineHeight = 30.sp)
+                                else if (large) it.copy(fontSize = 28.sp, lineHeight = 36.sp)
+                                else it.copy(fontSize = 32.sp, lineHeight = 40.sp)
+                            },
+                            modifier = Modifier.semantics { heading() },
                         )
                     }
-                    Text(
-                        text = stringResource(if (kind == PauseKind.REMOTE_CONTROL) R.string.pause_title_remote else R.string.pause_title),
-                        style = MaterialTheme.typography.headlineSmall.let {
-                            if (large) it.copy(fontSize = 28.sp, lineHeight = 36.sp) else it.copy(fontSize = 32.sp, lineHeight = 40.sp)
-                        },
-                        modifier = Modifier.semantics { heading() },
-                    )
+                    if (large) {
+                        // Reviewer 21/10 (hc-api34, 200%): the 5-second message, the title, was cut by the sentence, "Nghe lại" and the
+                        // level row above it. From 150% the title comes right after the AI sentence; the rest follows it.
+                        disclosure(Modifier)
+                        title()
+                        levelRow()
+                        replay()
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            disclosure(Modifier.weight(1f).padding(end = 12.dp))
+                            replay()
+                        }
+                        levelRow()
+                        title()
+                    }
                     Text(
                         text = stringResource(if (kind == PauseKind.REMOTE_CONTROL) R.string.pause_body_remote else R.string.pause_body),
                         style = MaterialTheme.typography.bodyLarge,
@@ -166,13 +195,25 @@ fun SafePauseScreen(
                 }
                 if (scroll.canScrollForward) {
                     // Fading edge: tells the reader there is more text below the pinned buttons.
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .background(Brush.verticalGradient(listOf(Color.Transparent, SurfaceWhite))),
-                    )
+                    Column(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(if (large) 32.dp else 48.dp)
+                                .background(Brush.verticalGradient(listOf(Color.Transparent, SurfaceWhite))),
+                        )
+                        // From 150% the fade alone read as "the words stopped" (reviewer, 21/10): say there is more, on a solid strip.
+                        if (large) {
+                            Text(
+                                text = stringResource(R.string.onboarding_scroll_hint),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = BrandNavy,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().background(SurfaceWhite).padding(vertical = 2.dp),
+                            )
+                        }
+                    }
                 }
             }
             HorizontalDivider()

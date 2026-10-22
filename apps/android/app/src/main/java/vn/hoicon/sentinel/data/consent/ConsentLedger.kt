@@ -18,7 +18,7 @@ data class ConsentItem(
  */
 object ConsentLedger {
     /** Bump whenever any text the user agrees to changes (CLAUDE.md rule 7); the E3 screen is then shown again. */
-    const val VERSION = "2026.10-v2"
+    const val VERSION = "2026.10-v3"
 
     /** The E3 prominent disclosure itself. */
     const val CORE_PROTECTION = "core_protection"
@@ -36,11 +36,29 @@ object ConsentLedger {
      */
     const val LOOKUPS = "lookups"
 
+    /**
+     * Practice calls (Spec 028): the server invites a drill only while the ledger holds this grant. Asked just in time,
+     * never at onboarding (see [vn.hoicon.sentinel.DrillConsentModel]); same [VERSION] as the others.
+     */
+    const val DRILLS = "drills"
+
+    const val CALL_SCREENING = "call_screening"
+    const val USAGE_MONITORING = "usage_monitoring"
+    const val OVERLAY_PAUSE = "overlay_pause"
+
+    /**
+     * Texts that exist in docs/legal/consent/ (Spec 011) but promise something the code does not do yet, so no screen
+     * asks for them and the phone never records them: the server will not use them either until a spec makes it so.
+     */
+    const val LLM_PROCESSING = "llm_processing"
+    const val VOICE_INPUT = "voice_input"
+    const val PILOT_RESEARCH = "pilot_research"
+
     /** Android's own permission pages (E4) that map to a consent purpose; notification/battery settings do not. */
     fun purposeOf(permission: SensorPermission): String? = when (permission) {
-        SensorPermission.CALL_SCREENING_ROLE -> "call_screening"
-        SensorPermission.USAGE_ACCESS -> "usage_monitoring"
-        SensorPermission.DISPLAY_OVER_APPS -> "overlay_pause"
+        SensorPermission.CALL_SCREENING_ROLE -> CALL_SCREENING
+        SensorPermission.USAGE_ACCESS -> USAGE_MONITORING
+        SensorPermission.DISPLAY_OVER_APPS -> OVERLAY_PAUSE
         SensorPermission.NOTIFICATIONS, SensorPermission.BATTERY_UNRESTRICTED -> null
     }
 

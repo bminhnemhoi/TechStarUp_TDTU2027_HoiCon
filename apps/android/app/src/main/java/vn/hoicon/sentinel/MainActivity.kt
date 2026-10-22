@@ -44,6 +44,7 @@ class MainActivity : ComponentActivity() {
     private var askChildSent by mutableStateOf(false)
     private var dialerFailed by mutableStateOf(false)
     private var needsRepair by mutableStateOf(false)
+    private var drillsOffer by mutableStateOf(false)
     private var tokens: TokenStorage? = null
     private var showPermissions by mutableStateOf(false)
     private var consents: ConsentSync? = null
@@ -81,11 +82,13 @@ class MainActivity : ComponentActivity() {
                             askChildSent = askChildSent,
                             dialerFailed = dialerFailed,
                             needsRepair = needsRepair,
+                            drillsOffer = drillsOffer,
                         ),
                         onAskChild = ::askChild,
                         onPermissions = { showPermissions = true },
                         onReconnect = ::reconnect,
                         onLookup = { startActivity(Intent(this, LookupActivity::class.java)) },
+                        onDrills = { startActivity(Intent(this, DrillConsentActivity::class.java)) },
                     )
                 }
             }
@@ -112,6 +115,7 @@ class MainActivity : ComponentActivity() {
 
     private fun refresh() {
         needsRepair = tokens?.needsRepair ?: false
+        drillsOffer = tokens != null && tokens?.acceptedDrillsVersion != ConsentLedger.VERSION
         granted = SensorPermissions.granted(this)
         val sync = consents ?: return
         // A permission turned off in Settings becomes a new granted=false ledger row (the ledger only grows).

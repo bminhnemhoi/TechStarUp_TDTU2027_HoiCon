@@ -88,7 +88,7 @@ lựa chọn và hai mốc giờ; `is_drill`/`[DIỄN TẬP]` ở cả 4 màn; c
 | 2 | Medium | **Đã sửa.** Cuộc gọi lạ thật khi người cao tuổi mới thấy lời mời không còn báo `aborted` (và không tốn tin Zalo): bài ở lại, thông báo được gỡ và nhịp heartbeat kế tiếp mời lại. Khi đang làm bài vẫn `aborted` kèm các câu đã trả lời. Màn dừng vì cuộc gọi có chữ riêng ("Có cuộc gọi tới… bác cứ lo cuộc gọi trước"), không còn nói "chưa có ai gọi bác thật". Lời đọc to khớp chữ trên màn. Test: `DrillFlowTest` (reason `CALL`, `interrupt()` trả có/không cần gửi kết quả) |
 | 3 | Medium | **Đã sửa.** Màn không đọc to trước khi biết cửa sổ rủi ro (`riskWindowKnown`); khi cuộc gọi bắt đầu lúc màn này đang đọc thì dừng chính giọng của nó (an toàn vì SafePause chỉ nói sau khi cửa sổ mở). Chưa có test tự động cho phần âm thanh/TTS (chỉ đọc mã) |
 | 4 | Medium | **Đã sửa.** Back ở phản hồi của câu cuối đi tới màn tổng kết thay vì hủy kết quả (`DrillFlow.back()`). Test: `DrillFlowTest` ×2 |
-| 1 | Medium | **Chưa sửa, cần Tiến/Minh quyết** (không phải lỗi mã): app chưa có mục đích `drills` (văn bản, phiên bản, ghi/rút). Đồng ý hiện chỉ do máy chủ kiểm; thí điểm ghi bằng văn bản theo PILOT-PROTOCOL. Cần chốt nơi đồng ý (app/Zalo/văn bản) trước khi thí điểm; khi thêm vào `ConsentLedger` phải đưa `drills` vào `granted`/`texts`, nếu không `changes()` sẽ tự sinh dòng rút đồng ý |
+| 1 | Medium | **Đã sửa ở Làn A Wave 2 (21/10/2026, mục dưới).** Trước đó: chưa sửa, cần Tiến/Minh quyết (không phải lỗi mã): app chưa có mục đích `drills` (văn bản, phiên bản, ghi/rút). Đồng ý hiện chỉ do máy chủ kiểm; thí điểm ghi bằng văn bản theo PILOT-PROTOCOL. Cần chốt nơi đồng ý (app/Zalo/văn bản) trước khi thí điểm; khi thêm vào `ConsentLedger` phải đưa `drills` vào `granted`/`texts`, nếu không `changes()` sẽ tự sinh dòng rút đồng ý |
 | 5–13 | Low | Để lại, ghi để theo dõi: race hẹp `markHandled`/`savePending` (#5); worker kết quả thử lại vô hạn (#6); `reconnect()` chưa hủy công việc gửi kết quả đang chờ (#7); `ConsentWithdrawn` chưa xóa thông báo/script đã lưu (#8); thông báo không hết hạn khi đồng hồ máy sai (#9); thông báo bị vuốt đi thì không còn lối vào bài (#10); xoay màn hình ngắt giọng (#11); `optString` với `null` (#12, hiện không xảy ra vì schema và 3 kịch bản đều có giá trị); chưa `setHideOverlayWindows` (#13) |
 
 **Kiểm lại trên máy ảo sau khi sửa (18/10/2026, hc-api36 nối backend thật cổng 18001, DB `hoicon_android`):**
@@ -113,3 +113,32 @@ lựa chọn và hai mốc giờ; `is_drill`/`[DIỄN TẬP]` ở cả 4 màn; c
 - Chỉ số PILOT-PROTOCOL: v1 đo tỷ lệ vượt qua / hoàn thành / từ chối, không đo "tỷ lệ phát hiện bằng cảm biến" (spec §2).
 - Duyệt 3 kịch bản diễn tập trước thí điểm.
 - Nơi người cao tuổi đồng ý `drills` (app v1 chưa có) và số phận cột `drills.debriefed_at` (xem mục E2E, điểm 2 và 4).
+
+## Đồng ý `drills` trên máy (Làn A Wave 2, 21/10/2026) — đóng Medium #1
+
+**Làm gì.** Lối vào ở E6: nút nhỏ "Tập nhận biết lừa đảo" (chỉ hiện khi chưa đồng ý bản chữ hiện tại; biến mất sau khi đồng ý) mở `DrillConsentActivity`
+(không xuất ra ngoài): chữ nguyên văn `docs/legal/consent/drills.vi.md` (sha `6a182f00…`, `2026.10-v3`), nói rõ chỉ là diễn tập; ô "Tôi từ 18 tuổi trở lên."
+(luật 8, thí điểm ≥ 18); "Đồng ý để HỏiCon mời tập" ghi qua `ConsentLedger` (`DrillConsent` + `ConsentSync`); "Để lúc khác" đóng, không ghi gì.
+Bấm Đồng ý khi chưa tích ⇒ chỉ một câu nhắc, không ghi sổ. Test JVM: `DrillConsentTest` ×3, `ConsentSyncTest` (+2: chỉ ghi `drills` sau khi người lớn đồng ý;
+hai `ConsentSync` chạy cùng lúc chỉ ghi một dòng — xem "Phát hiện").
+
+**Chạy thật trên hc-api36** (backend 18001, DB `hoicon_android`, Zalo MOCK, dữ liệu hư cấu; số liệu máy ảo):
+| Bước | Kết quả |
+|---|---|
+| `ops drills schedule` khi chưa đồng ý | `Từ chối (consent_missing)` |
+| Bấm "Đồng ý" khi chưa tích 18 tuổi | hiện câu nhắc; `consents` không có dòng `drills` |
+| Tích + Đồng ý (01:59:31 UTC) | `consents`: `drills`, `2026.10-v3`, `6a182f00d88b4ba9121af29937032020de070919e01a5cd527a65a0aafb9bb4d`, granted |
+| `ops drills schedule` ngay sau (01:59:36) | `Đã đặt lịch` |
+| Heartbeat kế tiếp (`offered_at` 02:14:04) | thông báo `[DIỄN TẬP] Đến giờ…` hiện (ảnh `notif-diendap-100.png`) — **lời mời đến SAU khi đồng ý** |
+Ảnh ở `~/hoicon-evidence/028-drills/w2/`: `drills-consent-100-{a,notice,end,ticked}`, `drills-consent-200-{a,notice,b,c,d,ticked}`, `e6-with-drills-link-100.png`.
+
+**`ux-elder-reviewer`.** Lượt 1: 0 Chặn, 3 Cao (chữ 200% khi có câu nhắc chỉ còn 1 dòng; không gợi ý cuộn; hai nút phụ ở E6 khác chiều rộng) + 6 Trung bình/Thấp.
+Đã sửa: ô tích về cuối vùng chữ cuộn (chỉ câu nhắc + 2 nút được ghim), câu nhắc là một câu đậm thay cho khung, "Kéo xuống đọc tiếp ↓" trên nền đặc, hai nút E6 cùng rộng,
+nhãn ô ngắn lại, nút đổi thành "Đồng ý để HỏiCon mời tập". Lượt 2: 0 Chặn, 0 Cao về thiết kế; 1 Cao về **bằng chứng** (ảnh "đã tích" ở 100% bị chụp nhầm trạng thái) ⇒ chụp lại đúng
+(`drills-consent-100-ticked.png`); 3 Trung bình đã sửa (ô tích luôn ở cuối, "Nghe lại" luôn thấy, gợi ý cuộn không đè chữ).
+
+**Phát hiện (đã sửa).** Hai `ConsentSync` (E6 `onResume` và màn đồng ý) mỗi cái có khóa riêng ⇒ cùng một grant ghi 2 dòng (`recorded_at` cách 29 ms). Khóa nay dùng chung cả tiến trình;
+đột biến (khóa theo từng đối tượng) làm `ConsentSyncTest` đỏ, đã khôi phục.
+
+**Chưa làm / giới hạn.** Rút đồng ý `drills` trên máy (hiện chỉ rút qua đội thí điểm, văn bản đã nói vậy); chưa nghe TTS thật (máy ảo không âm thanh), chưa TalkBack, chưa máy thật;
+"Đã kết nối với w2-gia-dinh-3" là tên thử (dữ liệu hư cấu). Câu "Con bác sẽ biết bác đã chọn gì" khác câu ở E11 ("báo cho con biết bác đã luyện tập") — cần Tiến/Minh thống nhất phạm vi con thấy.

@@ -9,7 +9,9 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "vn.hoicon.demobank"
+        // -PdemobankApplicationId=com.anydesk.anydeskandroid dựng bản "app điều khiển từ xa giả" để thử luật R5 / E7 biến thể
+        // điều khiển từ xa trên máy ảo (không bao giờ phát hành; chỉ cài lên máy ảo).
+        applicationId = providers.gradleProperty("demobankApplicationId").getOrElse("vn.hoicon.demobank")
         minSdk = 29
         targetSdk = 36
         versionCode = 1

@@ -42,7 +42,7 @@ class AiDisclosureCopyTest {
 
     @Test
     fun shownTextsStartWithDisclosure() {
-        for (name in listOf("pause_disclosure", "hello_ai_disclosure", "lookups_consent_ai", "lookup_offline_ai")) {
+        for (name in listOf("pause_disclosure", "hello_ai_disclosure", "lookup_ai", "lookup_offline_ai")) {
             assertTrue(string(name).startsWith(disclosure), "$name = ${string(name)}")
         }
     }
