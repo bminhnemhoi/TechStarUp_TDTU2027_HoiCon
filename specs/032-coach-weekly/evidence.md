@@ -14,3 +14,8 @@
 | SC-005 công khai AI + PII | 100% công khai; 0 PII | pytest | chưa chạy | CHƯA ĐO |
 | SC-006 ngưỡng 24 giờ | khoảng trống dài nhất trên AVD < 24 giờ | AVD | chưa chạy | CHƯA ĐO |
 | SC-007 máy thật | tỷ lệ báo nhầm 7 ngày thí điểm | thí điểm | — | BLOCKED (029 giai đoạn 2) |
+
+## Wave 3 làn A (22/10/2026) — T011 chưa làm
+
+Task cần 5 điều kiện đo liên tục (2 giờ + 2 giờ + 4 giờ + khởi động lại + kill) trên máy ảo với backend dev chạy suốt, tổng ≳ 8 giờ máy chạy; ngoài khả năng một phiên làm việc. Điều kiện tiên quyết
+của task không nêu gì khác. Chưa đo, không tick T011; việc cho một phiên chạy dài (hoặc `adb shell cmd jobscheduler` ép nhịp không áp dụng được cho WorkManager định kỳ, xem evidence 028).

@@ -35,7 +35,7 @@ Biến: `UT = python3 -m unittest discover -s scripts/tests -p test_deploy_vps.p
 
 ## Wave 2 (18/10/2026 — từ `/speckit-analyze`: việc làm được ngay, trước đây bị gộp vào BLOCKED)
 
-- [ ] T016 [A] [FR-011] buildType `demo` (kế thừa `release`: R8, `BuildConfig.DEBUG = false`; khác `release` ở `applicationIdSuffix
+- [x] T016 [A] [FR-011] buildType `demo` (kế thừa `release`: R8, `BuildConfig.DEBUG = false`; khác `release` ở `applicationIdSuffix
   ".demo"`, nhãn app "HỏiCon (demo)", địa chỉ máy chủ demo qua `-PhoiconApiBaseUrl` https) cho video và gian trưng bày; thêm baseline
   profile (`androidx.baselineprofile` + `profileinstaller`: nêu lý do thêm thư viện — O3 của MASTER-PLAN, khởi động nguội) cho
   `CallScreeningService` → `RiskWindowService` → `SafePauseActivity`. `release-gate.sh` chạy được trên AAB `demo`.
@@ -45,7 +45,7 @@ Biến: `UT = python3 -m unittest discover -s scripts/tests -p test_deploy_vps.p
   chạy API + worker dưới `hoicon_app`; ghi quyền thiếu (nếu có) và sửa `roles.sql`. Quyết định ghi vào plan (D10 cập nhật).
   · Verify: `HOICON_DATABASE_URL=<url hoicon_app> uv run --directory backend pytest tests/integration/test_db_roles.py` xanh (không
   bị bỏ qua); API dev dưới `hoicon_app` qua `/readyz` 200 và một lượt `scripts/e2e-m1.sh` phần máy chủ ĐẠT
-- [ ] T018 [A] [FR-011, SC-009] Đo lại khởi động nguội trên AVD `hc-api36` và `hc-api34` với bản `release`/`demo` (R8 + baseline
+- [x] T018 [A] [FR-011, SC-009] Đo lại khởi động nguội trên AVD `hc-api36` và `hc-api34` với bản `release`/`demo` (R8 + baseline
   profile): thời gian từ cuộc gọi tới `CallScreeningService.onScreenCall` khi app đã bị `am force-stop` (hạn của Telecom 5 s), và
   `app_foreground → pause_shown` (`emu-scenario.py --scenario fake_police --runs 10 --prep kill`). So với số debug cũ. Ghi "máy ảo ≠
   máy thật"; số máy thật vẫn ở 001 (FTL, BLOCKED).

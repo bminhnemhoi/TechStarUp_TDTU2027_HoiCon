@@ -1,0 +1,15 @@
+# Baseline profile viết tay (spec 012 T016): đường nóng khi app bị kill rồi có cuộc gọi tới —
+# CallScreeningService → RiskWindowService → SafePauseActivity (+ luật tất định ở :rules).
+# Quy tắc ký tự đại diện của AGP/profgen: HSPL = đã chạy (H), khởi động (S), sau khởi động (P), thuộc lớp (L).
+HSPLvn/hoicon/sentinel/sensing/**;->**(**)**
+Lvn/hoicon/sentinel/sensing/**;
+HSPLvn/hoicon/sentinel/pause/**;->**(**)**
+Lvn/hoicon/sentinel/pause/**;
+HSPLvn/hoicon/sentinel/domain/rules/**;->**(**)**
+Lvn/hoicon/sentinel/domain/rules/**;
+HSPLvn/hoicon/sentinel/ui/SafePauseScreen**;->**(**)**
+Lvn/hoicon/sentinel/ui/SafePauseScreen**;
+HSPLvn/hoicon/sentinel/ui/theme/**;->**(**)**
+Lvn/hoicon/sentinel/ui/theme/**;
+HSPLvn/hoicon/rules/**;->**(**)**
+Lvn/hoicon/rules/**;

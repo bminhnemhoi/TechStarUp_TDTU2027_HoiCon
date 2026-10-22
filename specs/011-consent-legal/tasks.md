@@ -62,7 +62,7 @@ T001–T009, T016–T017 làm trước khi có thẻ: đều là làn B.
 
 Thứ tự: T018 → T019 → T020; T021 độc lập. T018 làm trước 028 T023 (màn đồng ý `drills` dùng chuỗi của T018).
 
-- [ ] T018 [A] [FR-002, FR-011] Đồng bộ chuỗi đồng ý Android theo `docs/legal/consent/manifest.json` (bản nháp `2026.10-v3`, không chờ
+- [x] T018 [A] [FR-002, FR-011] Đồng bộ chuỗi đồng ý Android theo `docs/legal/consent/manifest.json` (bản nháp `2026.10-v3`, không chờ
   Minh — các văn bản chưa `released`, chưa có người dùng thật): mỗi dòng giữa `BEGIN-TEXT`/`END-TEXT` của
   `<purpose>.vi.md` là **một** chuỗi tài nguyên, đúng thứ tự, cho 7 mục đích app đang hiện (`core_protection`, `guardian_alerts`,
   `lookups`, 3 trang quyền, `drills` — chuẩn bị cho 028 T023); `ConsentLedger.VERSION = "2026.10-v3"`; E3/E4/E10 hiện lại chữ mới

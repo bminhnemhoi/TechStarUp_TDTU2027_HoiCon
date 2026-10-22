@@ -47,7 +47,7 @@ android {
         // -PhoiconApiBaseUrl=... (http:// chỉ áp dụng cho debug). Release: HTTPS (cleartext bị chặn từ API 28); yêu cầu
         // dựng release kèm địa chỉ http:// thì build dừng ngay, không lặng lẽ đổi địa chỉ. Đường dừng an toàn KHÔNG dùng mạng.
         val apiBaseUrl = providers.gradleProperty("hoiconApiBaseUrl")
-        val releaseRequested = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
+        val releaseRequested = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) || it.contains("Demo") }
         fun checked(url: String, schemes: List<String>): String {
             require(Regex("^[A-Za-z0-9:/._-]+$").matches(url) && schemes.any(url::startsWith)) {
                 "hoiconApiBaseUrl must start with ${schemes.joinToString(" or ")} and contain no quotes/spaces: $url"
@@ -73,6 +73,17 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             releaseSigning?.let { signingConfig = it }
         }
+        // Bản dựng cho video và gian trưng bày (spec 012 T016): giống release (R8, BuildConfig.DEBUG = false) nhưng cài song song
+        // được (".demo"), nhãn "HỏiCon (demo)" (src/demo/res) và địa chỉ máy chủ demo qua -PhoiconApiBaseUrl (https).
+        create("demo") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".demo"
+            matchingFallbacks += "release"
+            // Không có khóa phát hành ⇒ ký bằng khóa debug của SDK để cài thẳng lên máy ảo/máy gian trưng bày (không tải lên Play được).
+            signingConfig = releaseSigning ?: signingConfigs.getByName("debug")
+            val url = if (apiBaseUrl.orNull?.startsWith("https://") == true) checked(apiBaseUrl.get(), listOf("https://")) else "https://api.hoicon.vn"
+            buildConfigField("String", "API_BASE_URL", "\"$url\"")
+        }
     }
 
     buildFeatures {
@@ -97,6 +108,8 @@ dependencies {
     implementation(libs.tink.android)
     implementation(libs.play.services.code.scanner)
     implementation(libs.androidx.fragment)
+    // Cài baseline profile (src/main/baseline-prof.txt) ngay khi cài app, không đợi dịch nền: khởi động nguội nhanh hơn (O3 MASTER-PLAN).
+    implementation(libs.androidx.profileinstaller)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)

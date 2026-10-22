@@ -63,3 +63,43 @@
 
 T010–T015 trong `tasks.md`: VPS + DNS + Let's Encrypt thật; bot Zalo thật + `setWebhook`; bật `hoicon-backup.timer` và chép sao lưu ra ngoài máy;
 áp `roles.sql` ở prod; giám sát `/readyz`; phần Android (`specs/029-pilot-kit/evidence.md`).
+
+## Android: buildType `demo`, baseline profile, đo khởi động nguội (Làn A Wave 3, 22/10/2026) — T016, T018
+
+**T016 (mã).** `apps/android/app/build.gradle.kts`: buildType `demo` = `initWith(release)` (R8, `BuildConfig.DEBUG = false`, tắt nhật ký chẩn đoán) +
+`applicationIdSuffix ".demo"`; nhãn "HỏiCon (demo)" ở `src/demo/res/values/strings.xml`; địa chỉ máy chủ demo từ `-PhoiconApiBaseUrl` chỉ nhận
+`https://` (http ⇒ rơi về `https://api.hoicon.vn`, như `release`). Không có khóa phát hành ⇒ ký bằng khóa debug của SDK để cài thẳng lên máy ảo
+(không tải lên Play được). Baseline profile: thêm `androidx.profileinstaller:1.4.0` (đã có trong cache Gradle, nhẹ) và
+`src/main/baseline-prof.txt` **viết tay** bằng ký tự đại diện cho đường nóng `sensing/**` → `pause/**` → `domain/rules/**` → `SafePauseScreen` →
+`:rules`. **Lệch task:** không dùng plugin `androidx.baselineprofile` + mô-đun macrobenchmark (cần máy thật/máy ảo để sinh hồ sơ và thêm mô-đun); hồ sơ
+viết tay đủ để AGP biên dịch vào AAB (`BUNDLE-METADATA/.../baseline.prof` 7 852 byte, `baseline.profm` 1 025 byte) nhưng **chưa được sinh bằng đo thật** ⇒ cần
+Opus quyết có nâng lên plugin sinh hồ sơ không. Sửa kèm: `scripts/release-gate.sh` và `scripts/tests/test_release_gate.py` còn gọi
+`ConsentTextsPinTest` (Wave 2 đã thay bằng `ConsentManifestPinTest`) nên cổng TRƯỢT "No tests found"; đã đổi tên.
+
+| Kiểm | Kết quả |
+|---|---|
+| `gradlew :app:assembleDemo :app:bundleRelease :app:bundleDemo --no-configuration-cache` | thành công |
+| `aapt2 dump badging` APK demo | `package: name='vn.hoicon.sentinel.demo' versionCode='3' versionName='0.3.0'`, `application-label:'HỏiCon (demo)'` |
+| `bash scripts/release-gate.sh app-release.aab` | thoát 0: quyền cấm ĐẠT (17 quyền, 2 dịch vụ), debuggable tắt, R8 959/3 941 lớp (24%) rút gọn, không HC_TIMING/HC_SPIKE, cleartext chặn, có "Đây là trợ lý AI HỏiCon", `ConsentManifestPinTest` ĐẠT |
+| `bash scripts/release-gate.sh app-demo.aab` | thoát 0, cùng kết quả |
+| `python3 -m unittest discover -s scripts/tests` | OK |
+
+**T018 (đo).** Máy ảo, **không phải máy thật** (số máy thật vẫn ở 001, FTL, BLOCKED). `hc-api34` khởi động nguội (`emu-start.sh --cold`) ngay trước khi đo. Cùng
+một máy ảo, cùng phiên: bản debug hiện tại so với bản `demo` (R8 + hồ sơ). Mỗi lần: `am force-stop` → cuộc gọi giả (`adb emu gsm call`) → đọc log
+Telecom. "Sàng lọc" = từ `CallScreeningServiceFilter ... <gói> scheduled` tới `SCREENING_COMPLETED` (app đã bị dừng, tiến trình nguội); "tới
+FILTERING_COMPLETED" = hết bộ lọc của Telecom. Hạn của Telecom là 5 s.
+
+| AVD | Bản | n | Sàng lọc p50 / p95 (ms) | Tới FILTERING_COMPLETED p50 / p95 (ms) | `am start -W` MainActivity nguội (ms, 10 lần: min – max, trung vị) |
+|---|---|---|---|---|---|
+| hc-api36 | debug | 10 | 230 / 353 | 246 / 388 | 1143 – 1403, ≈ 1252 |
+| hc-api36 | **demo** | 10 | **51 / 64** | **67 / 96** | 760 – 1204, ≈ 906 |
+| hc-api34 | debug | 10 | 280 / 1105 | 296 / 1125 | 1249 – 1703, ≈ 1295 |
+| hc-api34 | **demo** | 9 (1 lần thiếu mốc log) | **121 / 214** | **187 / 425** | 736 – 949, ≈ 826 |
+
+- **Hạn 5 s của Telecom:** `onScreenCall` (sàng lọc) p95 ≤ 214 ms trên bản `demo`, đạt với biên rất rộng ở cả hai AVD. SC-009 phần đo AVD: ĐẠT (số máy ảo).
+- **`app_foreground → pause_shown` không đo được trên bản `demo`:** mốc `HC_TIMING` bị R8/`BuildConfig.DEBUG=false` loại khỏi bản phát hành (đúng chủ ý của
+  release-gate). Phần SafePause ở bản debug (cùng phiên, `emu-scenario.py --scenario fake_police`, n = 10): xem `specs/010-design-system/evidence.md` mục Wave 3.
+- **Không tách được phần của baseline profile:** khác biệt debug → demo gồm R8, không còn `debuggable` và hồ sơ; profileinstaller chỉ áp hồ sơ lúc chạy đầu/dexopt
+  nền nên một lần cài mới trên máy ảo chưa chắc đã hưởng. Không kết luận "hồ sơ làm nhanh X ms".
+- Một lần chạy đầu của bản demo trên hc-api34 thiếu mốc Telecom (n = 9): không điều tra thêm.
+- Một lần `emu-start.sh --cold` đầu tiên của `hc-api34` rơi kết nối ngay sau khi lên (adb `offline`); khởi động lại một lần là ổn.

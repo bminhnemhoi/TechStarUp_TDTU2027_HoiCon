@@ -147,7 +147,7 @@
 
 ## Wave 2 (18/10/2026 — tồn đọng Wave 1)
 
-- [ ] T023 [A] [FR-008] Màn đồng ý `drills` **đúng lúc** trên Android (review bảo mật 028, Medium #1; 011 `privacy-audit`: "không ai
+- [x] T023 [A] [FR-008] Màn đồng ý `drills` **đúng lúc** trên Android (review bảo mật 028, Medium #1; 011 `privacy-audit`: "không ai
   được mời"). Cần 011 T018 xong trước (chuỗi `drills` theo `docs/legal/consent/drills.vi.md` v3).
   - Đường vào: một hàng phụ (không phải hành động chính thứ ba) trên E6 "Đang bảo vệ": "Luyện tập nhận biết lừa đảo cùng con", vùng
     chạm ≥ 64dp; E6 vẫn ≤ 2 hành động chính.

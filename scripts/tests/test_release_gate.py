@@ -23,7 +23,7 @@ _SDK = Path(os.environ.get("ANDROID_HOME") or Path.home() / "Android" / "Sdk")
 
 def _run(*args: str, skip_pin: bool = True) -> subprocess.CompletedProcess[str]:
     env = dict(os.environ)
-    if skip_pin:  # bước ConsentTextsPinTest chạy Gradle: không lồng Gradle vào unit test của script
+    if skip_pin:  # bước ConsentManifestPinTest chạy Gradle: không lồng Gradle vào unit test của script
         env["HC_GATE_SKIP_PIN_TEST"] = "1"
     return subprocess.run(["bash", str(_SCRIPT), *args], capture_output=True, text=True, check=False, timeout=300, env=env)
 
@@ -99,7 +99,7 @@ class DebugApkTest(unittest.TestCase):
         self.assertEqual(self.proc.stdout.count("[KIỂM TAY]"), 2)
 
     def test_skipping_the_pin_test_never_turns_the_gate_green(self) -> None:
-        line = _line(self.proc.stdout, "ConsentTextsPinTest")
+        line = _line(self.proc.stdout, "ConsentManifestPinTest")
         self.assertTrue(line.startswith("[BỎ QUA]"), line)
 
 

@@ -11,7 +11,7 @@ object PiiMasker {
     private const val MIN_DIGITS = 8
     private const val KEEP = 3
 
-    // Digits with the separators people type inside numbers (+84 912 345 678, 091-234-5678, (028) 3822 1234).
+    // Digits with the separators people type inside numbers (spaces, dots, dashes, a +84 prefix, an area code in brackets).
     private val NUMBER = Regex("""[+(]?\d(?:[\d\s.\-()]*\d)?""")
 
     /** [text] with every run of 8+ digits replaced by `…` + its last 3 digits. */

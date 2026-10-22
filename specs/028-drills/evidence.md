@@ -142,3 +142,8 @@ nhãn ô ngắn lại, nút đổi thành "Đồng ý để HỏiCon mời tập
 
 **Chưa làm / giới hạn.** Rút đồng ý `drills` trên máy (hiện chỉ rút qua đội thí điểm, văn bản đã nói vậy); chưa nghe TTS thật (máy ảo không âm thanh), chưa TalkBack, chưa máy thật;
 "Đã kết nối với w2-gia-dinh-3" là tên thử (dữ liệu hư cấu). Câu "Con bác sẽ biết bác đã chọn gì" khác câu ở E11 ("báo cho con biết bác đã luyện tập") — cần Tiến/Minh thống nhất phạm vi con thấy.
+
+## Wave 3 (22/10/2026) — T023: chạy lại Verify
+
+`gradlew :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` xanh; `emu-scenario.py --scenario fake_police` (n = 10) 10/10 ĐẠT trên hc-api36 và hc-api34 (số máy ảo).
+Log E2E (lời mời diễn tập xuất hiện sau khi đồng ý), ảnh 100%/200% và báo cáo `ux-elder-reviewer` (0 Chặn, 0 Cao về thiết kế) là các mục "Đồng ý `drills` trên máy" ở trên (21/10); không chạy lại E2E drills ở Wave 3. Tick T023.

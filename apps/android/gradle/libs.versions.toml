@@ -39,6 +39,7 @@ androidx-security-crypto = { module = "androidx.security:security-crypto", versi
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.0" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }
 androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
 play-services-code-scanner = { module = "com.google.android.gms:play-services-code-scanner", version.ref = "codeScanner" }

@@ -6,7 +6,7 @@
 #
 # Mỗi mục ra [ĐẠT] / [TRƯỢT]; mục không tự động được in [KIỂM TAY]. Thoát 0 chỉ khi không mục nào TRƯỢT.
 #   exit 0 = đạt · 1 = có mục TRƯỢT (hoặc BỎ QUA) · 2 = dùng sai / thiếu công cụ hoặc tệp (UNAVAILABLE, không phải "đạt")
-# HC_GATE_SKIP_PIN_TEST=1 bỏ qua bước chạy ConsentTextsPinTest (Gradle, chậm); mục đó in [BỎ QUA] và tính là TRƯỢT,
+# HC_GATE_SKIP_PIN_TEST=1 bỏ qua bước chạy ConsentManifestPinTest (Gradle, chậm); mục đó in [BỎ QUA] và tính là TRƯỢT,
 # nên cờ này không thể làm cổng "xanh" giả.
 set -uo pipefail
 
@@ -218,13 +218,13 @@ fi
 
 # 7. Văn bản đồng ý đã ghim hash (đổi chữ ⇒ phải đổi phiên bản đồng ý).
 if [ "${HC_GATE_SKIP_PIN_TEST:-}" = 1 ]; then
-  skip "ConsentTextsPinTest: bị bỏ qua bằng HC_GATE_SKIP_PIN_TEST=1"
+  skip "ConsentManifestPinTest: bị bỏ qua bằng HC_GATE_SKIP_PIN_TEST=1"
 else
-  if "$ROOT/apps/android/gradlew" -p "$ROOT/apps/android" :app:testDebugUnitTest --tests '*ConsentTextsPinTest' \
+  if "$ROOT/apps/android/gradlew" -p "$ROOT/apps/android" :app:testDebugUnitTest --tests '*ConsentManifestPinTest' \
       --console=plain -q >"$TMP/pin.log" 2>&1; then
-    pass "ConsentTextsPinTest: hash văn bản đồng ý khớp"
+    pass "ConsentManifestPinTest: hash văn bản đồng ý khớp"
   else
-    fail "ConsentTextsPinTest: không đạt"
+    fail "ConsentManifestPinTest: không đạt"
     tail -n 15 "$TMP/pin.log" | while IFS= read -r line; do note "$line"; done
   fi
 fi

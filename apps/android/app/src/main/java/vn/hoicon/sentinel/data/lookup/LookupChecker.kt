@@ -34,7 +34,7 @@ sealed interface LookupInput {
             val number = if (text.startsWith("tel:", ignoreCase = true)) text.substring(4) else text
             if (PHONE_LIKE.matches(number)) return PhoneHasher.hash(number)?.let(::Phone) ?: BadPhone
             val url = UrlSanitizer.sanitize(text)
-                // A number typed with a stray letter ("0912345678a") or inside a link host must never travel as a link.
+                // A number followed by one stray letter, or inside a link host must never travel as a link.
                 ?: return if (text.substringBefore('/').count { it in '0'..'9' } >= 7) BadPhone else BadLink
             return Link(url, host = url.substringAfter("://").substringBefore('/'))
         }
