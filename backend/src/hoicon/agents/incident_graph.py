@@ -23,7 +23,7 @@ import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Annotated, Any, Literal, TypedDict
+from typing import Annotated, Any, Literal, TypedDict, get_args
 from uuid import UUID
 
 from langgraph.graph import END, START, StateGraph
@@ -180,16 +180,29 @@ def _brief_conditions(state: Mapping[str, Any], level: RiskLevel) -> dict[str, b
     }
 
 
+_BRIEF_ORDER: tuple[str, ...] = get_args(BriefPoint)  # = cột "#" của spec 024 §5: sự kiện → bác kể → nhận định
+_BRIEF_JUDGMENT = ("common_scam_pattern", "may_be_routine")
+
+
 def brief_points(state: Mapping[str, Any], level: RiskLevel, points: Sequence[str]) -> list[str]:
-    """Điểm LLM chọn, bỏ mã lạ/trùng/điều kiện sai, giữ thứ tự; rỗng ⇒ bộ mặc định (mã ứng dụng đúng + chung)."""
+    """Điểm gửi người giám hộ (spec 024 FR-013): LLM chọn điểm nào, máy chủ quyết thứ tự.
+
+    1) bỏ mã lạ/trùng/điều kiện sai, lấy tối đa 3; 2) nhóm nhận định giữ một mã (cả hai ⇒ bỏ `may_be_routine`);
+    3) chỉ còn mã nhận định ⇒ bộ mặc định (mã ứng dụng đúng + `common_scam_pattern`, hoặc rỗng nếu không có ứng dụng);
+    4) sắp theo thứ tự cố định, không theo thứ tự LLM."""
     conditions = _brief_conditions(state, level)
     kept: list[str] = []
     for point in points:
         if conditions.get(point) and point not in kept:
             kept.append(point)
-    if kept:
-        return kept[:3]
-    return [p for p in ("unknown_call_then_finance_app", "sideloaded_app") if conditions[p]] + ["common_scam_pattern"]
+    kept = kept[:3]
+    if all(p in kept for p in _BRIEF_JUDGMENT):
+        kept.remove("may_be_routine")
+    if all(p in _BRIEF_JUDGMENT for p in kept):
+        kept = [p for p in ("unknown_call_then_finance_app", "sideloaded_app") if conditions[p]]
+        if kept:
+            kept.append("common_scam_pattern")
+    return sorted(kept, key=_BRIEF_ORDER.index)
 
 
 @dataclass
@@ -463,7 +476,8 @@ def build_graph(deps: Deps) -> StateGraph:
         level = RiskLevel(state["level"])
         # Không còn câu mẫu tự do: fallback cũng chỉ là bộ điểm mặc định (ADR-012), câu ghép từ `BRIEF_POINT_VI`.
         fallback = GuardianBrief(
-            points=brief_points(state, level, []),  # type: ignore[arg-type]
+            # `GuardianBrief` đòi ≥ 1 mã: sự cố không có điểm nào ⇒ mã nhận định, `brief_points` lọc lại thành rỗng.
+            points=brief_points(state, level, []) or ["common_scam_pattern"],  # type: ignore[arg-type]
             action="call_and_stay_on_line" if level == RiskLevel.CRITICAL else "call_now",
         )
         # Chỉ siêu dữ liệu + enum; cách xưng hô thật không gửi cho LLM (chỗ giữ "{alias}" được thay sau).
@@ -483,7 +497,9 @@ def build_graph(deps: Deps) -> StateGraph:
         summary = texts.brief_summary(state["elder_alias"], kept)
         # Mức rất cao luôn kèm "gọi ngay và giữ máy" — LLM không được làm nhẹ lời khuyên.
         action = "call_and_stay_on_line" if level == RiskLevel.CRITICAL else llm.output.action
-        text = texts.guardian_detail(state["elder_alias"], level, summary, action, state["is_drill"])
+        text = texts.guardian_detail(
+            state["elder_alias"], level, summary, action, state["is_drill"], call_ongoing="call_still_ongoing" in kept
+        )
         sent = await notify(state, "detail", text)
         output = {
             "action": action,

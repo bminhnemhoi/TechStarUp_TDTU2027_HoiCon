@@ -13,7 +13,7 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from hoicon.agents.texts import ACTION_VI, BRIEF_POINT_VI, REPLY_GUIDE_NO_DETAIL
+from hoicon.agents.texts import ACTION_BUSY_VI, ACTION_VI, BRIEF_POINT_VI, REPLY_GUIDE_NO_DETAIL
 from hoicon.domain.pii import mask_text
 from hoicon.domain.risk import RiskLevel
 from hoicon.eval.cases import Case, plan_trigger
@@ -177,8 +177,14 @@ def _sentence_pattern(sentence: str) -> str:
 
 _BRIEF_SENTENCE = "|".join(_sentence_pattern(v) for v in BRIEF_POINT_VI.values())
 _BRIEF_BODY = re.compile(rf"(?:{_BRIEF_SENTENCE})(?: (?:{_BRIEF_SENTENCE}))*")
-_ACTION_TAIL = re.compile(" (?:" + "|".join(_sentence_pattern(v) for v in ACTION_VI.values()) + ")$")
-_DETAIL = re.compile(r"Mức nguy cơ: [^.\n]+\. (?P<body>.*?)\n\n(?P<tail>.*)\Z", re.DOTALL)
+_ACTION_TAIL = re.compile(
+    " (?:"
+    + "|".join(_sentence_pattern(v) for v in ACTION_VI.values())
+    + ")(?: "
+    + _sentence_pattern(ACTION_BUSY_VI)
+    + ")?$"
+)
+_DETAIL = re.compile(r"Mức nguy cơ: [^.\n]+\.(?P<body>.*?)\n\n(?P<tail>.*)\Z", re.DOTALL)
 
 
 def brief_outside_vocabulary(result: CaseResult) -> bool:
@@ -189,7 +195,8 @@ def brief_outside_vocabulary(result: CaseResult) -> bool:
         if found is None:
             continue
         body = _ACTION_TAIL.sub("", " " + found.group("body").strip()).strip()
-        if not _BRIEF_BODY.fullmatch(body) or found.group("tail") != REPLY_GUIDE_NO_DETAIL:
+        # Tóm tắt rỗng hợp lệ (spec 024 FR-013: sự cố không có ứng dụng); khác rỗng ⇒ ghép hoàn toàn từ câu cố định.
+        if (body and not _BRIEF_BODY.fullmatch(body)) or found.group("tail") != REPLY_GUIDE_NO_DETAIL:
             return True
     return False
 

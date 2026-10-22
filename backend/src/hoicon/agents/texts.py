@@ -107,14 +107,22 @@ def brief_summary(alias: str, points: list[str]) -> str:
     return " ".join(s[:1].upper() + s[1:] for s in sentences)  # alias là tên riêng/danh xưng ("bác Hùng") đứng đầu câu
 
 
-def guardian_detail(alias: str, level: RiskLevel, summary: str, action: str, is_drill: bool) -> str:
+ACTION_BUSY_VI = "Nếu máy {alias} đang bận, anh/chị nhắn tin cho {alias} rồi gọi lại sau một phút."
+_CALL_ACTIONS = ("call_now", "call_and_stay_on_line")
+
+
+def guardian_detail(
+    alias: str, level: RiskLevel, summary: str, action: str, is_drill: bool, *, call_ongoing: bool = False
+) -> str:
+    """Tin chi tiết: mức nguy cơ, tóm tắt (bỏ hẳn khi rỗng), việc cần làm; cuộc gọi còn diễn ra ⇒ thêm câu "máy bận"."""
     summary = summary.strip()
-    if summary and summary[-1] not in ".!?":  # tóm tắt do LLM viết có thể thiếu dấu chấm cuối
+    if summary and summary[-1] not in ".!?":
         summary += "."
-    return _message(
-        f"Mức nguy cơ: {LEVEL_VI[level]}. {summary} {ACTION_VI[action].format(alias=alias)}\n\n{REPLY_GUIDE_NO_DETAIL}",
-        is_drill,
-    )
+    act = ACTION_VI[action].format(alias=alias)
+    if call_ongoing and action in _CALL_ACTIONS:
+        act += " " + ACTION_BUSY_VI.format(alias=alias)
+    head = f"Mức nguy cơ: {LEVEL_VI[level]}."
+    return _message(f"{' '.join(part for part in (head, summary, act) if part)}\n\n{REPLY_GUIDE_NO_DETAIL}", is_drill)
 
 
 def guardian_reminder(alias: str, is_drill: bool) -> str:
