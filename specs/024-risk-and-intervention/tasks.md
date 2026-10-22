@@ -23,7 +23,7 @@ dòng đỏ vào evidence). `$PYTEST` = `uv run --directory backend pytest`. Kh�
 một ca smoke/full đổi recall/báo nhầm/vi phạm so baseline mà không giải thích được bằng ADR-012; hoặc `ux-elder-reviewer`
 còn High ở câu chữ sau 2 vòng.
 
-- [ ] T014 [B-api] [FR-011] Test đỏ trước, không sửa mã sản phẩm:
+- [x] T014 [B-api] [FR-011] Test đỏ trước, không sửa mã sản phẩm:
   (a) `backend/tests/contract/test_guardian_brief_schema.py`: fixture `docs/schemas/fixtures/guardian_brief.v2.{valid,invalid}.json`
   chạy với `Draft202012Validator`; enum `points` của hợp đồng == `typing.get_args(BriefPoint)`; `GuardianBrief.model_json_schema()`
   có `additionalProperties: false`;
@@ -37,7 +37,7 @@ còn High ở câu chữ sau 2 vòng.
   test dùng dạng v1 `summary` chữ thuần **và** dạng v2 mã lạ `["skip_guardian"]`).
   · Verify (đỏ): `$PYTEST tests/contract/test_guardian_brief_schema.py tests/unit/test_brief_points.py -q` lỗi import/assert;
   `$PYTEST tests/integration/test_eval_full.py -q -k prose_injection` đỏ 13 ca.
-- [ ] T015 [B-api] [FR-011] Hiện thực ADR-012 theo plan "Wave 3": `incident_graph.py` (`BriefPoint`, `GuardianBrief` v2,
+- [x] T015 [B-api] [FR-011] Hiện thực ADR-012 theo plan "Wave 3": `incident_graph.py` (`BriefPoint`, `GuardianBrief` v2,
   `brief_points`, `intervention` ghép câu cố định, `agent_steps.output` ghi `points_kept`/`points_dropped`), `texts.py`
   (`BRIEF_POINT_VI`, `brief_summary`), `prompts/intervention.md` `version: 2`; sửa tay 20 cassette `backend/eval/cassettes/smoke/`
   sang `points` + `prompt_versions.intervention = "intervention@2"`; cập nhật `docs/AGENTS.md` mục `intervention` (tóm tắt =
@@ -59,10 +59,10 @@ còn High ở câu chữ sau 2 vòng.
   `.claude/skills/run-eval/SKILL.md` (bỏ F-1 khỏi "phát hiện mở") — phụ thuộc T016, T015.
   · Verify: `$PYTEST -q` xanh; `hoicon-eval --suite full --compare baseline-full --shared-db-ok` exit 0 (recall 1,000, báo nhầm
   ≤ 0,10, 0 vi phạm); `hoicon-eval --suite smoke --compare baseline --shared-db-ok` exit 0.
-- [ ] T018 [B-api] [FR-011, FR-012] `security-privacy-reviewer` (prompt v2, điều kiện điểm đọc state nào, `agent_steps` không
+- [x] T018 [B-api] [FR-011, FR-012] `security-privacy-reviewer` (prompt v2, điều kiện điểm đọc state nào, `agent_steps` không
   có chữ LLM) + `/ponytail-review` trên diff T014–T017 ⇒ sửa mọi High/Medium.
   · Verify: báo cáo 0 High/Medium dán vào evidence.md.
-- [ ] T019 [B-api] [FR-011, FR-012] Cổng: `$PYTEST -q`; `ruff check` + `ruff format --check`; smoke + full + injection như trên;
+- [x] T019 [B-api] [FR-011, FR-012] Cổng: `$PYTEST -q`; `ruff check` + `ruff format --check`; smoke + full + injection như trên;
   `python3 scripts/check-spec-trace.py`; `gitleaks dir backend/src backend/tests backend/eval specs docs`. Ghi SC-007 (và SC-008
   nếu A) vào `specs/024-risk-and-intervention/evidence.md` (số + môi trường + n); cập nhật dòng P2-09 `docs/ROADMAP.md`.
   F-1 vẫn chờ Minh ⇒ SC-008 ghi `BLOCKED: chờ Minh (§8 mục 8)`, không tick T016/T017.
