@@ -83,6 +83,30 @@ def guardian_fast_alert_with_link(
     )
 
 
+# ADR-012 / spec 024 FR-011: tóm tắt gửi người giám hộ chỉ ghép từ các câu cố định này (LLM chỉ chọn mã).
+# Không chữ số/link; `{alias}` = cách xưng hô người cao tuổi.
+# Thêm tình huống = thêm mã (guardian_brief.v2.json) + câu + điều kiện + test.
+BRIEF_POINT_VI: dict[str, str] = {
+    "unknown_call_then_finance_app": "Vừa rồi {alias} nghe một số lạ gọi rồi mở ứng dụng ngân hàng hoặc ví điện tử.",
+    "sideloaded_app": "Vừa rồi {alias} mở một ứng dụng không tải từ cửa hàng CH Play, sau cuộc gọi lạ.",
+    "call_still_ongoing": "Cuộc gọi lạ với {alias} có thể vẫn đang diễn ra.",
+    "flagged_number": "Số điện thoại này nằm trong danh sách số bị báo nghi lừa đảo.",
+    "caller_claims_authority": "{alias} cho biết người gọi xưng là công an, ngân hàng hoặc cơ quan nhà nước.",
+    "asked_transfer_or_code": "{alias} cho biết người gọi bảo chuyển tiền hoặc đọc mã xác thực.",
+    "asked_secrecy": "{alias} cho biết người gọi dặn giữ kín, đừng kể với ai.",
+    "asked_install_app": "{alias} cho biết người gọi bảo cài ứng dụng hoặc mở một đường dẫn lạ.",
+    "elder_unsure_of_caller": "{alias} cho biết chưa rõ người gọi là ai.",
+    "common_scam_pattern": "Những điểm trên thường gặp trong các cuộc gọi giả danh để lừa chuyển tiền.",
+    "may_be_routine": "Cũng có thể đây chỉ là việc bình thường, anh/chị cứ nhẹ nhàng hỏi thăm {alias} xem chuyện gì.",
+}
+
+
+def brief_summary(alias: str, points: list[str]) -> str:
+    """Ghép câu cố định theo thứ tự điểm; mã không có câu bị bỏ (không bao giờ nhận chữ từ ngoài)."""
+    sentences = (BRIEF_POINT_VI[p].replace("{alias}", alias) for p in points if p in BRIEF_POINT_VI)
+    return " ".join(s[:1].upper() + s[1:] for s in sentences)  # alias là tên riêng/danh xưng ("bác Hùng") đứng đầu câu
+
+
 def guardian_detail(alias: str, level: RiskLevel, summary: str, action: str, is_drill: bool) -> str:
     summary = summary.strip()
     if summary and summary[-1] not in ".!?":  # tóm tắt do LLM viết có thể thiếu dấu chấm cuối
@@ -233,4 +257,156 @@ def reply_incident_closed(is_drill: bool) -> str:
         "Cảnh báo này đã đóng nên HỏiCon không nhận thêm trả lời. "
         "Nếu anh/chị vẫn lo, anh/chị gọi hỏi thăm người thân nhé.",
         is_drill,
+    )
+
+
+# --- Hồ sơ vụ việc (spec 031): câu cố định cho `content` của `case_files` (không chữ số dài, link, tên thật).
+CASE_FILE_AI_LABEL = (
+    "Đây là trợ lý AI HỏiCon. Hồ sơ này do trợ lý AI soạn từ dữ kiện đã ghi; anh/chị đọc kỹ trước khi duyệt."
+)
+TRANSITION_VI: dict[str, str] = {
+    "detected": "Điện thoại phát hiện dấu hiệu rủi ro",
+    "assessing": "HỏiCon bắt đầu đánh giá mức rủi ro",
+    "awaiting_guardian": "HỏiCon báo người giám hộ và chờ quyết định",
+    "verifying": "HỏiCon tra cứu số điện thoại và đường dẫn",
+    "rescore": "HỏiCon đánh giá lại sau khi tra cứu",
+    "case_open": "Người giám hộ chọn: nghi lừa đảo, HỏiCon giữ hồ sơ mở",
+    "closed": "Hồ sơ được đóng",
+    "resolved_safe": "Người giám hộ xác nhận an toàn",
+    "resolved_prevented": "Đã ngăn chặn được",
+    "resolved_false_alarm": "HỏiCon ghi nhận đây là báo động nhầm",
+    "resolved_no_response": "Chưa nhận được phản hồi từ người nhà",
+}
+RULE_VI: dict[str, str] = {
+    "R1": "Đang nghe số lạ thì mở ứng dụng ngân hàng hoặc ví điện tử",
+    "R2": "Cài hoặc mở ứng dụng ngoài cửa hàng CH Play sau cuộc gọi lạ",
+}
+RULE_DEFAULT_VI = "Điện thoại phát hiện dấu hiệu đáng ngờ và bật cảnh báo"
+CASE_REASON_VI: dict[str, str] = {
+    "flagged": "Số gọi tới nằm trong danh sách số bị báo nghi lừa đảo của HỏiCon",
+    "authority": "Người gọi xưng là cơ quan nhà nước, công an hoặc ngân hàng",
+    "transfer": "Người gọi yêu cầu chuyển tiền hoặc đọc mã xác thực (OTP)",
+    "unknown_caller": "Người cao tuổi cho biết không biết người gọi là ai",
+    "sideloaded": "Ứng dụng được mở không tải từ cửa hàng CH Play",
+    "floor": "Mức rủi ro do luật trên điện thoại xác định",
+}
+ANSWER_VI: dict[str, str] = {"yes": "Có", "no": "Không", "unsure": "Chưa chắc", "timeout": "Chưa trả lời"}
+CASE_LOCAL_FIELDS: list[dict[str, str]] = [
+    {"key": "caller_phone", "label": "Số điện thoại đã gọi tới"},
+    {"key": "account_number", "label": "Số tài khoản đã chuyển (nếu có)"},
+    {"key": "amount", "label": "Số tiền đã chuyển (nếu có)"},
+    {"key": "transfer_time", "label": "Giờ chuyển tiền (nếu có)"},
+    {"key": "bank_name", "label": "Ngân hàng (nếu có)"},
+]
+VERIFICATION_SOURCE_DEFAULT = "Danh sách cảnh báo HỏiCon"
+
+
+def guardian_case_file(alias: str) -> str:
+    """Tin Zalo báo đã có bản nháp hồ sơ (spec 031 FR-006). Không có liên kết/token: nhắn "4" để lấy liên kết
+    đăng nhập web (spec 027). Sự cố diễn tập không bao giờ có hồ sơ nên không có nhãn diễn tập."""
+    return _message(
+        f"HỏiCon đã soạn sẵn bản nháp hồ sơ vụ việc của {alias} để anh/chị mang đi trình báo nếu muốn. "
+        "HỏiCon không tự gửi "
+        "cho cơ quan nào. Anh/chị nhắn số 4 để nhận liên kết đăng nhập, rồi mở hồ sơ trên web để đọc và duyệt.",
+        False,
+    )
+
+
+def case_file_summary(alias: str, app_category: str, level: str, authority: bool, transfer: bool) -> str:
+    """Đoạn tóm tắt dựng từ mẫu (không LLM): dùng khi không có khóa API hoặc đoạn LLM bị bộ lọc loại."""
+    app = APP_KIND_VI.get(app_category)
+    parts = [f"{alias} nghe một cuộc gọi lạ" + (f" rồi mở ứng dụng {app}." if app else ".")]
+    if authority and transfer:
+        parts.append(
+            "Người gọi xưng là cơ quan nhà nước, công an hoặc ngân hàng, và yêu cầu chuyển tiền hoặc đọc mã xác thực."
+        )
+    elif authority:
+        parts.append("Người gọi xưng là cơ quan nhà nước, công an hoặc ngân hàng.")
+    elif transfer:
+        parts.append("Người gọi yêu cầu chuyển tiền hoặc đọc mã xác thực.")
+    shown = RiskLevel(level) if level in {x.value for x in RiskLevel} else RiskLevel.HIGH
+    parts.append(
+        f"HỏiCon đánh giá mức rủi ro: {LEVEL_VI[shown].lower()}. HỏiCon đã nhắc {alias} tạm dừng và báo người giám hộ."
+    )
+    return " ".join(parts)
+
+
+# --- Coach hằng tuần + báo "mất bảo vệ" (spec 032): mẫu cố định, không LLM. Người đọc là người giám hộ, chuyện nói về
+# người cao tuổi ⇒ nói điều ĐÃ BIẾT, nguyên nhân CÓ THỂ (không khẳng định), MỘT việc nên làm; không hoảng sợ, không "bị
+# hack", không khẳng định "an toàn" (máy không được bảo vệ thì "không thấy gì" không có nghĩa là không có gì).
+DIGEST_OFF_COMMAND = "TẮT TIN TUẦN"
+DIGEST_ON_COMMAND = "BẬT TIN TUẦN"
+
+
+def round_coverage(coverage: float) -> int:
+    """Độ phủ làm tròn tới 5% (không nói số lẻ giả chính xác)."""
+    return round(max(0.0, min(1.0, coverage)) * 20) * 5
+
+
+def guardian_protection_silent(alias: str, since_label: str) -> str:
+    """`since_label`: mốc giờ Việt Nam đã định dạng ("07:30 ngày 20 tháng 10")."""
+    return _message(
+        f"Điện thoại của {alias} chưa báo về HỏiCon từ {since_label}. Có thể máy hết pin, đang tắt, mất mạng hoặc "
+        f"hệ thống đã tắt ứng dụng chạy nền. Anh/chị nên gọi hỏi thăm {alias}, "
+        f"hoặc nhờ {alias} mở ứng dụng HỏiCon trên điện thoại.",
+        False,
+    )
+
+
+def guardian_protection_permission_off(alias: str) -> str:
+    return _message(
+        f"Trên điện thoại của {alias}, quyền để HỏiCon nhắc dừng lại khi có cuộc gọi lạ đang bị tắt, "
+        f"nên lúc này HỏiCon chưa nhắc được. Anh/chị nên gọi hỏi thăm {alias}, "
+        f"hoặc nhờ {alias} mở HỏiCon và bật lại quyền.",
+        False,
+    )
+
+
+def weekly_digest(
+    alias: str, incidents: int, resolved: int, coverage: float | None, drills: int, tip: str | None
+) -> str:
+    """Bản tin tuần (chiều Chủ nhật). `incidents`: số lần nhắc dừng lại của sự cố THẬT trong tuần; `resolved`: số lần
+    đã có người nhà xử lý; `coverage`: độ phủ heartbeat 7 ngày hoặc None ("chưa đủ dữ liệu")."""
+    lines = [f"Bản tin tuần của {alias}."]
+    if incidents > 0:
+        lines.append(
+            f"Tuần qua HỏiCon đã nhắc {alias} dừng lại {incidents} lần, "
+            f"trong đó {resolved} lần đã có người nhà xử lý xong."
+        )
+    elif coverage is None:
+        lines.append(
+            f"Tuần này HỏiCon chưa đủ dữ liệu về điện thoại của {alias} (máy chưa báo về đủ lâu), nên chưa thể nói gì."
+        )
+    else:
+        lines.append(f"Tuần này HỏiCon không thấy dấu hiệu đáng ngờ nào trên điện thoại của {alias}.")
+    if coverage is not None:
+        lines.append(
+            f"HỏiCon chạy trên điện thoại của {alias} khoảng {round_coverage(coverage)}% thời gian trong tuần."
+        )
+    elif incidents > 0:
+        lines.append(f"HỏiCon chưa đủ dữ liệu để nói máy của {alias} được bảo vệ bao nhiêu phần tuần này.")
+    lines.append(
+        f"{alias} đã làm {drills} bài luyện tập nhận biết lừa đảo."
+        if drills
+        else f"{alias} chưa làm bài luyện tập nào."
+    )
+    if tip:
+        lines.append(f"Mẹo tuần này: {tip}")
+    lines.append(f"Nhắn {DIGEST_OFF_COMMAND} để ngừng nhận bản tin này.")
+    return _message("\n".join(lines), False)
+
+
+def digest_off_ack() -> str:
+    return _message(
+        "Đã tắt bản tin tuần cho anh/chị. HỏiCon vẫn nhận cảnh báo khi có chuyện và nhắn cho anh/chị ngay. "
+        f"Muốn nhận lại bản tin, nhắn {DIGEST_ON_COMMAND}.",
+        False,
+    )
+
+
+def digest_on_ack() -> str:
+    return _message(
+        "Đã bật lại bản tin tuần cho anh/chị. Bản tin đến vào chiều Chủ nhật hằng tuần. "
+        f"Muốn ngừng, nhắn {DIGEST_OFF_COMMAND}.",
+        False,
     )

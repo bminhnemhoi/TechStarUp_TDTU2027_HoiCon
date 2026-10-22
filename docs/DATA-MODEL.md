@@ -141,6 +141,9 @@ theo lô ≤ 1.000 dòng, mỗi lô một giao dịch, lũy đẳng; `python -m 
 | `verifications` | 90 ngày | job `retention` (từ `at`) |
 | `drills` | 12 tháng | job `retention` (từ `created_at`) |
 | `device_heartbeats` | 90 ngày | job `retention` (từ `slot`, spec 029) |
+| Nhật ký proxy/ứng dụng (Caddy, uvicorn; có IP khách, token đã che) | tối đa 5 × 10 MB mỗi dịch vụ | driver log Docker `json-file` (`max-size`/`max-file`) tự xóa bản cũ; hạn theo dung lượng, không theo ngày (spec 012 T019) |
+| `case_files` (hồ sơ vụ việc, spec 031) | theo sự cố: 12 tháng sau `closed_at` | `ON DELETE CASCADE` từ `incidents`/`families`; job `case_autoclose` đóng sự cố `case_open` im lặng 30 ngày (hồ sơ nháp ⇒ `discarded`) |
+| Tin Coach (jobs `coach_weekly`, `protection_watch`; tin là `notify_guardian` khóa `protection:*`/`weekly:*` + `messages_out`) | như `jobs` (30 ngày sau `done_at`) và `messages_out` (giữ dòng, không có cột văn bản) | khóa chống trùng theo đợt (`protection:{thiết bị}:{mốc}`) và theo tuần (`weekly:{người}:{năm}-W{tuần}`); `members.weekly_digest_enabled` mặc định bật, theo người giám hộ (spec 032) |
 | `data_requests` | giữ | vết pháp lý của yêu cầu xóa dữ liệu (không có văn bản tự do) |
 
 ### Xóa dữ liệu gia đình theo yêu cầu (spec 034)

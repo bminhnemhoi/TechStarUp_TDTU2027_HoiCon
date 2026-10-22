@@ -61,6 +61,7 @@ class Outgoing:
         None  # HMAC của người nhận: bản mã `chat_enc` chỉ giải được dưới danh nghĩa đúng người này
     )
     is_drill: bool = False  # diễn tập ⇒ tin PHẢI có nhãn [DIỄN TẬP] (luật 8)
+    hold_pct: int | None = None  # ngưỡng giữ tin không khẩn riêng (bản tin tuần dừng ở `warn_pct`, spec 032 FR-006)
 
 
 def quota_month(now: datetime | None = None) -> str:
@@ -142,7 +143,7 @@ async def deliver(deps: ChannelDeps, out: Outgoing, attempt: int = 1) -> str:
         )
     used = used or 0
     limit = settings.zalo_monthly_quota
-    if not out.urgent and used >= _threshold(limit, settings.zalo_quota_hold_pct):
+    if not out.urgent and used >= _threshold(limit, out.hold_pct or settings.zalo_quota_hold_pct):
         logger.warning("zalo bot %s: giữ tin không khẩn %s (đã dùng %d/%d)", out.bot_id, out.template_id, used, limit)
         return await _set(deps, row_id, "held_quota", "over_hold_threshold")
     if used >= limit:
@@ -199,12 +200,22 @@ async def _fill_action_link(deps: ChannelDeps, payload: dict[str, Any], member: 
     return text.replace(ACTION_LINK_SLOT, link)
 
 
+def settings_hold_pct(deps: ChannelDeps, payload: dict[str, Any]) -> int | None:
+    """Bản tin tuần (`quota_class = "digest"`) dừng ở `warn_pct`; tin khác dùng `hold_pct` mặc định."""
+    return deps.settings.zalo_quota_warn_pct if payload.get("quota_class") == "digest" else None
+
+
 async def send_to_guardian(deps: ChannelDeps, payload: dict[str, Any], attempt: int = 1) -> str | None:
     """Handler của job `notify_guardian`: tìm người giám hộ đúng hạng của gia đình sự cố rồi `deliver`.
 
     Trả None khi sự cố chưa gắn gia đình (hành vi cũ: chỉ log). Không log nội dung tin.
     """
     template = payload["template"]
+    if payload.get("sim"):
+        # Spec 033 FR-004: tin của sự cố MÔ PHỎNG không bao giờ tới Zalo, kể cả khi HOICON_ZALO_MODE=live, không tạo
+        # `messages_out`, không trừ hạn mức. Bản ghi mock chính là `jobs.payload` (đã che PII), web `/sim` đọc từ đó.
+        logger.info("notify_guardian template=%s: sự cố mô phỏng, chỉ ghi nhận", template)
+        return "simulated"
     family_id = parse_uuid(payload.get("family_id"))
     if family_id is None:
         logger.info("notify_guardian template=%s: sự cố chưa gắn gia đình, không gửi", template)
@@ -214,13 +225,15 @@ async def send_to_guardian(deps: ChannelDeps, payload: dict[str, Any], attempt: 
         if family is None:
             logger.warning("notify_guardian template=%s: không thấy gia đình, không gửi", template)
             return None
+        # Tin Coach (spec 032) có thể nhắm đúng một người giám hộ (`member_id`); tin sự cố nhắm theo hạng.
+        selector = (
+            Member.id == UUID(str(payload["member_id"]))
+            if payload.get("member_id")
+            else Member.guardian_rank == payload["guardian_rank"]
+        )
         member = (
             await session.scalars(
-                select(Member).where(
-                    Member.family_id == family_id,
-                    Member.role == "guardian",
-                    Member.guardian_rank == payload["guardian_rank"],
-                )
+                select(Member).where(Member.family_id == family_id, Member.role == "guardian", selector)
             )
         ).one_or_none()
     # Luật 8: sự cố demo chỉ tới gia đình demo và ngược lại; không bao giờ lẫn demo với thật.
@@ -231,15 +244,16 @@ async def send_to_guardian(deps: ChannelDeps, payload: dict[str, Any], attempt: 
     elif family.is_demo and not is_demo:
         block = "real_to_demo_family"
     # Tin của sự cố mang `incident_id`; tin tổng kết diễn tập (spec 028) mang `drill_id` và không gắn sự cố nào.
-    owner = payload.get("incident_id") or payload["drill_id"]
-    job_key = f"{owner}:msg:{template}"
+    # Tin Coach mang khóa chống trùng riêng (`protection:{thiết bị}:{mốc}`, `weekly:{người}:{tuần}`).
+    job_key = payload.get("job_key") or f"{payload.get('incident_id') or payload['drill_id']}:msg:{template}"
     out = Outgoing(
         job_key=job_key,
         bot_id=member.zalo_bot_id if member and member.zalo_bot_id else deps.settings.zalo_bot_id,
         template_id=template,
         text=await _fill_action_link(deps, payload, member, job_key),
         chat_enc=member.zalo_chat_enc if member else None,
-        urgent=True,
+        urgent=bool(payload.get("urgent", True)),
+        hold_pct=settings_hold_pct(deps, payload),
         family_id=family.id,
         member_id=member.id if member else None,
         incident_id=parse_uuid(payload.get("incident_id")),

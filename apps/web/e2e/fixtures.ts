@@ -63,6 +63,53 @@ export const doneFrame = (total: number): SseFrame => ({
   data: { run_id: RUN_ID, status: "done", total_steps: total, cost_usd: "0.000000", is_drill: false, is_demo: true },
 });
 
+// --- Spec 033: `/v1/sim/*` và sơ đồ đồ thị (hợp đồng + sơ đồ sinh từ backend, tệp graph-incident.json) ---------------------
+export const TOPOLOGY = JSON.parse(readFileSync(path.join(__dirname, "graph-incident.json"), "utf-8")) as Json;
+const SIM_RUNS = load("sim_run.v1.valid.json").map(strip);
+export const SIM_INCIDENT = "5b0c1f3e-0000-4000-8000-000000000001";
+export const SCAM_ID = "fake_police_safe_account_002";
+export const BENIGN_ID = "benign_official_residence_005";
+const QUESTION = {
+  incident_id: SIM_INCIDENT,
+  question_id: "q_caller_authority",
+  text: "Đây là trợ lý AI HỏiCon. Người đang gọi có tự xưng là công an, viện kiểm sát, tòa án hoặc cán bộ cơ quan nhà nước không ạ?",
+  is_drill: false,
+  answers: ["yes", "no", "unsure"],
+  expires_at: "2026-12-20T09:05:00Z",
+};
+const FAST = { at: "2026-12-20T09:00:05Z", template: "fast_alert", text: "Đây là trợ lý AI HỏiCon. Mẹ vừa nghe một số lạ rồi mở ứng dụng ngân hàng. Anh/chị gọi hỏi Mẹ ngay nhé." };
+const DETAIL = { at: "2026-12-20T09:00:09Z", template: "detail", text: "Đây là trợ lý AI HỏiCon. Mức nguy cơ: rất cao. Anh/chị gọi ngay cho Mẹ và giữ máy." };
+export const SIM_SCENARIO_LIST = [
+  { id: SCAM_ID, category: "fake_police", is_benign: false, injection: false, draft: true, script_vi: "Người gọi xưng công an (hư cấu) báo bác dính vụ án và yêu cầu chuyển tiền vào tài khoản an toàn." },
+  { id: BENIGN_ID, category: "benign_official", is_benign: true, injection: false, draft: false, script_vi: "Bác gọi hỏi thủ tục cư trú ở phường (hư cấu), không mở ứng dụng ngân hàng." },
+];
+
+/** Máy trạng thái của một lượt mô phỏng giả (hợp đồng sim_run.v1): bắt đầu → câu hỏi E8 → tin cho con → quyết định. */
+export class SimMock {
+  stage: "idle" | "asked" | "answered" | "decided" = "idle";
+  started = 0;
+  view(): Json {
+    const base = { scenario_id: SCAM_ID, is_demo: true, llm_mode: "replay", incident_id: SIM_INCIDENT, run_id: RUN_ID, note: null };
+    if (this.stage === "asked") return { ...base, state: "assessing", level: "high", pending_question: QUESTION, guardian_messages: [FAST] };
+    if (this.stage === "answered") return { ...base, state: "awaiting_guardian", level: "critical", pending_question: null, guardian_messages: [FAST, DETAIL] };
+    return { ...base, state: "case_open", level: "critical", pending_question: null, guardian_messages: [FAST, DETAIL] };
+  }
+}
+
+// --- Spec 031: hồ sơ vụ việc (fixture hợp đồng case_file.v1) -----------------------------------------------------------
+const CASE_DOC = strip(load("case_file.v1.valid.json")[0]);
+export const CASE_ACTIONS: Record<string, Record<string, string>> = {
+  draft: { approve: "approved", discard: "discarded" },
+  approved: { mark_sent: "sent", discard: "discarded" },
+};
+
+export class CaseMock {
+  status = "draft";
+  view(): Json {
+    return { ...CASE_DOC, status: this.status, approved_at: this.status === "draft" ? null : "2026-12-20T09:03:00Z" };
+  }
+}
+
 export interface Call {
   method: string;
   path: string;
@@ -77,6 +124,12 @@ export interface MockOptions {
   steps?: () => { status: number; json?: Json };
   stream?: (attempt: number) => { body: string; delayMs?: number; status?: number };
   decision?: (body: Json) => { status: number; json?: Json };
+  sim?: SimMock;
+  simScenarios?: () => { status: number; json?: Json };
+  simStart?: (body: Json) => { status: number; json?: Json; headers?: Record<string, string> };
+  topology?: () => { status: number; json?: Json };
+  caseFile?: CaseMock;
+  caseFileGet?: () => { status: number; json?: Json };
 }
 
 /** Cài bộ chặn `/v1/**`; trả danh sách lời gọi để test kiểm tra (thân lời gọi, số lần, thứ tự). */
@@ -141,8 +194,44 @@ export async function mockApi(page: Page, options: MockOptions = {}): Promise<Ca
     }
     if (/^\/v1\/incidents\/[^/]+\/decision$/.test(p)) {
       const r = options.decision?.(body as Json) ?? { status: 200, json: { success: true } };
+      if (r.status === 200 && options.sim) options.sim.stage = "decided";
       return reply(route, r.status, r.json);
     }
+    if (/^\/v1\/guardian\/incidents\/[^/]+\/case-file$/.test(p)) {
+      if (method === "GET") {
+        const r = options.caseFileGet?.() ?? { status: 200, json: (options.caseFile ?? new CaseMock()).view() };
+        return reply(route, r.status, r.json);
+      }
+      const mock = options.caseFile ?? new CaseMock();
+      const next = CASE_ACTIONS[mock.status]?.[(body as Json).action as string];
+      if (!next) return reply(route, 409, { detail: "x" });
+      mock.status = next;
+      return reply(route, 200, mock.view());
+    }
+    if (p === "/v1/graphs/incident") {
+      const r = options.topology?.() ?? { status: 200, json: TOPOLOGY };
+      return reply(route, r.status, r.json);
+    }
+    if (p === "/v1/sim/scenarios") {
+      const r = options.simScenarios?.() ?? { status: 200, json: { scenarios: SIM_SCENARIO_LIST } };
+      return reply(route, r.status, r.json);
+    }
+    if (p === "/v1/sim/runs" && method === "POST") {
+      const custom = options.simStart?.(body as Json);
+      if (custom) return route.fulfill({ status: custom.status, contentType: "application/json", headers: custom.headers, body: JSON.stringify(custom.json ?? {}) });
+      const sim = options.sim ?? new SimMock();
+      sim.started += 1;
+      if ((body as Json).scenario_id === BENIGN_ID) {
+        return reply(route, 200, { ...SIM_RUNS[2], scenario_id: BENIGN_ID });
+      }
+      sim.stage = "asked";
+      return reply(route, 200, sim.view());
+    }
+    if (/^\/v1\/sim\/runs\/[^/]+\/answer$/.test(p) && options.sim) {
+      options.sim.stage = "answered";
+      return reply(route, 200, options.sim.view());
+    }
+    if (/^\/v1\/sim\/runs\/[^/]+$/.test(p) && options.sim) return reply(route, 200, options.sim.view());
     return reply(route, 404, { detail: "chưa có fixture" });
   });
   return calls;

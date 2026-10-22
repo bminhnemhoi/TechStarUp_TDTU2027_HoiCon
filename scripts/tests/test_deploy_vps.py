@@ -193,16 +193,47 @@ class ComposeInvariants(unittest.TestCase):
             self.assertIn("ALL", svc.get("cap_drop", []), name)
             self.assertIn("no-new-privileges:true", svc.get("security_opt", []), name)
 
+    def test_every_service_has_bounded_logs(self) -> None:  # review 012 L-10: nhật ký có IP khách phải có hạn
+        for name, svc in self.services.items():
+            opts = svc.get("logging", {}).get("options", {})
+            self.assertTrue(opts.get("max-size") and opts.get("max-file"), name)
+
     def test_resource_limits_everywhere(self) -> None:
         for name, svc in self.services.items():
             limits = svc.get("deploy", {}).get("resources", {}).get("limits", {})
             self.assertTrue(limits.get("memory") and limits.get("cpus"), name)
 
 
+class BackendImageData(unittest.TestCase):
+    """Ảnh backend chỉ chép các thư mục `data/` được liệt kê: thiếu thì tính năng đọc dữ liệu đó chết trong container."""
+
+    dockerfile = (ROOT / "backend" / "Dockerfile").read_text(encoding="utf-8")
+
+    def test_case_file_guidance_is_copied_into_the_image(self) -> None:  # spec 031 FR-011
+        self.assertIn("COPY data/case_file /app/data/case_file", self.dockerfile)
+        self.assertTrue((ROOT / "data" / "case_file" / "report_guidance.vi.yaml").is_file())
+
+    def test_eval_baselines_but_not_cassettes_or_reports_reach_the_image(self) -> None:  # spec 033 T010 (FR-012)
+        ignore = (ROOT / ".dockerignore").read_text(encoding="utf-8").splitlines()
+        self.assertIn("backend/eval", ignore)  # cassettes/ và reports/ vẫn bị loại
+        self.assertLess(ignore.index("backend/eval"), ignore.index("!backend/eval/baseline*.json"))
+        self.assertIn("COPY backend/eval/baseline*.json /app/backend/eval/", self.dockerfile)
+        self.assertNotIn("backend/eval/reports", self.dockerfile)
+        self.assertNotIn("backend/eval/cassettes", self.dockerfile)
+
+    def test_coach_tips_are_copied_into_the_image(self) -> None:  # spec 032 FR-005
+        self.assertIn("COPY data/coach /app/data/coach", self.dockerfile)
+        self.assertTrue((ROOT / "data" / "coach" / "tips.vi.yaml").is_file())
+
+
 class CaddyfileInvariants(unittest.TestCase):
     """Kiểm văn bản Caddyfile: các đường không được phơi ra Internet và bộ lọc nhật ký phải có ở CẢ logger mặc định."""
 
     text = (ROOT / "infra" / "caddy" / "Caddyfile").read_text(encoding="utf-8")
+
+    def test_logs_go_to_stdout_so_docker_log_caps_apply(self) -> None:  # review 012 L-10
+        self.assertIn("output stdout", self.text)
+        self.assertNotIn("output file", self.text)
 
     def test_private_paths_are_hidden(self) -> None:
         for path in ("/mcp/*", "/docs", "/redoc", "/openapi.json"):

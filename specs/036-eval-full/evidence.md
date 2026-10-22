@@ -20,6 +20,7 @@
 | SC-006 | 0 kết nối mạng ra ngoài và 0 client Anthropic trong lượt full | 0 / 0: socket ngoài loopback bị chặn và `AsyncAnthropic.__init__` bị cấm trong test mà lượt 12 ca đại diện vẫn chạy; mọi lời gọi LLM qua `LlmRouter(ReplayClient)` | Máy dev, n = 12 ca (test) + mã nguồn | Đạt | `test_nothing_leaves_the_machine_and_no_job_is_left_behind` |
 | SC-007 | Phần LLM thật: lặp prompt, so Haiku/Flash-Lite, ghi cassette `recorded` | **BLOCKED**: chưa có khóa API (P0-08); không có số đo, không giả số | Không chạy được | BLOCKED | Báo cáo ghi `cassette_source: synthetic`; CLI in dòng "chưa chứng minh bằng model thật (BLOCKED P0-08)" |
 | SC-008 | CI: bước full xanh trên PR, ghi thời gian bước | **BLOCKED**: chưa mở PR (cấm push trong lượt này). Đã chạy cục bộ đúng lệnh của bước (`hoicon-eval --suite full --compare baseline-full --shared-db-ok`) ⇒ exit 0, ≈ 28 s; YAML workflow parse hợp lệ (bước `eval full` sau `eval smoke`) | GitHub Actions: chưa chạy. Cục bộ: n = 3 | BLOCKED (link run CI: Tiến điền sau khi mở PR) | `.github/workflows/backend.yml` |
+| SC-009 | Lời chèn chữ thuần không tới người giám hộ: injection 17/17 bị chặn, 0 vi phạm; smoke/full không tụt baseline (ADR-012) | injection **17/17, 0 vi phạm**; full 110 ca recall 1,000 · nhầm 0,000 · 0 vi phạm; 13 ca chèn lệnh chia obey_injection 5 / soothe 4 / off_vocab 4 đều không lọt (test `test_prose_injection_never_reaches_the_guardian_on_any_injection_case`); đột biến (c) mới bắt cả 3 loại | Máy dev Linux, Postgres Docker 15432, cassette `synthetic`, n = 3 lượt full + 1 lượt injection | Đạt (chưa chứng minh bằng model thật, P0-08) | `specs/036-eval-full/tasks.md` T025–T028, `backend/tests/integration/test_eval_full_mutations.py` |
 
 ## Yêu cầu chức năng (FR) ↔ test
 
@@ -92,3 +93,10 @@
 - `docs/ROADMAP.md` "Ghi chú": đề xuất ghi F-1 và F-2 thành việc cho spec 024/đồ thị.
 - Khi mở PR: điền link run CI cho SC-001 (thời gian trên runner) và SC-008.
 - Khi có khóa API (P0-08): ghi cassette `recorded`, chạy lại full, lặp prompt, so Haiku/Flash-Lite; chạy lại `--write-baseline` chỉ khi Minh đồng ý.
+
+## Wave 3 — T025–T028 (đo F-2), 22/10/2026
+
+- **T025:** `cassettes.py` sinh `honest` ở dạng `points`; thêm `soothe`, `off_vocab`; 13 ca chèn lệnh chia 5/4/4; 90 tệp full sinh lại (`cassettes check` khớp); `leak_*`/`obey_injection` giữ dạng v1.
+- **T026:** `brief_outside_vocabulary` trong `checks.py` (tin `detail` phải ghép hoàn toàn từ `BRIEF_POINT_VI` + câu hành động + đuôi cố định), thứ tự `VIOLATION_ORDER` khớp enum `eval_report.v1.json` (test so khớp).
+- **T027:** đột biến (c) mới ("dùng thẳng chữ LLM") bắt cả 3 loại chèn lệnh; các đột biến cũ nói về bộ lọc `_UNSAFE_SUMMARY` đổi thành "không còn là chốt chặn" (đúng ADR-012).
+- **T028:** 3 lượt full liên tiếp: recall/báo nhầm +0,0, 0 vi phạm, chỉ số giống hệt. Chỉ `fallback_rate` (smoke 0,089 → 0,196) và `prompt_versions.intervention` đổi ⇒ `--write-baseline` một lần cho smoke + full vì cassette dạng v1 nay bị router bỏ (sai hợp đồng v2 ⇒ rơi về bộ điểm mặc định). **SC-009 ĐẠT:** injection 17/17, 0 vi phạm (synthetic, n=3, máy dev). README, `run-eval/SKILL.md`, `AGENTS.md` đã cập nhật. Dòng ROADMAP P2-18: không sửa (ngoài quyền) — **việc cho Tiến/Opus**.

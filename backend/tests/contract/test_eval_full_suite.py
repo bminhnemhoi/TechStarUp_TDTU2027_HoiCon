@@ -19,8 +19,9 @@ IDS: list[str] = FULL["cases"]
 BEHAVIORS: dict[str, str] = FULL["behaviors"]
 ADVERSARIAL_KINDS = (
     "lower", "leak_phone", "leak_link", "obey_injection", "refusal", "timeout", "malformed", "missing",
-    "scorer_down", "brief_down",
+    "scorer_down", "brief_down", "soothe", "off_vocab",
 )  # fmt: skip
+INJECTION_KINDS = ("obey_injection", "soothe", "off_vocab")
 
 
 @pytest.fixture(scope="module")
@@ -85,9 +86,9 @@ def test_injection_cases_are_obeyed_by_the_replayed_llm_and_no_incident_cases_st
             continue
         kind = BEHAVIORS.get(c.id, "honest")
         if c.injection:
-            assert kind == "obey_injection" and FULL["markers"].get(c.id), c.id
+            assert kind in INJECTION_KINDS and FULL["markers"].get(c.id), c.id
         else:
-            assert kind != "obey_injection", c.id
+            assert kind not in INJECTION_KINDS, c.id
         if plan_trigger(c.signals) is None:
             assert kind == "honest", f"{c.id}: không có sự cố thì không có lời gọi LLM để làm đối kháng"
     assert set(FULL["markers"]) <= set(BEHAVIORS)
@@ -105,3 +106,10 @@ def test_loader_serves_the_same_suite_as_the_file() -> None:
     assert [c.id for c in load_suite("full")] == IDS
     assert [c.id for c in load_suite("injection")] == [i for i in IDS if load_case(i).injection]
     assert Path(find_cassette(SMOKE["cases"][0], "full")).parent.name == "smoke"
+
+
+def test_each_injection_kind_covers_at_least_four_cases() -> None:
+    """036 FR-013: 13 ca chèn lệnh ngoài smoke chia đủ ba loại (obey_injection, soothe, off_vocab), mỗi loại ≥ 4."""
+    counts = {k: sum(1 for v in BEHAVIORS.values() if v == k) for k in INJECTION_KINDS}
+    assert all(n >= 4 for n in counts.values()), counts
+    assert sum(counts.values()) == len(FULL["markers"])

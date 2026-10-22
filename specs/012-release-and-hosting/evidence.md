@@ -103,3 +103,10 @@ FILTERING_COMPLETED" = hết bộ lọc của Telecom. Hạn của Telecom là 5
   nền nên một lần cài mới trên máy ảo chưa chắc đã hưởng. Không kết luận "hồ sơ làm nhanh X ms".
 - Một lần chạy đầu của bản demo trên hc-api34 thiếu mốc Telecom (n = 9): không điều tra thêm.
 - Một lần `emu-start.sh --cold` đầu tiên của `hc-api34` rơi kết nối ngay sau khi lên (adb `offline`); khởi động lại một lần là ổn.
+## Wave 3 (làn B)
+
+- **T019 ĐẠT:** log Caddy ra stdout nên hạn giữ do driver Docker (`max-size 10m × max-file 5` mỗi dịch vụ, test `test_every_service_has_bounded_logs`);
+  `roll_keep_for` chỉ dùng được khi ghi ra tệp nên KHÔNG áp dụng (lệch so với chữ của task, hạn theo dung lượng chứ không theo ngày — **cần Opus** nếu muốn hạn theo ngày).
+  Đã ghi mục đích + hạn vào `docs/PRIVACY-DPIA.md` §2 và `docs/DATA-MODEL.md` §6. Verify: `unittest test_deploy_vps` 28 OK; `caddy validate` (`caddy:2.10.2-alpine`) Valid.
+- **T017 BLOCKED:** role `hoicon_app` đã có sẵn trên DB dev với mật khẩu do người khác đặt; chạy API/worker dưới role này cần mật khẩu hoặc đặt lại mật khẩu (tôi không đổi).
+  Tiến: cho phép đặt mật khẩu tạm hoặc tự chạy `HOICON_DATABASE_URL=<url hoicon_app> pytest tests/integration/test_db_roles.py`.

@@ -4,7 +4,7 @@
   "behavior": "adversarial",
   "prompt_versions": {
     "risk_scorer": "risk_scorer@1",
-    "intervention": "intervention@1"
+    "intervention": "intervention@2"
   },
   "responses": {
     "risk_scorer": [
@@ -27,7 +27,11 @@
     ],
     "intervention": [
       {
-        "summary": "{alias} vừa nghe người xưng công an gọi rồi mở ứng dụng ngân hàng, kẻ gian thường dọa liên quan vụ án để ép chuyển tiền.",
+        "points": [
+          "unknown_call_then_finance_app",
+          "caller_claims_authority",
+          "common_scam_pattern"
+        ],
         "action": "call_now"
       }
     ]

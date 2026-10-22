@@ -8,7 +8,7 @@
 | Tác tử | Vai trò | Node chính |
 |---|---|---|
 | Chấm rủi ro | Kết hợp `rule_floor` + câu trả lời E8 + ngữ cảnh ⇒ mức rủi ro (chỉ nâng) | `risk_scorer` |
-| Can thiệp | Chọn lời nhắc/câu hỏi đã duyệt cho người cao tuổi, báo người giám hộ | `fast_alert`, `intervention` |
+| Can thiệp | Chọn lời nhắc/câu hỏi đã duyệt cho người cao tuổi; báo người giám hộ bằng **mã điểm** (LLM chỉ chọn mã từ danh sách đóng, máy chủ ghép câu cố định — ADR-012) | `fast_alert`, `intervention` |
 | Xác minh | Tra số/link/QR qua MCP `threat`, nguồn công khai | `verification`, `rescore` |
 | Hồ sơ | Soạn hồ sơ vụ việc, chờ người giám hộ duyệt | `case_file` |
 | Huấn luyện (Coach) | Bản tin tuần, diễn tập cá nhân hóa | đồ thị `coach` |
@@ -82,6 +82,37 @@ che PII, ngân sách, fallback; **không khóa API, không mạng ngoài, không
   báo nhầm ≤ 0,10, 0 vi phạm, công khai AI 100%), baseline `backend/eval/baseline-full.json`. `--suite injection`: 17 ca chèn lệnh,
   không baseline. Vẫn không khóa API: phần LLM thật (cassette `recorded`, lặp prompt) BLOCKED P0-08.
 - Giới hạn đã biết: cassette `synthetic` + kịch bản `draft: true` chỉ đo **rào tất định**, không đo chất lượng model.
-  **F-2**: tóm tắt LLM viết bằng chữ thuần (không số/link/kênh chat) lọt bộ lọc `_UNSAFE_SUMMARY` ⇒ thay bằng danh sách điểm
-  đóng (ADR-012, spec 024 T014–T015). **F-1**: `("q_asked_transfer","yes") ⇒ critical` báo nhầm chuyển tiền chính đáng ⇒
+  **F-2** (đã đóng, ADR-012, spec 024 T015): `intervention` không còn tóm tắt tự do; LLM chỉ chọn 1–3 mã điểm
+  (`GuardianBrief` v2, `docs/schemas/guardian_brief.v2.json`), máy chủ bỏ mã có dữ kiện sai và ghép câu cố định
+  `texts.BRIEF_POINT_VI`; eval có kiểm `brief_outside_vocabulary`. **F-1**: `("q_asked_transfer","yes") ⇒ critical` báo nhầm chuyển tiền chính đáng ⇒
   phương án ở spec 024 §5 (chờ Minh, MASTER-PLAN §8).
+
+## Sơ đồ đồ thị và cờ `sim` (spec 033)
+- `GET /v1/graphs/incident` sinh `graph_topology.v1` từ `build_graph(...).compile().get_graph()`. Nhãn tiếng Việt nằm ở
+  `incident_graph.NODE_LABELS_VI` (cùng `INTERRUPT_NODES`, `STEP_NODES`: nút `verification` ghi bước `verify`); thêm nút mà
+  quên nhãn ⇒ `graph_topology()` ném `MissingLabelError` (test đỏ).
+- State `sim: true` (chỉ có ở sự cố tạo qua `/v1/sim/runs`) ⇒ `notify` đặt `payload.sim` và `send_to_guardian` trả
+  `"simulated"` mà không gọi Zalo, không tạo `messages_out`. `IncidentRuntime.start_prepared(..., sim=True)`.
+
+## Nhánh hồ sơ vụ việc `case_file` (spec 031)
+`resolve → case_file → [INTERRUPT await_case_approval] → END` chỉ khi kết cục `case_open`, sự cố THẬT (id là UUID, có `family_id`),
+`is_drill = false`, không cờ `sim`; diễn tập/eval/mô phỏng đi thẳng `END`. `case_file` dựng `content` **tất định**
+(`case_file_service.build_content`: câu cố định ở `texts.py`, 3 số cuối), gọi `llm_router` một lần cho đoạn tóm tắt (prompt
+`case_file@1`, lọc số/link/lời khuyên nguy hiểm; hỏng/không khóa ⇒ câu mẫu), ghi `case_files` (UNIQUE `incident_id` ⇒ chạy lại
+không nhân bản) và xếp một tin Zalo mẫu `case_file` (khóa `{incident}:msg:case_file`, không có liên kết). Resume của
+`await_case_approval`: `{"case_action": "approve"|"discard", "actor": "guardian"|"system"}`. Router chỉ có hồ sơ `fast`, nên đoạn
+tóm tắt dùng `fast` thay vì `strong` như spec nêu.
+
+## Coach (spec 032) — `coach_weekly` và `protection_watch`
+Hai job, **không LangGraph** (plan D1: không interrupt, không LLM, không trạng thái dài), mẫu cố định ở `texts.py`, logic ở
+`services/coach_service.py`, trace bằng `agent_runs(graph='coach')` + `agent_steps` (chỉ số đếm và khóa mẫu).
+- `protection_watch` mỗi giờ (khóa `protection_watch:<giờ VN>`): `silent` (heartbeat cuối > 24 giờ) hoặc `permission_off` (2 khung
+  `device_heartbeats` gần nhất `protected = false`) ⇒ một tin cho người giám hộ hạng 1 có chat (không có ⇒ hạng 2), khóa
+  `protection:{thiết bị}:{mốc}`, tối đa 1 tin/thiết bị/24 giờ, không gửi 21:00–07:00 giờ VN. Loại: thiết bị thu hồi, gia đình demo,
+  người cao tuổi chưa đồng ý `guardian_alerts`. Cờ `HOICON_PROTECTION_WATCH` (mặc định bật).
+- `coach_weekly` 19:00 Chủ nhật giờ VN (khóa `coach_weekly:<năm>-W<tuần>`, tự xếp tuần kế): một tin cho mỗi người giám hộ có
+  `members.weekly_digest_enabled`, khóa `weekly:{người}:{năm}-W{tuần}`; độ phủ dùng `heartbeat_service.family_coverage` (cùng hàm
+  với `ops pilot`), làm tròn 5%; mẹo từ `data/coach/tips.vi.yaml` (`approved: false` ⇒ bản prod bỏ dòng mẹo).
+- Hạn mức: cả hai `urgent=False`; bản tin dừng ở `warn_pct` (`quota_class: digest`), tin mất bảo vệ đi tới `hold_pct`; tin sự cố
+  không bị ảnh hưởng. Lệnh Zalo "TẮT TIN TUẦN"/"BẬT TIN TUẦN" (`classify` ⇒ `digest_off`/`digest_on`) đổi cờ của chính người đó.
+- Việc chưa làm: trace của lượt `coach` chưa hiện cho người giám hộ trên web (ghi ở "Ghi chú" của ROADMAP — tôi không sửa ROADMAP).

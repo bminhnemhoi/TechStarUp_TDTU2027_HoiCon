@@ -16,9 +16,12 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY backend/alembic.ini ./
 COPY backend/migrations ./migrations
 COPY backend/src ./src
+COPY data/case_file /app/data/case_file
+COPY data/coach /app/data/coach
 COPY data/drills /app/data/drills
 COPY data/scenarios /app/data/scenarios
 COPY data/threat_seed.demo.json /app/data/threat_seed.demo.json
+COPY backend/eval/baseline*.json /app/backend/eval/
 COPY docs/schemas /app/docs/schemas
 RUN uv sync --frozen --no-dev
 

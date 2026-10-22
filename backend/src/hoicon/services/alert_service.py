@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class AlertService:
     @staticmethod
     async def trigger_guardian_fast_alert(
-        session: AsyncSession, *, incident: Incident, event: RiskEvent | None = None
+        session: AsyncSession, *, incident: Incident, event: RiskEvent | None = None, sim: bool = False
     ) -> bool:
         """Xếp cảnh báo giai đoạn 1 cho người giám hộ hạng đầu. True nếu vừa xếp; False nếu đã xếp trước đó hoặc gia
         đình chưa có người giám hộ. Không commit: người gọi sở hữu giao dịch."""
@@ -62,6 +62,8 @@ class AlertService:
             "is_demo": incident.is_demo,
             "is_drill": incident.is_drill,
         }
+        if sim:  # spec 033 FR-004: tin của sự cố mô phỏng không bao giờ ra khỏi máy chủ
+            payload["sim"] = True
         inserted = await session.scalar(
             insert(Job)
             .values(

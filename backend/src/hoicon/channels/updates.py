@@ -204,9 +204,23 @@ async def handle_update(
         return await _answer(deps, runtime, payload, member, attempt)
     if kind == "login":
         return await _login(deps, payload, member, attempt)
+    if kind in ("digest_off", "digest_on"):
+        return await _digest_switch(deps, payload, member, attempt, enabled=kind == "digest_on")
     return await _reply(
         deps, payload, "reply_help", texts.reply_help(), attempt, member=member, family_id=member.family_id
     )
+
+
+async def _digest_switch(
+    deps: ChannelDeps, payload: dict[str, Any], member: Member, attempt: int, *, enabled: bool
+) -> str | None:
+    """Spec 032 FR-007: người giám hộ (đã ghép) tắt/bật bản tin tuần của CHÍNH mình rồi nhận một câu xác nhận.
+    Lũy đẳng. Tin cảnh báo khi có chuyện không bị ảnh hưởng (câu xác nhận tắt nói rõ điều đó)."""
+    async with deps.sessions.begin() as session:
+        await session.execute(update(Member).where(Member.id == member.id).values(weekly_digest_enabled=enabled))
+    template = "ack_digest_on" if enabled else "ack_digest_off"
+    text = texts.digest_on_ack() if enabled else texts.digest_off_ack()
+    return await _reply(deps, payload, template, text, attempt, member=member, family_id=member.family_id)
 
 
 async def _login(deps: ChannelDeps, payload: dict[str, Any], member: Member, attempt: int) -> str | None:

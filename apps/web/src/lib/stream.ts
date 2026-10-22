@@ -8,7 +8,7 @@ import { NODE_ORDER, type AgentStep } from "@/lib/steps";
 // cho thấy rewrite của Next không đệm/nén luồng nên không cần route handler dự phòng.
 // Bỏ trùng theo `id` (luồng mới mở phát lại từ đầu); dừng khi nhận `done`; đóng khi rời trang hoặc tab ẩn > 5 phút.
 
-export type StreamStatus = "loading" | "live" | "reconnecting" | "done" | "failed" | "error" | "unauthorized";
+export type StreamStatus = "loading" | "live" | "reconnecting" | "done" | "failed" | "error" | "unauthorized" | "notfound";
 
 interface State {
   steps: AgentStep[];
@@ -108,6 +108,7 @@ export function useRunStream(runId: string | null) {
         const res = await fetch(`${base}/steps`, { cache: "no-store", credentials: "same-origin" });
         if (closed) return;
         if (res.status === 401) return dispatch({ type: "status", status: "unauthorized" });
+        if (res.status === 404) return dispatch({ type: "status", status: "notfound" }); // lượt của nhà khác cũng 404
         if (!res.ok) return dispatch({ type: "status", status: "error" });
         const history = (await res.json()) as { steps: AgentStep[]; status: string };
         if (closed) return;

@@ -4,7 +4,7 @@
   "behavior": "honest",
   "prompt_versions": {
     "risk_scorer": "risk_scorer@1",
-    "intervention": "intervention@1"
+    "intervention": "intervention@2"
   },
   "responses": {
     "risk_scorer": [
@@ -27,7 +27,10 @@
     ],
     "intervention": [
       {
-        "summary": "{alias} vừa nghe cuộc gọi tự xưng là bệnh viện rồi mở ứng dụng ngân hàng; anh/chị hỏi xem có đúng lịch khám không.",
+        "points": [
+          "unknown_call_then_finance_app",
+          "may_be_routine"
+        ],
         "action": "call_now"
       }
     ]

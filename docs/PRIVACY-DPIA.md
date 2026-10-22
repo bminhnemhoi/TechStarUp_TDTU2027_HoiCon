@@ -25,7 +25,7 @@ Hạn lưu theo `docs/DATA-MODEL.md` §6. Cột "Máy chủ có thực thi?" nó
 Máy (Android) → máy chủ HỏiCon (VPS, Việt Nam hoặc nơi đội chọn; Caddy HTTPS) → nhà cung cấp LLM (nước ngoài: **chỉ dữ liệu đã che PII**,
 gói trả phí không dùng để huấn luyện — cần xác nhận điều khoản thật khi có khóa API) → Zalo (người giám hộ). Mọi lời gọi LLM đi qua `llm_router`
 (che PII, ngân sách, timeout, rơi về mẫu soạn sẵn). Số điện thoại: máy băm `h1`, máy chủ chỉ giữ `HMAC(pepper, h1)` + 3 số cuối (ADR-006).
-Nhật ký proxy che token một lần và tiêu đề bí mật (`docs/setup/VPS-DEPLOYMENT.md` §6).
+Nhật ký proxy che token một lần và tiêu đề bí mật (`docs/setup/VPS-DEPLOYMENT.md` §6). Nhật ký này vẫn có địa chỉ IP khách (mục đích: vận hành và điều tra sự cố); giữ tối đa 5 × 10 MB mỗi dịch vụ rồi tự xóa (hạn theo dung lượng, `docs/DATA-MODEL.md` §6).
 
 ## 3. Dữ liệu nhạy cảm
 - Không thu nội dung cuộc gọi/SMS/danh bạ; không ghi âm; số điện thoại chỉ ở dạng băm (ADR-006).
@@ -118,3 +118,21 @@ kênh khác ngoài `/v1/consents`.
 ### Tách role CSDL
 `infra/postgres/roles.sql`: role `hoicon_app` không sở hữu bảng, chỉ `SELECT`/`INSERT` trên `consents` và
 `incident_transitions`, không tắt được trigger bất biến (kiểm bằng quyền, không chỉ bằng trigger). Áp dụng ở prod thuộc 012.
+
+## Hồ sơ vụ việc (spec 031)
+Khi người giám hộ chọn "nghi lừa đảo", HỏiCon soạn bản nháp hồ sơ để họ mang đi trình báo nếu muốn. Dữ liệu trong `case_files.content`
+chỉ là dữ kiện máy chủ đã có: dòng thời gian, mức rủi ro, loại ứng dụng, **3 số cuối** của số gọi tới, câu trả lời E8, kết quả
+tra cứu, bí danh gia đình (không tên thật). Không số điện thoại đầy đủ, h1, HMAC, tên gói hay lời kể tự do (có test quét). Các ô
+**tự điền** (số điện thoại đã gọi tới, số tài khoản, số tiền, giờ chuyển, ngân hàng) nằm trên trình duyệt của người giám hộ,
+không gửi về máy chủ, không lưu `localStorage` (ADR-006). Đoạn tóm tắt do LLM (nếu có khóa) đi qua `llm_router` (che PII) và bộ lọc
+số/link/lời khuyên nguy hiểm. HỏiCon **không tự gửi** hồ sơ cho cơ quan nào. Giữ theo sự cố (12 tháng sau khi đóng), xóa khi xóa dữ liệu gia đình;
+hồ sơ nháp bị bỏ sau 30 ngày không ai duyệt. Mục đích dữ liệu: `guardian_alerts` (văn bản đồng ý đã thêm câu về hồ sơ, bản `2026.10-v4`, chưa phát hành).
+
+## Coach hằng tuần và báo "mất bảo vệ" (spec 032)
+HỏiCon dùng **heartbeat** (độ phủ, cờ quyền) để (a) nhắn người giám hộ khi điện thoại của người cao tuổi im lặng hơn 24 giờ hoặc
+quyền nhắc dừng lại bị tắt, và (b) gửi bản tin tuần (số lần nhắc dừng lại, độ phủ làm tròn 5%, số bài luyện tập). Mục đích dữ liệu:
+`guardian_alerts` (văn bản đồng ý bản `2026.10-v4`, chưa phát hành, nói rõ "họ được báo nếu HỏiCon bị tắt" và "tóm tắt mỗi tuần").
+Không số điện thoại, không tên thật trong tin; không LLM. Tin gửi tối đa một lần mỗi đợt/tuần, không gửi 21:00–07:00. Chỉ gia đình
+thật, người cao tuổi còn đồng ý `guardian_alerts`; người giám hộ tắt được bản tin tuần bằng "TẮT TIN TUẦN" (tin cảnh báo mất bảo vệ
+không tắt được vì là an toàn). Tin không bao giờ khẳng định "an toàn" (máy không được bảo vệ thì "không thấy gì" không có nghĩa
+là không có gì).

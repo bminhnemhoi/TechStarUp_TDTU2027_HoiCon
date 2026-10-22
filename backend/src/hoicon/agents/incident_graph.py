@@ -17,8 +17,10 @@
   `IncidentService`.
 """
 
+import logging
 import re
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Annotated, Any, Literal, TypedDict
@@ -26,7 +28,7 @@ from uuid import UUID
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -35,9 +37,9 @@ from hoicon.agents.llm_router import LlmResult, LlmRouter, load_prompt
 from hoicon.channels.fcm import notify_elder_fcm
 from hoicon.config import Settings
 from hoicon.db.models import AgentRun, AgentStep, Verification
-from hoicon.domain.pii import mask_text
 from hoicon.domain.risk import RiskLevel, raise_only
 from hoicon.jobs.queue import cancel_prefix, enqueue
+from hoicon.services import case_file_service
 from hoicon.services.incident_service import (
     GRAPH_OUTCOMES,
     IncidentNotFoundError,
@@ -59,6 +61,9 @@ Tactic = Literal[
 Action = Literal["call_now", "call_and_stay_on_line", "visit_or_call_relative"]
 
 
+logger = logging.getLogger(__name__)
+
+
 class RiskAssessment(BaseModel):
     level: Literal["none", "low", "medium", "high", "critical"]
     tactic: Tactic
@@ -66,9 +71,34 @@ class RiskAssessment(BaseModel):
     ask_question: QuestionId
 
 
+# ADR-012: LLM chỉ chọn mã điểm từ danh sách đóng; máy chủ ghép câu cố định (`texts.BRIEF_POINT_VI`). Khớp
+# `docs/schemas/guardian_brief.v2.json` (test so enum).
+BriefPoint = Literal[
+    "unknown_call_then_finance_app",
+    "sideloaded_app",
+    "call_still_ongoing",
+    "flagged_number",
+    "caller_claims_authority",
+    "asked_transfer_or_code",
+    "asked_secrecy",
+    "asked_install_app",
+    "elder_unsure_of_caller",
+    "common_scam_pattern",
+    "may_be_routine",
+]
+
+
 class GuardianBrief(BaseModel):
-    summary: str = Field(max_length=280)
+    model_config = ConfigDict(extra="forbid")
+    points: list[BriefPoint] = Field(min_length=1, max_length=3)
     action: Action
+
+    @field_validator("points")
+    @classmethod
+    def _unique(cls, value: list[BriefPoint]) -> list[BriefPoint]:
+        if len(set(value)) != len(value):
+            raise ValueError("points không được trùng")
+        return value
 
 
 def _append(left: list[str], right: list[str]) -> list[str]:
@@ -79,6 +109,9 @@ class IncidentState(TypedDict, total=False):
     incident_id: str
     run_id: str
     family_id: str  # UUID gia đình nhận tin; vắng khi sự cố không gắn gia đình (spec 002)
+    case_ready: bool  # spec 031: dựng được hồ sơ ⇒ chờ duyệt; không ⇒ END
+    case_action: str  # spec 031: approve | discard (kết quả của `await_case_approval`)
+    sim: bool  # spec 033: sự cố mô phỏng ⇒ tin người giám hộ không bao giờ gửi Zalo thật; vắng = False
     guardian_alerts: bool  # False ⇒ chưa đồng ý báo người giám hộ: không xếp tin Zalo (spec 034); vắng = True
     is_drill: bool
     is_demo: bool
@@ -105,6 +138,60 @@ _UNSAFE_SUMMARY = re.compile(
 )
 
 
+_FINANCE_APPS = ("bank", "wallet", "securities")
+
+
+def _note_flag(state: Mapping[str, Any], *names: str) -> bool:
+    flags = (state.get("elder_answer") or {}).get("note_flags") or {}
+    return any(flags.get(n) is True for n in names)
+
+
+def _answered(state: Mapping[str, Any], question: str, *values: str) -> bool:
+    ans = state.get("elder_answer") or {}
+    return ans.get("question_id") == question and ans.get("answer") in values
+
+
+def _brief_conditions(state: Mapping[str, Any], level: RiskLevel) -> dict[str, bool]:
+    """Điều kiện dữ kiện tất định của từng mã điểm (ADR-012 §2): chỉ đọc state máy chủ, không đọc chữ của LLM."""
+    event = state.get("event") or {}
+    app = (event.get("app") or {}).get("category")
+    flagged = (state.get("threat") or {}).get("verdict") == "flagged" or bool(
+        (event.get("caller") or {}).get("flagged")
+    )
+    danger = {
+        "caller_claims_authority": _answered(state, "q_caller_authority", "yes")
+        or _note_flag(state, "mentions_authority"),
+        "asked_transfer_or_code": _answered(state, "q_asked_transfer", "yes")
+        or _note_flag(state, "mentions_transfer", "mentions_code"),
+        "asked_secrecy": _note_flag(state, "mentions_secrecy"),
+        "asked_install_app": _note_flag(state, "mentions_app_or_link"),
+    }
+    return {
+        "unknown_call_then_finance_app": app in _FINANCE_APPS,
+        "sideloaded_app": app == "sideloaded",
+        "call_still_ongoing": (event.get("call") or {}).get("active") is True,
+        "flagged_number": flagged,
+        **danger,
+        "elder_unsure_of_caller": _answered(state, "q_know_caller", "no", "unsure"),
+        "common_scam_pattern": True,
+        # LLM không được trấn an ở mức high/critical (luật 5), cũng không khi đã có dữ kiện nguy hiểm (số gắn cờ, người
+        # gọi xưng cơ quan/đòi tiền/đòi giữ kín/đòi cài app): mức có thể thấp chỉ vì LLM chấm thấp.
+        "may_be_routine": level.rank <= RiskLevel.MEDIUM.rank and not flagged and not any(danger.values()),
+    }
+
+
+def brief_points(state: Mapping[str, Any], level: RiskLevel, points: Sequence[str]) -> list[str]:
+    """Điểm LLM chọn, bỏ mã lạ/trùng/điều kiện sai, giữ thứ tự; rỗng ⇒ bộ mặc định (mã ứng dụng đúng + chung)."""
+    conditions = _brief_conditions(state, level)
+    kept: list[str] = []
+    for point in points:
+        if conditions.get(point) and point not in kept:
+            kept.append(point)
+    if kept:
+        return kept[:3]
+    return [p for p in ("unknown_call_then_finance_app", "sideloaded_app") if conditions[p]] + ["common_scam_pattern"]
+
+
 @dataclass
 class Deps:
     router: LlmRouter
@@ -127,6 +214,24 @@ def _incident_uuid(state: IncidentState) -> UUID | None:
         return UUID(state["incident_id"])
     except ValueError:
         return None
+
+
+# Sơ đồ đồ thị cho web (spec 033 FR-009): nhãn tiếng Việt, nút chờ người, và tên `agent_steps.node` của từng nút (nút
+# `verification` ghi bước tên `verify`). Thêm nút mới mà quên bảng này ⇒ `graph_topology()` báo lỗi (có test).
+NODE_LABELS_VI: dict[str, str] = {
+    "case_file": "Soạn hồ sơ vụ việc",
+    "await_case_approval": "Chờ người nhà duyệt hồ sơ",
+    "ingest": "Nhận sự kiện",
+    "fast_alert": "Báo nhanh người giám hộ",
+    "risk_scorer": "Chấm rủi ro",
+    "ask_elder": "Hỏi bác",
+    "verification": "Xác minh",
+    "intervention": "Soạn tin cho con",
+    "await_guardian": "Chờ người giám hộ",
+    "resolve": "Kết thúc sự cố",
+}
+INTERRUPT_NODES = frozenset({"ask_elder", "await_guardian", "await_case_approval"})
+STEP_NODES: dict[str, list[str]] = {"verification": ["verify"]}  # còn lại: tên nút = tên bước
 
 
 def build_graph(deps: Deps) -> StateGraph:
@@ -189,6 +294,8 @@ def build_graph(deps: Deps) -> StateGraph:
             "is_drill": state["is_drill"],
             "is_demo": state.get("is_demo", False),
         }
+        if state.get("sim"):
+            payload["sim"] = True
         await enqueue(deps.sessions, "notify_guardian", payload, key=key)
         return [template]
 
@@ -354,9 +461,9 @@ def build_graph(deps: Deps) -> StateGraph:
             await step(state, "intervention", started, {"skipped": done})
             return {"guardian_decision": DECIDED}
         level = RiskLevel(state["level"])
+        # Không còn câu mẫu tự do: fallback cũng chỉ là bộ điểm mặc định (ADR-012), câu ghép từ `BRIEF_POINT_VI`.
         fallback = GuardianBrief(
-            summary=f"{state['elder_alias']} vừa nghe số lạ gọi rồi mở ứng dụng tài chính — dấu hiệu thường gặp khi "
-            "kẻ gian giả danh cơ quan hoặc ngân hàng để dụ chuyển tiền.",
+            points=brief_points(state, level, []),  # type: ignore[arg-type]
             action="call_and_stay_on_line" if level == RiskLevel.CRITICAL else "call_now",
         )
         # Chỉ siêu dữ liệu + enum; cách xưng hô thật không gửi cho LLM (chỗ giữ "{alias}" được thay sau).
@@ -370,15 +477,20 @@ def build_graph(deps: Deps) -> StateGraph:
         llm = await deps.router.structured(
             prompt=brief_prompt, context=brief_context, output=GuardianBrief, fallback=fallback
         )
-        # Phần LLM viết nằm GIỮA mẫu (câu công khai AI do mẫu thêm); có dấu hiệu chèn số/link ⇒ dùng tóm tắt mẫu.
-        summary = llm.output.summary.strip()[:280]
-        unsafe = not summary or bool(_UNSAFE_SUMMARY.search(summary))
-        summary = fallback.summary if unsafe else mask_text(summary.replace("{alias}", state["elder_alias"]))
+        # Chữ của LLM không bao giờ tới người giám hộ: chỉ giữ mã điểm có dữ kiện đúng, câu do `texts` ghép (ADR-012).
+        chosen = list(llm.output.points)
+        kept = brief_points(state, level, chosen)
+        summary = texts.brief_summary(state["elder_alias"], kept)
         # Mức rất cao luôn kèm "gọi ngay và giữ máy" — LLM không được làm nhẹ lời khuyên.
         action = "call_and_stay_on_line" if level == RiskLevel.CRITICAL else llm.output.action
         text = texts.guardian_detail(state["elder_alias"], level, summary, action, state["is_drill"])
         sent = await notify(state, "detail", text)
-        output = {"action": action, "template": "detail", "summary_rejected": unsafe and not llm.fallback_used}
+        output = {
+            "action": action,
+            "template": "detail",
+            "points_kept": kept,
+            "points_dropped": [p for p in chosen if p not in kept],
+        }
         await step(state, "intervention", started, output, llm)
         return {"outbox": sent, "action": action}
 
@@ -430,6 +542,77 @@ def build_graph(deps: Deps) -> StateGraph:
         await step(state, "resolve", started, {"outcome": outcome, "level": state["level"]})
         return {"outcome": outcome}
 
+    async def case_file(state: IncidentState) -> dict[str, Any]:
+        """Hồ sơ là việc phụ: lỗi ở đây không được làm hỏng kết cục đã resolve ⇒ ghi bước lỗi rồi đi tiếp tới END."""
+        started = time.monotonic()
+        try:
+            return await _case_file(state)
+        except Exception as exc:  # DB chớp, gia đình đang bị xóa…: không treo thread, không nhân bản tin
+            logger.warning("case_file: không dựng được hồ sơ (%s)", type(exc).__name__)
+            await step(state, "case_file", started, {"created": False, "error": type(exc).__name__})
+            return {"case_ready": False}
+
+    async def _case_file(state: IncidentState) -> dict[str, Any]:
+        """Spec 031: dựng bản nháp hồ sơ (tất định + tóm tắt LLM đã lọc), ghi `case_files`, báo người giám hộ."""
+        started = time.monotonic()
+        incident_id = _incident_uuid(state)
+        if incident_id is None:  # cạnh `resolve → case_file` chỉ đi khi có sự cố thật
+            raise RuntimeError("case_file cần sự cố thật")
+        async with deps.sessions() as session:
+            content = await case_file_service.build_content(session, incident_id)
+        reasons = content["reasons"]
+        facts = {
+            "level": content["level"],
+            "app_category": content["app_category"],
+            "authority": texts.CASE_REASON_VI["authority"] in reasons,
+            "transfer": texts.CASE_REASON_VI["transfer"] in reasons,
+            "decision": content["guardian_decision"],
+        }
+        summary = await case_file_service.llm_summary(deps.router, facts, content["elder_alias"])
+        if summary:
+            content["summary"] = summary
+        created = await case_file_service.save_draft(
+            deps.sessions,
+            incident_id=incident_id,
+            family_id=UUID(state["family_id"]),
+            content=content,
+            summary_source="llm" if summary else "template",
+            is_demo=bool(state.get("is_demo", False)),
+        )
+        sent = await notify(state, "case_file", texts.guardian_case_file(content["elder_alias"]))
+        await step(
+            state,
+            "case_file",
+            started,
+            {"created": created, "summary_source": "llm" if summary else "template", "template": "case_file"},
+        )
+        return {"outbox": sent, "case_ready": True}
+
+    async def await_case_approval(state: IncidentState) -> dict[str, Any]:
+        """Chờ người giám hộ duyệt/bỏ hồ sơ (web) hoặc job tự đóng sau 30 ngày. Chạy lại từ đầu
+        ở mỗi lần resume ⇒ trước `interrupt` không có tác dụng phụ."""
+        started = time.monotonic()
+        value = interrupt({"kind": "await_case_approval"})
+        action = value.get("case_action") if isinstance(value, dict) else None
+        action = action if action in ("approve", "discard") else "discard"
+        actor = value.get("actor") if isinstance(value, dict) else None
+        await step(state, "await_case_approval", started, {"case_action": action, "actor": actor or "guardian"})
+        return {"case_action": action}
+
+    def after_resolve(state: IncidentState) -> str:
+        """Chỉ sự cố THẬT kết cục `case_open` có hồ sơ: diễn tập, mô phỏng (cờ `sim`), eval/demo không UUID ⇒ END."""
+        if (
+            state.get("outcome") == "case_open"
+            and not state["is_drill"]
+            and not state.get("sim")
+            and state.get("guardian_alerts", True)
+            is not False  # chưa/không còn đồng ý `guardian_alerts` ⇒ không soạn hồ sơ
+            and _incident_uuid(state) is not None
+            and state.get("family_id")
+        ):
+            return "case_file"
+        return END
+
     graph = StateGraph(IncidentState)
     for name, fn in (
         ("ingest", ingest),
@@ -440,6 +623,8 @@ def build_graph(deps: Deps) -> StateGraph:
         ("intervention", intervention),
         ("await_guardian", await_guardian),
         ("resolve", resolve),
+        ("case_file", case_file),
+        ("await_case_approval", await_case_approval),
     ):
         graph.add_node(name, fn)
     graph.add_edge(START, "ingest")
@@ -460,5 +645,9 @@ def build_graph(deps: Deps) -> StateGraph:
         lambda s: "resolve" if s.get("guardian_decision") else "await_guardian",
         ["resolve", "await_guardian"],
     )
-    graph.add_edge("resolve", END)
+    graph.add_conditional_edges("resolve", after_resolve, ["case_file", END])
+    graph.add_conditional_edges(
+        "case_file", lambda s: "await_case_approval" if s.get("case_ready") else END, ["await_case_approval", END]
+    )
+    graph.add_edge("await_case_approval", END)
     return graph

@@ -122,3 +122,6 @@ T010 (Minh duyệt), T011 (người thật đọc thử), T012 (làn A đồng b
   trang quyền có 4 đoạn trước nút "Mở cài đặt" (đề xuất đưa nút lên), màn "Xong rồi" thiếu "Kéo xuống đọc tiếp ↓", nhãn "✗ Chưa bật" nhỏ. Thấp: nháy thẳng ở E10, câu
   "để không bị kẻ xấu lợi dụng". Phần chữ của các đề xuất nằm trong `docs/legal/consent/` (làn B/Minh duyệt, T010) và phần bố cục ngoài task ⇒ **cần Opus/Minh**; không sửa.
 - Văn bản vẫn là bản nháp `2026.10-v3` chờ Minh duyệt (T010); T012 vẫn BLOCKED. Tick T018.
+## Wave 3 (làn B)
+
+- **T019 ĐẠT:** `backend/tests/contract/test_consent_release_block.py` (5 test; chưa có mã Wave 2 như ghi chú ban đầu nên viết mới). Đột biến: thêm `llm_processing` vào `released` ⇒ báo thiếu `test_consent_enforcement_llm_processing.py`.

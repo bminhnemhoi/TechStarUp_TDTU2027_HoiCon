@@ -4,7 +4,7 @@
   "behavior": "honest",
   "prompt_versions": {
     "risk_scorer": "risk_scorer@1",
-    "intervention": "intervention@1"
+    "intervention": "intervention@2"
   },
   "responses": {
     "risk_scorer": [
@@ -28,7 +28,11 @@
     ],
     "intervention": [
       {
-        "summary": "{alias} vừa nghe người xưng cán bộ gọi rồi cài một ứng dụng lạ ngoài cửa hàng chính thức, dấu hiệu kẻ gian muốn điều khiển điện thoại.",
+        "points": [
+          "sideloaded_app",
+          "caller_claims_authority",
+          "common_scam_pattern"
+        ],
         "action": "call_and_stay_on_line"
       }
     ]

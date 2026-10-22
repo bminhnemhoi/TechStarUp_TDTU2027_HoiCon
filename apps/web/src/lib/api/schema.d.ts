@@ -268,6 +268,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/guardian/incidents/{incident_id}/case-file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hồ sơ vụ việc của một sự cố (spec 031) */
+        get: operations["get_case_file_v1_guardian_incidents__incident_id__case_file_get"];
+        put?: never;
+        /** Duyệt, bỏ hoặc đánh dấu đã nộp hồ sơ (spec 031) */
+        post: operations["post_case_file_v1_guardian_incidents__incident_id__case_file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/lookups": {
         parameters: {
             query?: never;
@@ -421,6 +439,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/graphs/incident": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Incident Graph */
+        get: operations["get_incident_graph_v1_graphs_incident_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/eval/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Summary */
+        get: operations["get_summary_v1_eval_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scenarios */
+        get: operations["get_scenarios_v1_sim_scenarios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Run */
+        post: operations["post_run_v1_sim_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/runs/{incident_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Run */
+        get: operations["get_run_v1_sim_runs__incident_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/runs/{incident_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Answer */
+        post: operations["post_answer_v1_sim_runs__incident_id__answer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/webhooks/zalo/{bot_id}": {
         parameters: {
             query?: never;
@@ -528,6 +648,144 @@ export interface components {
              * @default false
              */
             flagged: boolean;
+        };
+        /** CaseElderAnswer */
+        CaseElderAnswer: {
+            /** Question */
+            question: string;
+            /** Answer */
+            answer: string;
+        };
+        /**
+         * CaseFileActionIn
+         * @description Khớp `docs/schemas/case_file_action.v1.json`: không có trường nội dung nào.
+         */
+        CaseFileActionIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "approve" | "discard" | "mark_sent";
+        };
+        /**
+         * CaseFileContent
+         * @description Khớp `docs/schemas/case_file.v1.json#/$defs/content`.
+         */
+        CaseFileContent: {
+            /**
+             * Schema Version
+             * @constant
+             */
+            schema_version: 1;
+            /** Ai Label */
+            ai_label: string;
+            /** Summary */
+            summary: string;
+            /** Elder Alias */
+            elder_alias: string;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "low" | "medium" | "high" | "critical";
+            /** Reasons */
+            reasons: string[];
+            /** Rule */
+            rule: string;
+            /** Caller Last3 */
+            caller_last3: string | null;
+            /**
+             * App Category
+             * @enum {string}
+             */
+            app_category: "bank" | "wallet" | "securities" | "sideloaded" | "remote_control" | "none";
+            /** Timeline */
+            timeline: components["schemas"]["CaseTimelineItem"][];
+            /** Elder Answers */
+            elder_answers: components["schemas"]["CaseElderAnswer"][];
+            /** Verifications */
+            verifications: components["schemas"]["CaseVerification"][];
+            /**
+             * Guardian Decision
+             * @enum {string}
+             */
+            guardian_decision: "scam" | "emergency_pause";
+            /** Local Fields */
+            local_fields: components["schemas"]["CaseLocalField"][];
+        };
+        /**
+         * CaseFileOut
+         * @description Khớp `docs/schemas/case_file.v1.json`.
+         */
+        CaseFileOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "approved" | "sent" | "discarded";
+            /**
+             * Summary Source
+             * @enum {string}
+             */
+            summary_source: "template" | "llm";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Approved At */
+            approved_at: string | null;
+            /** Sent At */
+            sent_at: string | null;
+            /** Discarded At */
+            discarded_at: string | null;
+            /** Is Demo */
+            is_demo: boolean;
+            content: components["schemas"]["CaseFileContent"];
+        };
+        /** CaseLocalField */
+        CaseLocalField: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+        };
+        /** CaseTimelineItem */
+        CaseTimelineItem: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Text */
+            text: string;
+        };
+        /** CaseVerification */
+        CaseVerification: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "phone" | "link";
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "dangerous" | "warning" | "unknown";
+            /** Source */
+            source: string;
+            /** List Version */
+            list_version: string | null;
         };
         /**
          * ConsentBatch
@@ -705,6 +963,45 @@ export interface components {
             /** Level */
             level: string;
         };
+        /** EvalBaseline */
+        EvalBaseline: {
+            /** Suite */
+            suite: string;
+            /** Created */
+            created: string;
+            /** Git Sha */
+            git_sha: string;
+            /** Cassette Source */
+            cassette_source: string;
+            /** Provisional Cases */
+            provisional_cases: number | null;
+            /** Metrics */
+            metrics: {
+                [key: string]: number;
+            };
+        };
+        /** EvalGate */
+        EvalGate: {
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "provisional" | "recorded";
+            /** Reasons */
+            reasons: string[];
+        };
+        /** EvalSuite */
+        EvalSuite: {
+            /** Suite */
+            suite: string;
+            baseline: components["schemas"]["EvalBaseline"];
+            gate: components["schemas"]["EvalGate"];
+        };
+        /** EvalSummary */
+        EvalSummary: {
+            /** Suites */
+            suites: components["schemas"]["EvalSuite"][];
+        };
         /** EventsBatch */
         EventsBatch: {
             /** Events */
@@ -720,6 +1017,23 @@ export interface components {
             incident_id: string | null;
             /** Incident Opened */
             incident_opened: boolean;
+        };
+        /**
+         * GraphTopologyOut
+         * @description Khớp `docs/schemas/graph_topology.v1.json`.
+         */
+        GraphTopologyOut: {
+            /**
+             * Graph
+             * @constant
+             */
+            graph: "incident";
+            /** Version */
+            version: string;
+            /** Nodes */
+            nodes: components["schemas"]["TopologyNode"][];
+            /** Edges */
+            edges: components["schemas"]["TopologyEdge"][];
         };
         /** GuardianIncidentDetail */
         GuardianIncidentDetail: {
@@ -1208,6 +1522,107 @@ export interface components {
             /** Token */
             token: string;
         };
+        /** SimMessageOut */
+        SimMessageOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Template */
+            template: string;
+            /** Text */
+            text: string;
+        };
+        /** SimQuestionOut */
+        SimQuestionOut: {
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /**
+             * Question Id
+             * @enum {string}
+             */
+            question_id: "q_caller_authority" | "q_asked_transfer" | "q_know_caller";
+            /** Text */
+            text: string;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Answers */
+            answers: ("yes" | "no" | "unsure")[];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /** SimRunIn */
+        SimRunIn: {
+            /** Scenario Id */
+            scenario_id: string;
+            /**
+             * Llm
+             * @default replay
+             * @enum {string}
+             */
+            llm: "replay" | "live";
+        };
+        /**
+         * SimRunOut
+         * @description Khớp `docs/schemas/sim_run.v1.json`.
+         */
+        SimRunOut: {
+            /** Scenario Id */
+            scenario_id: string;
+            /**
+             * Is Demo
+             * @constant
+             */
+            is_demo: true;
+            /**
+             * Llm Mode
+             * @enum {string}
+             */
+            llm_mode: "replay" | "live" | "fallback";
+            /** Incident Id */
+            incident_id: string | null;
+            /** Run Id */
+            run_id: string | null;
+            /** State */
+            state: string | null;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "none" | "low" | "medium" | "high" | "critical";
+            pending_question: components["schemas"]["SimQuestionOut"] | null;
+            /** Guardian Messages */
+            guardian_messages: components["schemas"]["SimMessageOut"][];
+            /** Note */
+            note: string | null;
+        };
+        /** SimScenarioOut */
+        SimScenarioOut: {
+            /** Id */
+            id: string;
+            /** Category */
+            category: string;
+            /** Is Benign */
+            is_benign: boolean;
+            /** Injection */
+            injection: boolean;
+            /** Draft */
+            draft: boolean;
+            /** Script Vi */
+            script_vi: string;
+        };
+        /** SimScenariosOut */
+        SimScenariosOut: {
+            /** Scenarios */
+            scenarios: components["schemas"]["SimScenarioOut"][];
+        };
         /** Source */
         Source: {
             /** Name */
@@ -1244,6 +1659,29 @@ export interface components {
             detect_ms?: number | null;
             /** Pause Ms */
             pause_ms?: number | null;
+        };
+        /** TopologyEdge */
+        TopologyEdge: {
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
+            /** Conditional */
+            conditional: boolean;
+        };
+        /** TopologyNode */
+        TopologyNode: {
+            /** Id */
+            id: string;
+            /** Label Vi */
+            label_vi: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "start" | "end" | "node" | "interrupt";
+            /** Step Nodes */
+            step_nodes: string[];
         };
         /** TransitionOut */
         TransitionOut: {
@@ -1877,6 +2315,111 @@ export interface operations {
             };
         };
     };
+    get_case_file_v1_guardian_incidents__incident_id__case_file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseFileOut"];
+                };
+            };
+            /** @description Chưa đăng nhập */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_case_file_v1_guardian_incidents__incident_id__case_file_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaseFileActionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseFileOut"];
+                };
+            };
+            /** @description Không có bằng chứng cùng nguồn */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lệnh không hợp lệ với trạng thái hiện tại */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     post_lookup_v1_lookups_post: {
         parameters: {
             query?: never;
@@ -2173,6 +2716,193 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PendingQuestionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_incident_graph_v1_graphs_incident_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphTopologyOut"];
+                };
+            };
+        };
+    };
+    get_summary_v1_eval_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvalSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scenarios_v1_sim_scenarios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimScenariosOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_run_v1_sim_runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimRunIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_run_v1_sim_runs__incident_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_answer_v1_sim_runs__incident_id__answer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElderAnswerIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimRunOut"];
                 };
             };
             /** @description Validation Error */

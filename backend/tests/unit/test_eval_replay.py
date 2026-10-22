@@ -11,7 +11,7 @@ from hoicon.agents.llm_router import LlmRouter, load_prompt
 from hoicon.eval.replay import ReplayClient
 
 RISK = {"level": "high", "tactic": "bank_security", "reasons": ["a"], "ask_question": "q_asked_transfer"}
-BRIEF = {"summary": "Mẹ vừa nghe cuộc gọi lạ rồi mở ứng dụng ngân hàng.", "action": "call_now"}
+BRIEF = {"points": ["unknown_call_then_finance_app", "common_scam_pattern"], "action": "call_now"}
 
 
 def cassette(risk: list[dict] | None = None, brief: list[dict] | None = None) -> dict[str, Any]:
@@ -19,7 +19,7 @@ def cassette(risk: list[dict] | None = None, brief: list[dict] | None = None) ->
         "case_id": "fake_police_drug_ring_001",
         "source": "synthetic",
         "behavior": "honest",
-        "prompt_versions": {"risk_scorer": "risk_scorer@1", "intervention": "intervention@1"},
+        "prompt_versions": {"risk_scorer": "risk_scorer@1", "intervention": "intervention@2"},
         "responses": {"risk_scorer": risk or [], "intervention": brief or []},
     }
 
@@ -36,7 +36,7 @@ async def ask_risk(r: LlmRouter, context: dict[str, Any] | None = None):
 
 
 async def ask_brief(r: LlmRouter):
-    fallback = GuardianBrief(summary="mẫu", action="call_now")
+    fallback = GuardianBrief(points=["common_scam_pattern"], action="call_now")
     return await r.structured(
         prompt=load_prompt("intervention"), context={"k": "v"}, output=GuardianBrief, fallback=fallback
     )
@@ -48,7 +48,7 @@ async def test_outputs_come_back_in_order_per_node() -> None:
     r = router(client)
     first_risk, brief, second_risk = await ask_risk(r), await ask_brief(r), await ask_risk(r)
     assert (first_risk.output.level, second_risk.output.level) == ("high", "critical")
-    assert brief.output.summary == BRIEF["summary"]
+    assert brief.output.points == BRIEF["points"]
     assert not any(x.fallback_used for x in (first_risk, brief, second_risk))
     assert first_risk.tokens_in > 0 and first_risk.cost_usd > 0  # có usage cố định để router tính chi phí
 

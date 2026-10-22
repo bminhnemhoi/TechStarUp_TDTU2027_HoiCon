@@ -9,6 +9,8 @@
 #   còn lại                                     → web người giám hộ (Next.js)
 # Nhật ký truy cập CHE token một lần nằm trong đường dẫn (/login/<token>, /a/<token>, /v1/action/<token>) và bỏ tiêu đề
 # bí mật (docs/ROADMAP.md, ghi chú spec 027): nhật ký proxy không bao giờ chứa thứ đăng nhập được.
+# Hạn giữ log (review 012 L-10): log có địa chỉ IP khách, mục đích vận hành/điều tra sự cố. Caddy ghi ra stdout nên hạn do driver log
+# Docker quyết (compose.prod.yml: max-size 10m × max-file 5 mỗi dịch vụ, tự xóa bản cũ). `roll_keep_for` chỉ dùng được khi ghi ra tệp nên không áp dụng.
 (redact_logs) {
 	output stdout
 	format filter {

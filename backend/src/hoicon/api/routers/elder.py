@@ -90,6 +90,15 @@ async def _waiting_question(incident_id: UUID) -> dict[str, Any] | None:
     return run.interrupt
 
 
+def resume_value(answer_in: ElderAnswerIn) -> dict[str, Any]:
+    """Giá trị đưa vào chỗ đồ thị chờ `ask_elder` (đã làm sạch).
+    Dùng chung với `/v1/sim/runs/{id}/answer` (spec 033)."""
+    raw: dict[str, Any] = ({"timeout": True} if answer_in.answer == "timeout" else {"answer": answer_in.answer}) | (
+        {"note_flags": answer_in.note_flags.model_dump()} if answer_in.note_flags else {}
+    )
+    return clean_resume(raw)
+
+
 @router.post("/incidents/{incident_id}/answers", response_model=ElderAnswerResult)
 async def submit_elder_answer(
     incident_id: UUID, answer_in: ElderAnswerIn, claims: Annotated[DeviceClaims, Depends(get_current_device)]
@@ -101,10 +110,7 @@ async def submit_elder_answer(
     waiting = await _waiting_question(incident_id)
     if waiting is None or waiting.get("question_id") != answer_in.question_id:
         return ElderAnswerResult(status="expired", incident_id=incident_id, level=incident.level)
-    raw: dict[str, Any] = ({"timeout": True} if answer_in.answer == "timeout" else {"answer": answer_in.answer}) | (
-        {"note_flags": answer_in.note_flags.model_dump()} if answer_in.note_flags else {}
-    )
-    payload = {"thread_id": str(incident_id), "expect": "ask_elder", "value": clean_resume(raw)}
+    payload = {"thread_id": str(incident_id), "expect": "ask_elder", "value": resume_value(answer_in)}
     async with get_sessionmaker().begin() as session:  # bấm hai lần ⇒ một job (khóa theo sự cố)
         await enqueue(session, "graph_resume", payload, key=f"{incident_id}:elder_answer")
     logger.info("elder_answer: incident=%s answer=%s", incident_id, answer_in.answer)

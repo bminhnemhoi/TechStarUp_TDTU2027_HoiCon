@@ -154,6 +154,9 @@ class Member(Base):
     zalo_hmac_kid: Mapped[int | None] = mapped_column(SmallInteger)
     zalo_chat_enc: Mapped[str | None] = mapped_column(Text)
     locale: Mapped[str] = mapped_column(String(8), server_default=text("'vi'"))
+    weekly_digest_enabled: Mapped[bool] = mapped_column(
+        server_default=text("true")
+    )  # spec 032: bản tin tuần, theo người
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     deleted_at: Mapped[datetime | None]  # tombstone sau yêu cầu xóa (spec 034)
 
@@ -602,3 +605,30 @@ class DeviceHeartbeat(Base):
     device_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("devices.id", ondelete="CASCADE"), primary_key=True)
     slot: Mapped[datetime] = mapped_column(primary_key=True)
     protected: Mapped[bool]
+
+
+class CaseFile(Base):
+    """Hồ sơ vụ việc cho người giám hộ (spec 031): bản nháp dựng TẤT ĐỊNH từ dữ kiện máy chủ đã có khi sự cố thật kết
+    cục `case_open`. `content` = đúng `case_file.v1#/$defs/content` (không PII). Không `is_drill`: diễn tập không có hồ
+    sơ."""
+
+    __tablename__ = "case_files"
+    __table_args__ = (
+        CheckConstraint("status IN ('draft', 'approved', 'sent', 'discarded')", name="status"),
+        CheckConstraint("summary_source IN ('template', 'llm')", name="summary_source"),
+        UniqueConstraint("incident_id", name="uq_case_files_incident_id"),
+        Index("ix_case_files_family_created", "family_id", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    incident_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("incidents.id", ondelete="CASCADE"))
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    status: Mapped[str] = mapped_column(String(16), server_default=text("'draft'"))
+    content: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    summary_source: Mapped[str] = mapped_column(String(16), server_default=text("'template'"))
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("members.id", ondelete="SET NULL"))
+    approved_at: Mapped[datetime | None]
+    sent_at: Mapped[datetime | None]
+    discarded_at: Mapped[datetime | None]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    is_demo: Mapped[bool] = mapped_column(server_default=text("false"))

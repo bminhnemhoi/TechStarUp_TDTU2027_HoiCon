@@ -77,3 +77,14 @@ chuẩn đã cài lại; `am start` từ shell giờ bị từ chối như mong 
 - FR-006 "nâng mức ⇒ đánh thức đồ thị": đồ thị khởi động khi sự cố đạt `high`/`critical` (mở mới hoặc được nâng), chưa
   đánh thức lượt đang chạy khi mức tăng thêm.
 - Client TS (`apps/web/src/lib/api/schema.d.ts`) chưa sinh lại từ spec 020 tới nay (`scripts/gen-api-client.sh`).
+
+## Wave 3 — F-2 (ADR-012), làn B, 22/10/2026
+
+- **T014 ĐẠT** (đỏ trước): `test_guardian_brief_schema.py`, `test_brief_points.py` lỗi import; `-k prose_injection` đỏ ở dạng v1 trước khi sửa mã.
+- **T015 ĐẠT:** `GuardianBrief` v2 (`extra=forbid`, 1–3 mã không trùng), `brief_points`, `texts.BRIEF_POINT_VI`/`brief_summary`, `prompts/intervention.md` v2, 20 cassette smoke sửa sang `points` + `intervention@2`, `docs/AGENTS.md`. `agent_steps.output` chỉ ghi mã `points_kept/points_dropped`.
+- **T018 ĐẠT** (2 reviewer, môi trường: subagent đọc diff; lần đầu chết vì lỗi mạng, chạy lại):
+  - bảo mật: 0 Critical/0 High; Medium #1 (`may_be_routine` đứng cạnh dữ kiện nguy hiểm) → SỬA: bỏ khi `flagged`/xưng cơ quan/đòi tiền/giữ kín/cài app; Medium #2 (kiểm eval hở alias và đuôi sau `\n\n`) → SỬA: alias chỉ chữ cái/cách/`/` ≤ 20, đuôi phải đúng `REPLY_GUIDE_NO_DETAIL`.
+  - UX: Chặn B1 (trấn an cạnh cảnh báo) → SỬA bằng luật loại trừ trên + câu mới; B2 (nói như đã nghe cuộc gọi) → SỬA: 4 câu dùng "{alias} cho biết …"; Cao H1 (chữ hoa đầu câu với alias "bác Hùng") → SỬA trong `brief_summary`; H2 (`common_scam_pattern` "Đây là…") → SỬA câu; M1/M3/L1/L2 → SỬA câu.
+  - **CHƯA sửa, cần Opus** (đổi `spec.md` §5 bảng câu chữ, tôi không sửa spec): thứ tự ghép cố định (sự kiện → nghi ngờ → nhận định) và loại trừ `common_scam_pattern`/`may_be_routine`; H3 câu `call_still_ongoing` kèm "máy báo bận" (sửa `ACTION_VI`); M2 (`sideloaded_app` lặp ý với ứng dụng tài chính); câu sửa B2 thêm "cho biết" nghĩa là spec §5 đã lệch mã. Bảng spec §5 nay khác `BRIEF_POINT_VI`.
+  - Security Low chưa sửa: #3 số `19001234` trong cassette `fake_tax_debt_link_001` (có từ trước), #4 `unknown_call_then_finance_app` không xét danh bạ, #5 `common_scam_pattern` luôn đúng kể cả mức thấp, #6 `reasons` LLM nằm trong checkpoint; `_UNSAFE_SUMMARY` nay là mã chết (giữ cho test).
+- **T019 ĐẠT:** pytest 2273 passed/21 skipped; ruff sạch; smoke 20 ca, full 110 ca, injection **17/17**, đều recall 100%, báo nhầm 0%, 0 vi phạm, công khai AI 100%, không lệch baseline; `check-spec-trace` 0 lỗi; gitleaks 8 thư mục sạch; `alembic heads` = 1. **SC-007 ĐẠT** trên cassette `synthetic` (n=1 lượt/suite, máy dev; chưa chứng minh bằng model thật, P0-08). SC-008/F-1: BLOCKED chờ Minh (§8 mục 8); T016/T017 không làm.

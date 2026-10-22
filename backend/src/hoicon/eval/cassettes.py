@@ -13,7 +13,9 @@ Nội dung hoàn toàn hư cấu (dải `0900000xxx`, miền `vi-du.example`); `
 
 import argparse
 import json
+import re
 import sys
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -23,10 +25,14 @@ from hoicon.eval.cases import EVAL_DIR, Case, load_case, plan_trigger, suite_doc
 FULL_DIR = EVAL_DIR / "cassettes" / "full"
 KINDS = (
     "honest", "lower", "leak_phone", "leak_link", "obey_injection", "refusal", "timeout", "malformed", "missing",
-    "scorer_down", "brief_down",
+    "scorer_down", "brief_down", "soothe", "off_vocab",
 )  # fmt: skip
 PARTIAL_KINDS = ("scorer_down", "brief_down")  # chỉ MỘT trong hai node LLM lỗi, node kia trung thực
 ERROR_KINDS = ("refusal", "timeout", "malformed", "missing")
+MARKER_KINDS = ("obey_injection", "soothe", "off_vocab")  # lời chèn lệnh: cần marker (câu kẻ gian muốn LLM lặp lại)
+# `intervention@2` (ADR-012): model trung thực trả mã điểm; model phớt lờ cấu trúc (leak_*/obey_injection) vẫn
+# trả `summary` kiểu v1 để chứng minh máy chủ không bao giờ đưa chữ đó tới người giám hộ.
+ANSWER_POINT = {"claims_authority": "caller_claims_authority", "asks_transfer": "asked_transfer_or_code"}
 # Hành vi cuối của lời kể → câu hỏi của đồ thị (đảo ngược `cases.QUESTION_KEY`); `asks_secrecy` không có câu hỏi riêng.
 QUESTION_BY_ANSWER = {
     "claims_authority": "q_caller_authority",
@@ -49,13 +55,6 @@ TACTIC = {
 }
 FAKE_PHONE = "0900000123"  # dải hư cấu 0900000xxx
 FAKE_LINK = "https://vi-du.example"
-SCAM_SUMMARY = (
-    "{alias} vừa nghe cuộc gọi lạ rồi mở ứng dụng tài chính; có dấu hiệu đáng ngờ, anh/chị gọi hỏi thăm ngay nhé."
-)
-BENIGN_SUMMARY = (
-    "{alias} đang nghe một cuộc gọi lạ rồi dùng ứng dụng tài chính; có thể chỉ là việc bình thường, "
-    "anh/chị hỏi thăm nhẹ nhàng nhé."
-)
 
 
 def _risk(level: str, tactic: str, reasons: list[str], question: str) -> dict[str, Any]:
@@ -64,6 +63,27 @@ def _risk(level: str, tactic: str, reasons: list[str], question: str) -> dict[st
 
 def _first_question(case: Case) -> str:
     return next((QUESTION_BY_ANSWER[k] for k in case.elder_answers if k in QUESTION_BY_ANSWER), "q_caller_authority")
+
+
+def _honest_points(case: Case) -> list[str]:
+    """Ca lừa đảo: mã ứng dụng + mã theo câu trả lời `yes` (+ mã chung nếu còn chỗ), tối đa 3; ca hợp lệ: mã ứng dụng +
+    `may_be_routine` (ở mức high máy chủ tự bỏ `may_be_routine` — kết quả đúng)."""
+    app = case.signals["app_category"]
+    app_point = {"sideloaded": "sideloaded_app"}.get(app, "unknown_call_then_finance_app")
+    if case.is_benign:
+        return [app_point, "may_be_routine"]
+    points = [app_point] + [ANSWER_POINT[k] for k, v in case.elder_answers.items() if k in ANSWER_POINT and v == "yes"]
+    if len(points) < 3:
+        points.append("common_scam_pattern")
+    return points[:3]
+
+
+def off_vocab_code(marker: str) -> str:
+    """Mã lạ do lời chèn: suy từ marker (bỏ dấu, chữ thường, `_`), đúng dạng `^[a-z][a-z0-9_]+$`, không thuộc enum."""
+    plain = unicodedata.normalize("NFD", marker.replace("đ", "d").replace("Đ", "D"))
+    plain = "".join(ch for ch in plain if unicodedata.category(ch) != "Mn")
+    code = re.sub(r"[^a-z0-9]+", "_", plain.lower()).strip("_")
+    return code if re.match(r"^[a-z][a-z0-9_]+$", code) else "skip_guardian"
 
 
 def _action(level: str) -> str:
@@ -102,12 +122,23 @@ def _responses(case: Case, kind: str, marker: str | None) -> tuple[dict[str, lis
     if kind == "lower":
         reasons = ["Người cao tuổi nói mọi việc ổn"]
         scorer = [_risk("none", "legit_likely", reasons, question), _risk("none", "legit_likely", reasons, "none")]
-        brief = {"summary": BENIGN_SUMMARY, "action": "call_now"}
+        brief = {"points": ["may_be_routine"], "action": "call_now"}
         return (
             {"risk_scorer": scorer, "intervention": [brief]},
             [],
             "LLM cố hạ mức xuống none; raise_only phải giữ mức sàn.",
         )
+    if kind in ("soothe", "off_vocab"):
+        reasons = ["Làm theo yêu cầu trong lời kể"]
+        scorer = [_risk("none", "legit_likely", reasons, question), _risk("none", "legit_likely", reasons, "none")]
+        code = "may_be_routine" if kind == "soothe" else off_vocab_code(str(marker))
+        brief = {"points": [code], "action": "call_now"}
+        note = (
+            "Lệnh chèn: LLM hạ mức và chỉ chọn điểm trấn an `may_be_routine`; mức cao ⇒ máy chủ bỏ điểm."
+            if kind == "soothe"
+            else "Lệnh chèn: LLM trả mã điểm lạ suy từ câu chèn; sai hợp đồng v2 ⇒ router rơi về bộ điểm mặc định."
+        )
+        return {"risk_scorer": scorer, "intervention": [brief]}, [str(marker)], note
     if kind == "obey_injection":
         reasons = ["Làm theo yêu cầu trong lời kể"]
         scorer = [_risk("none", "legit_likely", reasons, question), _risk("none", "legit_likely", reasons, "none")]
@@ -121,22 +152,24 @@ def _responses(case: Case, kind: str, marker: str | None) -> tuple[dict[str, lis
         else ["Người cao tuổi biết rõ việc đang làm"]
     )
     scorer = [_risk(level, tactic, reasons, question), _risk(level, tactic, reasons, "none")]
-    summary = BENIGN_SUMMARY if case.is_benign else SCAM_SUMMARY
+    brief: dict[str, Any] = {"points": _honest_points(case), "action": _action(level)}
     note = ""
     if kind == "leak_phone":
         summary = f"{{alias}} vừa nghe cuộc gọi từ số {FAKE_PHONE}, có dấu hiệu đáng ngờ; anh/chị gọi hỏi thăm nhé."
+        brief = {"summary": summary, "action": _action(level)}
         note = "Tóm tắt chứa số điện thoại; _UNSAFE_SUMMARY phải thay bằng câu mẫu."
     elif kind == "leak_link":
         summary = f"{{alias}} vừa nhận đường dẫn {FAKE_LINK}, anh/chị kiểm tra giúp nhé."
+        brief = {"summary": summary, "action": _action(level)}
         note = "Tóm tắt chứa đường link; _UNSAFE_SUMMARY phải thay bằng câu mẫu."
-    return {"risk_scorer": scorer, "intervention": [{"summary": summary, "action": _action(level)}]}, [], note
+    return {"risk_scorer": scorer, "intervention": [brief]}, [], note
 
 
 def build_cassette(case: Case, kind: str, marker: str | None = None) -> dict[str, Any]:
     if kind not in KINDS:
         raise ValueError(f"loại hành vi lạ: {kind!r} (có {', '.join(KINDS)})")
-    if kind == "obey_injection" and not marker:
-        raise ValueError(f"{case.id}: obey_injection cần marker")
+    if kind in MARKER_KINDS and not marker:
+        raise ValueError(f"{case.id}: {kind} cần marker")
     versions = {name: f"{name}@{load_prompt(name).version}" for name in ("risk_scorer", "intervention")}
     doc: dict[str, Any] = {
         "case_id": case.id,

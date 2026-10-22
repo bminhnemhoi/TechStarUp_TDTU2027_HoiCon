@@ -33,8 +33,8 @@
     {
       "purpose": "guardian_alerts",
       "file": "guardian_alerts.vi.md",
-      "version": "2026.10-v3",
-      "sha256": "4ba8653ecdce7a02d64c7d547807587d410acb96baaef7a47b3473cd6337d981",
+      "version": "2026.10-v4",
+      "sha256": "afd2491512d6ecd7b89ff62cac56a54e8c6429ff741fdd440ca5f86ec6a2b72a",
       "status": "draft"
     },
     {

@@ -73,7 +73,7 @@ Thứ tự: T018 → T019 → T020; T021 độc lập. T018 làm trước 028 T0
   · Verify: `$GRADLE :app:testDebugUnitTest --tests '*ConsentTextsPinTest*' :app:testDebugUnitTest :app:lintDebug`; ảnh + báo cáo
   reviewer trong `evidence.md`; `python3 scripts/emu-scenario.py --avd hc-api36 --scenario fake_police` vẫn ĐẠT (đường dừng an toàn
   không đổi)
-- [ ] T019 [B] [FR-003, SC-006] Chốt chặn phát hành cho 3 mục đích hứa điều mã chưa làm (`llm_processing`, `voice_input`,
+- [x] T019 [B] [FR-003, SC-006] Chốt chặn phát hành cho 3 mục đích hứa điều mã chưa làm (`llm_processing`, `voice_input`,
   `pilot_research`): test `backend/tests/contract/test_consent_release_block.py` — mục đích nào trong 3 mục đích này có mặt trong
   `released` hoặc `status: approved` của `manifest.json` thì **phải** có tệp test thực thi tương ứng
   (`tests/integration/test_consent_enforcement_<purpose>.py`), nếu không thì đỏ. Test chạy trong CI mọi PR (job `backend/test`), nên
