@@ -26,23 +26,23 @@
 
 ## Nhóm [B-api]
 
-- [ ] T002 [B-api] [FR-001] `backend/tests/contract/test_sim_schemas.py`: chạy fixture của 4 lược đồ với `Registry` (mẫu
+- [x] T002 [B-api] [FR-001] `backend/tests/contract/test_sim_schemas.py`: chạy fixture của 4 lược đồ với `Registry` (mẫu
   `test_drill_schemas.py`).
   · Verify: `$PYTEST tests/contract/test_sim_schemas.py`
-- [ ] T003 [B-api] [FR-002, FR-003] `config.py`: `sim_enabled: bool = False` (biến `HOICON_SIM_ENABLED`); `api/routers/sim.py` với
+- [x] T003 [B-api] [FR-002, FR-003] `config.py`: `sim_enabled: bool = False` (biến `HOICON_SIM_ENABLED`); `api/routers/sim.py` với
   phụ thuộc chung: cổng tắt ⇒ 404; phiên `hc_guardian` bắt buộc; gia đình không `is_demo` ⇒ 404; lệnh ghi có
   `require_same_origin`. `ops guardian_link --seed` tạo thêm **một thiết bị demo** cho gia đình demo (sự kiện cần `device_id`) nếu
   chưa có. Test `tests/integration/test_api_sim.py` (phần cổng): tắt ⇒ 404 mọi route; gia đình thật ⇒ 404; thiếu phiên ⇒ 401;
   sai `Origin` ⇒ 403. Kiểm `infra/compose.prod.yml` **không** đặt `HOICON_SIM_ENABLED` (test hạ tầng có sẵn ở `scripts/tests`).
   · Verify: `$PYTEST tests/integration/test_api_sim.py -k gate && python3 -m unittest discover -s scripts/tests -p test_deploy_vps.py`
-- [ ] T004 [B-api] [FR-004] Cờ `sim` trong state đồ thị và payload `notify_guardian`; `channels/guardian.py::send_to_guardian` thấy
+- [x] T004 [B-api] [FR-004] Cờ `sim` trong state đồ thị và payload `notify_guardian`; `channels/guardian.py::send_to_guardian` thấy
   `sim` ⇒ chỉ ghi bộ mock, không gọi client thật, không trừ hạn mức. Test: `HOICON_ZALO_MODE=live` + sự cố sim ⇒ 0 lời gọi
   `LiveZaloClient` (client giả đếm lời gọi); sự cố thường của gia đình demo giữ hành vi cũ.
   · Verify: `$PYTEST tests/integration/test_api_sim.py -k zalo tests/integration/test_notify_guardian.py tests/integration/test_guardian_alert.py`
-- [ ] T005 [B-api] [FR-005] `GET /v1/sim/scenarios` đọc `data/scenarios/*.yaml` (qua `eval.cases.load_case`), trả `sim_scenarios.v1`
+- [x] T005 [B-api] [FR-005] `GET /v1/sim/scenarios` đọc `data/scenarios/*.yaml` (qua `eval.cases.load_case`), trả `sim_scenarios.v1`
   (không `elder_note`, không `source_ref`), sắp theo id. Test: hợp lệ lược đồ, đủ số tệp YAML, không chứa khóa ngoài lược đồ.
   · Verify: `$PYTEST tests/integration/test_api_sim.py -k scenarios`
-- [ ] T006 [B-api] [FR-005, FR-006] `POST /v1/sim/runs`: `build_event(case)` ⇒ **cùng đường** với `post_events` (tách phần ghi
+- [x] T006 [B-api] [FR-005, FR-006] `POST /v1/sim/runs`: `build_event(case)` ⇒ **cùng đường** với `post_events` (tách phần ghi
   `risk_events` + `IncidentService` + `_start_graph` của `routers/events.py` thành hàm service nếu chưa tách; `post_events` gọi lại
   hàm đó, hành vi không đổi) với thiết bị demo; `services/sim_service.py` giữ runtime replay theo plan D2. Kịch bản không kích
   hoạt luật ⇒ 200, `incident_id: null`, `note`. Ảnh container không có cassette (`.dockerignore` loại `backend/eval`) ⇒ trong
@@ -51,22 +51,22 @@
   **bằng** lượt eval cùng ca (gọi `eval.runner` cho ca đó làm đối chứng); `live` không khóa ⇒ `llm_mode: "fallback"`; toàn bộ
   `tests/integration/test_api_events.py` vẫn xanh.
   · Verify: `$PYTEST tests/integration/test_api_sim.py -k runs tests/integration/test_api_events.py`
-- [ ] T007 [B-api] [FR-007] `GET /v1/sim/runs/{incident_id}` (sự cố phải là sự cố sim của gia đình phiên, không ⇒ 404) và `POST
+- [x] T007 [B-api] [FR-007] `GET /v1/sim/runs/{incident_id}` (sự cố phải là sự cố sim của gia đình phiên, không ⇒ 404) và `POST
   /v1/sim/runs/{incident_id}/answer` đi qua **cùng hàm** với `routers/elder.py::submit_elder_answer` (tách thành service nếu cần;
   không nhận `note`). Tin người giám hộ lấy từ bản ghi mock theo thứ tự, đã che. Test: E8 đang chờ hiện đúng `elder_question.v1`;
   trả lời ⇒ đồ thị đi tiếp; quyết định qua `POST /v1/incidents/{id}/decision` bằng phiên đó ⇒ trạng thái cuối; phản hồi không chứa
   số điện thoại/h1/tên gói (quét bằng `case_secrets`).
   · Verify: `$PYTEST tests/integration/test_api_sim.py -k "view or answer" tests/integration/test_api_elder.py`
-- [ ] T008 [B-api] [FR-008] Hạn mức: 10 lượt `POST /v1/sim/runs`/giờ/phiên, 3 lượt đang chạy/gia đình (429 + `Retry-After`);
+- [x] T008 [B-api] [FR-008] Hạn mức: 10 lượt `POST /v1/sim/runs`/giờ/phiên, 3 lượt đang chạy/gia đình (429 + `Retry-After`);
   registry D2 tối đa 20 runtime, quá 60 phút thì bỏ. Test: lượt 11 ⇒ 429; lượt đang chạy thứ 4 ⇒ 429; runtime hết hạn ⇒
   `llm_mode: "fallback"` ở lần `answer` sau.
   · Verify: `$PYTEST tests/integration/test_api_sim.py -k limit`
-- [ ] T009 [B-api] [FR-009] `GET /v1/graphs/incident` (không cổng, không đăng nhập) sinh `graph_topology.v1` từ `build_graph` đã
+- [x] T009 [B-api] [FR-009] `GET /v1/graphs/incident` (không cổng, không đăng nhập) sinh `graph_topology.v1` từ `build_graph` đã
   biên dịch + bảng nhãn tiếng Việt và `step_nodes` (ví dụ `verification` ⇒ `verify`) đặt cạnh `incident_graph.py`. Test
   `tests/integration/test_api_graphs.py`: hợp lệ lược đồ; tập nút = nút của đồ thị biên dịch; nút không có nhãn ⇒ test đỏ (thêm
   nút giả bằng `monkeypatch`); `version` đổi khi cạnh đổi.
   · Verify: `$PYTEST tests/integration/test_api_graphs.py`
-- [ ] T011 [B-api] [FR-001, FR-014] `bash scripts/gen-api-client.sh`; cập nhật `docs/API.md` (`/v1/sim/*`, `/v1/graphs/incident`,
+- [x] T011 [B-api] [FR-001, FR-014] `bash scripts/gen-api-client.sh`; cập nhật `docs/API.md` (`/v1/sim/*`, `/v1/graphs/incident`,
   `/v1/eval/summary` nếu đã có), `docs/AGENTS.md` (topology, cờ `sim`).
   · Verify: `bash scripts/gen-api-client.sh && $WEB typecheck`
 

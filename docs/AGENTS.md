@@ -86,3 +86,10 @@ che PII, ngân sách, fallback; **không khóa API, không mạng ngoài, không
   (`GuardianBrief` v2, `docs/schemas/guardian_brief.v2.json`), máy chủ bỏ mã có dữ kiện sai và ghép câu cố định
   `texts.BRIEF_POINT_VI`; eval có kiểm `brief_outside_vocabulary`. **F-1**: `("q_asked_transfer","yes") ⇒ critical` báo nhầm chuyển tiền chính đáng ⇒
   phương án ở spec 024 §5 (chờ Minh, MASTER-PLAN §8).
+
+## Sơ đồ đồ thị và cờ `sim` (spec 033)
+- `GET /v1/graphs/incident` sinh `graph_topology.v1` từ `build_graph(...).compile().get_graph()`. Nhãn tiếng Việt nằm ở
+  `incident_graph.NODE_LABELS_VI` (cùng `INTERRUPT_NODES`, `STEP_NODES`: nút `verification` ghi bước `verify`); thêm nút mà
+  quên nhãn ⇒ `graph_topology()` ném `MissingLabelError` (test đỏ).
+- State `sim: true` (chỉ có ở sự cố tạo qua `/v1/sim/runs`) ⇒ `notify` đặt `payload.sim` và `send_to_guardian` trả
+  `"simulated"` mà không gọi Zalo, không tạo `messages_out`. `IncidentRuntime.start_prepared(..., sim=True)`.

@@ -104,6 +104,7 @@ class IncidentState(TypedDict, total=False):
     incident_id: str
     run_id: str
     family_id: str  # UUID gia đình nhận tin; vắng khi sự cố không gắn gia đình (spec 002)
+    sim: bool  # spec 033: sự cố mô phỏng ⇒ tin người giám hộ không bao giờ gửi Zalo thật; vắng = False
     guardian_alerts: bool  # False ⇒ chưa đồng ý báo người giám hộ: không xếp tin Zalo (spec 034); vắng = True
     is_drill: bool
     is_demo: bool
@@ -208,6 +209,22 @@ def _incident_uuid(state: IncidentState) -> UUID | None:
         return None
 
 
+# Sơ đồ đồ thị cho web (spec 033 FR-009): nhãn tiếng Việt, nút chờ người, và tên `agent_steps.node` của từng nút (nút
+# `verification` ghi bước tên `verify`). Thêm nút mới mà quên bảng này ⇒ `graph_topology()` báo lỗi (có test).
+NODE_LABELS_VI: dict[str, str] = {
+    "ingest": "Nhận sự kiện",
+    "fast_alert": "Báo nhanh người giám hộ",
+    "risk_scorer": "Chấm rủi ro",
+    "ask_elder": "Hỏi bác",
+    "verification": "Xác minh",
+    "intervention": "Soạn tin cho con",
+    "await_guardian": "Chờ người giám hộ",
+    "resolve": "Kết thúc sự cố",
+}
+INTERRUPT_NODES = frozenset({"ask_elder", "await_guardian"})
+STEP_NODES: dict[str, list[str]] = {"verification": ["verify"]}  # còn lại: tên nút = tên bước
+
+
 def build_graph(deps: Deps) -> StateGraph:
     risk_prompt = load_prompt("risk_scorer")
     brief_prompt = load_prompt("intervention")
@@ -268,6 +285,8 @@ def build_graph(deps: Deps) -> StateGraph:
             "is_drill": state["is_drill"],
             "is_demo": state.get("is_demo", False),
         }
+        if state.get("sim"):
+            payload["sim"] = True
         await enqueue(deps.sessions, "notify_guardian", payload, key=key)
         return [template]
 

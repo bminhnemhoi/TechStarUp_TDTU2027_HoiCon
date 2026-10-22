@@ -10,6 +10,7 @@ Thiết bị/gia đình/thành viên lấy từ token, không từ thân yêu c�
 import logging
 import time
 from collections import deque
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated, Any
 from uuid import UUID
@@ -83,13 +84,13 @@ class EventsResult(BaseModel):
     incident_opened: bool
 
 
-def _row(event: RiskEventIn, claims: DeviceClaims) -> dict[str, Any]:
+def _row(event: RiskEventIn, family_id: UUID, device_id: UUID) -> dict[str, Any]:
     """Dòng `risk_events`. `payload` = sự kiện đã BỎ `caller.h1`; cột `caller_*` chỉ có HMAC + 3 số cuối."""
     payload = event.model_dump(mode="json", exclude_none=True)
     row: dict[str, Any] = {
         "id": event.id,
-        "family_id": claims.family_id,
-        "device_id": claims.device_id,
+        "family_id": family_id,
+        "device_id": device_id,
         "type": event.type,
         "rule_id": event.rule_id,
         "rule_floor": event.rule_floor.value,
@@ -177,12 +178,12 @@ async def _record_call_verification(
     )
 
 
-async def _start_graph(
-    session: AsyncSession, incident: Incident, event: RiskEventIn, *, guardian_alerts: bool = True
-) -> None:
-    """Spec 024 FR-006: sự cố đạt mức cảnh báo (cùng ngưỡng với cảnh báo nhanh) ⇒ xếp job chạy đồ thị tác tử, cùng
-    giao dịch với lô. Khóa theo sự cố ⇒ một sự cố một lượt dù nhiều sự kiện liên kết vào. Payload đã bỏ h1 + tên gói
-    (ADR-006): bảng `jobs` giữ dòng đã chạy xong."""
+async def start_graph_payload(
+    session: AsyncSession, incident: Incident, event: RiskEventIn, *, guardian_alerts: bool = True, sim: bool = False
+) -> dict[str, Any]:
+    """Payload khởi động đồ thị (đã bỏ h1 + tên gói, ADR-006) và ghi kết quả tra số gọi đến (spec 026 FR-008).
+    Dùng chung
+    cho job `start_graph` (`_start_graph`) và `POST /v1/sim/runs` (mô phỏng tự chạy đồ thị bằng runtime phát lại)."""
     threat, event_data = await prepare_event(session, event)
     await _record_call_verification(session, incident, event, threat)
     member = await session.get(Member, incident.member_id)
@@ -196,7 +197,98 @@ async def _start_graph(
         # Spec 034 FR-005: chưa đồng ý `guardian_alerts` ⇒ đồ thị vẫn chạy (an toàn người cao tuổi), không xếp tin Zalo.
         "guardian_alerts": guardian_alerts,
     }
+    if sim:  # spec 033 FR-004: chỉ đặt khi mô phỏng ⇒ payload sự cố thường không đổi
+        payload["sim"] = True
+    return payload
+
+
+async def _start_graph(
+    session: AsyncSession, incident: Incident, event: RiskEventIn, *, guardian_alerts: bool = True, sim: bool = False
+) -> None:
+    """Spec 024 FR-006: sự cố đạt mức cảnh báo (cùng ngưỡng với cảnh báo nhanh) ⇒ xếp job chạy đồ thị tác tử, cùng
+    giao dịch với lô. Khóa theo sự cố ⇒ một sự cố một lượt dù nhiều sự kiện liên kết vào. Payload đã bỏ h1 + tên gói
+    (ADR-006): bảng `jobs` giữ dòng đã chạy xong."""
+    payload = await start_graph_payload(session, incident, event, guardian_alerts=guardian_alerts, sim=sim)
     await enqueue(session, "start_graph", payload, key=f"{incident.id}:graph:start")
+
+
+class _Unavailable(Exception):
+    """Lỗi tạm của `ingest_events` ⇒ 503 ở route (không nêu chi tiết nội bộ)."""
+
+    def __init__(self, detail: str, headers: dict[str, str] | None = None) -> None:
+        super().__init__(detail)
+        self.detail, self.headers = detail, headers
+
+
+@dataclass(frozen=True)
+class Ingested:
+    accepted: int
+    incident_id: UUID | None
+    opened: bool
+    pending_starts: list[tuple[Incident, RiskEventIn]] = field(default_factory=list)  # chỉ khi `defer_graph`
+
+
+async def ingest_events(
+    events: list[RiskEventIn],
+    *,
+    device_id: UUID,
+    family_id: UUID,
+    member_id: UUID,
+    guardian_alerts: bool = True,
+    sim: bool = False,
+    defer_graph: bool = False,
+) -> Ingested:
+    """Ghi lô sự kiện + mở/liên kết sự cố + cảnh báo nhanh + xếp job `start_graph`, MỘT giao dịch. Dùng chung cho
+    `POST /v1/events` và `POST /v1/sim/runs` (spec 033 FR-005: mô phỏng đi cùng đường với máy thật). `defer_graph`:
+    không xếp job khởi động đồ thị mà trả sự cố cho người gọi tự chạy sau commit (mô phỏng phát lại cần runtime riêng).
+    ⇒ `_Unavailable` khi thiếu khóa băm (503) hoặc chờ khóa thiết bị quá hạn (503 + Retry-After)."""
+    try:
+        rows = sorted((_row(event, family_id, device_id) for event in events), key=lambda row: row["id"])
+    except RuntimeError as exc:  # thiếu pepper: lỗi cấu hình của ta ⇒ 503, không nêu chi tiết, không lưu gì
+        logger.error("events: không băm được số gọi đến (%s)", type(exc).__name__)
+        raise _Unavailable("Dịch vụ chưa sẵn sàng") from None
+    pending: list[tuple[Incident, RiskEventIn]] = []
+    try:
+        async with get_sessionmaker().begin() as session:
+            await session.execute(text(f"SET LOCAL lock_timeout = {int(LOCK_TIMEOUT_MS)}"))
+            stored = await session.scalars(
+                insert(RiskEventRecord)
+                .values(rows)
+                .on_conflict_do_nothing(index_elements=["id"])
+                .returning(RiskEventRecord.id)
+            )
+            fresh = set(stored.all())
+            incident_id = None
+            opened = False
+            seen: set[UUID] = set()
+            # Theo thứ tự xảy ra (ổn định trong lô): sự kiện cũ hơn mở sự cố trước, sự kiện sau liên kết vào.
+            for event in sorted(events, key=lambda e: e.occurred_at):
+                if event.id not in fresh or event.id in seen:
+                    continue
+                seen.add(event.id)
+                result = await IncidentService.correlate_event(
+                    session, event, device_id=device_id, family_id=family_id, member_id=member_id
+                )
+                if result is not None:
+                    incident_id, opened = result.incident.id, opened or result.opened
+                    if result.incident.level in ("high", "critical"):
+                        if guardian_alerts:  # chưa đồng ý báo người giám hộ ⇒ nhận sự kiện nhưng không gửi Zalo
+                            await AlertService.trigger_guardian_fast_alert(
+                                session, incident=result.incident, event=event, sim=sim
+                            )
+                        if defer_graph:
+                            pending.append((result.incident, event))
+                        else:
+                            await _start_graph(
+                                session, result.incident, event, guardian_alerts=guardian_alerts, sim=sim
+                            )
+            accepted = len(fresh)
+    except OperationalError as exc:
+        if not isinstance(exc.orig, LockNotAvailable):
+            raise
+        logger.warning("events: chờ khóa thiết bị quá hạn")
+        raise _Unavailable(BUSY, {"Retry-After": "2"}) from None
+    return Ingested(accepted, incident_id, opened, pending)
 
 
 @router.post("/events", response_model=EventsResult)
@@ -214,45 +306,16 @@ async def post_events(batch: EventsBatch, claims: Annotated[DeviceClaims, Depend
     if rejected:  # không ghi id hay định danh: chỉ số lượng (máy có thể khai bậy bất cứ id nào)
         logger.warning("events: drill flag rejected (%d sự kiện coi như thật)", rejected)
     try:
-        rows = sorted((_row(event, claims) for event in events), key=lambda row: row["id"])  # thứ tự khóa ổn định
-    except RuntimeError as exc:  # thiếu pepper: lỗi cấu hình của ta ⇒ 503, không nêu chi tiết, không lưu gì
-        logger.error("events: không băm được số gọi đến (%s)", type(exc).__name__)
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Dịch vụ chưa sẵn sàng") from None
-    try:
-        async with get_sessionmaker().begin() as session:
-            await session.execute(text(f"SET LOCAL lock_timeout = {int(LOCK_TIMEOUT_MS)}"))
-            stored = await session.scalars(
-                insert(RiskEventRecord)
-                .values(rows)
-                .on_conflict_do_nothing(index_elements=["id"])
-                .returning(RiskEventRecord.id)
-            )
-            fresh = set(stored.all())
-            accepted = incident_id = None
-            opened = False
-            seen: set[UUID] = set()
-            # Theo thứ tự xảy ra (ổn định trong lô): sự kiện cũ hơn mở sự cố trước, sự kiện sau liên kết vào.
-            for event in sorted(events, key=lambda e: e.occurred_at):
-                if event.id not in fresh or event.id in seen:
-                    continue
-                seen.add(event.id)
-                result = await IncidentService.correlate_event(
-                    session, event, device_id=claims.device_id, family_id=claims.family_id, member_id=claims.member_id
-                )
-                if result is not None:
-                    incident_id, opened = result.incident.id, opened or result.opened
-                    if result.incident.level in ("high", "critical"):
-                        if consent.guardian_alerts:  # chưa đồng ý báo người giám hộ ⇒ nhận sự kiện nhưng không gửi Zalo
-                            await AlertService.trigger_guardian_fast_alert(
-                                session, incident=result.incident, event=event
-                            )
-                        await _start_graph(session, result.incident, event, guardian_alerts=consent.guardian_alerts)
-            accepted = len(fresh)
-    except OperationalError as exc:
-        if not isinstance(exc.orig, LockNotAvailable):
-            raise
-        logger.warning("events: chờ khóa thiết bị quá hạn")
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail=BUSY, headers={"Retry-After": "2"}) from None
+        ingested = await ingest_events(
+            events,
+            device_id=claims.device_id,
+            family_id=claims.family_id,
+            member_id=claims.member_id,
+            guardian_alerts=consent.guardian_alerts,
+        )
+    except _Unavailable as exc:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail=exc.detail, headers=exc.headers) from None
+    accepted, incident_id, opened = ingested.accepted, ingested.incident_id, ingested.opened
     logger.info("events: accepted=%d duplicates=%d incident_opened=%s", accepted, len(batch.events) - accepted, opened)
     return EventsResult(
         accepted=accepted, duplicates=len(batch.events) - accepted, incident_id=incident_id, incident_opened=opened

@@ -1313,6 +1313,283 @@
     }
    }
   },
+  "/v1/graphs/incident": {
+   "get": {
+    "tags": [
+     "graphs"
+    ],
+    "summary": "Get Incident Graph",
+    "operationId": "get_incident_graph_v1_graphs_incident_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GraphTopologyOut"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/sim/scenarios": {
+   "get": {
+    "tags": [
+     "sim"
+    ],
+    "summary": "Get Scenarios",
+    "operationId": "get_scenarios_v1_sim_scenarios_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SimScenariosOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/sim/runs": {
+   "post": {
+    "tags": [
+     "sim"
+    ],
+    "summary": "Post Run",
+    "operationId": "post_run_v1_sim_runs_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SimRunIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SimRunOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/sim/runs/{incident_id}": {
+   "get": {
+    "tags": [
+     "sim"
+    ],
+    "summary": "Get Run",
+    "operationId": "get_run_v1_sim_runs__incident_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     },
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SimRunOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/sim/runs/{incident_id}/answer": {
+   "post": {
+    "tags": [
+     "sim"
+    ],
+    "summary": "Post Answer",
+    "operationId": "post_answer_v1_sim_runs__incident_id__answer_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     },
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ElderAnswerIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SimRunOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/webhooks/zalo/{bot_id}": {
    "post": {
     "tags": [
@@ -2047,6 +2324,42 @@
      "incident_opened"
     ],
     "title": "EventsResult"
+   },
+   "GraphTopologyOut": {
+    "properties": {
+     "graph": {
+      "type": "string",
+      "const": "incident",
+      "title": "Graph"
+     },
+     "version": {
+      "type": "string",
+      "title": "Version"
+     },
+     "nodes": {
+      "items": {
+       "$ref": "#/components/schemas/TopologyNode"
+      },
+      "type": "array",
+      "title": "Nodes"
+     },
+     "edges": {
+      "items": {
+       "$ref": "#/components/schemas/TopologyEdge"
+      },
+      "type": "array",
+      "title": "Edges"
+     }
+    },
+    "type": "object",
+    "required": [
+     "graph",
+     "version",
+     "nodes",
+     "edges"
+    ],
+    "title": "GraphTopologyOut",
+    "description": "Khớp `docs/schemas/graph_topology.v1.json`."
    },
    "GuardianIncidentDetail": {
     "properties": {
@@ -3337,6 +3650,272 @@
     ],
     "title": "SessionIn"
    },
+   "SimMessageOut": {
+    "properties": {
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     },
+     "template": {
+      "type": "string",
+      "title": "Template"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "at",
+     "template",
+     "text"
+    ],
+    "title": "SimMessageOut"
+   },
+   "SimQuestionOut": {
+    "properties": {
+     "incident_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Incident Id"
+     },
+     "question_id": {
+      "type": "string",
+      "enum": [
+       "q_caller_authority",
+       "q_asked_transfer",
+       "q_know_caller"
+      ],
+      "title": "Question Id"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "title": "Is Drill"
+     },
+     "answers": {
+      "items": {
+       "type": "string",
+       "enum": [
+        "yes",
+        "no",
+        "unsure"
+       ]
+      },
+      "type": "array",
+      "title": "Answers"
+     },
+     "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Expires At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "incident_id",
+     "question_id",
+     "text",
+     "is_drill",
+     "answers",
+     "expires_at"
+    ],
+    "title": "SimQuestionOut"
+   },
+   "SimRunIn": {
+    "properties": {
+     "scenario_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(_[a-z0-9]+)*_[0-9]{3}$",
+      "title": "Scenario Id"
+     },
+     "llm": {
+      "type": "string",
+      "enum": [
+       "replay",
+       "live"
+      ],
+      "title": "Llm",
+      "default": "replay"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "scenario_id"
+    ],
+    "title": "SimRunIn"
+   },
+   "SimRunOut": {
+    "properties": {
+     "scenario_id": {
+      "type": "string",
+      "title": "Scenario Id"
+     },
+     "is_demo": {
+      "type": "boolean",
+      "const": true,
+      "title": "Is Demo"
+     },
+     "llm_mode": {
+      "type": "string",
+      "enum": [
+       "replay",
+       "live",
+       "fallback"
+      ],
+      "title": "Llm Mode"
+     },
+     "incident_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Incident Id"
+     },
+     "run_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Run Id"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "level": {
+      "type": "string",
+      "enum": [
+       "none",
+       "low",
+       "medium",
+       "high",
+       "critical"
+      ],
+      "title": "Level"
+     },
+     "pending_question": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/SimQuestionOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "guardian_messages": {
+      "items": {
+       "$ref": "#/components/schemas/SimMessageOut"
+      },
+      "type": "array",
+      "title": "Guardian Messages"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "scenario_id",
+     "is_demo",
+     "llm_mode",
+     "incident_id",
+     "run_id",
+     "state",
+     "level",
+     "pending_question",
+     "guardian_messages",
+     "note"
+    ],
+    "title": "SimRunOut",
+    "description": "Khớp `docs/schemas/sim_run.v1.json`."
+   },
+   "SimScenarioOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "category": {
+      "type": "string",
+      "title": "Category"
+     },
+     "is_benign": {
+      "type": "boolean",
+      "title": "Is Benign"
+     },
+     "injection": {
+      "type": "boolean",
+      "title": "Injection"
+     },
+     "draft": {
+      "type": "boolean",
+      "title": "Draft"
+     },
+     "script_vi": {
+      "type": "string",
+      "title": "Script Vi"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "category",
+     "is_benign",
+     "injection",
+     "draft",
+     "script_vi"
+    ],
+    "title": "SimScenarioOut"
+   },
+   "SimScenariosOut": {
+    "properties": {
+     "scenarios": {
+      "items": {
+       "$ref": "#/components/schemas/SimScenarioOut"
+      },
+      "type": "array",
+      "title": "Scenarios"
+     }
+    },
+    "type": "object",
+    "required": [
+     "scenarios"
+    ],
+    "title": "SimScenariosOut"
+   },
    "Source": {
     "properties": {
      "name": {
@@ -3448,6 +4027,66 @@
     "additionalProperties": false,
     "type": "object",
     "title": "Timing"
+   },
+   "TopologyEdge": {
+    "properties": {
+     "source": {
+      "type": "string",
+      "title": "Source"
+     },
+     "target": {
+      "type": "string",
+      "title": "Target"
+     },
+     "conditional": {
+      "type": "boolean",
+      "title": "Conditional"
+     }
+    },
+    "type": "object",
+    "required": [
+     "source",
+     "target",
+     "conditional"
+    ],
+    "title": "TopologyEdge"
+   },
+   "TopologyNode": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "label_vi": {
+      "type": "string",
+      "title": "Label Vi"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "start",
+       "end",
+       "node",
+       "interrupt"
+      ],
+      "title": "Kind"
+     },
+     "step_nodes": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Step Nodes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "label_vi",
+     "kind",
+     "step_nodes"
+    ],
+    "title": "TopologyNode"
    },
    "TransitionOut": {
     "properties": {

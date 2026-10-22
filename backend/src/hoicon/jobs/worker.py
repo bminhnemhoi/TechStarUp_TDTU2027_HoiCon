@@ -62,6 +62,7 @@ def incident_handlers(runtime: IncidentRuntime, channel: ChannelDeps | None = No
             family_id=payload["family_id"],
             is_demo=payload["is_demo"],
             guardian_alerts=payload.get("guardian_alerts", True),  # job cũ chưa có khóa này
+            sim=payload.get("sim", False),
         )
 
     async def drill_expire(payload: dict[str, Any]) -> None:

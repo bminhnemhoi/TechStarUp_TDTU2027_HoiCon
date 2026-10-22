@@ -205,6 +205,11 @@ async def send_to_guardian(deps: ChannelDeps, payload: dict[str, Any], attempt: 
     Trả None khi sự cố chưa gắn gia đình (hành vi cũ: chỉ log). Không log nội dung tin.
     """
     template = payload["template"]
+    if payload.get("sim"):
+        # Spec 033 FR-004: tin của sự cố MÔ PHỎNG không bao giờ tới Zalo, kể cả khi HOICON_ZALO_MODE=live, không tạo
+        # `messages_out`, không trừ hạn mức. Bản ghi mock chính là `jobs.payload` (đã che PII), web `/sim` đọc từ đó.
+        logger.info("notify_guardian template=%s: sự cố mô phỏng, chỉ ghi nhận", template)
+        return "simulated"
     family_id = parse_uuid(payload.get("family_id"))
     if family_id is None:
         logger.info("notify_guardian template=%s: sự cố chưa gắn gia đình, không gửi", template)

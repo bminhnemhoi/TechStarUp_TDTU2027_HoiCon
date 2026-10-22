@@ -175,6 +175,7 @@ class IncidentRuntime:
         is_demo: bool = False,
         family_id: str | None = None,
         guardian_alerts: bool = True,
+        sim: bool = False,
     ) -> RunStatus:
         """Chạy đồ thị từ sự kiện đã qua `prepare_event` (job `start_graph`, spec 024). Thread đã có trạng thái ⇒ không
         chạy lại (job thử lại sau khi đồ thị đã chạy không mở lượt thứ hai)."""
@@ -204,6 +205,8 @@ class IncidentRuntime:
             }
             if family_id is not None:  # không đặt khóa khi không có ⇒ state/checkpoint sự cố không gia đình không đổi
                 state["family_id"] = family_id
+            if sim:  # spec 033 FR-004: sự cố mô phỏng — tin chỉ ghi nhận, không gửi Zalo thật
+                state["sim"] = True
             if not guardian_alerts:  # spec 034: chỉ đặt khi tắt ⇒ checkpoint của sự cố bình thường không đổi
                 state["guardian_alerts"] = False
             await self.graph.ainvoke(state, self._config(incident_id), durability="sync")

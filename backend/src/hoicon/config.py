@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     zalo_webhook_secret: SecretStr | None = None
     # `mock` (mặc định, CI/không token) | `live` (gọi Zalo thật; thiếu token ⇒ lỗi khi khởi động, không rơi về mock).
     zalo_mode: Literal["mock", "live"] = "mock"
+    # Spec 033 FR-002: cổng bật `/v1/sim/*` và `/v1/eval/*` (mô phỏng cho BGK). Mặc định TẮT; compose.prod không đặt.
+    sim_enabled: bool = False
     # Bot nhận webhook (một bot dev ở spike; 3 bot thí điểm sau: thêm khóa + token theo bot_id).
     zalo_bot_id: str = "hoicon-dev"
     # Hạn mức tin/tháng của gói Basic (bot.zapps.me, tra 15/10/2026) và ngưỡng cảnh báo/giữ tin không khẩn (% hạn mức).

@@ -421,6 +421,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/graphs/incident": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Incident Graph */
+        get: operations["get_incident_graph_v1_graphs_incident_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scenarios */
+        get: operations["get_scenarios_v1_sim_scenarios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Run */
+        post: operations["post_run_v1_sim_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/runs/{incident_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Run */
+        get: operations["get_run_v1_sim_runs__incident_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/runs/{incident_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Answer */
+        post: operations["post_answer_v1_sim_runs__incident_id__answer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/webhooks/zalo/{bot_id}": {
         parameters: {
             query?: never;
@@ -720,6 +805,23 @@ export interface components {
             incident_id: string | null;
             /** Incident Opened */
             incident_opened: boolean;
+        };
+        /**
+         * GraphTopologyOut
+         * @description Khớp `docs/schemas/graph_topology.v1.json`.
+         */
+        GraphTopologyOut: {
+            /**
+             * Graph
+             * @constant
+             */
+            graph: "incident";
+            /** Version */
+            version: string;
+            /** Nodes */
+            nodes: components["schemas"]["TopologyNode"][];
+            /** Edges */
+            edges: components["schemas"]["TopologyEdge"][];
         };
         /** GuardianIncidentDetail */
         GuardianIncidentDetail: {
@@ -1208,6 +1310,107 @@ export interface components {
             /** Token */
             token: string;
         };
+        /** SimMessageOut */
+        SimMessageOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Template */
+            template: string;
+            /** Text */
+            text: string;
+        };
+        /** SimQuestionOut */
+        SimQuestionOut: {
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /**
+             * Question Id
+             * @enum {string}
+             */
+            question_id: "q_caller_authority" | "q_asked_transfer" | "q_know_caller";
+            /** Text */
+            text: string;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Answers */
+            answers: ("yes" | "no" | "unsure")[];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /** SimRunIn */
+        SimRunIn: {
+            /** Scenario Id */
+            scenario_id: string;
+            /**
+             * Llm
+             * @default replay
+             * @enum {string}
+             */
+            llm: "replay" | "live";
+        };
+        /**
+         * SimRunOut
+         * @description Khớp `docs/schemas/sim_run.v1.json`.
+         */
+        SimRunOut: {
+            /** Scenario Id */
+            scenario_id: string;
+            /**
+             * Is Demo
+             * @constant
+             */
+            is_demo: true;
+            /**
+             * Llm Mode
+             * @enum {string}
+             */
+            llm_mode: "replay" | "live" | "fallback";
+            /** Incident Id */
+            incident_id: string | null;
+            /** Run Id */
+            run_id: string | null;
+            /** State */
+            state: string | null;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "none" | "low" | "medium" | "high" | "critical";
+            pending_question: components["schemas"]["SimQuestionOut"] | null;
+            /** Guardian Messages */
+            guardian_messages: components["schemas"]["SimMessageOut"][];
+            /** Note */
+            note: string | null;
+        };
+        /** SimScenarioOut */
+        SimScenarioOut: {
+            /** Id */
+            id: string;
+            /** Category */
+            category: string;
+            /** Is Benign */
+            is_benign: boolean;
+            /** Injection */
+            injection: boolean;
+            /** Draft */
+            draft: boolean;
+            /** Script Vi */
+            script_vi: string;
+        };
+        /** SimScenariosOut */
+        SimScenariosOut: {
+            /** Scenarios */
+            scenarios: components["schemas"]["SimScenarioOut"][];
+        };
         /** Source */
         Source: {
             /** Name */
@@ -1244,6 +1447,29 @@ export interface components {
             detect_ms?: number | null;
             /** Pause Ms */
             pause_ms?: number | null;
+        };
+        /** TopologyEdge */
+        TopologyEdge: {
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
+            /** Conditional */
+            conditional: boolean;
+        };
+        /** TopologyNode */
+        TopologyNode: {
+            /** Id */
+            id: string;
+            /** Label Vi */
+            label_vi: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "start" | "end" | "node" | "interrupt";
+            /** Step Nodes */
+            step_nodes: string[];
         };
         /** TransitionOut */
         TransitionOut: {
@@ -2173,6 +2399,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PendingQuestionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_incident_graph_v1_graphs_incident_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphTopologyOut"];
+                };
+            };
+        };
+    };
+    get_scenarios_v1_sim_scenarios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimScenariosOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_run_v1_sim_runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimRunIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_run_v1_sim_runs__incident_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_answer_v1_sim_runs__incident_id__answer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElderAnswerIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimRunOut"];
                 };
             };
             /** @description Validation Error */

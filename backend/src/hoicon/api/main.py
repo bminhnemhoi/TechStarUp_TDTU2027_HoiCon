@@ -25,11 +25,13 @@ from hoicon.api.routers import (
     drills,
     elder,
     events,
+    graphs,
     guardian,
     incidents,
     lookups,
     pairing,
     runs,
+    sim,
 )
 from hoicon.channels.zalo import mock_allowed
 from hoicon.config import get_settings
@@ -82,6 +84,8 @@ app.include_router(lookups.router)
 app.include_router(drills.router)
 app.include_router(actions.router)
 app.include_router(elder.router)
+app.include_router(graphs.router)
+app.include_router(sim.router)  # spec 033: 404 hết khi HOICON_SIM_ENABLED=false
 app.include_router(webhooks.router)  # cùng route với ứng dụng con `hoicon.api.webhooks:app` (chỉ nó ra đường hầm)
 # /mcp/threat gắn ở MỌI môi trường nhưng đóng mặc định: `McpGuard` đòi token Bearer (chưa cấu hình client nào ⇒ 401)
 # và giới hạn tần suất theo client (spec 003, ADR-009 §9). Kiểm Host localhost của MCP SDK chỉ chống DNS rebinding,
