@@ -29,11 +29,13 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from hoicon.db.models import Device, Family, Incident
 from hoicon.db.session import get_sessionmaker
+from hoicon.services import consent_gate
 from hoicon.services.heartbeat_service import CORE_PERMISSIONS, device_slot_counts
 
 PILOT = "pilot"
 MAX_DAYS = 90
 MIN_FAMILIES = 5  # Gate M2
+MIN_GROUP = 3  # dưới ngần này gia đình thì không công bố số gộp theo nhóm
 MIN_COVERAGE = 0.90
 MIN_CRASH_FREE = 99.0
 OK, FAIL, MISSING = "ĐẠT", "TRƯỢT", "CHƯA CÓ SỐ"
@@ -90,17 +92,30 @@ async def build_report(sessions: async_sessionmaker, days: int, *, now: datetime
             )
         ).all()
         for family in rows:
-            devices = (
+            # Spec 011 FR-006/D8: heartbeat của người chưa (hoặc không còn) đồng ý `pilot_research` vẫn được nhận
+            # (bảo vệ cần nó) nhưng không vào báo cáo thí điểm; nhà không có ai đồng ý thì không có mặt.
+            family_devices = (
                 await session.scalars(
-                    select(Device)
-                    .where(Device.family_id == family.id, (Device.revoked_at.is_(None)) | (Device.revoked_at >= since))
-                    .order_by(Device.created_at, Device.id)
+                    select(Device).where(Device.family_id == family.id).order_by(Device.created_at, Device.id)
                 )
             ).all()
+            consenting = {
+                d.member_id
+                for d in family_devices
+                if (await consent_gate.state_for(session, d.member_id)).pilot_research
+            }
+            if not consenting:
+                continue
+            devices = [
+                d
+                for d in family_devices
+                if d.member_id in consenting and (d.revoked_at is None or d.revoked_at >= since)
+            ]
             incidents, false_alarms = (  # sự cố THẬT: không diễn tập, không demo
                 await session.execute(
                     select(func.count(), func.count().filter(Incident.state == "resolved_false_alarm")).where(
                         Incident.family_id == family.id,
+                        Incident.member_id.in_(consenting),
                         Incident.opened_at >= since,
                         Incident.is_drill.is_(False),
                         Incident.is_demo.is_(False),
@@ -145,7 +160,11 @@ def evaluate_gate(
 ) -> list[Criterion]:
     families = len(report["families"])
     pooled, worst = pooled_coverage(report)
-    if pooled is None:
+    if families < MIN_GROUP:  # nhóm quá nhỏ: số gộp gần như là số của một nhà ⇒ ẩn (spec 011 FR-006)
+        coverage = Criterion(
+            "Độ phủ heartbeat ≥ 90%", MISSING, f"ẩn: dưới {MIN_GROUP} gia đình đồng ý nghiên cứu", False
+        )
+    elif pooled is None:
         coverage = Criterion("Độ phủ heartbeat ≥ 90%", MISSING, "chưa có khung kỳ vọng nào (chưa có thiết bị)", False)
     else:
         verdict = OK if pooled >= MIN_COVERAGE else FAIL

@@ -36,10 +36,10 @@ from hoicon.agents import texts
 from hoicon.agents.llm_router import LlmResult, LlmRouter, load_prompt
 from hoicon.channels.fcm import notify_elder_fcm
 from hoicon.config import Settings
-from hoicon.db.models import AgentRun, AgentStep, Verification
+from hoicon.db.models import AgentRun, AgentStep, Incident, Verification
 from hoicon.domain.risk import RiskLevel, raise_only
 from hoicon.jobs.queue import cancel_prefix, enqueue
-from hoicon.services import case_file_service
+from hoicon.services import case_file_service, consent_gate
 from hoicon.services.incident_service import (
     GRAPH_OUTCOMES,
     IncidentNotFoundError,
@@ -258,6 +258,21 @@ def build_graph(deps: Deps) -> StateGraph:
         async with deps.sessions() as session:
             return await decided_state(session, incident_id)
 
+    async def llm_consented(state: IncidentState) -> bool:
+        """Spec 011 FR-006/D8: người cao tuổi còn đồng ý `llm_processing`? Đọc lúc gọi (rút giữa chừng có hiệu lực, đệm
+        ≤ 60 s). Eval/demo/mô phỏng và thread không có sự cố thật: chỉ dữ liệu hư cấu ⇒ True. Không đọc được ⇒ False."""
+        incident_id = _incident_uuid(state)
+        if incident_id is None or state.get("is_demo") or state.get("sim"):
+            return True
+        try:
+            async with deps.sessions() as session:
+                member_id = await session.scalar(select(Incident.member_id).where(Incident.id == incident_id))
+                # Không có dòng sự cố, hoặc người cao tuổi đã bị xóa (`member_id` NULL) ⇒ không biết đồng ý ⇒ đóng.
+                return member_id is not None and (await consent_gate.state_for(session, member_id)).llm_processing
+        except Exception as exc:  # đóng mặc định: không xác định được đồng ý ⇒ không gửi gì cho dịch vụ AI
+            logger.warning("llm consent unreadable: %s", type(exc).__name__)
+            return False
+
     async def step(
         state: IncidentState,
         node: str,
@@ -378,7 +393,11 @@ def build_graph(deps: Deps) -> StateGraph:
         )
         # Không có văn bản tự do nào: lời kể của người cao tuổi chỉ còn là cờ tất định (runtime.clean_resume).
         llm = await deps.router.structured(
-            prompt=risk_prompt, context=context(state), output=RiskAssessment, fallback=fallback
+            prompt=risk_prompt,
+            context=context(state),
+            output=RiskAssessment,
+            fallback=fallback,
+            consented=await llm_consented(state),
         )
         assessed = llm.output
         level = raise_only(floor, RiskLevel(state["level"]), RiskLevel(assessed.level), forced_level)
@@ -489,7 +508,11 @@ def build_graph(deps: Deps) -> StateGraph:
             "is_drill": state["is_drill"],
         }
         llm = await deps.router.structured(
-            prompt=brief_prompt, context=brief_context, output=GuardianBrief, fallback=fallback
+            prompt=brief_prompt,
+            context=brief_context,
+            output=GuardianBrief,
+            fallback=fallback,
+            consented=await llm_consented(state),
         )
         # Chữ của LLM không bao giờ tới người giám hộ: chỉ giữ mã điểm có dữ kiện đúng, câu do `texts` ghép (ADR-012).
         chosen = list(llm.output.points)
@@ -584,7 +607,9 @@ def build_graph(deps: Deps) -> StateGraph:
             "transfer": texts.CASE_REASON_VI["transfer"] in reasons,
             "decision": content["guardian_decision"],
         }
-        summary = await case_file_service.llm_summary(deps.router, facts, content["elder_alias"])
+        summary = await case_file_service.llm_summary(
+            deps.router, facts, content["elder_alias"], consented=await llm_consented(state)
+        )
         if summary:
             content["summary"] = summary
         created = await case_file_service.save_draft(

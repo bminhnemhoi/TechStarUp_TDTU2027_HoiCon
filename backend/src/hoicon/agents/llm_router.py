@@ -138,10 +138,15 @@ class LlmRouter:
         context: dict[str, Any],
         output: type[T],
         fallback: T,
+        consented: bool,
         untrusted: str | None = None,
         max_tokens: int = 512,
     ) -> LlmResult[T]:
-        """Gọi hồ sơ `fast`; không bao giờ ném lỗi — thất bại nào cũng trả `fallback` với `fallback_used=True`."""
+        """Gọi hồ sơ `fast`; không bao giờ ném lỗi — thất bại nào cũng trả `fallback` với `fallback_used=True`.
+
+        `consented` (spec 011 FR-006, D8): người cao tuổi còn đồng ý `llm_processing`. Bắt buộc, không có mặc định: lời
+        gọi quên truyền sẽ không chạy. False ⇒ không gọi nhà cung cấp (kể cả khi có khóa), rơi về `fallback`, lý do
+        `consent`. Lượt không có người thật (eval, demo, mô phỏng) truyền True vì chỉ có dữ liệu hư cấu."""
         context_text = _defang(mask_text(json.dumps(context, ensure_ascii=False, sort_keys=True)))
         content = f"<context>\n{context_text}\n</context>"
         if untrusted:
@@ -154,6 +159,8 @@ class LlmRouter:
             input_redacted={"context": context_text, "untrusted": bool(untrusted)},
         )
 
+        if not consented:
+            return self._fallback(result, "consent")
         today = date.today()
         if self._client is None:
             return self._fallback(result, "no_api_key")

@@ -10,13 +10,13 @@ from typing import Any
 from uuid import UUID
 
 import pytest
-from consent_support import purge_family
+from consent_support import SHA, purge_family
 from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 from sqlalchemy import select
 
 from hoicon.db.ids import new_id
-from hoicon.db.models import Device, DeviceHeartbeat, Family, Incident, Member
+from hoicon.db.models import Consent, Device, DeviceHeartbeat, Family, Incident, Member
 from hoicon.db.session import get_sessionmaker
 from hoicon.ops import pilot
 
@@ -51,7 +51,9 @@ async def make_family(require_db: None) -> AsyncGenerator[Make]:
         revoked_ago: timedelta | None = None,
         slots_seen: int = 0,
         protected: bool = True,
+        research: bool | None = True,
     ) -> dict[str, Any]:
+        """`research`: True = đã đồng ý `pilot_research`; False = đã rút; None = chưa từng trả lời."""
         async with get_sessionmaker().begin() as session:
             hmac = secrets.token_hex(32)  # giả, duy nhất mỗi thành viên
             fam = Family(display_name=f"test-029-{secrets.token_hex(3)}", region="nam", plan=plan, is_demo=demo)
@@ -68,6 +70,18 @@ async def make_family(require_db: None) -> AsyncGenerator[Make]:
             )
             session.add(member)
             await session.flush()
+            if research is not None:
+                session.add(
+                    Consent(
+                        family_id=fam.id,
+                        member_id=member.id,
+                        purpose="pilot_research",
+                        granted=research,
+                        consent_version="v1.0",
+                        text_sha256=SHA,
+                        channel="app",
+                    )
+                )
             device = Device(
                 family_id=fam.id,
                 member_id=member.id,

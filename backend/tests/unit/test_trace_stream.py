@@ -532,3 +532,31 @@ def test_limit_errors_say_which_limit_was_hit() -> None:
     assert (by_member.value.scope, by_family.value.scope) == ("member", "family")
     for slot in [*held, other]:
         slot.release()
+
+
+async def test_the_stream_stops_when_the_elder_withdraws_consent_mid_stream(
+    monkeypatch: pytest.MonkeyPatch, fast: None
+) -> None:
+    """Spec 011 D9: kiểm lại đồng ý mỗi nhịp; `still_allowed` đổi sang False ⇒ không phát thêm khung nào."""
+    world = World("running")
+    world.add("ingest")
+    answers = iter([True, False])
+
+    async def still_allowed() -> bool:
+        return next(answers, False)
+
+    frames = await collect(stream_run(wire(monkeypatch, world), world.run.id, None, never, still_allowed))
+    assert events(frames) == ["step"] and "done" not in events(frames)
+
+
+async def test_a_stream_that_is_not_allowed_from_the_start_sends_only_the_retry_hint(
+    monkeypatch: pytest.MonkeyPatch, fast: None
+) -> None:
+    world = World("done")
+    world.add("ingest")
+
+    async def never_allowed() -> bool:
+        return False
+
+    frames = await collect(stream_run(wire(monkeypatch, world), world.run.id, None, never, never_allowed))
+    assert frames == ["retry: 3000\n\n"]

@@ -218,6 +218,10 @@ async def list_incidents(
         .join(Member, Member.id == Incident.member_id, isouter=True)
         .where(Incident.family_id == claims.family_id)
     )
+    async with get_sessionmaker()() as session:
+        consenting = await consent_gate.web_readable_members(session, claims.family_id)
+    # Spec 011 FR-006/D9: người cao tuổi đã rút đồng ý ⇒ sự cố của họ không còn hiện trên web (demo hư cấu được miễn).
+    query = query.where(or_(Incident.is_demo.is_(True), Incident.member_id.in_(consenting)))
     if status_filter == "open":
         query = query.where(Incident.state.in_(OPEN_STATES))
     elif status_filter == "closed":
@@ -263,7 +267,9 @@ async def get_incident_detail(
     response.headers.update(NO_STORE)
     async with get_sessionmaker()() as session:
         incident = await load_incident(session, incident_id, claims.family_id)
-        if incident is None:
+        if incident is None or not await consent_gate.web_readable(
+            session, incident.member_id, is_demo=incident.is_demo
+        ):
             raise _not_found()
         alias = await session.scalar(select(Member.alias).where(Member.id == incident.member_id))
         run_id = await session.scalar(select(AgentRun.id).where(AgentRun.thread_id == str(incident.id)))
@@ -348,11 +354,7 @@ async def _own_case_file(session: AsyncSession, incident_id: UUID, family_id: UU
     if row is None:  # sự cố nhà khác, không có hồ sơ: cùng một 404 (không lộ sự tồn tại)
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy hồ sơ")
     # Hồ sơ thuộc mục đích `guardian_alerts`: chưa/không còn đồng ý ⇒ cùng 404 (dữ liệu demo hư cấu được miễn).
-    if (
-        not row.is_demo
-        and incident is not None
-        and not (await consent_gate.state_for(session, incident.member_id)).guardian_alerts
-    ):
+    if incident is not None and not await consent_gate.web_readable(session, incident.member_id, is_demo=row.is_demo):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy hồ sơ")
     return row
 

@@ -43,12 +43,12 @@ T001–T009, T016–T017 làm trước khi có thẻ: đều là làn B.
   (Đồng bộ lần đầu theo bản nháp `2026.10-v3` **không** chờ Minh: T018.)
 
 ## Phase 4: Convergence
-- [ ] T013 [B] [FR-006, SC-006] Thực thi đồng ý `llm_processing` ở `llm_router`: người cao tuổi chưa đồng ý (hoặc đã rút) ⇒ không
+- [x] T013 [B] [FR-006, SC-006] Thực thi đồng ý `llm_processing` ở `llm_router`: người cao tuổi chưa đồng ý (hoặc đã rút) ⇒ không
   gọi nhà cung cấp LLM, rơi về mẫu soạn sẵn, ghi `agent_steps.fallback_used` + lý do `consent`. **BLOCKED** tới khi có khóa LLM thật
   (P0-08): trước đó máy chủ không gửi gì cho dịch vụ AI nên lời hứa giữ được; T019 chặn phát hành nếu mục đích này được "phát hành"
   trước khi task này xong. Quyết định (thực thi, không bỏ lời hứa): plan D8.
   · Verify: test "thiếu `llm_processing` ⇒ 0 lời gọi client, fallback" xanh; `hoicon-eval --suite smoke --compare baseline` không lệch
-- [ ] T014 [B] [FR-006, SC-006] Thực thi đồng ý `pilot_research`: heartbeat của người chưa đồng ý vẫn nhận (bảo vệ cần nó) nhưng
+- [x] T014 [B] [FR-006, SC-006] Thực thi đồng ý `pilot_research`: heartbeat của người chưa đồng ý vẫn nhận (bảo vệ cần nó) nhưng
   **không** vào báo cáo thí điểm (`ops pilot report`/`gate-m2`); báo cáo gộp theo nhóm khi < 3 gia đình thì ẩn. **BLOCKED** tới
   029 giai đoạn 2 (chưa có người tham gia thật). Quyết định: plan D8.
   · Verify: test "thiếu `pilot_research` ⇒ không có trong báo cáo" xanh; `consent_texts check` đạt
@@ -83,9 +83,9 @@ Thứ tự: T018 → T019 → T020; T021 độc lập. T018 làm trước 028 T0
   (`monkeypatch` đường dẫn manifest) ⇒ đỏ
 - [ ] T020 [B] [FR-006, SC-006] Thực thi 3 lời hứa khi tính năng có thật: `llm_processing` (T013, khi P0-08), `pilot_research` (T014,
   khi 029 giai đoạn 2), `voice_input` (T015, khi spec 004 có trả lời bằng giọng nói). Mỗi lời hứa xong ⇒ thêm tệp
-  `test_consent_enforcement_<purpose>.py` và T019 cho phép phát hành mục đích đó. **BLOCKED** tới khi tính năng có thật.
+  `test_consent_enforcement_<purpose>.py` và T019 cho phép phát hành mục đích đó. **Wave 5 (23/10):** `llm_processing` và `pilot_research` đã có mã + test (T013, T014); còn `voice_input` (T015, chờ spec 004) và Minh duyệt (T010) ⇒ chưa tick.
   · Verify: T019 xanh với mục đích đã chuyển `approved`
-- [ ] T021 [B] [FR-006] Kiểm đồng ý ở route đọc web của người giám hộ (027: `/v1/guardian/incidents*`, `/v1/runs/*` qua phiên web):
+- [x] T021 [B] [FR-006] Kiểm đồng ý ở route đọc web của người giám hộ (027: `/v1/guardian/incidents*`, `/v1/runs/*` qua phiên web):
   người cao tuổi đã rút `guardian_alerts` ⇒ danh sách chỉ còn sự cố **trước** lúc rút (hoặc rỗng — chọn theo quyết định ★ của Minh ở
   MASTER-PLAN §8, mặc định: rỗng), chi tiết ⇒ 404. Tên mục đích lấy từ một hằng số (đổi sang mục đích mới nếu Minh tách) — plan D9.
   · Verify: `$PYTEST tests/integration/test_guardian_incidents.py tests/integration/test_guardian_consent_gate.py`

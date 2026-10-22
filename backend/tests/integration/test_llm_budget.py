@@ -73,7 +73,7 @@ async def spend(require_db: None) -> AsyncGenerator[Any]:
 
 async def call(router: LlmRouter) -> Any:
     return await router.structured(
-        prompt=PROMPT, context={"rule_floor": "high"}, output=RiskAssessment, fallback=FALLBACK
+        prompt=PROMPT, context={"rule_floor": "high"}, output=RiskAssessment, fallback=FALLBACK, consented=True
     )
 
 

@@ -202,13 +202,18 @@ def safe_summary(text: str, alias: str) -> str | None:
     return text
 
 
-async def llm_summary(router: LlmRouter, facts: dict[str, Any], alias: str) -> str | None:
+async def llm_summary(router: LlmRouter, facts: dict[str, Any], alias: str, *, consented: bool) -> str | None:
     """Một lời gọi qua `llm_router` (che PII, ngân sách, timeout ≤ 4 s). Không khóa/hỏng/quá hạn/bị lọc ⇒ None.
     (Hồ sơ `strong` chưa có trong router: dùng hồ sơ `fast` hiện có.)"""
     fallback = CaseSummary(summary=texts.case_file_summary(alias, "none", "high", False, False))
     context = {"elder_alias": "{alias}", **facts}
     result = await router.structured(
-        prompt=load_prompt("case_file"), context=context, output=CaseSummary, fallback=fallback, max_tokens=400
+        prompt=load_prompt("case_file"),
+        context=context,
+        output=CaseSummary,
+        fallback=fallback,
+        consented=consented,
+        max_tokens=400,
     )
     if result.fallback_used:
         return None
