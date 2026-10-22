@@ -141,6 +141,7 @@ theo lô ≤ 1.000 dòng, mỗi lô một giao dịch, lũy đẳng; `python -m 
 | `verifications` | 90 ngày | job `retention` (từ `at`) |
 | `drills` | 12 tháng | job `retention` (từ `created_at`) |
 | `device_heartbeats` | 90 ngày | job `retention` (từ `slot`, spec 029) |
+| Nhật ký proxy/ứng dụng (Caddy, uvicorn; có IP khách, token đã che) | tối đa 5 × 10 MB mỗi dịch vụ | driver log Docker `json-file` (`max-size`/`max-file`) tự xóa bản cũ; hạn theo dung lượng, không theo ngày (spec 012 T019) |
 | `data_requests` | giữ | vết pháp lý của yêu cầu xóa dữ liệu (không có văn bản tự do) |
 
 ### Xóa dữ liệu gia đình theo yêu cầu (spec 034)

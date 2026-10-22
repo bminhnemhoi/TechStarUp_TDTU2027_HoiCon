@@ -25,7 +25,7 @@ Hạn lưu theo `docs/DATA-MODEL.md` §6. Cột "Máy chủ có thực thi?" nó
 Máy (Android) → máy chủ HỏiCon (VPS, Việt Nam hoặc nơi đội chọn; Caddy HTTPS) → nhà cung cấp LLM (nước ngoài: **chỉ dữ liệu đã che PII**,
 gói trả phí không dùng để huấn luyện — cần xác nhận điều khoản thật khi có khóa API) → Zalo (người giám hộ). Mọi lời gọi LLM đi qua `llm_router`
 (che PII, ngân sách, timeout, rơi về mẫu soạn sẵn). Số điện thoại: máy băm `h1`, máy chủ chỉ giữ `HMAC(pepper, h1)` + 3 số cuối (ADR-006).
-Nhật ký proxy che token một lần và tiêu đề bí mật (`docs/setup/VPS-DEPLOYMENT.md` §6).
+Nhật ký proxy che token một lần và tiêu đề bí mật (`docs/setup/VPS-DEPLOYMENT.md` §6). Nhật ký này vẫn có địa chỉ IP khách (mục đích: vận hành và điều tra sự cố); giữ tối đa 5 × 10 MB mỗi dịch vụ rồi tự xóa (hạn theo dung lượng, `docs/DATA-MODEL.md` §6).
 
 ## 3. Dữ liệu nhạy cảm
 - Không thu nội dung cuộc gọi/SMS/danh bạ; không ghi âm; số điện thoại chỉ ở dạng băm (ADR-006).

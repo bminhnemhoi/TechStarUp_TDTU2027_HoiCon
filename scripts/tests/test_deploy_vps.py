@@ -193,6 +193,11 @@ class ComposeInvariants(unittest.TestCase):
             self.assertIn("ALL", svc.get("cap_drop", []), name)
             self.assertIn("no-new-privileges:true", svc.get("security_opt", []), name)
 
+    def test_every_service_has_bounded_logs(self) -> None:  # review 012 L-10: nhật ký có IP khách phải có hạn
+        for name, svc in self.services.items():
+            opts = svc.get("logging", {}).get("options", {})
+            self.assertTrue(opts.get("max-size") and opts.get("max-file"), name)
+
     def test_resource_limits_everywhere(self) -> None:
         for name, svc in self.services.items():
             limits = svc.get("deploy", {}).get("resources", {}).get("limits", {})
@@ -203,6 +208,10 @@ class CaddyfileInvariants(unittest.TestCase):
     """Kiểm văn bản Caddyfile: các đường không được phơi ra Internet và bộ lọc nhật ký phải có ở CẢ logger mặc định."""
 
     text = (ROOT / "infra" / "caddy" / "Caddyfile").read_text(encoding="utf-8")
+
+    def test_logs_go_to_stdout_so_docker_log_caps_apply(self) -> None:  # review 012 L-10
+        self.assertIn("output stdout", self.text)
+        self.assertNotIn("output file", self.text)
 
     def test_private_paths_are_hidden(self) -> None:
         for path in ("/mcp/*", "/docs", "/redoc", "/openapi.json"):

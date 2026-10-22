@@ -50,7 +50,7 @@ Biến: `UT = python3 -m unittest discover -s scripts/tests -p test_deploy_vps.p
   `app_foreground → pause_shown` (`emu-scenario.py --scenario fake_police --runs 10 --prep kill`). So với số debug cũ. Ghi "máy ảo ≠
   máy thật"; số máy thật vẫn ở 001 (FTL, BLOCKED).
   · Verify: bảng p50/p95 hai AVD × hai bản trong `evidence.md`; `onScreenCall` p95 < 5 s
-- [ ] T019 [B] [FR-005, FR-009] Review L-10: địa chỉ IP khách trong log Caddy/uvicorn — đặt hạn giữ log (`roll_keep_for` của Caddy,
+- [x] T019 [B] [FR-005, FR-009] Review L-10: địa chỉ IP khách trong log Caddy/uvicorn — đặt hạn giữ log (`roll_keep_for` của Caddy,
   `max-size`/`max-file` của driver log Docker), ghi mục đích + hạn lưu vào `docs/PRIVACY-DPIA.md` và `docs/DATA-MODEL.md` §6.
   · Verify: `python3 -m unittest discover -s scripts/tests -p test_deploy_vps.py` (thêm kiểm `roll_keep_for` trong Caddyfile và giới
   hạn log trong compose); `caddy validate` trong ảnh `caddy:2.10.2-alpine`

@@ -63,3 +63,11 @@
 
 T010–T015 trong `tasks.md`: VPS + DNS + Let's Encrypt thật; bot Zalo thật + `setWebhook`; bật `hoicon-backup.timer` và chép sao lưu ra ngoài máy;
 áp `roles.sql` ở prod; giám sát `/readyz`; phần Android (`specs/029-pilot-kit/evidence.md`).
+
+## Wave 3 (làn B)
+
+- **T019 ĐẠT:** log Caddy ra stdout nên hạn giữ do driver Docker (`max-size 10m × max-file 5` mỗi dịch vụ, test `test_every_service_has_bounded_logs`);
+  `roll_keep_for` chỉ dùng được khi ghi ra tệp nên KHÔNG áp dụng (lệch so với chữ của task, hạn theo dung lượng chứ không theo ngày — **cần Opus** nếu muốn hạn theo ngày).
+  Đã ghi mục đích + hạn vào `docs/PRIVACY-DPIA.md` §2 và `docs/DATA-MODEL.md` §6. Verify: `unittest test_deploy_vps` 28 OK; `caddy validate` (`caddy:2.10.2-alpine`) Valid.
+- **T017 BLOCKED:** role `hoicon_app` đã có sẵn trên DB dev với mật khẩu do người khác đặt; chạy API/worker dưới role này cần mật khẩu hoặc đặt lại mật khẩu (tôi không đổi).
+  Tiến: cho phép đặt mật khẩu tạm hoặc tự chạy `HOICON_DATABASE_URL=<url hoicon_app> pytest tests/integration/test_db_roles.py`.

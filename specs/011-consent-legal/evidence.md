@@ -108,3 +108,7 @@ T010 (Minh duyệt), T011 (người thật đọc thử), T012 (làn A đồng b
 - Đã bỏ câu "cho con biết quyền nào đang bật hay tắt" ở E3 và ở bản đọc to; bản đọc to E3/E10 viết lại cho khớp chữ mới (3 số cuối + mã thay cho số, hạn 90 ngày).
 - App chỉ xin 7 trong 10 mục đích; `llm_processing`, `voice_input`, `pilot_research` có chữ trong app nhưng KHÔNG có màn nào xin và không bao giờ ghi vào sổ (mã chưa thực thi, xem trên).
 - Chưa làm: #16 tên người giám hộ thay "con bác", chia thẻ có "Nghe lại" cho `core_protection`; chưa chụp E3/E4 chữ 200% sau đổi; văn bản vẫn là BẢN NHÁP chờ Minh duyệt (T010) nên T012 không tick.
+
+## Wave 3 (làn B)
+
+- **T019 ĐẠT:** `backend/tests/contract/test_consent_release_block.py` (5 test; chưa có mã Wave 2 như ghi chú ban đầu nên viết mới). Đột biến: thêm `llm_processing` vào `released` ⇒ báo thiếu `test_consent_enforcement_llm_processing.py`.
