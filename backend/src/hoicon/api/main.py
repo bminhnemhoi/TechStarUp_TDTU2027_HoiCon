@@ -24,6 +24,7 @@ from hoicon.api.routers import (
     devices,
     drills,
     elder,
+    eval_summary,
     events,
     graphs,
     guardian,
@@ -85,6 +86,7 @@ app.include_router(drills.router)
 app.include_router(actions.router)
 app.include_router(elder.router)
 app.include_router(graphs.router)
+app.include_router(eval_summary.router)
 app.include_router(sim.router)  # spec 033: 404 hết khi HOICON_SIM_ENABLED=false
 app.include_router(webhooks.router)  # cùng route với ứng dụng con `hoicon.api.webhooks:app` (chỉ nó ra đường hầm)
 # /mcp/threat gắn ở MỌI môi trường nhưng đóng mặc định: `McpGuard` đòi token Bearer (chưa cấu hình client nào ⇒ 401)

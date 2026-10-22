@@ -1485,6 +1485,60 @@
     }
    }
   },
+  "/v1/eval/summary": {
+   "get": {
+    "tags": [
+     "eval"
+    ],
+    "summary": "Get Summary",
+    "operationId": "get_summary_v1_eval_summary_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EvalSummary"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/v1/sim/scenarios": {
    "get": {
     "tags": [
@@ -2754,6 +2808,123 @@
      "level"
     ],
     "title": "ElderAnswerResult"
+   },
+   "EvalBaseline": {
+    "properties": {
+     "suite": {
+      "type": "string",
+      "title": "Suite"
+     },
+     "created": {
+      "type": "string",
+      "title": "Created"
+     },
+     "git_sha": {
+      "type": "string",
+      "title": "Git Sha"
+     },
+     "cassette_source": {
+      "type": "string",
+      "title": "Cassette Source"
+     },
+     "provisional_cases": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Provisional Cases"
+     },
+     "metrics": {
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "object",
+      "title": "Metrics"
+     }
+    },
+    "type": "object",
+    "required": [
+     "suite",
+     "created",
+     "git_sha",
+     "cassette_source",
+     "provisional_cases",
+     "metrics"
+    ],
+    "title": "EvalBaseline"
+   },
+   "EvalGate": {
+    "properties": {
+     "verdict": {
+      "type": "string",
+      "enum": [
+       "provisional",
+       "recorded"
+      ],
+      "title": "Verdict"
+     },
+     "reasons": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Reasons"
+     }
+    },
+    "type": "object",
+    "required": [
+     "verdict",
+     "reasons"
+    ],
+    "title": "EvalGate"
+   },
+   "EvalSuite": {
+    "properties": {
+     "suite": {
+      "type": "string",
+      "title": "Suite"
+     },
+     "baseline": {
+      "$ref": "#/components/schemas/EvalBaseline"
+     },
+     "gate": {
+      "$ref": "#/components/schemas/EvalGate"
+     }
+    },
+    "type": "object",
+    "required": [
+     "suite",
+     "baseline",
+     "gate"
+    ],
+    "title": "EvalSuite"
+   },
+   "EvalSummary": {
+    "properties": {
+     "suites": {
+      "items": {
+       "$ref": "#/components/schemas/EvalSuite"
+      },
+      "type": "array",
+      "title": "Suites"
+     }
+    },
+    "type": "object",
+    "required": [
+     "suites"
+    ],
+    "title": "EvalSummary"
    },
    "EventsBatch": {
     "properties": {

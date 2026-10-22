@@ -95,7 +95,7 @@
 
 ## P3 — `/eval` (cắt được)
 
-- [ ] T010 [B-api] [FR-012] `GET /v1/eval/summary` (sau cổng FR-002): đọc `backend/eval/baseline*.json` đã commit, trả danh sách
+- [x] T010 [B-api] [FR-012] `GET /v1/eval/summary` (sau cổng FR-002): đọc `backend/eval/baseline*.json` đã commit, trả danh sách
   `{suite, baseline}` kèm `gate` nếu có (036). Test: cổng tắt ⇒ 404; không đọc `reports/`; JSON không có `run_id` của gia đình thật.
   **Lưu ý:** `.dockerignore` hiện loại cả `backend/eval` (dòng 23) và `backend/Dockerfile` chỉ chép các thư mục được liệt kê ⇒ ảnh
   backend của 012 không có baseline. Thêm ngoại lệ `!backend/eval/baseline*.json` (giữ loại `cassettes/`, `reports/`) + dòng `COPY`

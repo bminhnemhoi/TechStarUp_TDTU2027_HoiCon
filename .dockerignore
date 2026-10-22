@@ -21,6 +21,7 @@ node_modules
 **/playwright-report
 backend/tests
 backend/eval
+!backend/eval/baseline*.json
 apps/web/e2e
 **/.env*
 **/*.pem

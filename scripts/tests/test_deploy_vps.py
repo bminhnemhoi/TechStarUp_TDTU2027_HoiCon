@@ -213,6 +213,14 @@ class BackendImageData(unittest.TestCase):
         self.assertIn("COPY data/case_file /app/data/case_file", self.dockerfile)
         self.assertTrue((ROOT / "data" / "case_file" / "report_guidance.vi.yaml").is_file())
 
+    def test_eval_baselines_but_not_cassettes_or_reports_reach_the_image(self) -> None:  # spec 033 T010 (FR-012)
+        ignore = (ROOT / ".dockerignore").read_text(encoding="utf-8").splitlines()
+        self.assertIn("backend/eval", ignore)  # cassettes/ và reports/ vẫn bị loại
+        self.assertLess(ignore.index("backend/eval"), ignore.index("!backend/eval/baseline*.json"))
+        self.assertIn("COPY backend/eval/baseline*.json /app/backend/eval/", self.dockerfile)
+        self.assertNotIn("backend/eval/reports", self.dockerfile)
+        self.assertNotIn("backend/eval/cassettes", self.dockerfile)
+
     def test_coach_tips_are_copied_into_the_image(self) -> None:  # spec 032 FR-005
         self.assertIn("COPY data/coach /app/data/coach", self.dockerfile)
         self.assertTrue((ROOT / "data" / "coach" / "tips.vi.yaml").is_file())

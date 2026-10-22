@@ -228,6 +228,7 @@ qua `require_same_origin`. Tin người giám hộ của sự cố mô phỏng m
 | `POST /v1/sim/runs` | `sim_run_request.v1` → `sim_run.v1` | dựng sự kiện bằng `eval.cases.build_event`, đi qua `ingest_events` (cùng hàm với `POST /v1/events`); mặc định `llm: "replay"`; không cassette (ảnh container) hoặc `live` không khóa ⇒ `llm_mode: "fallback"`; kịch bản không bật luật ⇒ `incident_id: null` + `note` |
 | `GET /v1/sim/runs/{incident_id}` | `sim_run.v1` | chỉ sự cố mô phỏng của gia đình phiên, không thì 404 |
 | `POST /v1/sim/runs/{incident_id}/answer` | `elder_answer` (không `note`) → `sim_run.v1` | cùng làm sạch với `/answers`; câu không còn chờ ⇒ 409 |
+| `GET /v1/eval/summary` | (không có lược đồ riêng) | cùng cổng và phiên demo; chỉ đọc `backend/eval/baseline*.json` đã commit (không `reports/`); `gate.verdict = provisional` khi cassette `synthetic` hoặc kịch bản `draft` — "số rào tất định, CHƯA PHẢI SỐ M3" |
 | `GET /v1/graphs/incident` | `graph_topology.v1` | **không cổng, không đăng nhập**; sinh từ đồ thị đã biên dịch; `Cache-Control: public, max-age=300` |
 
 Hạn mức: 10 lượt `POST /v1/sim/runs`/giờ/người giám hộ và 3 lượt đang chạy/gia đình ⇒ 429 + `Retry-After`. Quyết định của người

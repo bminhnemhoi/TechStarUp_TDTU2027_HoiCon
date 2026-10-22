@@ -456,6 +456,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/eval/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Summary */
+        get: operations["get_summary_v1_eval_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/sim/scenarios": {
         parameters: {
             query?: never;
@@ -945,6 +962,45 @@ export interface components {
             incident_id: string;
             /** Level */
             level: string;
+        };
+        /** EvalBaseline */
+        EvalBaseline: {
+            /** Suite */
+            suite: string;
+            /** Created */
+            created: string;
+            /** Git Sha */
+            git_sha: string;
+            /** Cassette Source */
+            cassette_source: string;
+            /** Provisional Cases */
+            provisional_cases: number | null;
+            /** Metrics */
+            metrics: {
+                [key: string]: number;
+            };
+        };
+        /** EvalGate */
+        EvalGate: {
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "provisional" | "recorded";
+            /** Reasons */
+            reasons: string[];
+        };
+        /** EvalSuite */
+        EvalSuite: {
+            /** Suite */
+            suite: string;
+            baseline: components["schemas"]["EvalBaseline"];
+            gate: components["schemas"]["EvalGate"];
+        };
+        /** EvalSummary */
+        EvalSummary: {
+            /** Suites */
+            suites: components["schemas"]["EvalSuite"][];
         };
         /** EventsBatch */
         EventsBatch: {
@@ -2689,6 +2745,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GraphTopologyOut"];
+                };
+            };
+        };
+    };
+    get_summary_v1_eval_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvalSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
