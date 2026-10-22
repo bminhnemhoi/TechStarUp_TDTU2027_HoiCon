@@ -124,3 +124,29 @@ Chưa đổi (đề xuất của reviewer, cần Tiến/Minh vì đụng lời):
 - Chưa kiểm: hc-api29 (font XML chạy từ API 26, minSdk 29 đủ theo tài liệu, **chưa đo**); máy thật (không có; số máy thật là việc của spec 001/FTL); GitHub Actions (chưa push).
 - Ảnh "trước" hc-api36 E7 có banner cuộc gọi của hệ thống ở đầu (dựng bằng modem), ảnh "sau" dựng bằng broadcast debug ⇒ vùng cuộn không so sánh được trực tiếp ở API 36; phần so sánh vùng cuộn dựa trên API 34 (cả hai cùng broadcast).
 - `Color.kt` đã có bí danh `Risk*`/`Drill*`/`FocusRing`/`SurfaceMuted` chưa màn nào dùng (plan: thêm sẵn cho 020/022/023/028).
+
+## Wave 3 (22/10/2026) — T028: câu chữ E7 "điều khiển từ xa" + ảnh + reviewer (đóng cả T027)
+
+**Chuỗi đã đổi** (`strings.xml`, giữ khóa, không đổi bố cục ngoài gợi ý cuộn dưới): `pause_title_remote` = "Bác ơi, khoan cho người lạ điều khiển điện thoại";
+`pause_body_remote` = "Ứng dụng này cho người khác nhìn thấy và điều khiển điện thoại của bác, kể cả ứng dụng ngân hàng. Công an, ngân hàng không bao giờ bảo bác
+cài ứng dụng này. Bác cúp máy, đóng ứng dụng đó (như AnyDesk, TeamViewer), rồi bấm Hỏi con." Đã bỏ "Kẻ gian". Không test/ảnh nào nhắc chuỗi cũ.
+
+**Sửa bố cục (1 vòng).** Vòng 1 của `ux-elder-reviewer` (8/10 ảnh): 0 Chặn, **1 Cao** — ở 100% câu hành động cuối ("đóng ứng dụng đó… rồi bấm Hỏi con") bị mờ và cắt, không có
+gợi ý cuộn (dải "Kéo xuống đọc tiếp ↓" chỉ hiện từ chữ ≥ 150%). Thân bài mới dài hơn nên tràn cả ở 100%. Sửa: `SafePauseScreen.kt` hiện dải gợi ý khi
+`large || kind == PauseKind.REMOTE_CONTROL` (biến thể ngân hàng ở 100% không đổi). Vòng 2: **mục Cao đã hết, 0 Chặn, 0 Cao mới.** Còn Trung bình: (1) 200% trên hc-api34 vùng
+đọc đầu trang chưa hiện dòng thân nào (ba nút ghim chiếm ≈ 40% màn); (2) lớp mờ cắt đáy nút "Nghe lại" ở 200% hc-api34. Thấp: "AnyDesk, TeamViewer" là tên tiếng Anh (giữ, vì có "như").
+Vòng 1 còn đề xuất tách thân bài thành 2 việc có đánh số và đổi nút "Vẫn tiếp tục" thành nút chữ: đụng chữ/bố cục ngoài task ⇒ **cần Opus** quyết.
+
+**Ảnh** `~/hoicon-evidence/010-design-system/w3/e7-remote-{36,34}-{100,200}-*.png` (a = đầu màn; b–d = cuộn dần ở 200%). Dựng bằng `:demobank` mang gói giả
+`com.anydesk.anydeskandroid` (chỉ máy ảo) và cuộc gọi giả.
+
+**`fake_police` trên bản cuối** (số máy ảo, không kết luận về máy thật; mỗi dòng n = 10, 10/10 hiện SafePause, ngưỡng ≤ 3000 ms ĐẠT):
+| AVD | Biến thể | Phát hiện p50 / p95 (ms) | SafePause p50 / p95 (ms) |
+|---|---|---|---|
+| hc-api36 | điều khiển từ xa | 304 / 989 | 615 / 1091 |
+| hc-api36 | ngân hàng | 282 / 762 | 784 / 1270 |
+| hc-api34 (khởi động nguội) | điều khiển từ xa | 465 / 846 | 914 / 1264 |
+| hc-api34 (khởi động nguội) | ngân hàng | 424 / 626 | 816 / 1082 |
+Đường dừng an toàn không đổi (chỉ chữ và một dòng gợi ý). Lần trượt "Telecom không thấy cuộc gọi" của hc-api34 ở Wave 2 **không** tái hiện sau `emu-start.sh --cold`.
+
+**Kết luận T028/T027: ĐẠT, "0 High" cho ảnh E7 điều khiển từ xa** (reviewer vòng 2 đọc lại). Tick T027 và T028.

@@ -123,7 +123,7 @@ Cấm sửa `backend/**`.
 
 ## Phase 9: Wave 2 (18/10/2026 — tồn đọng Wave 1)
 
-- [ ] T027 [A] Chụp E7 biến thể **điều khiển từ xa** (`PauseKind.REMOTE_CONTROL`, luật R5) ở cỡ chữ 100% và 200% trên `hc-api36` và
+- [x] T027 [A] Chụp E7 biến thể **điều khiển từ xa** (`PauseKind.REMOTE_CONTROL`, luật R5) ở cỡ chữ 100% và 200% trên `hc-api36` và
   `hc-api34`, rồi gọi `ux-elder-reviewer` — đóng phần "chưa có ảnh" của FR-013 (evidence: "biến thể điều khiển từ xa CHƯA có ảnh, không
   dựng được trên máy ảo"). Cách dựng trên máy ảo, theo tiền lệ `vn.hoicon.demobank` trong `BankAppCatalog`:
   - thêm gói hư cấu `vn.hoicon.demoremote` vào `RemoteControlCatalog` (tăng `VERSION`) và `<queries>` của manifest (giữ
@@ -152,7 +152,7 @@ Bỏ "Kẻ gian" khỏi màn người cao tuổi; không đổi `pause_reason_re
 | `pause_title_remote` | Bác ơi, có người lạ đang muốn điều khiển điện thoại của bác? | **Bác ơi, khoan cho người lạ điều khiển điện thoại** |
 | `pause_body_remote` | Kẻ gian hay bảo bác cài ứng dụng để họ nhìn và điều khiển điện thoại của bác, rồi lấy tiền trong ngân hàng. Công an, ngân hàng không bao giờ bảo làm vậy. Bác cúp máy, đóng ứng dụng đó (như AnyDesk, TeamViewer), rồi bấm Hỏi con. | **Ứng dụng này cho người khác nhìn thấy và điều khiển điện thoại của bác, kể cả ứng dụng ngân hàng. Công an, ngân hàng không bao giờ bảo bác cài ứng dụng này. Bác cúp máy, đóng ứng dụng đó (như AnyDesk, TeamViewer), rồi bấm Hỏi con.** |
 
-- [ ] T028 [A] [FR-013] Thay đúng hai chuỗi trên trong `apps/android/app/src/main/res/values/strings.xml` (không đổi khóa, không đổi
+- [x] T028 [A] [FR-013] Thay đúng hai chuỗi trên trong `apps/android/app/src/main/res/values/strings.xml` (không đổi khóa, không đổi
   bố cục `SafePauseScreen.kt`; nếu có test/screenshot test nhắc chuỗi cũ thì sửa theo). Dựng lại E7 biến thể điều khiển từ xa trên
   máy ảo theo cách của Wave 2 (evidence.md): `apps/android/gradlew -p apps/android :demobank:installDebug
   -PdemobankApplicationId=com.anydesk.anydeskandroid` (bản giả, chỉ máy ảo) rồi

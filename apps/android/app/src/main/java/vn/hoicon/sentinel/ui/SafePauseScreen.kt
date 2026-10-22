@@ -203,7 +203,8 @@ fun SafePauseScreen(
                                 .background(Brush.verticalGradient(listOf(Color.Transparent, SurfaceWhite))),
                         )
                         // From 150% the fade alone read as "the words stopped" (reviewer, 21/10): say there is more, on a solid strip.
-                        if (large) {
+                        // The remote-control body is the longest, so it overflows at 100% too and gets the same hint (reviewer, 22/10).
+                        if (large || kind == PauseKind.REMOTE_CONTROL) {
                             Text(
                                 text = stringResource(R.string.onboarding_scroll_hint),
                                 style = MaterialTheme.typography.bodyMedium,
