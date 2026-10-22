@@ -23,7 +23,7 @@ from hoicon.agents.runtime import IncidentRuntime, RunStatus
 from hoicon.config import Settings, get_settings
 from hoicon.db.models import AgentRun, AgentStep, Job
 from hoicon.domain.events import RiskEvent
-from hoicon.eval.cases import EVAL_DIR, Case, build_event, case_secrets, elder_reply, incident_id
+from hoicon.eval.cases import Case, build_event, case_secrets, elder_reply, find_cassette, incident_id
 from hoicon.eval.checks import MAX_ASK_ELDER, CaseResult, checkpoint_bytes, evaluate
 from hoicon.eval.replay import ReplayClient
 from hoicon.jobs.queue import cancel_prefix
@@ -34,6 +34,13 @@ THREAT_SEED = Path(__file__).resolve().parents[4] / "data" / "threat_seed.demo.j
 ELDER_ALIAS = "Mẹ"
 PRODUCTION_ENVS = ("prod", "production")
 LONG_TIMER_S = 3600  # hẹn giờ của đồ thị chỉ để có job; không worker nào chạy, và cuối ca job bị xóa
+
+
+def _suite_cassette(case_id: str, suite: str) -> Path | None:
+    try:
+        return find_cassette(case_id, suite)
+    except FileNotFoundError:
+        return None
 
 
 class IsolationError(Exception):
@@ -217,6 +224,16 @@ async def _fail_unfinished_runs(sessions: async_sessionmaker, nonce: str) -> Non
         await session.execute(stmt)
 
 
+async def _zero_replayed_costs(sessions: async_sessionmaker, nonce: str) -> None:
+    """Chi phí phát lại là GIẢ (usage cố định): không để cộng dồn vào sổ ngân sách LLM của DB dùng chung.
+
+    Sổ ngân sách = SUM(agent_steps.cost_usd) của ngày (spec 003); nhiều lượt eval từng làm cạn ngân sách DB dev.
+    Token được giữ lại."""
+    runs = select(AgentRun.id).where(AgentRun.thread_id.startswith(f"eval-{nonce}-", autoescape=True))
+    async with sessions.begin() as session:
+        await session.execute(update(AgentStep).where(AgentStep.run_id.in_(runs)).values(cost_usd=0))
+
+
 async def _seed_threat_list(sessions: async_sessionmaker, settings: Settings) -> None:
     """Danh sách đe dọa nằm trong DB (spec 003) ⇒ DB eval phải có số demo để ca `flagged` ra `flagged` (idempotent)."""
     try:
@@ -245,11 +262,15 @@ async def run_suite(
 ) -> list[CaseOutcome]:
     settings = settings or get_settings()
     check_isolation(database_url, shared_db_ok, settings)
-    cassette_dir = cassette_dir or EVAL_DIR / "cassettes" / suite
-    missing = [c.id for c in cases if not (cassette_dir / f"{c.id}.json").is_file()]
+    paths: dict[str, Path] = {}
+    for c in cases:  # `cassette_dir` (test) ép một thư mục; mặc định tra theo suite: full → smoke (spec 036)
+        path = cassette_dir / f"{c.id}.json" if cassette_dir else _suite_cassette(c.id, suite)
+        if path is not None and path.is_file():
+            paths[c.id] = path
+    missing = [c.id for c in cases if c.id not in paths]
     if missing:
         raise IsolationError(f"thiếu cassette: {', '.join(missing)}")
-    cassettes = {c.id: json.loads((cassette_dir / f"{c.id}.json").read_text(encoding="utf-8")) for c in cases}
+    cassettes = {case_id: json.loads(path.read_text(encoding="utf-8")) for case_id, path in paths.items()}
     nonce = nonce or uuid.uuid4().hex[:8]
     eval_settings = settings.model_copy(
         update={
@@ -278,5 +299,6 @@ async def run_suite(
     finally:
         await cancel_prefix(sessions, f"eval-{nonce}-")
         await _fail_unfinished_runs(sessions, nonce)
+        await _zero_replayed_costs(sessions, nonce)
         await engine.dispose()
     return outcomes

@@ -1,0 +1,36 @@
+{
+  "case_id": "fake_bank_secure_app_006",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "none",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi nói mọi việc ổn"
+        ],
+        "ask_question": "q_caller_authority"
+      },
+      {
+        "level": "none",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi nói mọi việc ổn"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "{alias} đang nghe một cuộc gọi lạ rồi dùng ứng dụng tài chính; có thể chỉ là việc bình thường, anh/chị hỏi thăm nhẹ nhàng nhé.",
+        "action": "call_now"
+      }
+    ]
+  },
+  "notes": "LLM cố hạ mức xuống none; raise_only phải giữ mức sàn."
+}

@@ -279,3 +279,71 @@ def test_markdown_warns_when_a_cassette_was_recorded_for_another_prompt_version(
     )
     md = report.render_markdown(rep, [stale])
     assert "cassette" in md.lower() and "risk_scorer@0" in md
+
+
+# --- Suite full: ngưỡng Gate M3 + provisional (spec 036, FR-005/FR-006) --------------------------------------------
+
+
+@pytest.mark.parametrize("suite", ["full", "injection"])
+def test_gate_m3_thresholds_apply_without_any_baseline(suite: str) -> None:
+    assert report.absolute_failures(current(recall=0.90, false_rate=0.10), suite) == []
+    assert any("recall" in f for f in report.absolute_failures(current(recall=0.899), suite))
+    assert any("báo nhầm" in f for f in report.absolute_failures(current(false_rate=0.101), suite))
+    assert report.absolute_failures(current(violations=1), suite) != []
+    assert report.absolute_failures(current(disclosure=0.99), suite) != []
+
+
+def test_smoke_keeps_only_the_two_absolute_rules() -> None:
+    assert report.absolute_failures(current(recall=0.5, false_rate=0.5)) == []
+    assert report.absolute_failures(current(recall=0.5, false_rate=0.5), "smoke") == []
+    assert report.absolute_failures(current(violations=1), "smoke") != []
+
+
+def test_full_comparison_fails_on_the_gate_even_when_equal_to_a_weak_baseline() -> None:
+    diff = report.compare(current(recall=0.85), base(recall=0.85), "b", "full")
+    assert diff["recall_pp"] == 0 and diff["failures"] != []
+    assert report.compare(current(recall=0.85), base(recall=0.85), "b")["failures"] == []  # smoke không có ngưỡng 0,90
+
+
+def test_provisional_counts_follow_the_draft_flag_of_each_scenario() -> None:
+    from dataclasses import replace
+
+    approved = mk("benign_family_vegetables_001", "high")
+    approved = CaseOutcome(replace(approved.case, draft=False), approved.result, [], [], approved.cassette)
+    assert report.provisional_counts([approved, SCAM_OK(), BENIGN_OK()]) == (2, 3)
+    assert report.provisional_counts([approved]) == (0, 1)
+    assert report.provisional_counts([]) == (0, 0)
+
+
+def test_markdown_and_baseline_state_how_many_cases_are_provisional(tmp_path: Path) -> None:
+    outcomes = [SCAM_OK(), BENIGN_OK()]
+    rep = report.build_report(outcomes, started_at=NOW, git_sha="g", baseline=None, baseline_ref="", suite="full")
+    md = report.render_markdown(rep, outcomes)
+    assert "2/2 ca provisional" in md and "chưa có ca nào đã duyệt" in md
+    assert md.startswith("# Eval full")
+    report.write_baseline(tmp_path / "b.json", rep)
+    saved = json.loads((tmp_path / "b.json").read_text(encoding="utf-8"))
+    assert saved["suite"] == "full" and saved["provisional_cases"] == 2
+    assert not [e.message for e in Draft202012Validator(SCHEMA, format_checker=FormatChecker()).iter_errors(rep)]
+
+
+def test_gate_suites_fail_when_there_is_no_scam_case_at_all() -> None:
+    empty = {**current(), "cases_scam": 0}
+    assert any("lừa đảo" in f for f in report.absolute_failures(empty, "injection"))
+    assert report.absolute_failures({**current(), "cases_scam": 5}, "full") == []
+    assert report.absolute_failures(empty, "smoke") == []
+
+
+def test_limits_say_what_recall_and_false_alarm_actually_measure() -> None:
+    scam_at_floor = mk("fake_police_drug_ring_001", "critical")  # kỳ vọng critical = sàn critical? sàn của mk là high
+    outcomes = [scam_at_floor, BENIGN_OK(), mk("benign_official_tax_reminder_001", "none", notified=False)]
+    outcomes[2].result.incident_started = False
+    limits = report.measurement_limits(outcomes)
+    assert limits["scam_above_floor"] == 1 and limits["scam_incident"] == 1  # mk dùng sàn high, kỳ vọng critical
+    assert limits["benign_no_incident"] == 1 and limits["benign_no_incident_alarms"] == 0
+    assert limits["benign_incident"] == 1 and limits["benign_incident_over_max"] == 0
+    md = report.render_markdown(
+        report.build_report(outcomes, started_at=NOW, git_sha="g", baseline=None, baseline_ref="", suite="full"),
+        outcomes,
+    )
+    assert "Giới hạn của chỉ số" in md and "luật sàn" in md

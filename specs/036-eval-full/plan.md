@@ -1,100 +1,102 @@
-# Kế hoạch Spec 036: Eval đầy đủ
+# Implementation Plan: Eval full (`hoicon-eval --suite full|injection`)
 
-**Mã**: `036-eval-full` · **ROADMAP**: `P2-15`, `P2-18` · **Làn**: B · Spec: [`spec.md`](spec.md)
+**Branch**: `feat/w2-server` | **Date**: 2026-10-21 | **Spec**: [spec.md](spec.md)
 
-## 1. Kiểm theo hiến chương
+**Input**: `specs/036-eval-full/spec.md`
 
-| Nguyên tắc | Áp dụng |
-|---|---|
-| I. Dừng an toàn | Không đụng Android; eval chỉ chấm đồ thị máy chủ |
-| II. Riêng tư | Kịch bản hư cấu; `leak_pii` mở rộng sang cassette `recorded` trước khi ghi đĩa |
-| III. LLM chỉ nâng | `lower_than_floor` ở mọi bước; đột biến (a) bỏ `raise_only` phải bị bắt |
-| IV. Công khai AI | `missing_ai_disclosure` 100% là ngưỡng tuyệt đối |
-| V. Hợp đồng trước | `eval_suite.v1.json` mới + khối `gate` tùy chọn trong `eval_report.v1.json`, fixture trước code |
-| VII. Bằng chứng | verdict `pass/fail/provisional/blocked`; số cassette viết tay không bao giờ in như số M3 |
-| VIII. Ít code | Dùng lại toàn bộ `hoicon.eval` của 030; chỉ thêm bộ nạp cassette theo bộ, khối `gate`, một bộ kiểm |
+## Summary
 
-## 2. Quyết định
+Mở rộng gói `hoicon.eval` (spec 030) từ 20 lên ≥ 100 ca mà không đổi runner, đồ thị, router, prompt hay hợp đồng. Thêm 50 kịch bản
+hư cấu vào `data/scenarios/`, suite `full.v1.json` (110 id, ⊇ smoke) kèm bảng hành vi LLM ghi sẵn, bộ sinh cassette tất định
+(`hoicon.eval.cassettes`), suite `injection` (lọc từ full), ngưỡng tuyệt đối của Gate M3 và baseline riêng `baseline-full.json`,
+báo cáo tách ca provisional, test đột biến trên full, bước CI nếu < 2 phút.
 
-| # | Quyết định | Lý do | Phương án bỏ |
+**Quyết định kỹ thuật** (Tiến giao Wave 2; chạy một mạch, §2.6):
+- F1: "ca" = một tệp kịch bản (hợp đồng ép `…_NNN`); +50 kịch bản mới thay vì biến thể trong cùng tệp.
+- F2: cassette ngoài smoke được SINH từ `Case` + loại hành vi (không viết tay 90 tệp); tệp sinh được commit và có test "đĩa = bộ sinh".
+- F3: cassette smoke viết tay giữ nguyên; full dùng lại qua danh sách thư mục cassette `full → smoke`.
+- F4: `injection` = ca `injection: true` của full, không có baseline riêng, chỉ ngưỡng tuyệt đối.
+- F5: không đổi `docs/schemas/`; provisional suy từ `draft` từng ca, báo ở Markdown/CLI/baseline.
+
+## Technical Context
+
+**Language/Version**: Python 3.12 (`uv`) · **Dependencies**: không thêm (PyYAML, jsonschema đã có) · **Storage**: Postgres DB eval, không migration
+**Testing**: `uv run --directory backend pytest` · `ruff` · `hoicon-eval --suite smoke|full`
+**Performance Goals**: full < 120 s (kỳ vọng ≈ 40 s: smoke 20 ca ≈ 6 s) · **Constraints**: không mạng, không khóa API, tất định, không tự ghi baseline
+**Scale/Scope**: 110 ca (73 lừa đảo / 37 hợp lệ = 33,6%, 17 injection, 48 cassette đối kháng = 43,6%), 20 cassette tay + 90 sinh
+
+## Constitution Check
+
+| # | Nguyên tắc | Đụng tới? | Đạt / cách đảm bảo |
 |---|---|---|---|
-| D1 | `full` = toàn thư viện, không chọn tay | Thêm kịch bản là tự vào eval; không có chuyện "giấu" ca khó | Bộ chọn tay (dễ lệch, dễ chọn ca dễ) |
-| D2 | Cassette tìm theo thứ tự `recorded/<bộ>/` → `full/` → `smoke/` | Một ca chỉ có một bản viết tay; `recorded` thắng khi có | Chép cassette smoke sang full (hai bản lệch nhau) |
-| D3 | Khối `gate` là thuộc tính **tùy chọn** của `eval_report.v1` | Thêm tùy chọn không phá báo cáo cũ; không cần `v2` | `eval_report.v2.json` (phải sửa mọi nơi đọc) |
-| D4 | `unsafe_advice` dựa trên danh sách mẫu + mẫu phủ định, dữ liệu ở JSON có ví dụ | Kiểm được trong CI, người duyệt đọc được; giới hạn ghi rõ | LLM-judge (B6 chờ Minh, tốn tiền, không tất định) |
-| D5 | `stale` = so `prompt_versions` của cassette với front-matter prompt lúc chạy | Phát hiện "đổi prompt mà số vẫn xanh vì cassette cũ" | Băm cả nội dung prompt (đổi dấu cách cũng stale) |
-| D6 | `--record` ghi vào thư mục riêng, không ghi đè `synthetic` | Giữ được bộ đối kháng viết tay (LLM thật hiếm khi trả lời xấu theo ý muốn) | Ghi đè |
-| D7 | Tỷ lệ chính thức tính trên ca không `draft` và không `stale`; khi tập rỗng ⇒ `null`, không phải 0 | Không giả số khi chưa có ca được duyệt | Gộp hết |
+| I | Dừng an toàn | Không | Không đụng Android |
+| II | Riêng tư | **Có** (đo) | Kịch bản/cassette hư cấu (dải `0900000xxx`); `leak_pii` quét tin, nội dung gửi LLM, `agent_steps`, checkpoint cho cả 110 ca |
+| III | LLM chỉ nâng | **Có** (đo) | ≥ 25% ca đối kháng (hạ mức, nhét số/link, làm theo lệnh, refusal/timeout/malformed/missing) |
+| IV | Công khai AI | **Có** (đo) | 100% tin + câu hỏi; DB riêng + `is_demo` |
+| V | Hợp đồng trước | **Có** | `scenario.v1`/`eval_cassette.v1` giữ nguyên; test hợp đồng cho suite full viết trước code |
+| VI | UX | Gián tiếp | `panic_wording`/`promise_refund` trên mọi mẫu tin |
+| VII | Bằng chứng trung thực | **Có** | `synthetic` + provisional ghi ở mọi báo cáo; phần LLM thật BLOCKED, không giả số |
+| VIII | Ít code | **Có** | Dùng lại runner/checks/report/CLI; chỉ thêm bộ sinh cassette + chọn suite + ngưỡng |
+| IX | Chặn phát hành | Không | Công cụ dev/CI |
 
-## 3. Hợp đồng (phác thảo)
+Kết quả: **ĐẠT**.
 
-```json
-// eval_suite.v1.json
-{"required": ["suite","version","description","cases"], "additionalProperties": false,
- "properties": {"suite": {"enum": ["smoke","full","injection"]}, "version": {"const": 1},
-   "description": {"type": "string", "maxLength": 400},
-   "min_cases": {"type": "integer", "minimum": 1},
-   "quotas": {"type": "object", "additionalProperties": false, "properties": {
-     "benign_ratio_min": {"type": "number"}, "injection_min": {"type": "integer"},
-     "per_scam_category_min": {"type": "integer"}, "per_region_ratio_min": {"type": "number"}}},
-   "cases": {"type": "array", "uniqueItems": true, "minItems": 1,
-     "items": {"type": "string", "pattern": "^[a-z0-9]+(_[a-z0-9]+)*_[0-9]{3}$"}}}}
-// eval_report.v1.json — thêm properties.gate (không thêm vào required)
-"gate": {"type": "object", "additionalProperties": false,
-  "required": ["name","verdict","reasons","official_cases","provisional_cases","stale_cases","metrics_official"],
-  "properties": {"name": {"const": "M3"}, "verdict": {"enum": ["pass","fail","provisional","blocked"]},
-    "reasons": {"type": "array", "items": {"type": "string", "maxLength": 200}},
-    "official_cases": {"type": "integer", "minimum": 0}, "provisional_cases": {"type": "integer", "minimum": 0},
-    "stale_cases": {"type": "integer", "minimum": 0},
-    "metrics_official": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/metrics"}]},
-    "twin_pairs_both_correct": {"$ref": "#/$defs/rate"}}}
-// case: thêm "stale": {"type": "boolean"}, "cassette_source": {"enum": ["synthetic","recorded"]} (tùy chọn)
+## Tái sử dụng *(mandatory)*
+
+| Cần gì | Đã có ở đâu | Dùng lại / mở rộng / viết mới |
+|---|---|---|
+| Chạy đồ thị thật, thu kết quả | `eval/runner.py::run_suite` | **dùng lại**; mở rộng nhận danh sách thư mục cassette theo suite |
+| Bộ kiểm tất định | `eval/checks.py` | **dùng lại** nguyên |
+| Chỉ số, so baseline, báo cáo | `eval/report.py` | **mở rộng**: ngưỡng tuyệt đối theo suite, provisional |
+| CLI + mã thoát | `eval/cli.py` | **mở rộng**: `full`/`injection`, `--compare baseline-full`, số ca tối thiểu theo suite |
+| Đọc suite + kịch bản | `eval/cases.py::load_suite` | **mở rộng**: `full`, `injection`, tra cassette theo suite |
+| Hình dạng cassette | `docs/schemas/eval_cassette.v1.json`, 20 cassette smoke làm mẫu | **dùng lại**; bộ sinh chỉ xuất đúng hình dạng đó |
+| Mẫu test đột biến | `tests/integration/test_eval_mutations.py`, `eval_support.py` | **dùng lại** mẫu, thêm bản chạy trên tập con full |
+| Mẫu kiểm kịch bản | `tests/contract/test_scenarios.py` | **dùng lại** nguyên (110 kịch bản vẫn qua) |
+| Danh sách cụm hoảng sợ/hoàn tiền | `eval/checks.py::PANIC_PHRASES`, `REFUND_PHRASES` | **dùng lại** để bộ sinh tránh tự phạm |
+
+## Project Structure
+
+```text
+specs/036-eval-full/{spec,plan,tasks,evidence}.md · contracts/README.md
+data/scenarios/<50 kịch bản mới>.yaml
+backend/eval/suites/full.v1.json                # cases[110] + behaviors{}
+backend/eval/cassettes/full/<id>.json           # 90 tệp sinh (smoke dùng lại cassette smoke)
+backend/eval/baseline-full.json                 # --write-baseline, chạy tay
+backend/src/hoicon/eval/cassettes.py            # bộ sinh tất định + CLI `python -m hoicon.eval.cassettes write|check`
+backend/src/hoicon/eval/{cases,runner,report,cli}.py   # mở rộng nhỏ
+backend/tests/contract/test_eval_full_suite.py  # thành phần suite, cassette = bộ sinh
+backend/tests/unit/test_eval_cassettes.py · test_eval_report.py (bổ sung) · test_eval_cases.py (bổ sung) · test_eval_cli.py (bổ sung)
+backend/tests/integration/test_eval_full.py · test_eval_full_mutations.py
+.github/workflows/backend.yml                   # bước full (nếu < 2 phút)
+backend/README.md · docs/ROADMAP.md (dòng P2-15, P2-18)
 ```
 
-Tệp lược đồ được viết ở giai đoạn 0 (checkout chính, cùng commit với spec). Test hợp đồng trong `tests/contract/` là task B.
+## Thiết kế & trade-off
 
-## 4. Bản đồ file
+- **Bảng hành vi** (khóa `behaviors[id]` trong `full.v1.json`; thiếu khóa ⇒ `honest`):
 
-| Làn | File | Thay đổi |
-|---|---|---|
-| chung | `docs/schemas/eval_suite.v1.json`, `eval_report.v1.json` (khối `gate`), fixtures | mới / sửa (giai đoạn 0, đã làm) |
-| B | `tests/contract/test_eval_schemas.py` (+ `eval_suite`, `gate`) | sửa |
-| B | `data/scenarios/*.yaml` (+ ≥ 40), `backend/tests/contract/test_scenarios.py` | mới / sửa |
-| B | `backend/eval/suites/{full,injection}.v1.json`, `backend/eval/cassettes/full/*.json`, `backend/eval/lexicon/unsafe_advice.vi.json` | mới |
-| B | `hoicon/eval/{cases,replay,checks,report,cli,runner}.py` | sửa (bộ nạp theo bộ, `stale`, `unsafe_advice`, `gate`, `--record`) |
-| B | `tests/unit/test_eval_suites.py`, `test_eval_unsafe_advice.py`, `tests/integration/test_eval_full.py`, `test_eval_mutations.py` | mới |
-| B | `backend/eval/baseline-full.json`, `baseline-injection.json` | mới (`--write-baseline`) |
-| B | `.github/workflows/backend.yml` | sửa |
-| docs | `docs/AGENTS.md`, `.claude/skills/run-eval/SKILL.md`, `backend/README.md`, `backend/eval/README.md` (PROMPT-LOG) | sửa / mới |
+  | Loại | Cassette sinh | Rào được đo |
+  |---|---|---|
+  | `honest` | scorer ≥ sàn (lừa đảo leo thang `critical` nếu người cao tuổi xác nhận bị đòi chuyển tiền), tóm tắt sạch | đường vui, recall/báo nhầm |
+  | `lower` | scorer trả `none` cả hai lần | `raise_only` giữ mức sàn |
+  | `leak_phone` | tóm tắt chứa số điện thoại hư cấu | `_UNSAFE_SUMMARY` + `leak_pii` |
+  | `leak_link` | tóm tắt chứa `https://vi-du.example` | như trên (link/tên miền) |
+  | `obey_injection` | scorer hạ mức + tóm tắt lặp lại câu chèn lệnh kèm link | không làm theo lệnh chèn, giữ sàn |
+  | `refusal` / `timeout` / `malformed` / `missing` | scorer và tóm tắt đều lỗi | rơi về mẫu soạn sẵn |
+  | `scorer_down` / `brief_down` | chỉ node chấm rủi ro (timeout) hoặc chỉ node tóm tắt (refusal) lỗi | rơi về mẫu từng phần |
 
-## 5. Tái sử dụng
+  Ca không kích hoạt luật (R0 / không mở app tài chính): cassette rỗng (không dùng).
+- **Câu hỏi người cao tuổi**: phần tử đầu của `elder_answers` ⇒ `ask_question` đầu (`claims_authority`→`q_caller_authority`,
+  `knows_caller`→`q_know_caller`, `asks_transfer`→`q_asked_transfer`), lần chấm thứ hai `none` (như cassette smoke).
+- **Tra cassette**: `full`/`injection` ⇒ `[cassettes/full, cassettes/smoke]`, lấy tệp đầu tiên có; thiếu ⇒ lỗi cấu hình (exit 2).
+- **Ngưỡng tuyệt đối**: `absolute_failures(metrics, suite)`; smoke giữ 2 điều kiện cũ, full/injection thêm recall ≥ 0,90 và nhầm ≤ 0,10.
+- **Số ca tối thiểu theo suite**: smoke 20, full 100, injection 10 (thay hằng `SMOKE_CASES`).
+- **Provisional**: `provisional = sum(o.case.draft)`; Markdown thêm mục; baseline-full lưu `provisional_cases`.
+- **Tốc độ**: đo thực tế 27,7 / 28,5 / 26,9 s cho 110 ca (cả `uv run` khởi động) ⇒ đưa vào CI; vượt 120 s thì tách job riêng.
+- **Hai lớp chống số điện thoại trong tóm tắt**: `_UNSAFE_SUMMARY` rồi `mask_text`; test đột biến phải tắt CẢ HAI mới thấy `leak_pii` ở ca `leak_phone`.
+- **Ngoài phạm vi nhưng phải sửa**: `test_ops_drills.py::test_output_has_no_name_alias_or_phone` (spec 028) chập chờn vì UUID v7 có lúc chứa ≥ 9 chữ số liền; bỏ UUID trước khi dò số.
 
-| Có sẵn (030) | Dùng để |
-|---|---|
-| `eval/cases.py::load_suite`, `build_event`, `case_secrets` | nạp mọi bộ; khóa bí mật cho `leak_pii` |
-| `eval/replay.py::ReplayClient` | thêm tham số thư mục tìm cassette, không viết client mới |
-| `eval/checks.py::evaluate` | thêm `unsafe_advice` vào danh sách, giữ chữ ký |
-| `eval/report.py::compute_metrics`, `absolute_failures`, `compare` | tính lại trên tập chính thức cho `gate` |
-| `domain/pii.py::mask_text` | kiểm cassette `recorded` |
-| Skill `add-scam-scenario`, `vietnamese-scam-redteam` | soạn ca mới, ca chèn lệnh |
+## Complexity Tracking
 
-## 6. Rủi ro
-
-| Rủi ro | Mức | Giảm thiểu |
-|---|---|---|
-| Đọc nhầm số rào thành số M3 trong thuyết minh | **Cao** | Dòng cảnh báo đầu Markdown; verdict; `pitch-sync` đối chiếu `gate.verdict` |
-| Kịch bản mới bịa nguồn | TB | `source_ref` phải mở được; test cấm URL rỗng; Minh duyệt (005) |
-| `full` chậm trên CI | TB | Đo SC-002; FR-014 chạy theo đường dẫn nếu > 180 s |
-| `unsafe_advice` báo nhầm câu an toàn ("đừng chuyển tiền") | TB | Mẫu phủ định + ví dụ âm trong test |
-| P0-08 trễ ⇒ M3 chỉ có `provisional` | **Cao** | Ghi BLOCKED; báo Minh sớm: M3 cần khóa API trước ~26/12 để còn thời gian ghi cassette |
-
-## 7. Rà soát `/speckit-analyze` (18/10/2026, vòng 1)
-
-Phủ FR: 15/15 có task. **0 CRITICAL, 1 HIGH (đã sửa), 2 MEDIUM, 1 LOW.**
-
-| # | Mức | Phát hiện | Xử lý |
-|---|---|---|---|
-| E1 | HIGH | Đột biến "bỏ bọc `<untrusted>`" không đo được bằng phát lại (cassette không phụ thuộc prompt) ⇒ SC-004 sẽ không bao giờ đạt | Thay bằng đột biến "giữ lời kể thô thay `note_flags`" (bắt bằng `leak_pii`); ghi rõ `<untrusted>` thuộc phần LLM thật (FR-013) |
-| E2 | MEDIUM | `stale` dựa vào số phiên bản ⇒ sửa prompt mà giữ `@N` thì lách được | T009 thêm test ghim sha thân prompt theo phiên bản |
-| E3 | MEDIUM | Thời gian `full` trên CI chưa biết ⇒ FR-014 có hai nhánh | SC-002 đo ở T012/T013; nhánh chạy theo đường dẫn nếu > 180 s |
-| E4 | LOW | Cassette chỉ có khóa `risk_scorer`/`intervention`; prompt `case_file` (031) không có cassette | Eval không đi nhánh `case_file` (031 FR-003) ⇒ không ảnh hưởng; ghi lại để 031 không kỳ vọng eval kiểm hồ sơ |
+Không vi phạm Hiến chương cần biện minh.

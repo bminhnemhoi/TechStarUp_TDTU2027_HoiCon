@@ -1,0 +1,20 @@
+id: benign_family_gift_money_005
+category: benign_family
+is_benign: true
+twin_of: prize_gift_anniversary_005
+region: south
+channel: phone_call
+script_vi: |
+  Em trai gọi hỏi thăm sinh nhật bác, nói sẽ gửi quà qua bưu điện, không nhờ chuyển tiền hay đóng phí.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: lt_1m, app_category: none}
+elder_answers: {knows_caller: 'yes', asks_transfer: 'no'}
+expected:
+  min_risk_level: none
+  max_risk_level: low
+  notify_guardian: false
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points: [Quà gia đình không đòi phí]
+source_ref: 'VietnamPlus 27/03/2026 – Bảo vệ người cao tuổi trước chiêu lừa đảo (mật khẩu gia đình, gọi lại số quen): https://www.vietnamplus.vn/bao-ve-nguoi-cao-tuoi-truoc-cac-chieu-lua-dao-tinh-vi-tren-khong-gian-mang-post1101437.vnp'
+draft: true

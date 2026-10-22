@@ -1,0 +1,25 @@
+{
+  "case_id": "recovery_scam_police_report_005",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@1"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "error": "malformed"
+      },
+      {
+        "error": "malformed"
+      }
+    ],
+    "intervention": [
+      {
+        "error": "malformed"
+      }
+    ]
+  },
+  "notes": "Mọi lời gọi LLM đều lỗi (malformed); đồ thị phải rơi về mẫu soạn sẵn và giữ mức sàn."
+}
