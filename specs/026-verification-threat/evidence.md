@@ -114,3 +114,8 @@ phần cuộn của màn đồng ý (thẻ 2–3); màn lỗi/hết lượt.
 - Sổ đăng ký tên miền/tổng đài chính thức: nguồn để kết luận `safe`. Cần dữ liệu đã kiểm và Minh duyệt.
 - Tra cứu số tài khoản (`kind=account`): chưa có nguồn dữ liệu.
 - Trạng thái `verifying`/`rescore` chưa được dùng; phải sửa `decided_state` trước.
+
+## Wave 3 (22/10/2026) — T032: bỏ chuỗi giống số điện thoại khỏi mã sản phẩm
+
+`LookupChecker.kt:37` và `PiiMasker.kt:14`: hai chú thích có ví dụ dạng số điện thoại ⇒ mô tả bằng lời, không đổi hành vi. Verify: lệnh `grep -rnE` của task không còn kết quả (trước khi sửa: 2 dòng);
+`gradlew :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` xanh. Tick T032.

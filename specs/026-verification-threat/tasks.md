@@ -236,7 +236,7 @@
 
 ## Wave 2 (18/10/2026 — tồn đọng Wave 1)
 
-- [ ] T032 [A] [FR-011] Bỏ chuỗi giống số điện thoại khỏi chú thích trong **mã sản phẩm** (CLAUDE.md luật 1–2: số hư cấu chỉ ở
+- [x] T032 [A] [FR-011] Bỏ chuỗi giống số điện thoại khỏi chú thích trong **mã sản phẩm** (CLAUDE.md luật 1–2: số hư cấu chỉ ở
   `tests/` hoặc `data/`): `data/lookup/LookupChecker.kt:37` (`"0912345678a"`) ⇒ mô tả bằng lời ("một số gõ kèm chữ cái thừa ở
   cuối"); cùng loại ở `apps/android/rules/src/main/kotlin/vn/hoicon/rules/PiiMasker.kt:14` (ví dụ dạng `+84 …`, `091-…`, `(028) …`)
   ⇒ mô tả các dạng phân cách bằng lời. Ví dụ cụ thể, nếu cần, chuyển vào test (`src/test/`) dùng số trong `data/fixtures/phones.json`.
