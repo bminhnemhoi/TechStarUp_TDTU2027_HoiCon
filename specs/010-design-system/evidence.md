@@ -150,3 +150,21 @@ Vòng 1 còn đề xuất tách thân bài thành 2 việc có đánh số và �
 Đường dừng an toàn không đổi (chỉ chữ và một dòng gợi ý). Lần trượt "Telecom không thấy cuộc gọi" của hc-api34 ở Wave 2 **không** tái hiện sau `emu-start.sh --cold`.
 
 **Kết luận T028/T027: ĐẠT, "0 High" cho ảnh E7 điều khiển từ xa** (reviewer vòng 2 đọc lại). Tick T027 và T028.
+
+## Wave 5 (23/10/2026) — debug: hc-api34 "Telecom không thấy cuộc gọi" (CHƯA tái hiện, CHƯA xác định nguyên nhân)
+
+**Hiện tượng (Wave 2, 21/10):** `emu-scenario.py --scenario fake_police` trên hc-api34 báo `Telecom không thấy cuộc gọi đến (lỗi modem giả lập)` 10/10 cho tới khi khởi động lại máy ảo (`emu-start.sh --cold`).
+
+**Đã làm trong Wave 5 (đọc mã, không chạy máy ảo):** tìm nguyên nhân khả dĩ trong chính `emu-scenario.py` (`ring`, `flush_modem`, `screening_diagnosis`). `ring()` coi cuộc gọi là "đổ chuông" khi
+`dumpsys telephony.registry` có `mCallState=1`; nhưng thông báo trên chỉ in khi log Telecom **không** có `IncomingCallFilterGraph`, tức là lớp Telecom chưa nhận cuộc gọi dù registry đã thấy đổ chuông.
+Giả thuyết còn lại, theo thứ tự dễ kiểm: (H1) ngay sau khởi động nguội modem giả chưa đăng ký mạng (`gsm.sim.state`/`mVoiceRegState` chưa `IN_SERVICE`) trong khi `sys.boot_completed` đã = 1;
+(H2) vai trò `CALL_SCREENING` không còn do Lính gác giữ (sau `pm clear`/cài lại); (H3) trạng thái modem giả treo sau nhiều cuộc gọi tay (`flush_modem` đã có để xử lý trường hợp này).
+Wave 3 và Wave 4 khởi động nguội hc-api34 thêm ba lần: cả ba lần `fake_police` 10/10 (không tái hiện), nên H1/H3 không bị loại và cũng chưa được xác nhận.
+
+**Sửa cho dễ chẩn đoán và phòng ngừa (`scripts/emu-scenario.py`, chưa chạy được 10/10 sau cold boot — xem dưới):**
+- `radio_ready()` (SIM `LOADED`/`READY` và `mVoiceRegState=0(IN_SERVICE)`), `role_held()`, `ensure_ready()` chờ modem tối đa 120 s và cấp lại vai trò nếu mất; gọi ở đầu `main()` cho mọi kịch bản.
+- Thông báo `Telecom không thấy cuộc gọi đến` giờ kèm `modem IN_SERVICE=… · vai trò do Lính gác giữ=…`, để lần tới biết ngay H1 hay H2.
+- Kiểm tay chỉ-đọc trên hc-api36 đang chạy: `radio_ready()` = True, `role_held()` = True (đúng với máy khỏe).
+
+**Chưa làm được (chặn):** đo lại "10/10 sau cold boot" trên hc-api36 và hc-api34. hc-api36 đang chạy bộ đo heartbeat 032 T011 (Wave 4, 23/10 00:42 → ≈ 10:45 +07; khởi động lại máy ảo sẽ làm hỏng phép đo), và máy chỉ đủ RAM cho một AVD.
+Việc kế tiếp (sau ≈ 10:45): `bash scripts/emu-start.sh hc-api34 --headless --cold` rồi chạy ngay `fake_police --runs 10` (chưa chờ gì) để thử H1; nếu trượt, dùng thông báo mới để phân biệt H1/H2; lặp lại trên hc-api36. Kết luận "hạn chế AVD" hay "lỗi app" **chưa có**.
