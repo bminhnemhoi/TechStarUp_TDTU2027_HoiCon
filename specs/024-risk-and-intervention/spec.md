@@ -79,22 +79,38 @@ chính mình thì mất tính độc lập. 036 nhận phần đo: ca hồi quy 
   `detail` của lượt full chỉ gồm câu trong `BRIEF_POINT_VI` (kiểm `brief_outside_vocabulary` của 036); (iv) smoke/full không
   tụt so baseline (recall, báo nhầm), 0 vi phạm, công khai AI 100%.
 
-Câu chữ chốt (người đọc là con cháu, "anh/chị"; `{alias}` = cách xưng hô người cao tuổi; không chữ số/link; `ux-elder-reviewer`
-đọc lại ở T015):
+Câu chữ (người đọc là con cháu, "anh/chị"; `{alias}` = cách xưng hô người cao tuổi, máy chủ viết hoa chữ đầu câu). **Nguồn sự
+thật là `backend/src/hoicon/agents/texts.py::BRIEF_POINT_VI`** (đã sửa theo `ux-elder-reviewer` ở T018: B2 "{alias} cho biết …" cho
+điều bác kể, H2 câu nhận định); bảng dưới là bản chép 23/10/2026, test T020 ghim bảng = mã. Cột "Nhóm" là thứ tự ghép (FR-013).
 
-| Mã | Câu (`BRIEF_POINT_VI`) | Điều kiện |
-|---|---|---|
-| `unknown_call_then_finance_app` | {alias} vừa nghe một số lạ gọi rồi mở ứng dụng ngân hàng hoặc ví tiền. | `app.category ∈ {bank, wallet, securities}` |
-| `sideloaded_app` | {alias} vừa mở một ứng dụng cài từ ngoài cửa hàng Play sau cuộc gọi lạ. | `app.category == sideloaded` |
-| `call_still_ongoing` | Cuộc gọi lạ có thể vẫn đang diễn ra. | `call.active == true` |
-| `flagged_number` | Số gọi tới nằm trong danh sách cảnh báo lừa đảo. | `threat.verdict == flagged` hoặc `caller.flagged` |
-| `caller_claims_authority` | Người gọi xưng là công an, ngân hàng hoặc cơ quan nhà nước. | `q_caller_authority = yes` hoặc cờ `mentions_authority` |
-| `asked_transfer_or_code` | Người gọi bảo {alias} chuyển tiền hoặc đọc mã số. | `q_asked_transfer = yes` hoặc cờ `mentions_transfer`/`mentions_code` |
-| `asked_secrecy` | Người gọi dặn {alias} giữ kín, đừng kể với người nhà. | cờ `mentions_secrecy` |
-| `asked_install_app` | Người gọi bảo {alias} cài ứng dụng hoặc mở đường dẫn lạ. | cờ `mentions_app_or_link` |
-| `elder_unsure_of_caller` | {alias} không chắc người gọi là ai. | `q_know_caller ∈ {no, unsure}` |
-| `common_scam_pattern` | Đây là dấu hiệu thường gặp khi kẻ gian giả danh để dụ chuyển tiền. | luôn đúng |
-| `may_be_routine` | Có thể chỉ là việc bình thường, anh/chị cứ hỏi thăm nhẹ nhàng. | mức cuối ≤ `medium` |
+| # | Nhóm | Mã | Câu (`BRIEF_POINT_VI`) | Điều kiện |
+|---|---|---|---|---|
+| 1 | sự kiện | `unknown_call_then_finance_app` | Vừa rồi {alias} nghe một số lạ gọi rồi mở ứng dụng ngân hàng hoặc ví điện tử. | `app.category ∈ {bank, wallet, securities}` |
+| 2 | sự kiện | `sideloaded_app` | Vừa rồi {alias} mở một ứng dụng không tải từ cửa hàng CH Play, sau cuộc gọi lạ. | `app.category == sideloaded` (loại trừ với #1: một sự kiện chỉ có một `category`) |
+| 3 | sự kiện | `call_still_ongoing` | Cuộc gọi lạ với {alias} có thể vẫn đang diễn ra. | `call.active == true` |
+| 4 | sự kiện | `flagged_number` | Số điện thoại này nằm trong danh sách số bị báo nghi lừa đảo. | `threat.verdict == flagged` hoặc `caller.flagged` |
+| 5 | bác kể | `caller_claims_authority` | {alias} cho biết người gọi xưng là công an, ngân hàng hoặc cơ quan nhà nước. | `q_caller_authority = yes` hoặc cờ `mentions_authority` |
+| 6 | bác kể | `asked_transfer_or_code` | {alias} cho biết người gọi bảo chuyển tiền hoặc đọc mã xác thực. | `q_asked_transfer = yes` hoặc cờ `mentions_transfer`/`mentions_code` |
+| 7 | bác kể | `asked_secrecy` | {alias} cho biết người gọi dặn giữ kín, đừng kể với ai. | cờ `mentions_secrecy` |
+| 8 | bác kể | `asked_install_app` | {alias} cho biết người gọi bảo cài ứng dụng hoặc mở một đường dẫn lạ. | cờ `mentions_app_or_link` |
+| 9 | bác kể | `elder_unsure_of_caller` | {alias} cho biết chưa rõ người gọi là ai. | `q_know_caller ∈ {no, unsure}` |
+| 10 | nhận định | `common_scam_pattern` | Những điểm trên thường gặp trong các cuộc gọi giả danh để lừa chuyển tiền. | **có ≥ 1 điểm #1–#9 được giữ** (câu trỏ "những điểm trên") |
+| 11 | nhận định | `may_be_routine` | Cũng có thể đây chỉ là việc bình thường, anh/chị cứ nhẹ nhàng hỏi thăm {alias} xem chuyện gì. | mức ≤ `medium` **và** không #4–#8 (sửa Medium #1 bảo mật ở T018) |
+
+- **(FR-013)** *(23/10/2026, sau `ux-elder-reviewer` T018: thứ tự ghép phải cố định)*: LLM chọn **điểm nào**, máy chủ quyết **thứ
+  tự**. Thuật toán `brief_points` (tất định, thuần):
+  1. Duyệt mã của LLM theo thứ tự LLM, bỏ mã lạ/trùng/điều kiện sai (bảng trên), lấy tối đa 3 mã đầu còn lại (LLM vẫn quyết ưu tiên).
+  2. Nhóm nhận định giữ tối đa một mã: có cả hai ⇒ bỏ `may_be_routine` (chọn phía thận trọng, luật 5).
+  3. Sắp lại theo cột "#" (sự kiện → bác kể → nhận định) — **không theo thứ tự LLM**.
+  4. Rỗng ⇒ bộ mặc định: các mã sự kiện #1/#2 đúng điều kiện, rồi `common_scam_pattern` nếu đã có ≥ 1 mã sự kiện. Vẫn rỗng (sự cố
+     không có ứng dụng, ví dụ chỉ R4) ⇒ `summary = ""` và `guardian_detail` bỏ hẳn phần tóm tắt (không để hai dấu cách, không dấu
+     chấm thừa): tin còn "Mức nguy cơ: …" + hành động.
+  5. *(H3 của reviewer)* Khi `call_still_ongoing` được giữ và `action ∈ {call_now, call_and_stay_on_line}`, câu hành động thêm câu
+     cố định `texts.ACTION_BUSY_VI` = "Nếu máy {alias} đang bận, anh/chị nhắn tin cho {alias} rồi gọi lại sau một phút." (tin vẫn ≤ giới
+     hạn của Zalo; `ux-elder-reviewer` đọc lại).
+- **(SC-009)**: Với mọi hoán vị của cùng một tập mã hợp lệ, `brief_summary` cho **cùng một chuỗi** (test đặc tính trên toàn bộ tập con
+  ≤ 3 mã của 11 mã); không chuỗi nào bắt đầu bằng câu nhận định; bảng spec §5 = `BRIEF_POINT_VI` (test); smoke/full/injection không
+  lệch baseline về recall/báo nhầm/vi phạm.
 
 ### F-1 — người cao tuổi xác nhận "bị đòi chuyển tiền" ⇒ luôn `critical` (báo nhầm) — **★ chờ Minh** (MASTER-PLAN §8 mục 8)
 

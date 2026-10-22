@@ -19,6 +19,7 @@
           "category": { "$ref": "scenario.v1.json#/properties/category" },
           "is_benign": { "type": "boolean" },
           "injection": { "type": "boolean" },
+          "title_vi": { "type": "string", "minLength": 3, "maxLength": 80, "description": "Tên ngắn tiếng Việt cho ô chọn kịch bản (spec 033 FR-015): máy chủ dựng TẤT ĐỊNH từ nhãn nhóm thủ đoạn + số thứ tự (ví dụ \"Giả danh công an · ca 2\"; ca hợp lệ: \"Cuộc gọi thật · …\"). Tùy chọn trong v1 để mã cũ không gãy; máy chủ gửi luôn từ 033 T021" },
           "draft": { "type": "boolean", "description": "Kịch bản chưa qua duyệt (005) ⇒ web gắn nhãn 'kịch bản nháp'" },
           "script_vi": { "type": "string", "minLength": 20, "maxLength": 1200, "description": "Mô tả tình huống hư cấu (script_vi của kịch bản)" }
         }

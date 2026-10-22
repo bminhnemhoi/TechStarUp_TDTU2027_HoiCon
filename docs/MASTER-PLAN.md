@@ -340,7 +340,7 @@ Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi
    **22/10:** chữ gộp đã chốt cho 031 T011 (160/160 từ) nói cả (a), (b), (c) trong một mục đích — tức là theo đề xuất "có cả ba";
    Minh tách thì văn bản phải tách theo.
 5. ★ **I4 trong 032**: Tiến giao 032 "gồm I4" (18/10) trong khi mục 1 (I1–I5) chưa có ý kiến Minh. Phần "mất bảo vệ" nằm sau cờ
-   `HOICON_PROTECTION_WATCH` (mặc định bật) — Minh từ chối thì tắt cờ, không gỡ mã. Văn bản `guardian_alerts` gộp (031 T011) có cụm "báo khi máy bác hết được bảo vệ"; Minh từ chối ⇒ 032 T008 bỏ cụm đó.
+   `HOICON_PROTECTION_WATCH` (mặc định bật) — Minh từ chối thì tắt cờ, không gỡ mã. Văn bản `guardian_alerts` `2026.10-v4` (bản duy nhất, 031 T011) có câu "Họ được báo nếu HỏiCon bị tắt."; Minh từ chối ⇒ 032 T008 bỏ câu đó.
 6. ★ **Kịch bản eval (036)** — cập nhật 22/10/2026: **cả 110 kịch bản** của suite full (60 cũ P1-07 + 50 mới do tác tử soạn) còn
    `draft: true`; Gate M3 chỉ là `pass` khi ≥ 100 ca được Minh duyệt bỏ `draft` **và** có cassette LLM thật (P0-08). Đọc trước
    nhóm `task_scam_*`, `recovery_scam_*`, `fake_bank_*` (security reviewer 036, Medium #4: mức chi tiết thủ đoạn). Kèm hai điểm

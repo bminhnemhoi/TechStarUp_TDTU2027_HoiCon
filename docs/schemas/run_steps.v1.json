@@ -11,6 +11,7 @@
     "status": { "enum": ["running", "waiting", "done", "failed"] },
     "is_drill": { "type": "boolean", "description": "Luật 8: giao diện gắn nhãn [DIỄN TẬP]" },
     "is_demo": { "type": "boolean" },
+    "is_sim": { "type": "boolean", "description": "Lượt chạy của sự cố mô phỏng /sim (spec 033 FR-015): web gắn nhãn MÔ PHỎNG ở /trace. Vắng = false; máy chủ gửi luôn từ 033 T021" },
     "steps": { "type": "array", "maxItems": 500, "items": { "$ref": "https://hoicon.vn/schemas/agent_step.v1.json" } }
   }
 }

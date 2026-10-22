@@ -47,7 +47,7 @@
   · Verify: `$PYTEST tests/unit/test_zalo_inbound.py tests/integration/test_zalo_webhook.py tests/integration/test_zalo_no_leak.py tests/integration/test_guardian_reply.py`
 - [x] T008 [B] [FR-009] Văn bản đồng ý: câu của 032 **đã vào ở 031 T011** (bản gộp, chốt 22/10 — MASTER-PLAN §5 "Wave 3"). Ở đây
   chỉ: kiểm chữ khớp mã thật (job `coach_weekly` + `protection_watch` chạy), `PILOT-PROTOCOL.md` §4 thêm lại dòng đã bỏ. Minh bác
-  I4 (MASTER-PLAN §8 mục 5) ⇒ bỏ cụm "báo khi máy bác hết được bảo vệ," (còn 153 từ), tăng phiên bản, `consent_texts write`,
+  I4 (MASTER-PLAN §8 mục 5) ⇒ bỏ câu "Họ được báo nếu HỏiCon bị tắt." của bản `2026.10-v4` (còn 153 từ), tăng `2026.10-v5`, `consent_texts write`,
   `ux-elder-reviewer`, và báo làn A chạy 032 T010.
   · Verify: `$PYTEST tests/contract/test_consent_texts.py && uv run --directory backend python -m hoicon.ops.consent_texts check`
 - [x] T009 [B] [FR-011] `docs/AGENTS.md` (Coach: hai job, không LangGraph, plan D1), `docs/DATA-MODEL.md` (cột mới, khóa chống trùng),

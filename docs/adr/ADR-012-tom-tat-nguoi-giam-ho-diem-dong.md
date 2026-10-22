@@ -54,7 +54,8 @@ bằng luật tất định.
    Luật R5 (ứng dụng điều khiển từ xa) chưa có trong `risk_event.v1` phía máy chủ nên chưa có mã riêng; thêm khi sự kiện có.
    Bộ chính xác (tên mã, câu chữ, điều kiện) chốt ở `specs/024-risk-and-intervention` §5; đổi bộ ⇒ tăng `version` hợp đồng
    và prompt.
-3. Máy chủ ghép `summary = " ".join(câu của các điểm còn lại theo thứ tự LLM)`, thay `{alias}`; còn rỗng sau khi lọc ⇒ bộ mặc
+3. *(sửa 23/10/2026, spec 024 FR-013: LLM chọn **điểm nào**, máy chủ quyết **thứ tự**)* Máy chủ ghép `summary` theo **thứ tự cố định**
+   sự kiện → điều bác kể → nhận định (thứ tự enum của `guardian_brief.v2.json`), không theo thứ tự LLM, thay `{alias}`; còn rỗng sau khi lọc ⇒ bộ mặc
    định tất định: mã ứng dụng đúng điều kiện (`unknown_call_then_finance_app` hoặc `sideloaded_app`, nếu có) + `common_scam_pattern`.
    `fallback` của router (LLM lỗi/sai dạng) là `GuardianBrief` v2 với đúng bộ mặc định này ⇒ không còn câu mẫu tự do. `guardian_detail` và câu công khai AI do mẫu
    thêm, không đổi. Mức `critical` vẫn ép `call_and_stay_on_line`.

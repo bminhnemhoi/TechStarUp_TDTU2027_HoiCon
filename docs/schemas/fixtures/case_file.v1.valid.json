@@ -120,5 +120,143 @@
         }
       ]
     }
+  },
+  {
+    "_name": "hướng dẫn đã duyệt (spec 031 FR-015)",
+    "id": "7d1e2f30-0000-4000-8000-000000000001",
+    "incident_id": "7d1e2f30-0000-4000-8000-0000000000aa",
+    "status": "draft",
+    "summary_source": "template",
+    "created_at": "2026-12-20T09:02:05Z",
+    "approved_at": null,
+    "sent_at": null,
+    "discarded_at": null,
+    "is_demo": false,
+    "content": {
+      "schema_version": 1,
+      "ai_label": "Đây là trợ lý AI HỏiCon. Hồ sơ này do trợ lý AI soạn từ dữ kiện đã ghi; anh/chị đọc kỹ trước khi duyệt.",
+      "summary": "Mẹ nghe một cuộc gọi lạ dài hơn mười lăm phút, người gọi xưng là công an, rồi mẹ mở ứng dụng ngân hàng. HỏiCon đã nhắc mẹ dừng lại.",
+      "elder_alias": "Mẹ",
+      "level": "critical",
+      "reasons": [
+        "Người gọi xưng là cơ quan nhà nước",
+        "Người gọi yêu cầu chuyển tiền"
+      ],
+      "rule": "Đang nghe số lạ thì mở ứng dụng ngân hàng (luật R1)",
+      "caller_last3": "123",
+      "app_category": "bank",
+      "timeline": [
+        {
+          "at": "2026-12-20T09:00:00Z",
+          "text": "Điện thoại phát hiện cuộc gọi lạ rồi mở ứng dụng ngân hàng"
+        },
+        {
+          "at": "2026-12-20T09:02:00Z",
+          "text": "Anh/chị chọn: nghi lừa đảo"
+        }
+      ],
+      "elder_answers": [
+        {
+          "question": "Người gọi có xưng là cơ quan nhà nước không?",
+          "answer": "Có"
+        }
+      ],
+      "verifications": [
+        {
+          "kind": "phone",
+          "verdict": "dangerous",
+          "source": "Danh sách cảnh báo HỏiCon",
+          "list_version": "2026-12-19"
+        }
+      ],
+      "guardian_decision": "scam",
+      "local_fields": [
+        {
+          "key": "caller_phone",
+          "label": "Số điện thoại đã gọi tới mẹ"
+        },
+        {
+          "key": "amount",
+          "label": "Số tiền đã chuyển (nếu có)"
+        }
+      ]
+    },
+    "guidance": {
+      "approved": true,
+      "steps": [
+        {
+          "id": "contact_bank",
+          "text_vi": "Gọi ngay tổng đài ghi sau thẻ của ngân hàng người thân để nhờ kiểm tra.",
+          "source_ref": "https://vi-du.example/huong-dan"
+        }
+      ],
+      "fallback_vi": "Anh/chị liên hệ công an nơi cư trú và ngân hàng của người thân."
+    }
+  },
+  {
+    "_name": "hướng dẫn chưa duyệt: chỉ câu chung",
+    "id": "7d1e2f30-0000-4000-8000-000000000001",
+    "incident_id": "7d1e2f30-0000-4000-8000-0000000000aa",
+    "status": "draft",
+    "summary_source": "template",
+    "created_at": "2026-12-20T09:02:05Z",
+    "approved_at": null,
+    "sent_at": null,
+    "discarded_at": null,
+    "is_demo": false,
+    "content": {
+      "schema_version": 1,
+      "ai_label": "Đây là trợ lý AI HỏiCon. Hồ sơ này do trợ lý AI soạn từ dữ kiện đã ghi; anh/chị đọc kỹ trước khi duyệt.",
+      "summary": "Mẹ nghe một cuộc gọi lạ dài hơn mười lăm phút, người gọi xưng là công an, rồi mẹ mở ứng dụng ngân hàng. HỏiCon đã nhắc mẹ dừng lại.",
+      "elder_alias": "Mẹ",
+      "level": "critical",
+      "reasons": [
+        "Người gọi xưng là cơ quan nhà nước",
+        "Người gọi yêu cầu chuyển tiền"
+      ],
+      "rule": "Đang nghe số lạ thì mở ứng dụng ngân hàng (luật R1)",
+      "caller_last3": "123",
+      "app_category": "bank",
+      "timeline": [
+        {
+          "at": "2026-12-20T09:00:00Z",
+          "text": "Điện thoại phát hiện cuộc gọi lạ rồi mở ứng dụng ngân hàng"
+        },
+        {
+          "at": "2026-12-20T09:02:00Z",
+          "text": "Anh/chị chọn: nghi lừa đảo"
+        }
+      ],
+      "elder_answers": [
+        {
+          "question": "Người gọi có xưng là cơ quan nhà nước không?",
+          "answer": "Có"
+        }
+      ],
+      "verifications": [
+        {
+          "kind": "phone",
+          "verdict": "dangerous",
+          "source": "Danh sách cảnh báo HỏiCon",
+          "list_version": "2026-12-19"
+        }
+      ],
+      "guardian_decision": "scam",
+      "local_fields": [
+        {
+          "key": "caller_phone",
+          "label": "Số điện thoại đã gọi tới mẹ"
+        },
+        {
+          "key": "amount",
+          "label": "Số tiền đã chuyển (nếu có)"
+        }
+      ]
+    },
+    "guidance": {
+      "approved": false,
+      "steps": [],
+      "fallback_vi": "Anh/chị liên hệ công an nơi cư trú và ngân hàng của người thân."
+    }
   }
 ]

@@ -16,7 +16,33 @@
     "sent_at": { "$ref": "#/$defs/maybe_time" },
     "discarded_at": { "$ref": "#/$defs/maybe_time" },
     "is_demo": { "type": "boolean" },
-    "content": { "$ref": "#/$defs/content" }
+    "content": { "$ref": "#/$defs/content" },
+    "guidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approved", "steps", "fallback_vi"],
+      "description": "Hướng dẫn trình báo (spec 031 FR-011, FR-015) từ data/case_file/report_guidance.vi.yaml. Chưa duyệt (approved=false) ⇒ steps RỖNG, web chỉ hiện fallback_vi. Không thuộc nội dung hồ sơ (không in như dữ kiện vụ việc). Tùy chọn trong v1; máy chủ gửi luôn từ 031 T019",
+      "properties": {
+        "approved": { "type": "boolean" },
+        "steps": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "text_vi"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{2,40}$" },
+              "text_vi": { "type": "string", "minLength": 10, "maxLength": 240 },
+              "source_ref": { "type": ["string", "null"], "maxLength": 300, "description": "Nguồn chính thức đã kiểm (Minh duyệt)" }
+            }
+          }
+        },
+        "fallback_vi": { "type": "string", "minLength": 10, "maxLength": 240 }
+      },
+      "if": { "properties": { "approved": { "const": false } } },
+      "then": { "properties": { "steps": { "maxItems": 0 } } }
+    }
   },
   "$defs": {
     "uuid": { "type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },

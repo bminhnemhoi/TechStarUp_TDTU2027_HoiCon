@@ -69,3 +69,29 @@ còn High ở câu chữ sau 2 vòng.
   · Verify: `python3 scripts/check-spec-trace.py` 0 lỗi.
 
 Thứ tự: T014 → T015 → (036 T025 → T026 → T027) → T018 → T019. T016 → T017 chỉ khi Minh chọn A, chen trước T018.
+
+---
+
+## Wave 4 (23/10/2026) — thứ tự ghép cố định (FR-013, SC-009)
+
+**Chế độ chạy**: làn B (`[B-api]`, chỉ `backend/**`), một mạch, test đỏ trước. Không đổi hợp đồng (`guardian_brief.v2.json` giữ
+nguyên enum; thứ tự enum chính là thứ tự ghép). **Dừng** khi một ca smoke/full đổi recall/báo nhầm/vi phạm so baseline.
+
+- [ ] T020 [B-api] [FR-013] Test đỏ trước trong `backend/tests/unit/test_brief_points.py`:
+  (a) `BRIEF_POINT_VI` == bảng spec §5 (11 câu, đúng chữ — chép bảng vào test làm hằng số kỳ vọng);
+  (b) thứ tự khóa `BRIEF_POINT_VI` == enum `points` của `docs/schemas/guardian_brief.v2.json` == cột "#";
+  (c) đặc tính: mọi tập con ≤ 3 mã hợp lệ, mọi hoán vị ⇒ cùng `brief_summary` (dùng `itertools.permutations`, state dựng sao cho
+  mọi điều kiện đúng); (d) có cả `common_scam_pattern` và `may_be_routine` ⇒ chỉ còn `common_scam_pattern`; (e) chỉ có mã nhận
+  định ⇒ rơi về bộ mặc định; (f) sự cố không ứng dụng (không #1/#2) và LLM trả mã sai ⇒ `summary == ""` và `guardian_detail` không
+  có hai dấu cách liền, không có ". ." ; (g) `call_still_ongoing` + `call_now` ⇒ tin có `ACTION_BUSY_VI`, không có `call_still_ongoing`
+  ⇒ không có.
+  · Verify (đỏ): `uv run --directory backend pytest tests/unit/test_brief_points.py -q` đỏ ở (c)(d)(f)(g).
+- [ ] T021 [B-api] [FR-013] Sửa `incident_graph.py::brief_points` theo 5 bước của FR-013 và `texts.py` (`ACTION_BUSY_VI`,
+  `guardian_detail` bỏ phần tóm tắt khi rỗng); cassette smoke/full không cần sinh lại (mã không đổi) — chạy `cassettes check` để
+  chắc. `ux-elder-reviewer` đọc 3 tin mẫu (lừa đảo đủ 3 nhóm; ca có `call_still_ongoing`; ca tóm tắt rỗng).
+  Phụ thuộc: T020.
+  · Verify: `uv run --directory backend pytest tests/unit/test_brief_points.py tests/integration/test_eval_full.py -q`;
+  `uv run --directory backend ruff check . && uv run --directory backend ruff format --check .`;
+  `uv run --directory backend python -m hoicon.eval.cassettes check`;
+  `hoicon-eval --suite smoke --compare baseline --shared-db-ok`, `--suite full --compare baseline-full --shared-db-ok`,
+  `--suite injection --shared-db-ok` đều exit 0; reviewer 0 Chặn/Cao ghi vào `evidence.md` (SC-009).

@@ -12,7 +12,7 @@
       "minItems": 1,
       "maxItems": 3,
       "uniqueItems": true,
-      "description": "Thứ tự = thứ tự câu trong tin. Điều kiện từng mã: ADR-012 §Quyết định 2; `may_be_routine` bị bỏ khi mức cuối ≥ high.",
+      "description": "LLM chọn mã (thứ tự của LLM chỉ là ưu tiên khi cắt còn 3). Thứ tự câu trong tin do máy chủ quyết = thứ tự enum dưới đây (spec 024 FR-013: sự kiện → điều bác kể → nhận định). Điều kiện từng mã: spec 024 §5.",
       "items": {
         "enum": [
           "unknown_call_then_finance_app",
