@@ -1,6 +1,7 @@
 # ADR-006: Số điện thoại / số tài khoản chỉ rời máy dưới dạng băm; máy chủ lưu HMAC có pepper xoay vòng
 
 - Trạng thái: **Chấp nhận** · 08/10/2026
+- Sửa đổi bởi [ADR-011](ADR-011-danh-sach-de-doa-bucket.md) (18/10/2026), đúng một ý: danh sách đe dọa xuống máy dạng bucket k-ẩn danh thay vì tập `h1`
 - Liên quan: DATA-MODEL §3, CLAUDE.md luật 1–2, Luật Bảo vệ dữ liệu cá nhân 91/2025/QH15
 
 ## Bối cảnh

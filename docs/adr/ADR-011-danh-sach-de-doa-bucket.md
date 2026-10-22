@@ -1,11 +1,11 @@
 # ADR-011: Danh sách đe dọa trên máy dạng bucket k-ẩn danh, không phát tập h1
 
-- Trạng thái: **Đề xuất** (16/10/2026). Chờ Tiến chấp nhận; Minh chốt phạm vi khi duyệt PR. Soạn bởi Claude cho Tiến;
-  spec 026, nhiệm vụ T001.
+- Trạng thái: **Chấp nhận** (18/10/2026, Tiến duyệt và ủy quyền cho Claude ghi vào ADR; Minh chốt phạm vi khi duyệt PR).
+  Đề xuất 16/10/2026, soạn bởi Claude cho Tiến; spec 026, nhiệm vụ T001.
 - Liên quan: ADR-001 (luật tất định trên máy), ADR-006 (HMAC số điện thoại), ADR-009 (lõi tác tử);
   `specs/026-verification-threat` (spec, plan D1); `docs/DATA-MODEL.md` §2 (`threat_indicators`); CLAUDE.md luật 1–2.
 - **Phần ADR-006 bị sửa đổi: đúng một ý** ("Danh sách đe dọa gửi xuống máy dạng tập h1"). Thân ADR-006 không bị sửa.
-  Khi Tiến chấp nhận thì mới gắn dòng "Sửa đổi bởi ADR-011" vào ADR-006.
+  Dòng "Sửa đổi bởi ADR-011" đã gắn vào ADR-006 khi chấp nhận (18/10/2026).
 
 ## Bối cảnh
 Muốn tra ngoại tuyến (US-06.3), máy phải trả lời được "h1 này có trong danh sách không" mà không cần mạng, vì

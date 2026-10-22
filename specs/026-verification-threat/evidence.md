@@ -11,7 +11,7 @@
   - `POST /v1/lookups` p95 ≈ 14 ms (n = 50, trong tiến trình, `test_lookup_latency_p95`); 25 request đồng thời ⇒ đúng 20
     lọt; `GET /v1/threat-list` 24 lượt/ngày/thiết bị rồi 429.
   - Migration `0007` lên/xuống/lên ổn trên DB dev (kể cả khi sổ đồng ý đã có dòng `lookups`).
-- **ADR-011** (bucket k-ẩn danh): Đề xuất, chờ Tiến chấp nhận.
+- **ADR-011** (bucket k-ẩn danh): ~~Đề xuất, chờ Tiến chấp nhận~~ → **Chấp nhận 18/10/2026** (Tiến; ghi vào ADR và commit 22/10/2026). ADR-006 có dòng "Sửa đổi bởi ADR-011".
 - **Môi trường dự kiến**:
   - Linux CachyOS, Postgres dev trên Docker (cổng 15432), uvicorn trên localhost.
   - AVD `hc-api36` và `hc-api34` (`sdk_gphone64`).
