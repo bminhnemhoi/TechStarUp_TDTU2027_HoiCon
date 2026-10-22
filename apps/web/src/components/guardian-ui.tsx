@@ -94,7 +94,7 @@ export function useLoginRedirect() {
   };
 }
 
-export function GuardianShell({ children }: { children: ReactNode }) {
+export function GuardianShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const router = useRouter();
   const [session, setSession] = useState<GuardianSession | null>(null);
   const [leaving, setLeaving] = useState(false);
@@ -122,7 +122,7 @@ export function GuardianShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-4 py-5 text-foreground">
+    <div className={`mx-auto flex min-h-screen w-full ${wide ? "max-w-7xl" : "max-w-3xl"} flex-col gap-5 px-4 py-5 text-foreground`}>
       <header className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-brand-navy pb-3">
         <div>
           <p className="text-body font-bold">HỏiCon</p>

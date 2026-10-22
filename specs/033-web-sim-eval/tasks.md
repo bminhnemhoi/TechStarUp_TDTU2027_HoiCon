@@ -72,24 +72,24 @@
 
 ## Nhóm [B-web]
 
-- [ ] T012 [B-web] [FR-011] `pnpm --dir apps/web add --save-exact @xyflow/react@12.12.0`; ghi lý do (plan D6, giấy phép MIT) vào
+- [x] T012 [B-web] [FR-011] `pnpm --dir apps/web add --save-exact @xyflow/react@12.12.0`; ghi lý do (plan D6, giấy phép MIT) vào
   thông điệp commit; component `src/components/trace-graph.tsx` nạp động (`next/dynamic`, `ssr: false`), bố cục tĩnh từ
   `graph_topology`, trạng thái nút (đã chạy / đang chờ người / lỗi / rơi về mẫu) bằng màu **và** biểu tượng + chữ, tôn trọng
   `prefers-reduced-motion`. Đo kích thước JS của `/incidents` trước/sau (không được tăng).
   · Verify: `$WEB typecheck && $WEB lint && $WEB build` (ghi kích thước route từ output build vào evidence)
-- [ ] T013 [B-web] [FR-011] Trang `src/app/trace/[runId]/page.tsx`: sơ đồ + **bản chữ** (danh sách bước theo thứ tự, dùng lại
+- [x] T013 [B-web] [FR-011] Trang `src/app/trace/[runId]/page.tsx`: sơ đồ + **bản chữ** (danh sách bước theo thứ tự, dùng lại
   `describeStep`) + chi tiết bước khi chọn nút; dữ liệu qua `GET /v1/runs/{id}/steps` + `useRunStream`; không phải của mình ⇒
   "Không tìm thấy". Link "Xem sơ đồ" từ `incidents/[id]`. Playwright `e2e/trace.spec.ts`: bản chữ đủ bước của run seed; chọn nút
   hiện chi tiết; bước mới qua SSE hiện ≤ 1 s; run của gia đình khác ⇒ "Không tìm thấy"; axe 0 lỗi; ảnh 360 px + 1280 px.
   · Verify: `$WEB e2e trace a11y`
-- [ ] T014 [B-web] [FR-010] Trang `src/app/sim/page.tsx` theo FR-010 (3 cột / 3 thẻ có tab dưới 768 px, nhãn "MÔ PHỎNG", nhãn
+- [x] T014 [B-web] [FR-010] Trang `src/app/sim/page.tsx` theo FR-010 (3 cột / 3 thẻ có tab dưới 768 px, nhãn "MÔ PHỎNG", nhãn
   "kịch bản nháp", nút E8 ≥ 64 px, quyết định có xác nhận dùng lại câu chữ của trang chi tiết 027). API 404 ⇒ "Trang này chưa mở".
   Playwright `e2e/sim.spec.ts`: (a) `fake_police_safe_account_002` replay từ "Bắt đầu" tới quyết định "nghi lừa đảo" ≤ 5 thao
   tác, mọi bước hiện, có tin Zalo mô phỏng mở đầu công khai AI; (b) một ca hợp lệ không kích hoạt luật ⇒ thông báo `note`; (c) chạy
   (a) hai lần ⇒ cùng dãy bước và cùng chữ tin (SC-002); (d) quét DOM không có số điện thoại/h1/tên gói (SC-006); axe 0 lỗi; ảnh
   360 px + 1280 px.
   · Verify: `$WEB e2e sim a11y`
-- [ ] T015 [B-web] [FR-010, FR-011] Thêm `/sim` và `/trace` vào `e2e/a11y.spec.ts` (tệp có sẵn của 027) và kiểm tương phản bằng
+- [x] T015 [B-web] [FR-010, FR-011] Thêm `/sim` và `/trace` vào `e2e/a11y.spec.ts` (tệp có sẵn của 027) và kiểm tương phản bằng
   token của 010 (không mã màu cứng).
   · Verify: `$WEB e2e a11y && python3 scripts/gen-design-tokens.py --check`
 

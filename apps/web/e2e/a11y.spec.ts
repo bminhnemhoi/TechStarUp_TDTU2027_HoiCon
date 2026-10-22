@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { FAKE_TOKEN, LIST_ITEMS, mockApi } from "./fixtures";
+import { FAKE_TOKEN, LIST_ITEMS, RUN_ID, SimMock, mockApi } from "./fixtures";
 
 // SC-005 (spec 027): 4 trang × 360/768/1280 px (+ cỡ chữ 200%): không tràn ngang, chữ ≥ 16 px, vùng chạm ≥ 44 px,
 // nút chính ≥ 64 px, axe-core 0 vi phạm serious/critical (kể cả tương phản nâng cao 7:1 cho chữ thân).
@@ -52,7 +52,25 @@ const SCREENS: Screen[] = [
     open: async (page) => {
       await mockApi(page);
       await page.goto(`/incidents/${INCIDENT_ID}`);
-      await expect(page.getByTestId("stream-status")).toHaveText("Trợ lý AI đã làm xong các bước");
+      await expect(page.getByTestId("stream-status")).toContainText("Trợ lý AI đã làm xong các bước");
+    },
+  },
+  {
+    name: "so-do",
+    open: async (page) => {
+      await mockApi(page);
+      await page.goto(`/trace/${RUN_ID}`);
+      await expect(page.getByTestId("stream-status")).toContainText("Trợ lý AI đã làm xong các bước");
+      await expect(page.locator(".react-flow__node").first()).toBeVisible();
+    },
+  },
+  {
+    name: "mo-phong",
+    open: async (page) => {
+      await mockApi(page, { sim: new SimMock() });
+      await page.goto("/sim");
+      await page.getByRole("button", { name: "Bắt đầu" }).click();
+      await expect(page.getByTestId("question")).toBeVisible();
     },
   },
 ];

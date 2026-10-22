@@ -19,6 +19,7 @@ import {
 } from "@/components/guardian-ui";
 import { ApiError, api, errorMessage, type Decision, type GuardianIncidentDetail } from "@/lib/client";
 import { useRunStream, type StreamStatus } from "@/lib/stream";
+import { decisionCopy as copy } from "@/lib/decision-copy";
 import { DECIDABLE_STATES, STATE_VI, aliasName, describeStep, relativeTime } from "@/lib/steps";
 
 // Chi tiết một sự cố (spec 027, FR-007): lịch sử chuyển trạng thái, trace trực tiếp của trợ lý AI, quyết định có xác nhận.
@@ -30,33 +31,6 @@ const ACTOR_VI: Record<string, string> = {
   system: "Hệ thống",
 };
 
-const DRILL_DONE =
-  "[DIỄN TẬP] Đã ghi nhận. Đây chỉ là bài tập, không có nguy hiểm thật. Cảm ơn anh/chị đã tham gia.";
-
-/** Câu hỏi xác nhận và câu đã ghi nhận; diễn tập không bao giờ nói như sự cố thật (luật 8). */
-function copy(decision: Decision, name: string, isDrill: boolean): { ask: string; done: string } {
-  const tag = isDrill ? "[DIỄN TẬP] " : "";
-  switch (decision) {
-    case "safe":
-      return {
-        ask: `${tag}Anh/chị đã nói chuyện trực tiếp với ${name} và chắc chắn ${name} an toàn? HỏiCon sẽ đóng cảnh báo này.`,
-        done: isDrill ? DRILL_DONE : `Đã ghi nhận: ${name} an toàn. HỏiCon đóng cảnh báo này.`,
-      };
-    case "emergency_pause":
-      return {
-        ask: `${tag}Anh/chị nghi ${name} đang bị lừa? HỏiCon sẽ giữ cảnh báo mở để theo dõi.`,
-        done: isDrill
-          ? DRILL_DONE
-          : `Đã ghi nhận: nghi lừa đảo. HỏiCon giữ cảnh báo mở để theo dõi và không tự báo cho cơ quan nào. Anh/chị hãy gọi ngay cho ${name}, nhắc tuyệt đối không chuyển tiền.`,
-      };
-    case "false_alarm":
-      return {
-        ask: `${tag}Anh/chị xác nhận đây là HỏiCon báo nhầm?`,
-        done: isDrill ? DRILL_DONE : "Đã ghi nhận: HỏiCon báo nhầm. Cảm ơn anh/chị đã cho biết.",
-      };
-  }
-}
-
 const STREAM_TEXT: Record<StreamStatus, string> = {
   loading: "Đang tải các bước…",
   live: "Đang theo dõi trực tiếp",
@@ -65,6 +39,7 @@ const STREAM_TEXT: Record<StreamStatus, string> = {
   failed: "Lượt xử lý này gặp trục trặc",
   error: "Chưa theo dõi trực tiếp được. Anh/chị bấm Thử lại.",
   unauthorized: "Phiên đã hết hạn",
+  notfound: "Không tìm thấy lượt xử lý này",
 };
 
 const when = (iso: string) =>
@@ -89,6 +64,11 @@ function Trace({ runId, alias }: { runId: string | null; alias: string }) {
       <h2 id="trace-title" className="text-headline">
         Trợ lý AI đang làm gì
       </h2>
+      {runId !== null && (
+        <Link href={`/trace/${encodeURIComponent(runId)}`} className={`${LINK_TOUCH} self-start`}>
+          Xem sơ đồ các bước
+        </Link>
+      )}
       <p className="rounded-card bg-surface-muted p-4 text-body">
         Đây là trợ lý AI HỏiCon. Các bước dưới đây do máy tự ghi lại, không kèm số điện thoại hay nội dung cuộc gọi.
       </p>

@@ -1,0 +1,144 @@
+{
+ "graph": "incident",
+ "version": "43bc71dae383",
+ "nodes": [
+  {
+   "id": "__end__",
+   "label_vi": "Kết thúc",
+   "kind": "end",
+   "step_nodes": []
+  },
+  {
+   "id": "__start__",
+   "label_vi": "Bắt đầu",
+   "kind": "start",
+   "step_nodes": []
+  },
+  {
+   "id": "ask_elder",
+   "label_vi": "Hỏi bác",
+   "kind": "interrupt",
+   "step_nodes": [
+    "ask_elder"
+   ]
+  },
+  {
+   "id": "await_guardian",
+   "label_vi": "Chờ người giám hộ",
+   "kind": "interrupt",
+   "step_nodes": [
+    "await_guardian"
+   ]
+  },
+  {
+   "id": "fast_alert",
+   "label_vi": "Báo nhanh người giám hộ",
+   "kind": "node",
+   "step_nodes": [
+    "fast_alert"
+   ]
+  },
+  {
+   "id": "ingest",
+   "label_vi": "Nhận sự kiện",
+   "kind": "node",
+   "step_nodes": [
+    "ingest"
+   ]
+  },
+  {
+   "id": "intervention",
+   "label_vi": "Soạn tin cho con",
+   "kind": "node",
+   "step_nodes": [
+    "intervention"
+   ]
+  },
+  {
+   "id": "resolve",
+   "label_vi": "Kết thúc sự cố",
+   "kind": "node",
+   "step_nodes": [
+    "resolve"
+   ]
+  },
+  {
+   "id": "risk_scorer",
+   "label_vi": "Chấm rủi ro",
+   "kind": "node",
+   "step_nodes": [
+    "risk_scorer"
+   ]
+  },
+  {
+   "id": "verification",
+   "label_vi": "Xác minh",
+   "kind": "node",
+   "step_nodes": [
+    "verify"
+   ]
+  }
+ ],
+ "edges": [
+  {
+   "source": "__start__",
+   "target": "ingest",
+   "conditional": false
+  },
+  {
+   "source": "ask_elder",
+   "target": "risk_scorer",
+   "conditional": false
+  },
+  {
+   "source": "await_guardian",
+   "target": "await_guardian",
+   "conditional": true
+  },
+  {
+   "source": "await_guardian",
+   "target": "resolve",
+   "conditional": true
+  },
+  {
+   "source": "fast_alert",
+   "target": "risk_scorer",
+   "conditional": false
+  },
+  {
+   "source": "ingest",
+   "target": "fast_alert",
+   "conditional": false
+  },
+  {
+   "source": "intervention",
+   "target": "await_guardian",
+   "conditional": true
+  },
+  {
+   "source": "intervention",
+   "target": "resolve",
+   "conditional": true
+  },
+  {
+   "source": "resolve",
+   "target": "__end__",
+   "conditional": false
+  },
+  {
+   "source": "risk_scorer",
+   "target": "ask_elder",
+   "conditional": true
+  },
+  {
+   "source": "risk_scorer",
+   "target": "verification",
+   "conditional": true
+  },
+  {
+   "source": "verification",
+   "target": "intervention",
+   "conditional": false
+  }
+ ]
+}

@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/login/:path*", headers: privateHeaders },
       { source: "/incidents/:path*", headers: privateHeaders },
+      { source: "/trace/:path*", headers: privateHeaders },
+      { source: "/sim/:path*", headers: privateHeaders },
+      { source: "/sim", headers: privateHeaders },
     ];
   },
   async rewrites() {
