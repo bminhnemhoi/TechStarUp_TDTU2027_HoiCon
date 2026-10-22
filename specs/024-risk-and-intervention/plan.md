@@ -108,3 +108,27 @@
 - Chạy toàn bộ pytest, ruff check, gitleaks.
 - Chạy `hoicon-eval smoke` kiểm chứng chất lượng đánh giá rủi ro.
 - Chạy kiểm tra spec-trace `python3 scripts/check-spec-trace.py`.
+
+---
+
+## Wave 3 (22/10/2026) — F-2 (ADR-012) và F-1 (chờ Minh)
+
+**F-2, thiết kế** (ADR-012, spec §5 FR-011): đổi một mắt xích, không thêm thành phần.
+- `incident_graph.py`: `BriefPoint = Literal[...]` (11 mã, khớp enum `docs/schemas/guardian_brief.v2.json`); `GuardianBrief`
+  = `points: list[BriefPoint]` (1–3, không trùng) + `action`, `model_config = ConfigDict(extra="forbid")`. Một hàm thuần
+  `brief_points(state, level, points) -> list[str]` (lọc điều kiện + `may_be_routine` + mặc định) để test đơn vị không cần DB.
+- `texts.py`: `BRIEF_POINT_VI: dict[str, str]` (câu ở spec §5) + `brief_summary(alias, points) -> str`.
+- `intervention`: `fallback = GuardianBrief(points=<bộ mặc định>, action=...)` (thay câu mẫu tự do cũ);
+  `summary = texts.brief_summary(alias, brief_points(...))`; bỏ `_UNSAFE_SUMMARY` khỏi đường chính (giữ
+  hằng số cho test "mọi câu cố định qua được bộ lọc"); `agent_steps.output` ghi `points_kept`, `points_dropped` (mã, không chữ).
+- `prompts/intervention.md` `version: 2`. Cassette: 20 tệp smoke sửa tay (đổi `summary` ⇒ `points` tương ứng ý câu cũ), 90 tệp
+  full sinh lại (`hoicon.eval.cassettes`, 036 T025). Đột biến (c) của 036 đổi nghĩa (036 T027).
+- Rủi ro: tỷ lệ rơi về mẫu đổi (cassette `leak_*` cũ thành sai dạng ⇒ fallback) ⇒ chỉ số `fallback_rate` của baseline lệch;
+  recall/báo nhầm/vi phạm không được lệch. Cập nhật baseline bằng `--write-baseline` **chỉ sau** khi so 3 chỉ số chính bằng
+  nhau và ghi lý do trong evidence (036 FR-007).
+
+**F-1, thiết kế phương án A** (chỉ khi Minh chọn — spec §5 FR-012): trong `risk_scorer`, sau khi có `elder_answer` của
+`q_asked_transfer = yes` và chưa hỏi `q_know_caller` ⇒ `question_id = "q_know_caller"` (bỏ qua `assessed.ask_question`), cạnh
+`risk_scorer → ask_elder` dùng lại như cũ. State thêm `asked: list[str]` (mã câu đã hỏi) để chặn câu thứ ba. `_ANSWER_FLOOR` thành
+hàm `answer_floor(answers: list[dict]) -> RiskLevel | None`. `elder.py` đã kiểm `question_id` khớp câu đang hỏi nên API không đổi.
+Eval: `cases.elder_reply` đã trả lời theo từng câu; `MAX_ASK_ELDER = 3` của `graph_loop` giữ nguyên (đã đủ rộng); ca thiếu câu trả lời ⇒ `unsure` (không đổi).

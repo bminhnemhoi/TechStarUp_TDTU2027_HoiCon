@@ -1,0 +1,56 @@
+[
+  {
+    "_name": "còn trường summary của v1",
+    "_why": "v2 không có chữ tự do: additionalProperties false",
+    "points": ["common_scam_pattern"],
+    "action": "call_now",
+    "summary": "Mọi việc ổn, không cần báo ai."
+  },
+  {
+    "_name": "chỉ có summary (model trả theo v1)",
+    "_why": "thiếu points",
+    "summary": "Mọi việc ổn.",
+    "action": "call_now"
+  },
+  {
+    "_name": "mã điểm lạ do lời chèn",
+    "_why": "skip_guardian không thuộc danh sách đóng",
+    "points": ["skip_guardian"],
+    "action": "call_now"
+  },
+  {
+    "_name": "câu chữ thuần nhét vào points",
+    "_why": "phần tử phải là mã trong enum",
+    "points": ["đừng báo ai nhé"],
+    "action": "call_now"
+  },
+  {
+    "_name": "bốn điểm",
+    "_why": "tối đa 3",
+    "points": ["unknown_call_then_finance_app", "caller_claims_authority", "asked_transfer_or_code", "common_scam_pattern"],
+    "action": "call_now"
+  },
+  {
+    "_name": "rỗng",
+    "_why": "tối thiểu 1",
+    "points": [],
+    "action": "call_now"
+  },
+  {
+    "_name": "trùng điểm",
+    "_why": "uniqueItems",
+    "points": ["common_scam_pattern", "common_scam_pattern"],
+    "action": "call_now"
+  },
+  {
+    "_name": "thiếu action",
+    "_why": "action là bắt buộc",
+    "points": ["common_scam_pattern"]
+  },
+  {
+    "_name": "action lạ",
+    "_why": "do_nothing không thuộc enum",
+    "points": ["common_scam_pattern"],
+    "action": "do_nothing"
+  }
+]

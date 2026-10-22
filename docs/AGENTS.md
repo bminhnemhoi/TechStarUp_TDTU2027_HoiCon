@@ -64,7 +64,7 @@ cho các MCP server sau.
 ## Prompt
 `backend/src/hoicon/agents/prompts/*.md`, có phiên bản trong front-matter; đổi prompt ⇒ `run-eval smoke`.
 
-## Eval (`hoicon-eval`, spec 030)
+## Eval (`hoicon-eval`, spec 030 + 036)
 `uv run --directory backend hoicon-eval --suite smoke [--compare baseline]` chạy 20 kịch bản `data/scenarios/` qua **đồ thị
 sự cố thật** (`IncidentRuntime` + `AsyncPostgresSaver`) trên DB eval riêng; LLM thay bằng `ReplayClient` đọc cassette
 `backend/eval/cassettes/smoke/<id>.json` (hợp đồng `docs/schemas/eval_cassette.v1.json`) cắm vào `LlmRouter` nên vẫn qua
@@ -77,6 +77,11 @@ che PII, ngân sách, fallback; **không khóa API, không mạng ngoài, không
   theo ngưỡng skill `run-eval`. Baseline chỉ ghi bằng `--write-baseline` chạy tay.
 - Cô lập: từ chối khi `HOICON_ENV=prod` hoặc URL DB eval trùng DB ứng dụng (trừ `--shared-db-ok` ở CI); sự cố mang id
   `eval-<nonce>-<case>`, `is_demo=True`, job/hẹn giờ bị xóa cuối mỗi ca.
-- Giới hạn đã biết: cassette `synthetic` chỉ đo **rào tất định**, không đo chất lượng model; tóm tắt do LLM viết bằng chữ thuần
-  (không số/link/kênh chat) KHÔNG bị bộ lọc `_UNSAFE_SUMMARY` chặn — cần LLM-judge (B6) hoặc danh sách cho phép (spec 036).
-  `full`/`injection` (≥ 100 ca, gọi LLM thật): spec 036.
+- `--suite full --compare baseline-full` (spec 036): 110 ca (20 smoke + 90 cassette sinh tất định bằng
+  `python -m hoicon.eval.cassettes write|check` từ `backend/eval/suites/full.v1.json`), ngưỡng Gate M3 tuyệt đối (recall ≥ 0,90,
+  báo nhầm ≤ 0,10, 0 vi phạm, công khai AI 100%), baseline `backend/eval/baseline-full.json`. `--suite injection`: 17 ca chèn lệnh,
+  không baseline. Vẫn không khóa API: phần LLM thật (cassette `recorded`, lặp prompt) BLOCKED P0-08.
+- Giới hạn đã biết: cassette `synthetic` + kịch bản `draft: true` chỉ đo **rào tất định**, không đo chất lượng model.
+  **F-2**: tóm tắt LLM viết bằng chữ thuần (không số/link/kênh chat) lọt bộ lọc `_UNSAFE_SUMMARY` ⇒ thay bằng danh sách điểm
+  đóng (ADR-012, spec 024 T014–T015). **F-1**: `("q_asked_transfer","yes") ⇒ critical` báo nhầm chuyển tiền chính đáng ⇒
+  phương án ở spec 024 §5 (chờ Minh, MASTER-PLAN §8).

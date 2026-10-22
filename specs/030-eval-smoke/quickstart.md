@@ -16,7 +16,7 @@ ls backend/eval/reports/                                            # <ngày>-sm
 
 # Thử rào: bước "gỡ raise_only / câu công khai AI / bộ lọc tóm tắt" đã được tự động hóa:
 uv run --directory backend pytest tests/integration/test_eval_mutations.py -q   # mỗi đột biến ⇒ trượt đúng ca, đúng loại
-uv run --directory backend hoicon-eval --suite full; echo $?        # exit 2: "chưa có — spec 036"
+uv run --directory backend hoicon-eval --suite full --compare baseline-full   # có từ spec 036 (22/10: không còn exit 2)
 ```
 
 Mã thoát: 0 đạt · 1 trượt (vi phạm an toàn, lệch kỳ vọng, hoặc tụt quá ngưỡng so baseline) · 2 lỗi dùng/cấu hình

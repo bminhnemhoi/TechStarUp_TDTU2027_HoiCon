@@ -61,9 +61,19 @@
   `content` hợp lệ lược đồ, không chứa `eval.cases.case_secrets(case)`, có `ai_label`; tin Zalo mở đầu công khai AI. Rồi hồi quy:
   `hoicon-eval --suite smoke --compare baseline` không đổi chỉ số.
   · Verify: `$PYTEST tests/integration/test_case_file_scenarios.py && uv run --directory backend hoicon-eval --suite smoke --compare baseline`
-- [ ] T011 [B-api] [FR-012] Văn bản đồng ý: thêm câu hồ sơ vào `docs/legal/consent/guardian_alerts.vi.md` (giữ ≤ 160 từ: rút gọn
-  câu khác nếu cần), cập nhật "Nguồn của từng con số"/"Điểm chờ quyết"; `python -m hoicon.ops.consent_texts write`; gọi
-  `ux-elder-reviewer` cho văn bản.
+- [ ] T011 [B-api] [FR-012] Văn bản đồng ý **gộp 031 + 032** (chốt 22/10, MASTER-PLAN §5 "Wave 3"): thay khối giữa
+  `BEGIN-TEXT`/`END-TEXT` của `docs/legal/consent/guardian_alerts.vi.md` bằng đúng chữ dưới (160/160 từ, `style_problems` rỗng —
+  đã thử bằng `hoicon.ops.consent_texts.style_problems`); cập nhật "Nguồn của từng con số" (hồ sơ: spec 031; tóm tắt tuần + "mất
+  bảo vệ": spec 032) và "Điểm chờ quyết" (xóa ghi chú "Đã BỎ câu…", thêm: câu "báo khi máy bác hết được bảo vệ" phụ thuộc I4 — Minh
+  bác thì 032 T008 bỏ cụm đó); tăng phiên bản trong `manifest.json` (giữ `draft`, **không** `released` trước khi 032 merge);
+  `python -m hoicon.ops.consent_texts write`; gọi `ux-elder-reviewer` cho văn bản (được rút gọn tiếp, không được thêm từ).
+  > Đây là trợ lý AI HỏiCon.
+  > Báo cho con bác biết khi bác cần giúp
+  > Khi thấy dấu hiệu đáng ngờ, HỏiCon nhắn Zalo cho con hoặc người thân bác đã chọn, để họ gọi hỏi thăm bác.
+  > Họ biết có cuộc gọi lạ (gọi tới hay đi, lúc nào, bao lâu), bác mở loại ứng dụng nào và chọn gì trên màn nhắc. Số điện thoại chỉ hiện 3 số cuối.
+  > Họ xem lại các lần nhắc trên web HỏiCon. HỏiCon cũng báo khi máy bác hết được bảo vệ, gửi tóm tắt mỗi tuần, soạn sẵn hồ sơ trình báo khi nghi bác bị lừa.
+  > HỏiCon giữ thông tin cuộc gọi lạ tối đa 90 ngày, các lần nhắc tối đa 12 tháng, không bán thông tin của bác.
+  > Muốn ngừng báo, bác nhờ người đã cài HỏiCon cho bác. HỏiCon vẫn nhắc bác dừng lại, chỉ không báo con nữa. Bác chưa đồng ý cũng không sao.
   · Verify: `$PYTEST tests/contract/test_consent_texts.py && uv run --directory backend python -m hoicon.ops.consent_texts check`
 - [ ] T012 [B-api] [FR-001, FR-014] `bash scripts/gen-api-client.sh`; `docs/API.md`, `docs/AGENTS.md` (nhánh `case_file`),
   `docs/PRIVACY-DPIA.md` (hồ sơ, ô tự điền).
@@ -80,9 +90,11 @@
 
 ## Nhóm [A]
 
-- [ ] T014 [A] [FR-012] Sau T011: đồng bộ chuỗi `guardian_alerts` trên Android theo văn bản mới và ghim lại sha (cùng cách của 011
-  Wave 2, task T018 của 011).
-  · Verify: `$GRADLE :app:testDebugUnitTest --tests '*ConsentTextsPinTest*'`
+- [ ] T014 [A] [FR-012] Sau T011: đồng bộ chuỗi `guardian_alerts` trên Android theo văn bản gộp 031 + 032 (một lần cho cả hai
+  spec — 032 T010 không lặp lại trừ khi chữ đổi), `res/values/consent_texts.xml` + `ConsentLedger.VERSION` theo `manifest.json`
+  (cùng cách của 011 T018, Wave 2); chụp E4 ở 100% + 200% trên `hc-api36`, `ux-elder-reviewer` (160 từ ở 200%).
+  · Verify: `$GRADLE :app:testDebugUnitTest --tests '*ConsentManifestPinTest*' :app:testDebugUnitTest :app:lintDebug`
+  (`ConsentTextsPinTest` đã được thay bằng `ConsentManifestPinTest` ở Wave 2)
 
 ## Rà soát & nghiệm thu
 

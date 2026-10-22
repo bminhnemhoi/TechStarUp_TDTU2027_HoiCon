@@ -251,6 +251,41 @@ git worktree remove ../hoicon-wt/android && git branch -d feat/001-safe-pause-re
 Đợt 3: B = 020 (API) → 021 → 023 · A = 020 (màn E1–E4, sau khi hợp đồng merge) → 022. Đợt 4: B = 030 → 024 → 025/026/027 ·
 A = 024 (E8) → 028.
 
+**Wave 3 (xếp 22/10/2026, sau khi gộp Wave 2 `afe8707`).** Nguyên tắc: an toàn trước (F-2), rồi thứ phục vụ video Vòng 1
+(`/sim` + `/trace`), rồi 031 → 032 (cùng văn bản `guardian_alerts`), `/eval` (P3, cắt được) cuối. Mỗi mục trỏ đúng task;
+Verify và điều kiện dừng nằm trong `tasks.md` của spec.
+
+| # | Làn A (Android, `hc-api36`/`hc-api34`) | Làn B (backend + web) |
+|---|---|---|
+| 0 | **Đối soát Wave 2** (mã đã gộp ở `afe8707` nhưng `tasks.md` chưa tick): chạy Verify rồi tick + evidence cho 026 T032, 011 T018, 028 T023, 012 T016, 012 T018 | **Đối soát Wave 2** (`a171bc2`): chạy Verify rồi tick + evidence cho 011 T019, 012 T017, 012 T019 |
+| 1 | 010 **T028** (chuỗi E7 điều khiển từ xa đã chốt, chụp lại 4 ảnh, reviewer 0 High; đóng luôn T027) | **F-2 an toàn:** 024 **T014** → **T015** → 036 **T025** → **T026** → **T027** → **T028** → 024 **T018** → **T019** |
+| 2 | *(nếu Tiến duyệt nới quyền, dưới đây)* 033 **T012** (`trace-graph.tsx`, dựng từ fixture `graph_topology` trong `docs/schemas/fixtures/`, chưa cần API) | 033 [B-api] **T002** → **T003** → **T004** → **T005** → **T006** → **T007** → **T008** → **T009** → **T011** (sinh client TS: mở khóa web) |
+| 3 | *(nới quyền)* 033 **T013** `/trace` → **T014** `/sim` → **T015** (sau làn B T011) | *(không nới quyền: làn B tự làm 033 T012 → T013 → T014 → T015 ở đây, rồi mới sang 031)* |
+| 4 | 031 **T014** (đồng bộ chuỗi `guardian_alerts` Android **một lần** cho cả 031 và 032 — xem dưới; sau làn B 031 T011) | 031 [B-api] **T002** → **T003** (migration) → **T004** → **T005** → **T006** → **T007** → **T008** → **T009** → **T010** → **T011** (văn bản gộp) → **T012**; [B-web] **T013** (hoặc làn A nếu nới quyền) |
+| 5 | 032 **T011** (đo khoảng trống heartbeat; cần backend dev có 032 T004); 032 **T010** gộp vào 031 T014 — chỉ chạy lại khi 032 T008 đổi chữ (Minh bác I4) | 032 **T001** (migration) → **T002** → … → **T007** → **T008** (chỉ kiểm, chữ đã vào ở 031 T011) → **T009** |
+| 6 | *(nới quyền)* 033 **T016** `/eval` (P3) | 033 **T010** (P3, `GET /v1/eval/summary` + `.dockerignore`) → rà soát/nghiệm thu: 033 **T017–T019**, 031 **T015–T016**, 032 **T012–T013** |
+| — | Chen khi Minh quyết F-1 = A: không có việc Android (E8 không đổi) | 024 **T016** → **T017** chen trước 024 T018 |
+
+**Văn bản `guardian_alerts` (031 ↔ 032, chốt 22/10):** một lần sửa duy nhất ở 031 T011, gồm cả câu của 032 (bản tin tuần + báo
+"mất bảo vệ") để không vượt trần 160 từ hai lần và Android chỉ đồng bộ một lần. Chữ chốt (160/160 từ, qua `style_problems`) nằm ở
+`specs/031-case-file/tasks.md` T011. Văn bản vẫn `draft`, chưa `released` cho tới khi 032 merge (lời hứa "báo khi máy hết được
+bảo vệ" phải có mã thật trước khi phát hành — luật của 011 T019). Minh bác I4 ⇒ 032 T008 bỏ cụm "báo khi máy bác hết được bảo
+vệ," (văn bản còn 153 từ), tăng phiên bản, 032 T010 đồng bộ lại.
+
+**Đề xuất nới quyền làn A cho [B-web] của 033 — CHỜ TIẾN DUYỆT (chưa áp dụng; luật 1 §5 vẫn giữ nguyên tới khi Tiến ghi "đồng ý").**
+- *Lý do:* sau 010 T028, làn A chỉ còn việc chờ làn B (031 T014 cần 031 T011; 032 T011 cần 032 T004) ⇒ ~3–5 ngày rảnh, trong khi
+  làn B phải làm nối tiếp F-2 → 033 API → 033 web → 031 → 032. Cho làn A làm 033 [B-web] rút đường găng làn B khoảng 2–3 ngày và
+  `/sim` + `/trace` (cần cho video) xong sớm hơn.
+- *Ranh giới:* làn A được sửa **chỉ** `apps/web/**` (trừ `apps/web/src/lib/api/schema.d.ts` — tệp sinh của làn B, luật 10) và chỉ
+  các task 033 T012–T016 (+ 031 T013 nếu còn rảnh). **Không** `backend/**`, **không** migration, **không** `infra/**`, không sinh
+  client TS (dùng bản làn B đã đẩy lên `tien-collab-dev`). Web dev chạy cổng **3101** với API **18001** của làn A (luật 2) — hoặc
+  trỏ API 18000 của làn B khi làn B đang chạy. Một spec một phiên: làn A làm 033-web trên nhánh riêng `feat/033-web-sim-eval-web`.
+- *Rủi ro và chặn:* (a) hai làn cùng sửa `apps/web/**` ⇒ trong thời gian nới quyền làn B **không** đụng `apps/web/**` ngoài tệp sinh;
+  (b) Gradle và `next build` chạy cùng lúc trên một máy (14 GB RAM, máy ảo) ⇒ không build web khi máy ảo đang chạy; (c) T013/T014
+  cần API thật (`/v1/sim/*`, `/v1/graphs/incident`) ⇒ chỉ bắt đầu sau làn B 033 T011, trước đó chỉ T012 dựng từ fixture;
+  (d) Playwright cần `HOICON_SIM_ENABLED=true` + gia đình demo trên DB `hoicon_android` ⇒ chạy `ops guardian_link --seed` ở DB đó.
+- *Hết hạn:* tự hết khi 033 T016 xong hoặc khi làn A có việc Android mới; ghi vào `docs/HANDOFF.md` nếu Tiến duyệt.
+
 ## 6. Cách làm một tính năng (bảng tra nhanh cho người và coding agent)
 1. **Checkout chính:** lấy số spec ở §3; ROADMAP đổi task sang `◐`, thêm link `specs/NNN-slug` (sau khi thư mục tồn tại).
 2. **Worktree/nhánh:** `git worktree add -b feat/NNN-slug ../hoicon-wt/<làn> origin/tien-collab-dev` (worktree đã có:
@@ -302,9 +337,30 @@ Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi
    không chia sẻ thêm cho bên thứ ba), kèm câu chữ rõ trong văn bản. Nếu Minh tách: thêm giá trị enum + văn bản (luật 7); mã đã
    gom tên mục đích vào một hằng số (011 D9) nên đổi rẻ. Liên quan: rút `guardian_alerts` thì web còn hiện sự cố cũ không (011 T021,
    mặc định: không).
+   **22/10:** chữ gộp đã chốt cho 031 T011 (160/160 từ) nói cả (a), (b), (c) trong một mục đích — tức là theo đề xuất "có cả ba";
+   Minh tách thì văn bản phải tách theo.
 5. ★ **I4 trong 032**: Tiến giao 032 "gồm I4" (18/10) trong khi mục 1 (I1–I5) chưa có ý kiến Minh. Phần "mất bảo vệ" nằm sau cờ
-   `HOICON_PROTECTION_WATCH` (mặc định bật) — Minh từ chối thì tắt cờ, không gỡ mã.
-6. ★ **Kịch bản eval mới (036)** ≥ 40 ca do tác tử soạn, `draft: true`; gate M3 chỉ là `pass` khi ≥ 100 ca được Minh duyệt (005) **và**
-   có cassette LLM thật (P0-08). Để kịp M3 (09/01): khóa Anthropic cần có trước ~26/12.
-7. **Tiến** (kỹ thuật, không phải ★): ký ngưỡng trần cuộn 30 ngày của `/v1/lookups` (600 / 600 / 3.000) — đánh giá ở
-   `specs/026-verification-threat/plan.md` §10, đề xuất giữ nguyên.
+   `HOICON_PROTECTION_WATCH` (mặc định bật) — Minh từ chối thì tắt cờ, không gỡ mã. Văn bản `guardian_alerts` gộp (031 T011) có cụm "báo khi máy bác hết được bảo vệ"; Minh từ chối ⇒ 032 T008 bỏ cụm đó.
+6. ★ **Kịch bản eval (036)** — cập nhật 22/10/2026: **cả 110 kịch bản** của suite full (60 cũ P1-07 + 50 mới do tác tử soạn) còn
+   `draft: true`; Gate M3 chỉ là `pass` khi ≥ 100 ca được Minh duyệt bỏ `draft` **và** có cassette LLM thật (P0-08). Đọc trước
+   nhóm `task_scam_*`, `recovery_scam_*`, `fake_bank_*` (security reviewer 036, Medium #4: mức chi tiết thủ đoạn). Kèm hai điểm
+   nhỏ: 8 ca app ngoài Play có `min_risk_level: high` trong khi sàn ADR-001 là `critical` (nâng kỳ vọng hay giữ?); để kịp M3
+   (09/01): khóa Anthropic cần có trước ~26/12.
+7. **Tiến** (kỹ thuật, không phải ★): **trần cuộn 30 ngày của `/v1/lookups` (600 thiết bị / 600 người giám hộ / 3.000 gia đình) —
+   đề xuất GIỮ, chờ Tiến xác nhận.** Lý do (`specs/026-verification-threat/plan.md` §10): giảm 3 lần sức dò bền bỉ so với trần ngày
+   (1.800 ⇒ 600 lượt/thiết bị/tháng); dò cả danh sách 10.000 chỉ báo cần ≥ 140 "gia đình-tháng"; người dùng thật tra vài lần/tháng
+   nên không chạm trần. Chú thích trong `backend/src/hoicon/api/routers/lookups.py` ghi "Tiến xác nhận" nhưng repo chưa có dấu vết
+   ⇒ khi Tiến ghi "đồng ý" ở đây thì giữ chú thích; nếu đổi số thì sửa mã + chú thích cùng lúc.
+8. ★ **F-1 (spec 024 §5, thêm 22/10/2026)**: người cao tuổi xác nhận "có người bảo chuyển tiền" ⇒ đồ thị luôn ép `critical`. Đúng
+   luật (sàn tất định, LLM không hạ) nhưng báo nhầm chuyển tiền chính đáng: xấu nhất **10/37 = 0,27 > 0,10 ⇒ Gate M3 trượt** khi có
+   model thật. **Đề xuất A**: hỏi thêm đúng một câu "bác có biết rõ người gọi không" chỉ trong nhánh này (tối đa 2 câu/sự cố);
+   biết ⇒ `high`, không/không rõ/hết giờ ⇒ `critical` ⇒ xấu nhất 3/37 = 0,081. Giá: E8 thêm một câu (≤ 60 s); lừa đảo giả người
+   thân mà người cao tuổi tin "biết người gọi" chỉ còn `high` (vẫn báo con, lời khuyên "gọi ngay" thay "gọi và giữ máy"). Phương án
+   B (hạ sàn, để LLM quyết) không đề xuất; C (sửa kỳ vọng eval) bị loại vì giấu báo nhầm. Minh chọn A/B/giữ nguyên ⇒ ghi ở đây;
+   chưa chọn thì 024 T016–T017 không chạy.
+9. **Tiến**: chấp nhận **ADR-012** (tóm tắt người giám hộ từ danh sách điểm đóng — sửa F-2). Đây là rào an toàn thuộc nhóm "không
+   bao giờ cắt" nên làn B thi công ngay theo bản Đề xuất (024 T014–T015); Tiến bác thì dừng ở T014 (test đỏ vẫn có giá trị).
+10. **Tiến**: duyệt/bác **nới quyền làn A làm [B-web] của 033** (§5 "Wave 3": chỉ `apps/web/**`, không backend, không migration).
+    Chưa duyệt ⇒ làn B tự làm, làn A rảnh sau 010 T028 tới khi 031 T011 xong.
+11. ★ **Nguồn của 50 kịch bản mới (036)**: `source_ref` chỉ tái dùng nguồn của 60 kịch bản P1-07; **chưa ai mở lại các URL** (tác tử
+    không truy cập mạng). Trước khi duyệt bỏ `draft` (mục 6): kiểm từng URL còn sống và đúng thủ đoạn, hoặc đổi nguồn.

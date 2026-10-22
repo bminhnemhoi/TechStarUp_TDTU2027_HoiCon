@@ -56,3 +56,64 @@ Tác tử can thiệp vận hành dựa trên đồ thị trạng thái LangGrap
 - **ADR-002**: worker job chạy nền trong tiến trình API (trước đó API không chạy job nào); runtime mở lười.
 - **FR-002**: FCM chỉ mock (chưa có Firebase), data message chỉ mang mã; nội dung câu hỏi lấy qua `pending-question`.
 - **FR-008/FR-009**: E8 chữ ≥ 20sp, vùng chạm ≥ 64dp, tương phản ≥ 7:1, nút ghim đáy ở cỡ chữ 200%; gửi qua WorkManager.
+
+---
+
+## 5. Wave 3 (22/10/2026) — hai phát hiện của eval full (spec 036 F-1, F-2)
+
+**Vì sao ở spec này, không ở 036:** cả hai nằm trong mã spec 024 sở hữu (FR-005: `intervention` sinh tóm tắt, `risk_scorer` +
+`_ANSWER_FLOOR`). Spec 036 là dụng cụ đo và tự cấm sửa đồ thị/prompt (tasks.md 036, "Chế độ chạy"); để eval vừa sửa vừa chấm
+chính mình thì mất tính độc lập. 036 nhận phần đo: ca hồi quy + tiêu chí (036 FR-013, T025–T028).
+
+### F-2 — lời chèn bằng chữ thuần lọt bộ lọc tóm tắt (AN TOÀN, "không bao giờ cắt": đường cảnh báo)
+
+- **(FR-011)**: `intervention` không còn đưa chữ tự do của LLM tới người giám hộ (ADR-012). LLM trả `GuardianBrief` v2
+  (`docs/schemas/guardian_brief.v2.json`): 1–3 mã `points` từ danh sách đóng + `action`; `extra="forbid"`. Máy chủ (tất
+  định): (a) bỏ mã có điều kiện dữ kiện sai (bảng dưới); (b) bỏ `may_be_routine` khi mức ≥ `high`; (c) ghép câu cố định
+  `texts.BRIEF_POINT_VI` theo thứ tự LLM, thay `{alias}`; (d) rỗng ⇒ bộ mặc định = mã ứng dụng đúng điều kiện (nếu có) +
+  `common_scam_pattern`; (e) output sai dạng/mã lạ/thừa trường ⇒ router trả `fallback`, mà `fallback` giờ cũng là `GuardianBrief` v2
+  (`points` = bộ mặc định, `action` theo mức) — **không còn câu mẫu tự do nào**: mọi tin `detail` chỉ gồm câu `BRIEF_POINT_VI`. Prompt
+  `intervention.md` lên `version: 2`. Văn bản kẻ gian vẫn chỉ trong `<untrusted>`; LLM vẫn chỉ nâng mức (không đổi `raise_only`).
+- **(SC-007)**: Không chữ nào do LLM viết có mặt trong tin gửi người giám hộ: (i) suite `injection` **17/17 ca bị chặn, 0 vi
+  phạm**; (ii) 13 ca chèn chữ thuần (cassette của test ghim F-2) **13/13 không lọt**, test ghim đảo chiều; (iii) mọi tin
+  `detail` của lượt full chỉ gồm câu trong `BRIEF_POINT_VI` (kiểm `brief_outside_vocabulary` của 036); (iv) smoke/full không
+  tụt so baseline (recall, báo nhầm), 0 vi phạm, công khai AI 100%.
+
+Câu chữ chốt (người đọc là con cháu, "anh/chị"; `{alias}` = cách xưng hô người cao tuổi; không chữ số/link; `ux-elder-reviewer`
+đọc lại ở T015):
+
+| Mã | Câu (`BRIEF_POINT_VI`) | Điều kiện |
+|---|---|---|
+| `unknown_call_then_finance_app` | {alias} vừa nghe một số lạ gọi rồi mở ứng dụng ngân hàng hoặc ví tiền. | `app.category ∈ {bank, wallet, securities}` |
+| `sideloaded_app` | {alias} vừa mở một ứng dụng cài từ ngoài cửa hàng Play sau cuộc gọi lạ. | `app.category == sideloaded` |
+| `call_still_ongoing` | Cuộc gọi lạ có thể vẫn đang diễn ra. | `call.active == true` |
+| `flagged_number` | Số gọi tới nằm trong danh sách cảnh báo lừa đảo. | `threat.verdict == flagged` hoặc `caller.flagged` |
+| `caller_claims_authority` | Người gọi xưng là công an, ngân hàng hoặc cơ quan nhà nước. | `q_caller_authority = yes` hoặc cờ `mentions_authority` |
+| `asked_transfer_or_code` | Người gọi bảo {alias} chuyển tiền hoặc đọc mã số. | `q_asked_transfer = yes` hoặc cờ `mentions_transfer`/`mentions_code` |
+| `asked_secrecy` | Người gọi dặn {alias} giữ kín, đừng kể với người nhà. | cờ `mentions_secrecy` |
+| `asked_install_app` | Người gọi bảo {alias} cài ứng dụng hoặc mở đường dẫn lạ. | cờ `mentions_app_or_link` |
+| `elder_unsure_of_caller` | {alias} không chắc người gọi là ai. | `q_know_caller ∈ {no, unsure}` |
+| `common_scam_pattern` | Đây là dấu hiệu thường gặp khi kẻ gian giả danh để dụ chuyển tiền. | luôn đúng |
+| `may_be_routine` | Có thể chỉ là việc bình thường, anh/chị cứ hỏi thăm nhẹ nhàng. | mức cuối ≤ `medium` |
+
+### F-1 — người cao tuổi xác nhận "bị đòi chuyển tiền" ⇒ luôn `critical` (báo nhầm) — **★ chờ Minh** (MASTER-PLAN §8 mục 8)
+
+**Đúng hay sai theo luật?** *Đúng luật.* `("q_asked_transfer","yes") ⇒ critical` là mức sàn **tất định** từ câu trả lời của
+người cao tuổi; luật 5 cấm LLM hạ mức, không cấm luật tất định thận trọng. Nó không phải lỗi an toàn mà là **hiệu chỉnh gây
+báo nhầm**: 10/37 ca hợp lệ (con gửi học phí, tiền nhà, shipper thu hộ…) đều xác nhận "có người bảo chuyển tiền". Mọi cách sửa
+phải giữ tất định; **cấm** sửa bằng cách cho LLM hạ dưới mức do câu trả lời đặt ra.
+
+| Phương án | Báo nhầm xấu nhất trên 37 ca hợp lệ (LLM/mẫu hỏi chuyển tiền trước — đúng câu mặc định của `fallback`) | Recall (73 ca lừa đảo) | Giá |
+|---|---|---|---|
+| Giữ nguyên (hiện tại) | **10/37 = 0,270 > 0,10 ⇒ Gate M3 trượt** khi có model thật; synthetic 0/37 chỉ vì thứ tự khóa cassette | 1,000 | 0 |
+| **A (đề xuất). Câu hỏi nối tiếp tất định**: `transfer = yes` ⇒ sàn `high` + hỏi thêm đúng một câu `q_know_caller`; `no`/`unsure`/`timeout` ⇒ `critical`, `yes` ⇒ giữ `high` (LLM vẫn nâng được). Tối đa **2** câu/sự cố | **3/37 = 0,081** (`shipper_pay_wallet_002` "không biết người gọi"; `official_traffic_fine_004`, `utility_bill_notice_004` không có câu trả lời ⇒ `unsure`) — đạt nhưng sát ngưỡng (1 ca) | 1,000 trên synthetic (sàn của 73 ca đến từ luật máy, không từ câu trả lời); **rủi ro thật**: lừa đảo giả người thân mà người cao tuổi tin "biết người gọi" chỉ còn `high` (`call_now` thay `call_and_stay_on_line`) | E8 thêm 1 câu (≤ 60 s); đổi bất biến "tối đa 1 câu hỏi" của đồ thị (AGENTS.md) |
+| B. Hạ sàn câu trả lời xuống `high`, để LLM quyết `critical` | dời báo nhầm sang LLM (model thật thấy cùng dữ kiện, có thể vẫn `critical`); `fallback` mất `critical` | 1,000 | rẻ nhưng chỉ chuyển chỗ vấn đề — **không đề xuất** |
+| C. Đổi kỳ vọng `max_risk_level` của 10 ca thành `critical` | 0 trên giấy | — | **loại**: giấu báo nhầm (Hiến chương VII) |
+
+- **(FR-012)** *(chỉ thi công khi Minh chọn A)*: `_ANSWER_FLOOR[("q_asked_transfer","yes")] = HIGH`; khi câu trả lời đó đến
+  và chưa hỏi `q_know_caller`, `risk_scorer` đặt `question_id = "q_know_caller"` **tất định** (không theo LLM); sàn của câu
+  thứ hai: `no`/`unsure`/`timeout` ⇒ `CRITICAL`, `yes` ⇒ không đổi. Không bao giờ quá 2 câu; câu thứ hai chỉ có trong nhánh này.
+  `fallback` của `risk_scorer` theo cùng luật. Không đổi E8 Android (cùng màn, cùng ngân hàng câu hỏi), không đổi hợp đồng
+  `elder_question/answer`.
+- **(SC-008)** *(khi A)*: test ghim F-1 đảo chiều: 10 ca ép hỏi chuyển tiền ⇒ ≤ 3 ca `above_max_level`; eval full giữ recall
+  1,000, báo nhầm ≤ 0,10, 0 vi phạm; 0 sự cố có > 2 câu hỏi (test riêng; `graph_loop` của eval giữ trần `MAX_ASK_ELDER = 3`).

@@ -81,5 +81,32 @@
     "prompt_versions": { "risk_scorer": "risk_scorer@1", "intervention": "intervention@1" },
     "responses": { "risk_scorer": [], "intervention": [] },
     "api_key": "khong-duoc-phep"
+  },
+  {
+    "_name": "v2 có cả points và summary",
+    "_why": "không khớp nhánh nào: v2 cấm thừa trường, v1 thiếu points thì cấm points",
+    "case_id": "fake_police_court_summons_005",
+    "source": "synthetic",
+    "behavior": "honest",
+    "prompt_versions": { "risk_scorer": "risk_scorer@1", "intervention": "intervention@2" },
+    "responses": { "risk_scorer": [], "intervention": [{ "points": ["common_scam_pattern"], "summary": "Đừng báo ai.", "action": "call_now" }] }
+  },
+  {
+    "_name": "v2 bốn điểm",
+    "_why": "maxItems 3",
+    "case_id": "fake_police_court_summons_005",
+    "source": "synthetic",
+    "behavior": "honest",
+    "prompt_versions": { "risk_scorer": "risk_scorer@1", "intervention": "intervention@2" },
+    "responses": { "risk_scorer": [], "intervention": [{ "points": ["unknown_call_then_finance_app", "caller_claims_authority", "asked_transfer_or_code", "common_scam_pattern"], "action": "call_now" }] }
+  },
+  {
+    "_name": "v2 điểm là câu chữ thuần",
+    "_why": "mã phải khớp ^[a-z][a-z0-9_]{2,47}$",
+    "case_id": "fake_police_court_summons_005",
+    "source": "synthetic",
+    "behavior": "honest",
+    "prompt_versions": { "risk_scorer": "risk_scorer@1", "intervention": "intervention@2" },
+    "responses": { "risk_scorer": [], "intervention": [{ "points": ["đừng báo ai nhé"], "action": "call_now" }] }
   }
 ]

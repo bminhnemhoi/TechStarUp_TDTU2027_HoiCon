@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/guardian_brief.v2.json",
+  "title": "GuardianBrief v2",
+  "description": "Đầu ra có cấu trúc của LLM ở node `intervention` (ADR-012, spec 024 FR-011). LLM CHỈ chọn 1–3 mã điểm từ danh sách đóng + một hành động; máy chủ ghép câu tiếng Việt cố định (`hoicon.agents.texts.BRIEF_POINT_VI`) sau khi bỏ các điểm có điều kiện dữ kiện sai. Không có trường chữ tự do nào: chữ của LLM không bao giờ tới người giám hộ. Enum `points` là nguồn sự thật cho `BriefPoint` trong `incident_graph.py` (test so khớp). Thay v1 (`summary` ≤ 280 ký tự).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["points", "action"],
+  "properties": {
+    "points": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "description": "Thứ tự = thứ tự câu trong tin. Điều kiện từng mã: ADR-012 §Quyết định 2; `may_be_routine` bị bỏ khi mức cuối ≥ high.",
+      "items": {
+        "enum": [
+          "unknown_call_then_finance_app",
+          "sideloaded_app",
+          "call_still_ongoing",
+          "flagged_number",
+          "caller_claims_authority",
+          "asked_transfer_or_code",
+          "asked_secrecy",
+          "asked_install_app",
+          "elder_unsure_of_caller",
+          "common_scam_pattern",
+          "may_be_routine"
+        ]
+      }
+    },
+    "action": {
+      "enum": ["call_now", "call_and_stay_on_line", "visit_or_call_relative"],
+      "description": "Mức critical luôn bị ép thành call_and_stay_on_line ở máy chủ"
+    }
+  }
+}

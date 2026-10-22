@@ -5,7 +5,9 @@
 - **Chạy một mạch** ở worktree làn B (`../hoicon-wt/server`, nhánh `feat/033-web-sim-eval`). Giai đoạn 0 (hợp đồng) đã làm ở
   checkout chính cùng commit với spec này.
 - **Thẻ làn:** `[B-api]` = `backend/**`; `[B-web]` = `apps/web/**`; `[AB]` chung. Không có task Android. Làm hết nhóm `[B-api]`
-  của P1 trước, sinh client TS, rồi mới sang `[B-web]`.
+  của P1 trước, sinh client TS, rồi mới sang `[B-web]`. **Wave 3 (22/10):** thứ tự hai làn ở MASTER-PLAN §5 "Wave 3"; nếu Tiến
+  duyệt đề xuất nới quyền ở đó thì `[B-web]` do **làn A** làm (chỉ `apps/web/**`, nhánh `feat/033-web-sim-eval-web`): T012 bắt đầu
+  được ngay từ fixture `docs/schemas/fixtures/graph_topology.v1.valid.json`, T013–T015 sau `[B-api]` T011. Chưa duyệt ⇒ giữ như cũ.
 - **Ưu tiên:** P1 = `/sim` + `/trace` (T002–T009, T011–T015, T017–T019). P3 = `/eval` (T010, T016): làm sau cùng; trễ thì đánh
   ✂ theo danh sách cắt của ROADMAP, ghi vào evidence, không làm vòng.
 - **Biến dùng trong lệnh** (từ gốc repo):

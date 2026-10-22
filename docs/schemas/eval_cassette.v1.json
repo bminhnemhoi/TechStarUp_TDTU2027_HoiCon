@@ -33,7 +33,7 @@
       "required": ["risk_scorer", "intervention"],
       "properties": {
         "risk_scorer": { "type": "array", "items": { "oneOf": [{ "$ref": "#/$defs/risk_output" }, { "$ref": "#/$defs/error" }] } },
-        "intervention": { "type": "array", "items": { "oneOf": [{ "$ref": "#/$defs/brief_output" }, { "$ref": "#/$defs/error" }] } }
+        "intervention": { "type": "array", "items": { "oneOf": [{ "$ref": "#/$defs/brief_output" }, { "$ref": "#/$defs/brief_output_v2" }, { "$ref": "#/$defs/error" }] } }
       },
       "description": "Phản hồi lần lượt theo từng lần gọi node. Hết danh sách ⇒ ném lỗi ⇒ router rơi về mẫu soạn sẵn"
     },
@@ -61,12 +61,22 @@
       }
     },
     "brief_output": {
-      "description": "Khớp GuardianBrief trong incident_graph.py",
+      "description": "Khớp GuardianBrief v1 (prompt intervention@1). Từ intervention@2 (ADR-012) chỉ còn dùng để mô phỏng model trả SAI dạng (chữ tự do, có thể chứa lời chèn): đồ thị phải coi là lỗi cấu trúc và rơi về mẫu",
       "type": "object",
       "additionalProperties": false,
       "required": ["summary", "action"],
       "properties": {
         "summary": { "type": "string", "maxLength": 280 },
+        "action": { "enum": ["call_now", "call_and_stay_on_line", "visit_or_call_relative"] }
+      }
+    },
+    "brief_output_v2": {
+      "description": "Khớp GuardianBrief v2 (docs/schemas/guardian_brief.v2.json, prompt intervention@2). Phần tử `points` CỐ Ý chỉ kiểm dạng mã, không kiểm enum, để cassette ghi được cả mã lạ do lời chèn (hành vi `off_vocab`); test hợp đồng bắt cassette `honest` chỉ dùng mã trong enum của guardian_brief.v2",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["points", "action"],
+      "properties": {
+        "points": { "type": "array", "minItems": 1, "maxItems": 3, "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]{2,47}$" } },
         "action": { "enum": ["call_now", "call_and_stay_on_line", "visit_or_call_relative"] }
       }
     },

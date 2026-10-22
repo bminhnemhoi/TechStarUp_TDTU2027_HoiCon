@@ -137,3 +137,30 @@ Cấm sửa `backend/**`.
   commit `ad2f2b7`). FR-013 · Verify: `apps/android/gradlew -p apps/android :rules:test :app:testDebugUnitTest :app:lintDebug`;
   `python3 scripts/emu-scenario.py --avd hc-api36 --scenario remote_control` và `--avd hc-api34` ĐẠT; 8 ảnh (2 AVD × 2 cỡ × trước/sau
   nếu sửa) ở `~/hoicon-evidence/010-design-system/`; báo cáo reviewer 0 High trong `evidence.md`
+
+---
+
+## Phase 10: Wave 3 (22/10/2026) — chốt câu chữ E7 biến thể "điều khiển từ xa"
+
+Câu chữ chốt bởi kiến trúc sư Spec Kit theo `docs/DESIGN-SYSTEM.md` (giọng ấm áp, không gây hoảng sợ, có hành động cụ thể; nói đúng
+điều máy biết) và 3 đề xuất của `ux-elder-reviewer` lượt 3 (evidence.md, mục "E7 biến thể điều khiển từ xa"). Tiêu đề cùng khuôn với
+biến thể ngân hàng ("Bác ơi, khoan chuyển tiền đã") và trùng câu thứ hai của lời đọc `pause_speech_remote` (màn và giọng nói một ý).
+Bỏ "Kẻ gian" khỏi màn người cao tuổi; không đổi `pause_reason_remote_*` (đã nói đúng điều máy biết) và `pause_speech_remote`.
+
+| Khóa `strings.xml` | Hiện tại | Chốt |
+|---|---|---|
+| `pause_title_remote` | Bác ơi, có người lạ đang muốn điều khiển điện thoại của bác? | **Bác ơi, khoan cho người lạ điều khiển điện thoại** |
+| `pause_body_remote` | Kẻ gian hay bảo bác cài ứng dụng để họ nhìn và điều khiển điện thoại của bác, rồi lấy tiền trong ngân hàng. Công an, ngân hàng không bao giờ bảo làm vậy. Bác cúp máy, đóng ứng dụng đó (như AnyDesk, TeamViewer), rồi bấm Hỏi con. | **Ứng dụng này cho người khác nhìn thấy và điều khiển điện thoại của bác, kể cả ứng dụng ngân hàng. Công an, ngân hàng không bao giờ bảo bác cài ứng dụng này. Bác cúp máy, đóng ứng dụng đó (như AnyDesk, TeamViewer), rồi bấm Hỏi con.** |
+
+- [ ] T028 [A] [FR-013] Thay đúng hai chuỗi trên trong `apps/android/app/src/main/res/values/strings.xml` (không đổi khóa, không đổi
+  bố cục `SafePauseScreen.kt`; nếu có test/screenshot test nhắc chuỗi cũ thì sửa theo). Dựng lại E7 biến thể điều khiển từ xa trên
+  máy ảo theo cách của Wave 2 (evidence.md): `apps/android/gradlew -p apps/android :demobank:installDebug
+  -PdemobankApplicationId=com.anydesk.anydeskandroid` (bản giả, chỉ máy ảo) rồi
+  `HC_DEMOBANK_PACKAGE=com.anydesk.anydeskandroid python3 scripts/emu-scenario.py --avd <avd> --scenario fake_police`; chụp ở
+  `adb shell settings put system font_scale 1.0` và `2.0` (đặt lại 1.0 sau khi chụp) trên `hc-api36` và `hc-api34` ⇒ 4 ảnh
+  `~/hoicon-evidence/010-design-system/w3/e7-remote-{36,34}-{100,200}.png`. Gọi `ux-elder-reviewer` đọc 4 ảnh + hai chuỗi mới;
+  còn High ⇒ sửa bố cục (chỉ nhánh `fontScale ≥ 1,5`, như `ad2f2b7`) và chụp lại, tối đa 2 vòng, quá 2 vòng ⇒ dừng, ghi BLOCKED.
+  Đạt 0 High ⇒ tick cả T027 (phần "reviewer đọc lại ảnh sau mục 4" được đóng bằng ảnh mới).
+  · Verify: `apps/android/gradlew -p apps/android :rules:test :app:testDebugUnitTest :app:lintDebug` xanh; `emu-scenario.py` ĐẠT trên
+  cả hai AVD (10/10 không bắt buộc, 1 lượt đủ cho ảnh; giữ `--runs 10` trên hc-api36 để xác nhận E7 vẫn ≤ 3 s); báo cáo reviewer
+  "0 High" + đường dẫn 4 ảnh ghi vào `specs/010-design-system/evidence.md` mục mới "E7 điều khiển từ xa — Wave 3".

@@ -45,8 +45,10 @@
   handler `zalo_update` cập nhật `weekly_digest_enabled` + trả lời xác nhận qua `deliver`. Test: phân loại (gồm chữ gần giống không
   khớp); webhook không lưu chữ thô (`test_zalo_no_leak.py` vẫn xanh); người lạ (không phải người giám hộ) ⇒ không đổi gì.
   · Verify: `$PYTEST tests/unit/test_zalo_inbound.py tests/integration/test_zalo_webhook.py tests/integration/test_zalo_no_leak.py tests/integration/test_guardian_reply.py`
-- [ ] T008 [B] [FR-009] Văn bản đồng ý: thêm câu (gộp với 031 nếu đã đổi — plan §5) vào `guardian_alerts.vi.md`, xóa ghi chú "Đã BỎ
-  câu…", ≤ 160 từ; `consent_texts write`; `PILOT-PROTOCOL.md` §4 thêm lại dòng đã bỏ; `ux-elder-reviewer` cho văn bản.
+- [ ] T008 [B] [FR-009] Văn bản đồng ý: câu của 032 **đã vào ở 031 T011** (bản gộp, chốt 22/10 — MASTER-PLAN §5 "Wave 3"). Ở đây
+  chỉ: kiểm chữ khớp mã thật (job `coach_weekly` + `protection_watch` chạy), `PILOT-PROTOCOL.md` §4 thêm lại dòng đã bỏ. Minh bác
+  I4 (MASTER-PLAN §8 mục 5) ⇒ bỏ cụm "báo khi máy bác hết được bảo vệ," (còn 153 từ), tăng phiên bản, `consent_texts write`,
+  `ux-elder-reviewer`, và báo làn A chạy 032 T010.
   · Verify: `$PYTEST tests/contract/test_consent_texts.py && uv run --directory backend python -m hoicon.ops.consent_texts check`
 - [ ] T009 [B] [FR-011] `docs/AGENTS.md` (Coach: hai job, không LangGraph, plan D1), `docs/DATA-MODEL.md` (cột mới, khóa chống trùng),
   `docs/PRIVACY-DPIA.md` (dùng heartbeat để báo người giám hộ), ROADMAP "Ghi chú" (trace của lượt `coach` chưa hiện cho người giám
@@ -55,8 +57,8 @@
 
 ## Làn A
 
-- [ ] T010 [A] [FR-009] Sau T008: đồng bộ chuỗi `guardian_alerts` trên Android và ghim lại sha (như 011 T018).
-  · Verify: `$GRADLE :app:testDebugUnitTest --tests '*ConsentTextsPinTest*'`
+- [ ] T010 [A] [FR-009] Đồng bộ chuỗi `guardian_alerts` trên Android đã làm chung ở 031 T014 (bản gộp). Task này chỉ chạy khi T008 đổi chữ (Minh bác I4); không đổi ⇒ chạy Verify của 031 T014 một lần nữa rồi tick.
+  · Verify: `$GRADLE :app:testDebugUnitTest --tests '*ConsentManifestPinTest*'`
 - [ ] T011 [A] [FR-010] Đo khoảng trống heartbeat trên `hc-api36` (và `hc-api34` nếu kịp) với backend dev: (a) bình thường 2 giờ, (b)
   `adb shell dumpsys deviceidle force-idle` 2 giờ, (c) `adb shell am set-standby-bucket vn.hoicon.sentinel rare` 4 giờ, (d) khởi động
   lại máy, (e) `adb shell am kill vn.hoicon.sentinel`. Đọc `device_heartbeats` bằng truy vấn đếm (không in định danh). Ghi khoảng

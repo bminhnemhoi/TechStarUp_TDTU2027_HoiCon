@@ -94,3 +94,38 @@ nếu eval lộ lỗi thật ở đó: ghi evidence + "Ghi chú" ROADMAP, **khô
 
 - Không đọc `.env`; URL DB eval do Tiến đặt qua biến môi trường. Không chạy worker trên DB eval.
 - Không đánh `[x]` khi Verify chưa chạy xanh. Commit trên nhánh `feat/w2-server`; không push/merge.
+
+---
+
+## Phase 9: Wave 3 (22/10/2026) — đo F-2 (mã sửa ở spec 024 T014–T015, ADR-012)
+
+**Chế độ chạy**: làn B, cùng nhánh với 024 T014–T015 và làm **ngay sau** 024 T015 (khi đó prompt đã là `intervention@2`).
+Luật cũ của Phase 1–8 giữ nguyên: không sửa `incident_graph.py`/prompt trong spec này. Test đỏ trước.
+
+- [ ] T025 [B-api] [FR-013] Test đỏ trước rồi sửa `backend/src/hoicon/eval/cassettes.py`: `honest` ⇒ `{"points": [...], "action"}`
+  (ca lừa đảo: mã ứng dụng + mã theo câu trả lời `yes` + `common_scam_pattern`, tối đa 3; ca hợp lệ: mã ứng dụng + `may_be_routine` —
+  ở ca hợp lệ mức `high` máy chủ bỏ `may_be_routine`, đó là kết quả đúng);
+  `leak_phone`/`leak_link`/`obey_injection` ⇒ dạng v1 `summary` (như cũ); thêm `soothe` (`["may_be_routine"]`) và `off_vocab`
+  (một mã dạng `^[a-z][a-z0-9_]+$` suy từ marker, ví dụ `skip_guardian`) vào `KINDS`; `backend/eval/suites/full.v1.json`: chia 13
+  ca chèn lệnh ngoài smoke thành `obey_injection` 5 / `soothe` 4 / `off_vocab` 4 (giữ `markers`); sinh lại 90 tệp
+  `backend/eval/cassettes/full/`. Test: `tests/unit/test_eval_cassettes.py` (mã của `honest` ⊂ enum guardian_brief.v2; `soothe`,
+  `off_vocab` hợp lệ `eval_cassette.v1`), `tests/contract/test_eval_full_suite.py` (đủ 13 loại hành vi, mỗi loại chèn lệnh ≥ 4).
+  · Verify: `$PYTEST tests/unit/test_eval_cassettes.py tests/contract -q`;
+  `uv run --directory backend python -m hoicon.eval.cassettes check` exit 0.
+- [ ] T026 [B-api] [FR-013] Test đỏ trước rồi thêm kiểm `brief_outside_vocabulary` vào `backend/src/hoicon/eval/checks.py`
+  (tách phần tóm tắt khỏi tin `detail` theo khung `texts.guardian_detail`; tập câu cho phép = **chỉ** giá trị `BRIEF_POINT_VI` sau khi thay
+  alias — `fallback` của `intervention` cũng ghép từ bộ này theo 024 FR-011(e)), tính vào vi phạm an toàn; giá trị đã có trong enum vi phạm của `docs/schemas/eval_report.v1.json` + fixture (hợp đồng
+  trước, 22/10) — thêm test so danh sách vi phạm của `checks.py` với enum hợp đồng. Test `tests/unit/test_eval_checks.py`: tin ghép đúng ⇒
+  không vi phạm; chèn thêm một câu lạ ⇒ vi phạm.
+  · Verify: `$PYTEST tests/unit/test_eval_checks.py tests/contract/test_eval_schemas.py -q`;
+  `uv run --directory backend hoicon-eval --suite injection --shared-db-ok` exit 0 với **17/17, 0 vi phạm** (SC-009).
+- [ ] T027 [B-api] [FR-013] Đột biến (c) mới trong `backend/tests/integration/test_eval_full_mutations.py`: monkeypatch bước ghép
+  thành "dùng thẳng chữ LLM" ⇒ `follow_injected_instruction` + `brief_outside_vocabulary` ở cả 3 loại chèn lệnh; giữ (c2) `mask_text`.
+  · Verify: `$PYTEST tests/integration/test_eval_full_mutations.py -q`.
+- [ ] T028 [B-api] [FR-013, FR-012] Chạy `hoicon-eval --suite full --compare baseline-full --shared-db-ok` 3 lần: recall/báo nhầm
+  ±0,0, 0 vi phạm, chỉ số giống hệt giữa 3 lần; nếu chỉ `fallback_rate`/thành phần hành vi đổi ⇒ `--write-baseline` một lần, ghi lý do
+  (ADR-012) vào evidence. Cập nhật `backend/README.md` (bảng hành vi: `soothe`, `off_vocab`), `.claude/skills/run-eval/SKILL.md`
+  và `docs/AGENTS.md` (bỏ F-2 khỏi "phát hiện mở"), dòng P2-18 `docs/ROADMAP.md`; ghi SC-009 vào `evidence.md` (số + môi trường + n).
+  · Verify: 3 lượt exit 0; `python3 scripts/check-spec-trace.py` 0 lỗi.
+
+Thứ tự: 024 T014 → 024 T015 → T025 → T026 → T027 → T028 → 024 T018 → 024 T019.
