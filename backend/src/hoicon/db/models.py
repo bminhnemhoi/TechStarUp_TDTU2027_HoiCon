@@ -154,6 +154,9 @@ class Member(Base):
     zalo_hmac_kid: Mapped[int | None] = mapped_column(SmallInteger)
     zalo_chat_enc: Mapped[str | None] = mapped_column(Text)
     locale: Mapped[str] = mapped_column(String(8), server_default=text("'vi'"))
+    weekly_digest_enabled: Mapped[bool] = mapped_column(
+        server_default=text("true")
+    )  # spec 032: bản tin tuần, theo người
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     deleted_at: Mapped[datetime | None]  # tombstone sau yêu cầu xóa (spec 034)
 

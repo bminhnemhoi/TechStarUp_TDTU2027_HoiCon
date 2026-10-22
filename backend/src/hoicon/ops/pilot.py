@@ -27,9 +27,9 @@ from uuid import UUID
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from hoicon.db.models import Device, DeviceHeartbeat, Family, Incident
+from hoicon.db.models import Device, Family, Incident
 from hoicon.db.session import get_sessionmaker
-from hoicon.services.heartbeat_service import CORE_PERMISSIONS, SLOT_SECONDS
+from hoicon.services.heartbeat_service import CORE_PERMISSIONS, device_slot_counts
 
 PILOT = "pilot"
 MAX_DAYS = 90
@@ -59,33 +59,8 @@ async def enroll(sessions: async_sessionmaker, family_id: UUID, *, confirm_adult
         return "enrolled"
 
 
-def _ceil_slot(moment: datetime) -> int:
-    return -(-int(moment.timestamp()) // SLOT_SECONDS)
-
-
-def _floor_slot(moment: datetime) -> int:
-    return int(moment.timestamp()) // SLOT_SECONDS
-
-
-def _at(slot_index: int) -> datetime:
-    return datetime.fromtimestamp(slot_index * SLOT_SECONDS, tz=UTC)
-
-
 async def _device_report(session: Any, device: Device, since: datetime, now: datetime) -> dict[str, Any]:
-    first = _ceil_slot(max(device.created_at, since))
-    last = _floor_slot(min(device.revoked_at or now, now))  # khung kỳ vọng: [first, last)
-    expected = max(0, last - first)
-    seen = protected = 0
-    if expected:
-        seen, protected = (
-            await session.execute(
-                select(func.count(), func.count().filter(DeviceHeartbeat.protected)).where(
-                    DeviceHeartbeat.device_id == device.id,
-                    DeviceHeartbeat.slot >= _at(first),
-                    DeviceHeartbeat.slot < _at(last),
-                )
-            )
-        ).one()
+    expected, seen, protected = await device_slot_counts(session, device, since, now)
     state = device.permission_state or {}
     off = sorted({name for name in (*state, *CORE_PERMISSIONS) if state.get(name) is not True})
     return {

@@ -39,6 +39,16 @@ def fixture(name: str) -> dict[str, Any]:
         ("đăng   nhập", ("login", None)),
         ("dang nhap", ("login", None)),
         ("ĐĂNG NHẬP", ("login", None)),
+        ("TẮT TIN TUẦN", ("digest_off", None)),  # spec 032 FR-007
+        ("tắt  tin   tuần ", ("digest_off", None)),
+        ("tat tin tuan", ("digest_off", None)),
+        ("Bật tin tuần", ("digest_on", None)),
+        ("BAT TIN TUAN\n", ("digest_on", None)),
+        ("tắt tin tuần đi", ("other", None)),  # chỉ nhận đúng lệnh
+        ("tắt tin", ("other", None)),
+        ("tat tin tuan tuan", ("other", None)),
+        ("bật tin tuần nhé", ("other", None)),
+        ("tắt tin tuổi", ("other", None)),  # chữ gần giống nhưng không phải lệnh
         ("đăng nhập web", ("other", None)),  # chỉ nhận đúng lệnh, không đoán ý
         ("4 5", ("other", None)),
         ("44", ("other", None)),

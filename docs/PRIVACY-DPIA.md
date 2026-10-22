@@ -127,3 +127,12 @@ tra cứu, bí danh gia đình (không tên thật). Không số điện thoại
 không gửi về máy chủ, không lưu `localStorage` (ADR-006). Đoạn tóm tắt do LLM (nếu có khóa) đi qua `llm_router` (che PII) và bộ lọc
 số/link/lời khuyên nguy hiểm. HỏiCon **không tự gửi** hồ sơ cho cơ quan nào. Giữ theo sự cố (12 tháng sau khi đóng), xóa khi xóa dữ liệu gia đình;
 hồ sơ nháp bị bỏ sau 30 ngày không ai duyệt. Mục đích dữ liệu: `guardian_alerts` (văn bản đồng ý đã thêm câu về hồ sơ, bản `2026.10-v4`, chưa phát hành).
+
+## Coach hằng tuần và báo "mất bảo vệ" (spec 032)
+HỏiCon dùng **heartbeat** (độ phủ, cờ quyền) để (a) nhắn người giám hộ khi điện thoại của người cao tuổi im lặng hơn 24 giờ hoặc
+quyền nhắc dừng lại bị tắt, và (b) gửi bản tin tuần (số lần nhắc dừng lại, độ phủ làm tròn 5%, số bài luyện tập). Mục đích dữ liệu:
+`guardian_alerts` (văn bản đồng ý bản `2026.10-v4`, chưa phát hành, nói rõ "họ được báo nếu HỏiCon bị tắt" và "tóm tắt mỗi tuần").
+Không số điện thoại, không tên thật trong tin; không LLM. Tin gửi tối đa một lần mỗi đợt/tuần, không gửi 21:00–07:00. Chỉ gia đình
+thật, người cao tuổi còn đồng ý `guardian_alerts`; người giám hộ tắt được bản tin tuần bằng "TẮT TIN TUẦN" (tin cảnh báo mất bảo vệ
+không tắt được vì là an toàn). Tin không bao giờ khẳng định "an toàn" (máy không được bảo vệ thì "không thấy gì" không có nghĩa
+là không có gì).

@@ -213,6 +213,10 @@ class BackendImageData(unittest.TestCase):
         self.assertIn("COPY data/case_file /app/data/case_file", self.dockerfile)
         self.assertTrue((ROOT / "data" / "case_file" / "report_guidance.vi.yaml").is_file())
 
+    def test_coach_tips_are_copied_into_the_image(self) -> None:  # spec 032 FR-005
+        self.assertIn("COPY data/coach /app/data/coach", self.dockerfile)
+        self.assertTrue((ROOT / "data" / "coach" / "tips.vi.yaml").is_file())
+
 
 class CaddyfileInvariants(unittest.TestCase):
     """Kiểm văn bản Caddyfile: các đường không được phơi ra Internet và bộ lọc nhật ký phải có ở CẢ logger mặc định."""

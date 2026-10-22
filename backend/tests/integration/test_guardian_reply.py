@@ -218,3 +218,43 @@ async def test_drill_label_survives_a_chain_of_replies(zalo_world: Any, runtime:
     assert world.sent_to(USER_1)[-1] == texts.guardian_ack("safe", True)
     assert (await runtime.status(incident)).outcome == "resolved_safe"
     await finish(runtime, incident)
+
+
+# --- Spec 032 FR-007: lệnh tắt/bật bản tin tuần -------------------------------------------------------------------
+
+
+async def digest_flag(member_id: Any) -> bool:
+    from hoicon.db.models import Member as _Member
+
+    async with get_sessionmaker()() as session:
+        return bool(await session.scalar(select(_Member.weekly_digest_enabled).where(_Member.id == member_id)))
+
+
+async def test_digest_off_and_on_update_only_that_guardian_and_reply_with_an_ack(zalo_world: Any) -> None:
+    first = await zalo_world.add_guardian(1)
+    second = await zalo_world.add_guardian(2)
+    user1, _ = zalo_world.zalo_ids[1]
+    status = await handle_update(zalo_world.deps, None, zalo_world.update_payload(user1, kind="digest_off"))
+    assert status == "sent"
+    assert await digest_flag(first.id) is False and await digest_flag(second.id) is True
+    ack = zalo_world.client.sent[-1].text
+    assert ack.startswith(texts.AI_DISCLOSURE) and "vẫn nhận cảnh báo khi có chuyện" in ack
+    assert await handle_update(zalo_world.deps, None, zalo_world.update_payload(user1, kind="digest_on")) == "sent"
+    assert await digest_flag(first.id) is True
+    assert "Đã bật lại bản tin tuần" in zalo_world.client.sent[-1].text
+
+
+async def test_a_stranger_cannot_change_any_digest_flag(zalo_world: Any) -> None:
+    guardian = await zalo_world.add_guardian(1)
+    status = await handle_update(zalo_world.deps, None, zalo_world.update_payload("nguoi-la-1", kind="digest_off"))
+    assert status == "sent"  # chỉ nhận câu hướng dẫn ghép đôi
+    assert await digest_flag(guardian.id) is True
+    assert "Đã tắt bản tin tuần" not in zalo_world.client.sent[-1].text
+
+
+async def test_digest_commands_are_idempotent(zalo_world: Any) -> None:
+    guardian = await zalo_world.add_guardian(1)
+    user, _ = zalo_world.zalo_ids[1]
+    for _ in range(2):
+        await handle_update(zalo_world.deps, None, zalo_world.update_payload(user, kind="digest_off"))
+    assert await digest_flag(guardian.id) is False

@@ -102,3 +102,17 @@ che PII, ngân sách, fallback; **không khóa API, không mạng ngoài, không
 không nhân bản) và xếp một tin Zalo mẫu `case_file` (khóa `{incident}:msg:case_file`, không có liên kết). Resume của
 `await_case_approval`: `{"case_action": "approve"|"discard", "actor": "guardian"|"system"}`. Router chỉ có hồ sơ `fast`, nên đoạn
 tóm tắt dùng `fast` thay vì `strong` như spec nêu.
+
+## Coach (spec 032) — `coach_weekly` và `protection_watch`
+Hai job, **không LangGraph** (plan D1: không interrupt, không LLM, không trạng thái dài), mẫu cố định ở `texts.py`, logic ở
+`services/coach_service.py`, trace bằng `agent_runs(graph='coach')` + `agent_steps` (chỉ số đếm và khóa mẫu).
+- `protection_watch` mỗi giờ (khóa `protection_watch:<giờ VN>`): `silent` (heartbeat cuối > 24 giờ) hoặc `permission_off` (2 khung
+  `device_heartbeats` gần nhất `protected = false`) ⇒ một tin cho người giám hộ hạng 1 có chat (không có ⇒ hạng 2), khóa
+  `protection:{thiết bị}:{mốc}`, tối đa 1 tin/thiết bị/24 giờ, không gửi 21:00–07:00 giờ VN. Loại: thiết bị thu hồi, gia đình demo,
+  người cao tuổi chưa đồng ý `guardian_alerts`. Cờ `HOICON_PROTECTION_WATCH` (mặc định bật).
+- `coach_weekly` 19:00 Chủ nhật giờ VN (khóa `coach_weekly:<năm>-W<tuần>`, tự xếp tuần kế): một tin cho mỗi người giám hộ có
+  `members.weekly_digest_enabled`, khóa `weekly:{người}:{năm}-W{tuần}`; độ phủ dùng `heartbeat_service.family_coverage` (cùng hàm
+  với `ops pilot`), làm tròn 5%; mẹo từ `data/coach/tips.vi.yaml` (`approved: false` ⇒ bản prod bỏ dòng mẹo).
+- Hạn mức: cả hai `urgent=False`; bản tin dừng ở `warn_pct` (`quota_class: digest`), tin mất bảo vệ đi tới `hold_pct`; tin sự cố
+  không bị ảnh hưởng. Lệnh Zalo "TẮT TIN TUẦN"/"BẬT TIN TUẦN" (`classify` ⇒ `digest_off`/`digest_on`) đổi cờ của chính người đó.
+- Việc chưa làm: trace của lượt `coach` chưa hiện cho người giám hộ trên web (ghi ở "Ghi chú" của ROADMAP — tôi không sửa ROADMAP).

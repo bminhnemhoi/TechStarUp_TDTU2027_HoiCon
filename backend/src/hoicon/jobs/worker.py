@@ -6,7 +6,7 @@ import logging
 import os
 import socket
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -20,7 +20,7 @@ from hoicon.channels.zalo import build_zalo_client
 from hoicon.config import get_settings
 from hoicon.db.session import get_sessionmaker
 from hoicon.jobs.queue import ATTEMPT_KEY, MAX_ATTEMPTS, Handler, run_once
-from hoicon.services import case_file_service, purge_service, retention_service
+from hoicon.services import case_file_service, coach_service, purge_service, retention_service
 from hoicon.services.drill_service import DrillService
 
 logger = logging.getLogger(__name__)
@@ -78,6 +78,15 @@ def incident_handlers(runtime: IncidentRuntime, channel: ChannelDeps | None = No
         # Spec 031 FR-008: sự cố `case_open` không hoạt động 30 ngày ⇒ đóng (hồ sơ nháp ⇒ bỏ).
         await case_file_service.run_autoclose(get_sessionmaker())
 
+    async def protection_watch(payload: dict[str, Any]) -> None:
+        # Spec 032 FR-002: mỗi giờ, phát hiện thiết bị im lặng/mất quyền và báo người giám hộ (một tin mỗi đợt).
+        await coach_service.run_protection_watch(get_sessionmaker())
+
+    async def coach_weekly(payload: dict[str, Any]) -> None:
+        # Spec 032 FR-004: bản tin tuần 19:00 Chủ nhật; chạy xong xếp luôn tuần kế tiếp (plan D4).
+        await coach_service.run_coach_weekly(get_sessionmaker())
+        await coach_service.schedule_weekly(get_sessionmaker(), now=datetime.now(UTC) + timedelta(days=1))
+
     async def purge_family(payload: dict[str, Any]) -> None:
         # Spec 034: xóa dữ liệu gia đình theo yêu cầu. Lũy đẳng; lỗi ⇒ yêu cầu `failed` + job thử lại.
         await purge_service.purge_family(
@@ -96,8 +105,13 @@ def incident_handlers(runtime: IncidentRuntime, channel: ChannelDeps | None = No
         "drill_expire": drill_expire,
         "retention": retention,
         "case_autoclose": case_autoclose,
+        "protection_watch": protection_watch,
+        "coach_weekly": coach_weekly,
         "purge_family": purge_family,
     }
+
+
+_hour_scheduled: str | None = None
 
 
 async def _schedule_retention(
@@ -106,12 +120,19 @@ async def _schedule_retention(
     """Mỗi ngày (giờ Việt Nam) xếp MỘT job `retention` (khóa `retention:<ngày>` ⇒ nhiều worker, nhiều lần khởi động
     trong ngày vẫn chỉ một job). Lỗi (DB chập chờn) ⇒ thử lại sau 60 giây, không làm chết worker.
     ⇒ (ngày đã xếp, mốc thử lại)."""
+    global _hour_scheduled
+    this_hour = coach_service.hour_key(datetime.now(UTC))
+    if this_hour != _hour_scheduled:  # job theo giờ (khóa giờ VN ⇒ nhiều worker chỉ xếp một job); lỗi ⇒ lần sau thử lại
+        with contextlib.suppress(Exception):
+            await coach_service.schedule_hourly(sessions)
+            _hour_scheduled = this_hour
     key = retention_service.retention_key(datetime.now(UTC))
     if key == scheduled or time.monotonic() < retry_at:
         return scheduled, retry_at
     try:
         await retention_service.schedule_daily(sessions)
         await case_file_service.schedule_daily_autoclose(sessions)
+        await coach_service.schedule_weekly(sessions)
     except Exception as exc:
         logger.warning("retention: chưa xếp được job hằng ngày (%s)", type(exc).__name__)
         return scheduled, time.monotonic() + 60

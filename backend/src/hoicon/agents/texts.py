@@ -329,3 +329,84 @@ def case_file_summary(alias: str, app_category: str, level: str, authority: bool
         f"HỏiCon đánh giá mức rủi ro: {LEVEL_VI[shown].lower()}. HỏiCon đã nhắc {alias} tạm dừng và báo người giám hộ."
     )
     return " ".join(parts)
+
+
+# --- Coach hằng tuần + báo "mất bảo vệ" (spec 032): mẫu cố định, không LLM. Người đọc là người giám hộ, chuyện nói về
+# người cao tuổi ⇒ nói điều ĐÃ BIẾT, nguyên nhân CÓ THỂ (không khẳng định), MỘT việc nên làm; không hoảng sợ, không "bị
+# hack", không khẳng định "an toàn" (máy không được bảo vệ thì "không thấy gì" không có nghĩa là không có gì).
+DIGEST_OFF_COMMAND = "TẮT TIN TUẦN"
+DIGEST_ON_COMMAND = "BẬT TIN TUẦN"
+
+
+def round_coverage(coverage: float) -> int:
+    """Độ phủ làm tròn tới 5% (không nói số lẻ giả chính xác)."""
+    return round(max(0.0, min(1.0, coverage)) * 20) * 5
+
+
+def guardian_protection_silent(alias: str, since_label: str) -> str:
+    """`since_label`: mốc giờ Việt Nam đã định dạng ("07:30 ngày 20 tháng 10")."""
+    return _message(
+        f"Điện thoại của {alias} chưa báo về HỏiCon từ {since_label}. Có thể máy hết pin, đang tắt, mất mạng hoặc "
+        f"hệ thống đã tắt ứng dụng chạy nền. Anh/chị nên gọi hỏi thăm {alias}, "
+        f"hoặc nhờ {alias} mở ứng dụng HỏiCon trên điện thoại.",
+        False,
+    )
+
+
+def guardian_protection_permission_off(alias: str) -> str:
+    return _message(
+        f"Trên điện thoại của {alias}, quyền để HỏiCon nhắc dừng lại khi có cuộc gọi lạ đang bị tắt, "
+        f"nên lúc này HỏiCon chưa nhắc được. Anh/chị nên gọi hỏi thăm {alias}, "
+        f"hoặc nhờ {alias} mở HỏiCon và bật lại quyền.",
+        False,
+    )
+
+
+def weekly_digest(
+    alias: str, incidents: int, resolved: int, coverage: float | None, drills: int, tip: str | None
+) -> str:
+    """Bản tin tuần (chiều Chủ nhật). `incidents`: số lần nhắc dừng lại của sự cố THẬT trong tuần; `resolved`: số lần
+    đã có người nhà xử lý; `coverage`: độ phủ heartbeat 7 ngày hoặc None ("chưa đủ dữ liệu")."""
+    lines = [f"Bản tin tuần của {alias}."]
+    if incidents > 0:
+        lines.append(
+            f"Tuần qua HỏiCon đã nhắc {alias} dừng lại {incidents} lần, "
+            f"trong đó {resolved} lần đã có người nhà xử lý xong."
+        )
+    elif coverage is None:
+        lines.append(
+            f"Tuần này HỏiCon chưa đủ dữ liệu về điện thoại của {alias} (máy chưa báo về đủ lâu), nên chưa thể nói gì."
+        )
+    else:
+        lines.append(f"Tuần này HỏiCon không thấy dấu hiệu đáng ngờ nào trên điện thoại của {alias}.")
+    if coverage is not None:
+        lines.append(
+            f"HỏiCon chạy trên điện thoại của {alias} khoảng {round_coverage(coverage)}% thời gian trong tuần."
+        )
+    elif incidents > 0:
+        lines.append(f"HỏiCon chưa đủ dữ liệu để nói máy của {alias} được bảo vệ bao nhiêu phần tuần này.")
+    lines.append(
+        f"{alias} đã làm {drills} bài luyện tập nhận biết lừa đảo."
+        if drills
+        else f"{alias} chưa làm bài luyện tập nào."
+    )
+    if tip:
+        lines.append(f"Mẹo tuần này: {tip}")
+    lines.append(f"Nhắn {DIGEST_OFF_COMMAND} để ngừng nhận bản tin này.")
+    return _message("\n".join(lines), False)
+
+
+def digest_off_ack() -> str:
+    return _message(
+        "Đã tắt bản tin tuần cho anh/chị. HỏiCon vẫn nhận cảnh báo khi có chuyện và nhắn cho anh/chị ngay. "
+        f"Muốn nhận lại bản tin, nhắn {DIGEST_ON_COMMAND}.",
+        False,
+    )
+
+
+def digest_on_ack() -> str:
+    return _message(
+        "Đã bật lại bản tin tuần cho anh/chị. Bản tin đến vào chiều Chủ nhật hằng tuần. "
+        f"Muốn ngừng, nhắn {DIGEST_OFF_COMMAND}.",
+        False,
+    )

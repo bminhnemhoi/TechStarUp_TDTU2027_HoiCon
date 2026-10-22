@@ -14,23 +14,23 @@
 
 ## Làn B
 
-- [ ] T001 [B] [FR-001] Migration cột `members.weekly_digest_enabled` + model + `tests/integration/test_schema_<số>.py`.
+- [x] T001 [B] [FR-001] Migration cột `members.weekly_digest_enabled` + model + `tests/integration/test_schema_<số>.py`.
   · Verify: `uv run --directory backend alembic upgrade head && uv run --directory backend alembic downgrade -1 && uv run --directory backend alembic upgrade head && $PYTEST tests/integration/test_schema_<số>.py`
-- [ ] T002 [B] [FR-005] Tách hàm độ phủ của `ops/pilot.py` thành hàm dùng chung (plan D3) nếu chưa là service; `ops pilot` gọi lại,
+- [x] T002 [B] [FR-005] Tách hàm độ phủ của `ops/pilot.py` thành hàm dùng chung (plan D3) nếu chưa là service; `ops pilot` gọi lại,
   hành vi không đổi.
   · Verify: `$PYTEST tests/integration/test_ops_pilot.py`
-- [ ] T003 [B] [FR-003, FR-005, FR-007] Mẫu tin trong `agents/texts.py`: `protection_silent`, `protection_permission_off`,
+- [x] T003 [B] [FR-003, FR-005, FR-007] Mẫu tin trong `agents/texts.py`: `protection_silent`, `protection_permission_off`,
   `weekly_digest` (biến thể: có sự cố / không sự cố / chưa đủ dữ liệu), `digest_off_ack`, `digest_on_ack`. Test TDD (viết trước): mở
   đầu công khai AI; không chứa chữ "an toàn" dạng khẳng định ("an toàn", "đã an toàn" — mẫu phủ định "chưa chắc an toàn" được phép
   nếu cần); độ phủ làm tròn 5%; không dãy ≥ 4 chữ số ngoài giờ; câu xác nhận tắt nói "vẫn nhận cảnh báo khi có chuyện".
   · Verify: `$PYTEST tests/unit/test_coach_texts.py tests/unit/test_texts_zalo.py tests/unit/test_texts_and_threat.py`
-- [ ] T004 [B] [FR-002, FR-003] `services/coach_service.py::find_protection_lapses(now)` + job `protection_watch` mỗi giờ (khóa giờ VN,
+- [x] T004 [B] [FR-002, FR-003] `services/coach_service.py::find_protection_lapses(now)` + job `protection_watch` mỗi giờ (khóa giờ VN,
   lũy đẳng), giờ im lặng 21:00–07:00 (hoãn tới 07:00), chọn người giám hộ hạng 1 rồi hạng 2, cờ `HOICON_PROTECTION_WATCH`. Test
   `tests/integration/test_protection_watch.py` với đồng hồ giả: 23 giờ ⇒ 0; 25 giờ ⇒ 1 tin; 48 lần chạy cùng đợt ⇒ 1 tin; heartbeat trở
   lại rồi mất ⇒ tin thứ hai; 2 khung `protected=false` ⇒ 1 tin; 1 khung ⇒ 0; thiết bị thu hồi / gia đình demo / chưa đồng ý
   `guardian_alerts` / cờ tắt ⇒ 0; 22:30 ⇒ hoãn tới 07:00; quét tin + job + `agent_steps` không có số điện thoại/h1.
   · Verify: `$PYTEST tests/integration/test_protection_watch.py`
-- [ ] T005 [B] [FR-004, FR-005, FR-008] Job `coach_weekly` (Chủ nhật 19:00 VN, khóa tuần ISO, tự xếp lần kế tiếp) + `agent_runs(graph
+- [x] T005 [B] [FR-004, FR-005, FR-008] Job `coach_weekly` (Chủ nhật 19:00 VN, khóa tuần ISO, tự xếp lần kế tiếp) + `agent_runs(graph
   ='coach')` + `agent_steps` (`collect`, `compose`, `send`, chỉ số đếm). Mẹo từ `data/coach/tips.vi.yaml` (`approved: false` ⇒ bản
   prod bỏ dòng mẹo; test cho cả hai chế độ). Test `tests/integration/test_coach_weekly.py`: số lần nhắc (loại diễn tập/demo), độ phủ,
   số bài luyện tập khớp seed; người giám hộ tắt bản tin ⇒ 0 tin cho người đó, người kia vẫn nhận; chạy hai lần cùng tuần ⇒ 1 tin;
@@ -38,19 +38,19 @@
   Thêm `COPY data/coach /app/data/coach` vào `backend/Dockerfile` (ảnh 012 chỉ chép các thư mục `data/` được liệt kê) và kiểm trong
   `scripts/tests/test_deploy_vps.py`.
   · Verify: `$PYTEST tests/integration/test_coach_weekly.py && python3 -m unittest discover -s scripts/tests -p test_deploy_vps.py`
-- [ ] T006 [B] [FR-006] Hạn mức: bản tin dừng ở `warn_pct`, tin mất bảo vệ đi tới `hold_pct`, cả hai `urgent=False`; tin sự cố không bị
+- [x] T006 [B] [FR-006] Hạn mức: bản tin dừng ở `warn_pct`, tin mất bảo vệ đi tới `hold_pct`, cả hai `urgent=False`; tin sự cố không bị
   ảnh hưởng. Test đếm bằng `messages_out` giả lập 79% / 81% / 96% hạn mức.
   · Verify: `$PYTEST tests/integration/test_coach_weekly.py -k quota tests/integration/test_protection_watch.py -k quota tests/integration/test_notify_guardian.py`
-- [ ] T007 [B] [FR-007] `classify`: "tắt tin tuần"/"bật tin tuần" (bỏ dấu, hoa thường, khoảng trắng thừa) ⇒ `digest_off`/`digest_on`;
+- [x] T007 [B] [FR-007] `classify`: "tắt tin tuần"/"bật tin tuần" (bỏ dấu, hoa thường, khoảng trắng thừa) ⇒ `digest_off`/`digest_on`;
   handler `zalo_update` cập nhật `weekly_digest_enabled` + trả lời xác nhận qua `deliver`. Test: phân loại (gồm chữ gần giống không
   khớp); webhook không lưu chữ thô (`test_zalo_no_leak.py` vẫn xanh); người lạ (không phải người giám hộ) ⇒ không đổi gì.
   · Verify: `$PYTEST tests/unit/test_zalo_inbound.py tests/integration/test_zalo_webhook.py tests/integration/test_zalo_no_leak.py tests/integration/test_guardian_reply.py`
-- [ ] T008 [B] [FR-009] Văn bản đồng ý: câu của 032 **đã vào ở 031 T011** (bản gộp, chốt 22/10 — MASTER-PLAN §5 "Wave 3"). Ở đây
+- [x] T008 [B] [FR-009] Văn bản đồng ý: câu của 032 **đã vào ở 031 T011** (bản gộp, chốt 22/10 — MASTER-PLAN §5 "Wave 3"). Ở đây
   chỉ: kiểm chữ khớp mã thật (job `coach_weekly` + `protection_watch` chạy), `PILOT-PROTOCOL.md` §4 thêm lại dòng đã bỏ. Minh bác
   I4 (MASTER-PLAN §8 mục 5) ⇒ bỏ cụm "báo khi máy bác hết được bảo vệ," (còn 153 từ), tăng phiên bản, `consent_texts write`,
   `ux-elder-reviewer`, và báo làn A chạy 032 T010.
   · Verify: `$PYTEST tests/contract/test_consent_texts.py && uv run --directory backend python -m hoicon.ops.consent_texts check`
-- [ ] T009 [B] [FR-011] `docs/AGENTS.md` (Coach: hai job, không LangGraph, plan D1), `docs/DATA-MODEL.md` (cột mới, khóa chống trùng),
+- [x] T009 [B] [FR-011] `docs/AGENTS.md` (Coach: hai job, không LangGraph, plan D1), `docs/DATA-MODEL.md` (cột mới, khóa chống trùng),
   `docs/PRIVACY-DPIA.md` (dùng heartbeat để báo người giám hộ), ROADMAP "Ghi chú" (trace của lượt `coach` chưa hiện cho người giám
   hộ).
   · Verify: `grep -n "coach_weekly\|protection_watch" docs/AGENTS.md docs/DATA-MODEL.md` có kết quả

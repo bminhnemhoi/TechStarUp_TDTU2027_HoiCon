@@ -27,7 +27,7 @@
 - Dừng ngay nếu người tham gia tỏ ra lo âu hoặc bối rối; ghi sự cố đạo đức (xem mục 7).
 
 ## 4. Quyền rút lui và xóa dữ liệu
-- **Rút lui bất cứ lúc nào**, không cần nêu lý do: tắt quyền trong Cài đặt điện thoại (HỏiCon thôi canh chừng; máy chủ chỉ ghi độ phủ để đội đo, chưa có tin báo người giám hộ khi quyền bị tắt),
+- **Rút lui bất cứ lúc nào**, không cần nêu lý do: tắt quyền trong Cài đặt điện thoại (HỏiCon thôi canh chừng). **Từ spec 032, nếu quyền bị tắt hoặc điện thoại im lặng hơn 24 giờ thì HỏiCon nhắn Zalo cho người giám hộ** (một tin mỗi đợt, không gửi 21:00–07:00; tắt được bằng cờ `HOICON_PROTECTION_WATCH` nếu Minh bác ý I4); nói rõ điều này với người tham gia khi giải thích rút lui,
   hoặc nhờ đội. Rút đồng ý `core_protection` thì máy chủ thôi nhận sự kiện từ máy đó.
 - **Yêu cầu xóa dữ liệu**: nói với đội qua kênh hỗ trợ. Đội chạy `python -m hoicon.ops.data request-delete --family <id>` (ghi vết trong `data_requests`),
   mục tiêu hoàn tất trong 72 giờ. Xóa mọi dữ liệu nhận diện của gia đình; sổ đồng ý được giữ nhưng không còn định danh.

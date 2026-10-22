@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     zalo_mode: Literal["mock", "live"] = "mock"
     # Spec 033 FR-002: cổng bật `/v1/sim/*` và `/v1/eval/*` (mô phỏng cho BGK). Mặc định TẮT; compose.prod không đặt.
     sim_enabled: bool = False
+    # Spec 032 D7: báo "mất bảo vệ" cho người giám hộ (ý I4 chưa được Minh duyệt) — tắt được mà không gỡ mã.
+    protection_watch: bool = True
     # Bot nhận webhook (một bot dev ở spike; 3 bot thí điểm sau: thêm khóa + token theo bot_id).
     zalo_bot_id: str = "hoicon-dev"
     # Hạn mức tin/tháng của gói Basic (bot.zapps.me, tra 15/10/2026) và ngưỡng cảnh báo/giữ tin không khẩn (% hạn mức).

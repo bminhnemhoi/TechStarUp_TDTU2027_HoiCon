@@ -1,0 +1,13 @@
+# Mẹo ngắn cho bản tin tuần của người giám hộ (spec 032 FR-005). CHƯA DUYỆT: `approved: false` ⇒ bản chạy thật (HOICON_ENV=prod)
+# bỏ dòng mẹo. Minh duyệt chữ rồi đổi `approved: true` (task T015). Mỗi mẹo: một câu, không số điện thoại/tài khoản/liên kết,
+# không khẳng định "an toàn", xoay vòng theo tuần ISO.
+approved: false
+tips:
+  - id: hang_up_and_call_back
+    text_vi: "Nếu có người tự xưng công an hay ngân hàng gọi tới, anh/chị nhắc bác cúp máy rồi tự gọi lại số đã lưu trong máy."
+  - id: never_share_otp
+    text_vi: "Anh/chị nhắc bác không đọc mã xác thực cho bất kỳ ai, kể cả người xưng là nhân viên ngân hàng."
+  - id: ask_family_first
+    text_vi: "Trước khi chuyển tiền cho người lạ, bác nên gọi hỏi người nhà. Anh/chị cho bác biết bác luôn được hỏi."
+  - id: no_unknown_apps
+    text_vi: "Anh/chị nhắc bác không cài ứng dụng hoặc mở đường dẫn lạ do người gọi điện hay nhắn tin bảo làm."
