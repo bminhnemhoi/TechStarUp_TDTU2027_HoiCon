@@ -20,3 +20,7 @@
 | Lệnh | Kết quả |
 |---|---|
 | jsonschema: fixture `case_file.v1` (2 valid, 7 invalid), `case_file_action.v1` (3 valid, 3 invalid) | valid hợp lệ, invalid bị từ chối |
+
+## Wave 3 làn A (22/10/2026) — T014 BLOCKED (chờ làn B)
+
+Điều kiện tiên quyết "Sau T011" chưa có trên nhánh: `031 T011` (văn bản đồng ý gộp 031 + 032, làn B) chưa tick và `docs/legal/consent/manifest.json` vẫn là `2026.10-v3` chưa có bản gộp `guardian_alerts`. Chưa đồng bộ chuỗi Android; không tick T014.

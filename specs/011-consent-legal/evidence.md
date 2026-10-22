@@ -108,3 +108,17 @@ T010 (Minh duyệt), T011 (người thật đọc thử), T012 (làn A đồng b
 - Đã bỏ câu "cho con biết quyền nào đang bật hay tắt" ở E3 và ở bản đọc to; bản đọc to E3/E10 viết lại cho khớp chữ mới (3 số cuối + mã thay cho số, hạn 90 ngày).
 - App chỉ xin 7 trong 10 mục đích; `llm_processing`, `voice_input`, `pilot_research` có chữ trong app nhưng KHÔNG có màn nào xin và không bao giờ ghi vào sổ (mã chưa thực thi, xem trên).
 - Chưa làm: #16 tên người giám hộ thay "con bác", chia thẻ có "Nghe lại" cho `core_protection`; chưa chụp E3/E4 chữ 200% sau đổi; văn bản vẫn là BẢN NHÁP chờ Minh duyệt (T010) nên T012 không tick.
+
+## Wave 3 (22/10/2026) — T018: kiểm lại Verify của đồng bộ chuỗi Android
+
+- `gradlew :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`: xanh (gồm `ConsentManifestPinTest`, thay `ConsentTextsPinTest` như đã ghi ở Wave 2).
+  `scripts/release-gate.sh` còn gọi tên test cũ ⇒ đã đổi (xem `specs/012-release-and-hosting/evidence.md`), cổng chạy thoát 0 trên AAB release và demo.
+- `emu-scenario.py --scenario fake_police` (n = 10, số máy ảo): hc-api36 10/10 ĐẠT (SafePause p95 1091 ms điều khiển từ xa, 1270 ms ngân hàng); hc-api34 10/10 ĐẠT. Đường dừng an toàn không đổi.
+- **Ảnh** `~/hoicon-evidence/011-consent-legal/w3/` (hc-api36, 1080×2400, backend dev cổng 18001, DB `hoicon_android`): E3 `e3-{100,200}-*` (đầu → cuối cuộn), trang quyền E4 đầu tiên
+  `e4page-{100,200}-*`, màn "Xong rồi" `e4-{100,200}-*`, E10 `e10-{100,200}-*`. Chỉ chụp trang quyền đầu tiên (2 trang còn lại cùng khung, khác chữ): chưa chụp.
+- **`ux-elder-reviewer` (22/10, đọc 15 ảnh):** 0 Chặn, **1 Cao**: "Đã kết nối với w3-gia-dinh." hiện mã kỹ thuật. Đây là **tên gia đình thử** do tôi đặt trong DB dev
+  (dữ liệu hư cấu), không phải chuỗi của sản phẩm; app hiện tên backend trả về. Còn mở để cân nhắc: dòng đó nên đổi thành "Đã kết nối với gia đình của bác" nếu tên
+  gia đình thật không phải lúc nào cũng đọc được. Trung bình: khối chữ E3 dày ở 100% (đề xuất tách 3 ý có tiêu đề), câu đường lui "bác muốn đổi ý lúc nào cũng được" nên rõ hơn,
+  trang quyền có 4 đoạn trước nút "Mở cài đặt" (đề xuất đưa nút lên), màn "Xong rồi" thiếu "Kéo xuống đọc tiếp ↓", nhãn "✗ Chưa bật" nhỏ. Thấp: nháy thẳng ở E10, câu
+  "để không bị kẻ xấu lợi dụng". Phần chữ của các đề xuất nằm trong `docs/legal/consent/` (làn B/Minh duyệt, T010) và phần bố cục ngoài task ⇒ **cần Opus/Minh**; không sửa.
+- Văn bản vẫn là bản nháp `2026.10-v3` chờ Minh duyệt (T010); T012 vẫn BLOCKED. Tick T018.
