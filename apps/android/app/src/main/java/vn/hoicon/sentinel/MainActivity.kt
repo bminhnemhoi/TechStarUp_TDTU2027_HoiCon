@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val tokens = TokenStorage.create(this).also { this.tokens = it }
         val session = tokens.load()
-        if (session == null || tokens.acceptedDisclosureVersion != ConsentLedger.VERSION) {
+        if (session == null || tokens.acceptedDisclosureVersion != ConsentLedger.DISCLOSURE_VERSION) {
             startActivity(Intent(this, OnboardingActivity::class.java))
             finish()
             return

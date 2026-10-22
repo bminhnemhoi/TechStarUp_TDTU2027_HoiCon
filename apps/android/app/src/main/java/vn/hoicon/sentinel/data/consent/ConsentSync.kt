@@ -25,7 +25,7 @@ class ConsentSync(private val storage: TokenStorage, private val api: PairingApi
         val session = storage.load() ?: return@synchronized Outcome.SKIPPED
         run {
             val purposes = buildSet {
-                if (storage.acceptedDisclosureVersion == ConsentLedger.VERSION) {
+                if (storage.acceptedDisclosureVersion == ConsentLedger.DISCLOSURE_VERSION) {
                     add(ConsentLedger.CORE_PROTECTION)
                     add(ConsentLedger.GUARDIAN_ALERTS)
                 }

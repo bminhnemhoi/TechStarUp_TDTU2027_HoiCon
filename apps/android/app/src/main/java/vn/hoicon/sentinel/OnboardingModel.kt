@@ -100,7 +100,7 @@ class OnboardingModel(app: Application) : AndroidViewModel(app) {
 
     /** E3 → E4: remember the acceptance, tell the server, only then does the user see any permission page. */
     fun acceptDisclosure(res: Resources, granted: Set<SensorPermission>) {
-        storage.acceptedDisclosureVersion = ConsentLedger.VERSION
+        storage.acceptedDisclosureVersion = ConsentLedger.DISCLOSURE_VERSION
         step = OnboardingStep.PERMISSIONS
         syncConsents(res, granted)
     }
@@ -123,7 +123,7 @@ class OnboardingModel(app: Application) : AndroidViewModel(app) {
 
         fun initialStep(storage: TokenStorage) = when {
             !storage.hasValidToken() -> OnboardingStep.WELCOME
-            storage.acceptedDisclosureVersion != ConsentLedger.VERSION -> OnboardingStep.DISCLOSURE
+            storage.acceptedDisclosureVersion != ConsentLedger.DISCLOSURE_VERSION -> OnboardingStep.DISCLOSURE
             else -> OnboardingStep.PERMISSIONS
         }
     }

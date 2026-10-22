@@ -11,7 +11,7 @@ import vn.hoicon.sentinel.data.consent.ConsentLedger
 /**
  * Spec 011: the words the app shows (res/values/consent_texts.xml) are, line for line, the BEGIN-TEXT block of
  * docs/legal/consent/<purpose>.vi.md, and their SHA-256 is the one in manifest.json. Changing a word anywhere
- * (the .md, the XML, the manifest) without the other two and without bumping ConsentLedger.VERSION turns this red
+ * (the .md, the XML, the manifest) without the other two and without bumping its version in ConsentLedger.versionOf turns this red
  * (CLAUDE.md rule 7). The literal pins below make a paired edit of XML + manifest visible too: re-pin them in the same commit.
  */
 class ConsentManifestPinTest {
@@ -40,7 +40,7 @@ class ConsentManifestPinTest {
         "call_screening" to "5765f61167f68549fa7de8ab4c7787082924ff7e095a72ac23699d24bde85643",
         "usage_monitoring" to "d69403e4a13874f99d236ab67a8f4f0153c8755e3b45f17a32395736dc4e114f",
         "overlay_pause" to "d98935d94ed0ced77f7f788600489f09cc0e32d472d55dbe9e303f7075300fce",
-        "guardian_alerts" to "4ba8653ecdce7a02d64c7d547807587d410acb96baaef7a47b3473cd6337d981",
+        "guardian_alerts" to "afd2491512d6ecd7b89ff62cac56a54e8c6429ff741fdd440ca5f86ec6a2b72a",
         "llm_processing" to "00bd60e3e3d6f5ae03e3f55b8862c6babc733a175d839bbc49ce2343a43b2f9b",
         "voice_input" to "4729274fdcf38cb613b1dad6ea7ede7a3e54ab04b8fb044e3f47e3ee5d3bba24",
         "drills" to "6a182f00d88b4ba9121af29937032020de070919e01a5cd527a65a0aafb9bb4d",
@@ -57,7 +57,7 @@ class ConsentManifestPinTest {
             val app = appLines(purpose)
             assertEquals(docLines(entry.getString("file")), app, "$purpose: app words differ from docs/legal/consent")
             assertEquals(entry.getString("sha256"), ConsentLedger.sha256Hex(app.joinToString("\n")), "$purpose: hash differs from manifest")
-            assertEquals(entry.getString("version"), ConsentLedger.VERSION, "$purpose: manifest version differs from ConsentLedger.VERSION")
+            assertEquals(entry.getString("version"), ConsentLedger.versionOf(purpose), "$purpose: manifest version differs from ConsentLedger.versionOf")
             assertEquals(pinned.getValue(purpose), ConsentLedger.sha256Hex(app.joinToString("\n")), "$purpose: re-pin with the version bump")
         }
     }

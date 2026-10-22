@@ -17,8 +17,21 @@ data class ConsentItem(
  * off later becomes a new `granted=false` row, never an edit (spec 020, FR-002).
  */
 object ConsentLedger {
-    /** Bump whenever any text the user agrees to changes (CLAUDE.md rule 7); the E3 screen is then shown again. */
+    /**
+     * The version of every text that has not been reworded since `2026.10-v3`. A text that changed carries its own
+     * version (the `version` of its entry in docs/legal/consent/manifest.json): ask [versionOf]. Bump a purpose's version
+     * whenever its text changes (CLAUDE.md rule 7); the screen that asks for it is then shown again.
+     */
     const val VERSION = "2026.10-v3"
+
+    /** `guardian_alerts` was merged with the case-file and weekly-summary promises (Spec 031 + 032): `2026.10-v4`. */
+    private const val GUARDIAN_ALERTS_VERSION = "2026.10-v4"
+
+    /** What E3 (core protection + the family cards) stores once accepted: the newest text on that screen. */
+    const val DISCLOSURE_VERSION = GUARDIAN_ALERTS_VERSION
+
+    /** The version of one purpose's current text, as in manifest.json. */
+    fun versionOf(purpose: String): String = if (purpose == GUARDIAN_ALERTS) GUARDIAN_ALERTS_VERSION else VERSION
 
     /** The E3 prominent disclosure itself. */
     const val CORE_PROTECTION = "core_protection"
@@ -69,7 +82,7 @@ object ConsentLedger {
      */
     fun mayShareWithFamily(accepted: String?, recorded: Set<String>, texts: Map<String, String>): Boolean {
         val words = texts[GUARDIAN_ALERTS] ?: return false
-        return accepted == VERSION && key(GUARDIAN_ALERTS, words) in recorded
+        return accepted == DISCLOSURE_VERSION && key(GUARDIAN_ALERTS, words) in recorded
     }
 
     fun sha256Hex(text: String): String =
@@ -77,7 +90,7 @@ object ConsentLedger {
             .joinToString("") { "%02x".format(it) }
 
     /** What identifies one recorded grant: a new version OR new wording of the same purpose is a new key. */
-    fun key(purpose: String, text: String) = "$purpose|$VERSION|${sha256Hex(text)}"
+    fun key(purpose: String, text: String) = "$purpose|${versionOf(purpose)}|${sha256Hex(text)}"
 
     /**
      * @param recorded keys ([key]) the server already holds as granted
@@ -88,7 +101,7 @@ object ConsentLedger {
         fun item(purpose: String, value: Boolean) = ConsentItem(
             purpose = purpose,
             granted = value,
-            consentVersion = VERSION,
+            consentVersion = versionOf(purpose),
             textSha256 = sha256Hex(texts.getValue(purpose)),
         )
         val recordedPurposes = recorded.mapTo(mutableSetOf()) { it.substringBefore('|') }
