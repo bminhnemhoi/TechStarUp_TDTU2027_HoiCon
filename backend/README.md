@@ -56,7 +56,7 @@ uv run python -m hoicon.ops.mcp_token new --client claude-team               # t
   `--write-baseline` (lượt phải đạt). `--shared-db-ok` chỉ dành cho CI (DB dịch vụ tạm): đừng dùng khi `HOICON_DATABASE_URL` trỏ DB có dữ liệu thật. Báo cáo ghi số ca *provisional* (kịch bản `draft: true` chưa được Minh duyệt) và cassette
   là `synthetic`: eval chỉ đo rào tất định, **không** đo chất lượng model thật.
   Thêm ca: viết kịch bản vào `data/scenarios/` (skill `add-scam-scenario`), thêm id vào `backend/eval/suites/full.v1.json`
-  và (nếu cần hành vi đối kháng) khóa vào `behaviors` — loại: `lower`, `leak_phone`, `leak_link`, `obey_injection` (kèm `markers`),
+  và (nếu cần hành vi đối kháng) khóa vào `behaviors` — loại: `lower`, `leak_phone`, `leak_link`, `obey_injection`/`soothe`/`off_vocab` (kèm `markers`; chia ba loại chèn lệnh, ADR-012),
   `refusal`, `timeout`, `malformed`, `missing`; thiếu khóa = `honest` — rồi chạy lệnh `cassettes write`. Test hợp đồng
   (`tests/contract/test_eval_full_suite.py`) bắt thiếu cassette, thành phần suite lệch và cassette không khớp bộ sinh.
 - `--loop asyncio:SelectorEventLoop`: psycopg async không chạy trên `ProactorEventLoop` mặc định của Windows (Linux

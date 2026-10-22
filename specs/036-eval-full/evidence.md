@@ -92,3 +92,10 @@
 - `docs/ROADMAP.md` "Ghi chú": đề xuất ghi F-1 và F-2 thành việc cho spec 024/đồ thị.
 - Khi mở PR: điền link run CI cho SC-001 (thời gian trên runner) và SC-008.
 - Khi có khóa API (P0-08): ghi cassette `recorded`, chạy lại full, lặp prompt, so Haiku/Flash-Lite; chạy lại `--write-baseline` chỉ khi Minh đồng ý.
+
+## Wave 3 — T025–T028 (đo F-2), 22/10/2026
+
+- **T025:** `cassettes.py` sinh `honest` ở dạng `points`; thêm `soothe`, `off_vocab`; 13 ca chèn lệnh chia 5/4/4; 90 tệp full sinh lại (`cassettes check` khớp); `leak_*`/`obey_injection` giữ dạng v1.
+- **T026:** `brief_outside_vocabulary` trong `checks.py` (tin `detail` phải ghép hoàn toàn từ `BRIEF_POINT_VI` + câu hành động + đuôi cố định), thứ tự `VIOLATION_ORDER` khớp enum `eval_report.v1.json` (test so khớp).
+- **T027:** đột biến (c) mới ("dùng thẳng chữ LLM") bắt cả 3 loại chèn lệnh; các đột biến cũ nói về bộ lọc `_UNSAFE_SUMMARY` đổi thành "không còn là chốt chặn" (đúng ADR-012).
+- **T028:** 3 lượt full liên tiếp: recall/báo nhầm +0,0, 0 vi phạm, chỉ số giống hệt. Chỉ `fallback_rate` (smoke 0,089 → 0,196) và `prompt_versions.intervention` đổi ⇒ `--write-baseline` một lần cho smoke + full vì cassette dạng v1 nay bị router bỏ (sai hợp đồng v2 ⇒ rơi về bộ điểm mặc định). **SC-009 ĐẠT:** injection 17/17, 0 vi phạm (synthetic, n=3, máy dev). README, `run-eval/SKILL.md`, `AGENTS.md` đã cập nhật. Dòng ROADMAP P2-18: không sửa (ngoài quyền) — **việc cho Tiến/Opus**.

@@ -83,6 +83,30 @@ def guardian_fast_alert_with_link(
     )
 
 
+# ADR-012 / spec 024 FR-011: tóm tắt gửi người giám hộ chỉ ghép từ các câu cố định này (LLM chỉ chọn mã).
+# Không chữ số/link; `{alias}` = cách xưng hô người cao tuổi.
+# Thêm tình huống = thêm mã (guardian_brief.v2.json) + câu + điều kiện + test.
+BRIEF_POINT_VI: dict[str, str] = {
+    "unknown_call_then_finance_app": "Vừa rồi {alias} nghe một số lạ gọi rồi mở ứng dụng ngân hàng hoặc ví điện tử.",
+    "sideloaded_app": "Vừa rồi {alias} mở một ứng dụng không tải từ cửa hàng CH Play, sau cuộc gọi lạ.",
+    "call_still_ongoing": "Cuộc gọi lạ với {alias} có thể vẫn đang diễn ra.",
+    "flagged_number": "Số điện thoại này nằm trong danh sách số bị báo nghi lừa đảo.",
+    "caller_claims_authority": "{alias} cho biết người gọi xưng là công an, ngân hàng hoặc cơ quan nhà nước.",
+    "asked_transfer_or_code": "{alias} cho biết người gọi bảo chuyển tiền hoặc đọc mã xác thực.",
+    "asked_secrecy": "{alias} cho biết người gọi dặn giữ kín, đừng kể với ai.",
+    "asked_install_app": "{alias} cho biết người gọi bảo cài ứng dụng hoặc mở một đường dẫn lạ.",
+    "elder_unsure_of_caller": "{alias} cho biết chưa rõ người gọi là ai.",
+    "common_scam_pattern": "Những điểm trên thường gặp trong các cuộc gọi giả danh để lừa chuyển tiền.",
+    "may_be_routine": "Cũng có thể đây chỉ là việc bình thường, anh/chị cứ nhẹ nhàng hỏi thăm {alias} xem chuyện gì.",
+}
+
+
+def brief_summary(alias: str, points: list[str]) -> str:
+    """Ghép câu cố định theo thứ tự điểm; mã không có câu bị bỏ (không bao giờ nhận chữ từ ngoài)."""
+    sentences = (BRIEF_POINT_VI[p].replace("{alias}", alias) for p in points if p in BRIEF_POINT_VI)
+    return " ".join(s[:1].upper() + s[1:] for s in sentences)  # alias là tên riêng/danh xưng ("bác Hùng") đứng đầu câu
+
+
 def guardian_detail(alias: str, level: RiskLevel, summary: str, action: str, is_drill: bool) -> str:
     summary = summary.strip()
     if summary and summary[-1] not in ".!?":  # tóm tắt do LLM viết có thể thiếu dấu chấm cuối

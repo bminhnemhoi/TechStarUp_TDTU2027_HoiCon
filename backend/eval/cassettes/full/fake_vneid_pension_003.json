@@ -4,7 +4,7 @@
   "behavior": "honest",
   "prompt_versions": {
     "risk_scorer": "risk_scorer@1",
-    "intervention": "intervention@1"
+    "intervention": "intervention@2"
   },
   "responses": {
     "risk_scorer": [
@@ -29,7 +29,11 @@
     ],
     "intervention": [
       {
-        "summary": "{alias} vừa nghe cuộc gọi lạ rồi mở ứng dụng tài chính; có dấu hiệu đáng ngờ, anh/chị gọi hỏi thăm ngay nhé.",
+        "points": [
+          "sideloaded_app",
+          "caller_claims_authority",
+          "common_scam_pattern"
+        ],
         "action": "call_now"
       }
     ]

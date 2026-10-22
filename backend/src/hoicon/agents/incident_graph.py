@@ -19,6 +19,7 @@
 
 import re
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Annotated, Any, Literal, TypedDict
@@ -26,7 +27,7 @@ from uuid import UUID
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -35,7 +36,6 @@ from hoicon.agents.llm_router import LlmResult, LlmRouter, load_prompt
 from hoicon.channels.fcm import notify_elder_fcm
 from hoicon.config import Settings
 from hoicon.db.models import AgentRun, AgentStep, Verification
-from hoicon.domain.pii import mask_text
 from hoicon.domain.risk import RiskLevel, raise_only
 from hoicon.jobs.queue import cancel_prefix, enqueue
 from hoicon.services.incident_service import (
@@ -66,9 +66,34 @@ class RiskAssessment(BaseModel):
     ask_question: QuestionId
 
 
+# ADR-012: LLM chỉ chọn mã điểm từ danh sách đóng; máy chủ ghép câu cố định (`texts.BRIEF_POINT_VI`). Khớp
+# `docs/schemas/guardian_brief.v2.json` (test so enum).
+BriefPoint = Literal[
+    "unknown_call_then_finance_app",
+    "sideloaded_app",
+    "call_still_ongoing",
+    "flagged_number",
+    "caller_claims_authority",
+    "asked_transfer_or_code",
+    "asked_secrecy",
+    "asked_install_app",
+    "elder_unsure_of_caller",
+    "common_scam_pattern",
+    "may_be_routine",
+]
+
+
 class GuardianBrief(BaseModel):
-    summary: str = Field(max_length=280)
+    model_config = ConfigDict(extra="forbid")
+    points: list[BriefPoint] = Field(min_length=1, max_length=3)
     action: Action
+
+    @field_validator("points")
+    @classmethod
+    def _unique(cls, value: list[BriefPoint]) -> list[BriefPoint]:
+        if len(set(value)) != len(value):
+            raise ValueError("points không được trùng")
+        return value
 
 
 def _append(left: list[str], right: list[str]) -> list[str]:
@@ -103,6 +128,60 @@ _UNSAFE_SUMMARY = re.compile(
     r"\d|https?://|www\.|@|\b[\w-]+\.(?:vn|com|net|org|me|ly|io|xyz|info|top|link|site)\b|zalo|telegram|viber",
     re.IGNORECASE,
 )
+
+
+_FINANCE_APPS = ("bank", "wallet", "securities")
+
+
+def _note_flag(state: Mapping[str, Any], *names: str) -> bool:
+    flags = (state.get("elder_answer") or {}).get("note_flags") or {}
+    return any(flags.get(n) is True for n in names)
+
+
+def _answered(state: Mapping[str, Any], question: str, *values: str) -> bool:
+    ans = state.get("elder_answer") or {}
+    return ans.get("question_id") == question and ans.get("answer") in values
+
+
+def _brief_conditions(state: Mapping[str, Any], level: RiskLevel) -> dict[str, bool]:
+    """Điều kiện dữ kiện tất định của từng mã điểm (ADR-012 §2): chỉ đọc state máy chủ, không đọc chữ của LLM."""
+    event = state.get("event") or {}
+    app = (event.get("app") or {}).get("category")
+    flagged = (state.get("threat") or {}).get("verdict") == "flagged" or bool(
+        (event.get("caller") or {}).get("flagged")
+    )
+    danger = {
+        "caller_claims_authority": _answered(state, "q_caller_authority", "yes")
+        or _note_flag(state, "mentions_authority"),
+        "asked_transfer_or_code": _answered(state, "q_asked_transfer", "yes")
+        or _note_flag(state, "mentions_transfer", "mentions_code"),
+        "asked_secrecy": _note_flag(state, "mentions_secrecy"),
+        "asked_install_app": _note_flag(state, "mentions_app_or_link"),
+    }
+    return {
+        "unknown_call_then_finance_app": app in _FINANCE_APPS,
+        "sideloaded_app": app == "sideloaded",
+        "call_still_ongoing": (event.get("call") or {}).get("active") is True,
+        "flagged_number": flagged,
+        **danger,
+        "elder_unsure_of_caller": _answered(state, "q_know_caller", "no", "unsure"),
+        "common_scam_pattern": True,
+        # LLM không được trấn an ở mức high/critical (luật 5), cũng không khi đã có dữ kiện nguy hiểm (số gắn cờ, người
+        # gọi xưng cơ quan/đòi tiền/đòi giữ kín/đòi cài app): mức có thể thấp chỉ vì LLM chấm thấp.
+        "may_be_routine": level.rank <= RiskLevel.MEDIUM.rank and not flagged and not any(danger.values()),
+    }
+
+
+def brief_points(state: Mapping[str, Any], level: RiskLevel, points: Sequence[str]) -> list[str]:
+    """Điểm LLM chọn, bỏ mã lạ/trùng/điều kiện sai, giữ thứ tự; rỗng ⇒ bộ mặc định (mã ứng dụng đúng + chung)."""
+    conditions = _brief_conditions(state, level)
+    kept: list[str] = []
+    for point in points:
+        if conditions.get(point) and point not in kept:
+            kept.append(point)
+    if kept:
+        return kept[:3]
+    return [p for p in ("unknown_call_then_finance_app", "sideloaded_app") if conditions[p]] + ["common_scam_pattern"]
 
 
 @dataclass
@@ -354,9 +433,9 @@ def build_graph(deps: Deps) -> StateGraph:
             await step(state, "intervention", started, {"skipped": done})
             return {"guardian_decision": DECIDED}
         level = RiskLevel(state["level"])
+        # Không còn câu mẫu tự do: fallback cũng chỉ là bộ điểm mặc định (ADR-012), câu ghép từ `BRIEF_POINT_VI`.
         fallback = GuardianBrief(
-            summary=f"{state['elder_alias']} vừa nghe số lạ gọi rồi mở ứng dụng tài chính — dấu hiệu thường gặp khi "
-            "kẻ gian giả danh cơ quan hoặc ngân hàng để dụ chuyển tiền.",
+            points=brief_points(state, level, []),  # type: ignore[arg-type]
             action="call_and_stay_on_line" if level == RiskLevel.CRITICAL else "call_now",
         )
         # Chỉ siêu dữ liệu + enum; cách xưng hô thật không gửi cho LLM (chỗ giữ "{alias}" được thay sau).
@@ -370,15 +449,20 @@ def build_graph(deps: Deps) -> StateGraph:
         llm = await deps.router.structured(
             prompt=brief_prompt, context=brief_context, output=GuardianBrief, fallback=fallback
         )
-        # Phần LLM viết nằm GIỮA mẫu (câu công khai AI do mẫu thêm); có dấu hiệu chèn số/link ⇒ dùng tóm tắt mẫu.
-        summary = llm.output.summary.strip()[:280]
-        unsafe = not summary or bool(_UNSAFE_SUMMARY.search(summary))
-        summary = fallback.summary if unsafe else mask_text(summary.replace("{alias}", state["elder_alias"]))
+        # Chữ của LLM không bao giờ tới người giám hộ: chỉ giữ mã điểm có dữ kiện đúng, câu do `texts` ghép (ADR-012).
+        chosen = list(llm.output.points)
+        kept = brief_points(state, level, chosen)
+        summary = texts.brief_summary(state["elder_alias"], kept)
         # Mức rất cao luôn kèm "gọi ngay và giữ máy" — LLM không được làm nhẹ lời khuyên.
         action = "call_and_stay_on_line" if level == RiskLevel.CRITICAL else llm.output.action
         text = texts.guardian_detail(state["elder_alias"], level, summary, action, state["is_drill"])
         sent = await notify(state, "detail", text)
-        output = {"action": action, "template": "detail", "summary_rejected": unsafe and not llm.fallback_used}
+        output = {
+            "action": action,
+            "template": "detail",
+            "points_kept": kept,
+            "points_dropped": [p for p in chosen if p not in kept],
+        }
         await step(state, "intervention", started, output, llm)
         return {"outbox": sent, "action": action}
 

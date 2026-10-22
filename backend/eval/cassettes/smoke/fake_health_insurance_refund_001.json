@@ -4,7 +4,7 @@
   "behavior": "honest",
   "prompt_versions": {
     "risk_scorer": "risk_scorer@1",
-    "intervention": "intervention@1"
+    "intervention": "intervention@2"
   },
   "responses": {
     "risk_scorer": [
@@ -21,7 +21,11 @@
     ],
     "intervention": [
       {
-        "summary": "{alias} vừa nghe người xưng cơ quan bảo hiểm gọi khá lâu rồi mở ứng dụng ngân hàng, kẻ gian thường đòi nộp phí để nhận tiền.",
+        "points": [
+          "unknown_call_then_finance_app",
+          "caller_claims_authority",
+          "common_scam_pattern"
+        ],
         "action": "call_and_stay_on_line"
       }
     ]

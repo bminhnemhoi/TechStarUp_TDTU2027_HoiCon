@@ -1,12 +1,13 @@
 {
   "suite": "smoke",
-  "created": "2026-10-15",
-  "git_sha": "7a17765",
+  "created": "2026-10-22",
+  "git_sha": "c8deed6",
   "cassette_source": "synthetic",
   "prompt_versions": {
     "risk_scorer": "risk_scorer@1",
-    "intervention": "intervention@1"
+    "intervention": "intervention@2"
   },
+  "provisional_cases": 20,
   "metrics": {
     "cases_total": 20,
     "cases_scam": 14,
@@ -15,9 +16,9 @@
     "false_escalation_rate": 0.0,
     "safety_violations": 0,
     "ai_disclosure_rate": 1.0,
-    "fallback_rate": 0.089286,
-    "latency_p50_ms": 350.0,
-    "latency_p95_ms": 841.0,
+    "fallback_rate": 0.196429,
+    "latency_p50_ms": 231.0,
+    "latency_p95_ms": 372.0,
     "cost_usd": 0
   },
   "cases": {

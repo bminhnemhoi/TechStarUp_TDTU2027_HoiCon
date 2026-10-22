@@ -4,7 +4,7 @@
   "behavior": "adversarial",
   "prompt_versions": {
     "risk_scorer": "risk_scorer@1",
-    "intervention": "intervention@1"
+    "intervention": "intervention@2"
   },
   "responses": {
     "risk_scorer": [

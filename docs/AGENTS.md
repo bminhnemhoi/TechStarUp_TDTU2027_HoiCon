@@ -8,7 +8,7 @@
 | Tác tử | Vai trò | Node chính |
 |---|---|---|
 | Chấm rủi ro | Kết hợp `rule_floor` + câu trả lời E8 + ngữ cảnh ⇒ mức rủi ro (chỉ nâng) | `risk_scorer` |
-| Can thiệp | Chọn lời nhắc/câu hỏi đã duyệt cho người cao tuổi, báo người giám hộ | `fast_alert`, `intervention` |
+| Can thiệp | Chọn lời nhắc/câu hỏi đã duyệt cho người cao tuổi; báo người giám hộ bằng **mã điểm** (LLM chỉ chọn mã từ danh sách đóng, máy chủ ghép câu cố định — ADR-012) | `fast_alert`, `intervention` |
 | Xác minh | Tra số/link/QR qua MCP `threat`, nguồn công khai | `verification`, `rescore` |
 | Hồ sơ | Soạn hồ sơ vụ việc, chờ người giám hộ duyệt | `case_file` |
 | Huấn luyện (Coach) | Bản tin tuần, diễn tập cá nhân hóa | đồ thị `coach` |
@@ -82,6 +82,7 @@ che PII, ngân sách, fallback; **không khóa API, không mạng ngoài, không
   báo nhầm ≤ 0,10, 0 vi phạm, công khai AI 100%), baseline `backend/eval/baseline-full.json`. `--suite injection`: 17 ca chèn lệnh,
   không baseline. Vẫn không khóa API: phần LLM thật (cassette `recorded`, lặp prompt) BLOCKED P0-08.
 - Giới hạn đã biết: cassette `synthetic` + kịch bản `draft: true` chỉ đo **rào tất định**, không đo chất lượng model.
-  **F-2**: tóm tắt LLM viết bằng chữ thuần (không số/link/kênh chat) lọt bộ lọc `_UNSAFE_SUMMARY` ⇒ thay bằng danh sách điểm
-  đóng (ADR-012, spec 024 T014–T015). **F-1**: `("q_asked_transfer","yes") ⇒ critical` báo nhầm chuyển tiền chính đáng ⇒
+  **F-2** (đã đóng, ADR-012, spec 024 T015): `intervention` không còn tóm tắt tự do; LLM chỉ chọn 1–3 mã điểm
+  (`GuardianBrief` v2, `docs/schemas/guardian_brief.v2.json`), máy chủ bỏ mã có dữ kiện sai và ghép câu cố định
+  `texts.BRIEF_POINT_VI`; eval có kiểm `brief_outside_vocabulary`. **F-1**: `("q_asked_transfer","yes") ⇒ critical` báo nhầm chuyển tiền chính đáng ⇒
   phương án ở spec 024 §5 (chờ Minh, MASTER-PLAN §8).

@@ -1,11 +1,11 @@
 {
   "suite": "full",
-  "created": "2026-10-21",
-  "git_sha": "f4ae279",
+  "created": "2026-10-22",
+  "git_sha": "c8deed6",
   "cassette_source": "synthetic",
   "prompt_versions": {
     "risk_scorer": "risk_scorer@1",
-    "intervention": "intervention@1"
+    "intervention": "intervention@2"
   },
   "provisional_cases": 110,
   "metrics": {
@@ -16,9 +16,9 @@
     "false_escalation_rate": 0.0,
     "safety_violations": 0,
     "ai_disclosure_rate": 1.0,
-    "fallback_rate": 0.16726,
-    "latency_p50_ms": 239.0,
-    "latency_p95_ms": 307.0,
+    "fallback_rate": 0.241993,
+    "latency_p50_ms": 256.0,
+    "latency_p95_ms": 637.0,
     "cost_usd": 0
   },
   "cases": {
