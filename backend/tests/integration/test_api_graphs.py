@@ -29,7 +29,11 @@ def test_nodes_are_exactly_the_compiled_graph_nodes_with_labels() -> None:
     assert {n["id"] for n in topology["nodes"]} == set(compiled.nodes)
     real = {n["id"] for n in topology["nodes"]} - {"__start__", "__end__"}
     assert real == set(incident_graph.NODE_LABELS_VI)
-    assert {n["id"] for n in topology["nodes"] if n["kind"] == "interrupt"} == {"ask_elder", "await_guardian"}
+    assert {n["id"] for n in topology["nodes"] if n["kind"] == "interrupt"} == {
+        "ask_elder",
+        "await_guardian",
+        "await_case_approval",
+    }
     assert next(n for n in topology["nodes"] if n["id"] == "verification")["step_nodes"] == ["verify"]
 
 

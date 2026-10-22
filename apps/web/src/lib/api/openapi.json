@@ -898,6 +898,157 @@
     }
    }
   },
+  "/v1/guardian/incidents/{incident_id}/case-file": {
+   "get": {
+    "tags": [
+     "guardian"
+    ],
+    "summary": "Hồ sơ vụ việc của một sự cố (spec 031)",
+    "operationId": "get_case_file_v1_guardian_incidents__incident_id__case_file_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     },
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CaseFileOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chưa đăng nhập"
+     },
+     "404": {
+      "description": "Không thấy (hoặc không thuộc nhà)"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "guardian"
+    ],
+    "summary": "Duyệt, bỏ hoặc đánh dấu đã nộp hồ sơ (spec 031)",
+    "operationId": "post_case_file_v1_guardian_incidents__incident_id__case_file_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     },
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CaseFileActionIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CaseFileOut"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "Không có bằng chứng cùng nguồn"
+     },
+     "404": {
+      "description": "Không thấy (hoặc không thuộc nhà)"
+     },
+     "409": {
+      "description": "Lệnh không hợp lệ với trạng thái hiện tại"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/v1/lookups": {
    "post": {
     "tags": [
@@ -1838,6 +1989,340 @@
      "in_contacts"
     ],
     "title": "Caller"
+   },
+   "CaseElderAnswer": {
+    "properties": {
+     "question": {
+      "type": "string",
+      "title": "Question"
+     },
+     "answer": {
+      "type": "string",
+      "title": "Answer"
+     }
+    },
+    "type": "object",
+    "required": [
+     "question",
+     "answer"
+    ],
+    "title": "CaseElderAnswer"
+   },
+   "CaseFileActionIn": {
+    "properties": {
+     "action": {
+      "type": "string",
+      "enum": [
+       "approve",
+       "discard",
+       "mark_sent"
+      ],
+      "title": "Action"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "action"
+    ],
+    "title": "CaseFileActionIn",
+    "description": "Khớp `docs/schemas/case_file_action.v1.json`: không có trường nội dung nào."
+   },
+   "CaseFileContent": {
+    "properties": {
+     "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "title": "Schema Version"
+     },
+     "ai_label": {
+      "type": "string",
+      "title": "Ai Label"
+     },
+     "summary": {
+      "type": "string",
+      "title": "Summary"
+     },
+     "elder_alias": {
+      "type": "string",
+      "title": "Elder Alias"
+     },
+     "level": {
+      "type": "string",
+      "enum": [
+       "low",
+       "medium",
+       "high",
+       "critical"
+      ],
+      "title": "Level"
+     },
+     "reasons": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Reasons"
+     },
+     "rule": {
+      "type": "string",
+      "title": "Rule"
+     },
+     "caller_last3": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Caller Last3"
+     },
+     "app_category": {
+      "type": "string",
+      "enum": [
+       "bank",
+       "wallet",
+       "securities",
+       "sideloaded",
+       "remote_control",
+       "none"
+      ],
+      "title": "App Category"
+     },
+     "timeline": {
+      "items": {
+       "$ref": "#/components/schemas/CaseTimelineItem"
+      },
+      "type": "array",
+      "title": "Timeline"
+     },
+     "elder_answers": {
+      "items": {
+       "$ref": "#/components/schemas/CaseElderAnswer"
+      },
+      "type": "array",
+      "title": "Elder Answers"
+     },
+     "verifications": {
+      "items": {
+       "$ref": "#/components/schemas/CaseVerification"
+      },
+      "type": "array",
+      "title": "Verifications"
+     },
+     "guardian_decision": {
+      "type": "string",
+      "enum": [
+       "scam",
+       "emergency_pause"
+      ],
+      "title": "Guardian Decision"
+     },
+     "local_fields": {
+      "items": {
+       "$ref": "#/components/schemas/CaseLocalField"
+      },
+      "type": "array",
+      "title": "Local Fields"
+     }
+    },
+    "type": "object",
+    "required": [
+     "schema_version",
+     "ai_label",
+     "summary",
+     "elder_alias",
+     "level",
+     "reasons",
+     "rule",
+     "caller_last3",
+     "app_category",
+     "timeline",
+     "elder_answers",
+     "verifications",
+     "guardian_decision",
+     "local_fields"
+    ],
+    "title": "CaseFileContent",
+    "description": "Khớp `docs/schemas/case_file.v1.json#/$defs/content`."
+   },
+   "CaseFileOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "incident_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Incident Id"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "draft",
+       "approved",
+       "sent",
+       "discarded"
+      ],
+      "title": "Status"
+     },
+     "summary_source": {
+      "type": "string",
+      "enum": [
+       "template",
+       "llm"
+      ],
+      "title": "Summary Source"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "approved_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Approved At"
+     },
+     "sent_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sent At"
+     },
+     "discarded_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Discarded At"
+     },
+     "is_demo": {
+      "type": "boolean",
+      "title": "Is Demo"
+     },
+     "content": {
+      "$ref": "#/components/schemas/CaseFileContent"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "incident_id",
+     "status",
+     "summary_source",
+     "created_at",
+     "approved_at",
+     "sent_at",
+     "discarded_at",
+     "is_demo",
+     "content"
+    ],
+    "title": "CaseFileOut",
+    "description": "Khớp `docs/schemas/case_file.v1.json`."
+   },
+   "CaseLocalField": {
+    "properties": {
+     "key": {
+      "type": "string",
+      "title": "Key"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     }
+    },
+    "type": "object",
+    "required": [
+     "key",
+     "label"
+    ],
+    "title": "CaseLocalField"
+   },
+   "CaseTimelineItem": {
+    "properties": {
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "at",
+     "text"
+    ],
+    "title": "CaseTimelineItem"
+   },
+   "CaseVerification": {
+    "properties": {
+     "kind": {
+      "type": "string",
+      "enum": [
+       "phone",
+       "link"
+      ],
+      "title": "Kind"
+     },
+     "verdict": {
+      "type": "string",
+      "enum": [
+       "dangerous",
+       "warning",
+       "unknown"
+      ],
+      "title": "Verdict"
+     },
+     "source": {
+      "type": "string",
+      "title": "Source"
+     },
+     "list_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "List Version"
+     }
+    },
+    "type": "object",
+    "required": [
+     "kind",
+     "verdict",
+     "source",
+     "list_version"
+    ],
+    "title": "CaseVerification"
    },
    "ConsentBatch": {
     "properties": {

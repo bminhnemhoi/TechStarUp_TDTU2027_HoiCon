@@ -262,6 +262,12 @@ export default function IncidentDetailPage({ params }: { params: Promise<{ id: s
           </>
         )}
 
+        {(incident.state === "case_open" || incident.state === "closed") && (
+          <Link href={`/incidents/${encodeURIComponent(id)}/case-file`} className={BUTTON_SECONDARY}>
+            Xem hồ sơ vụ việc
+          </Link>
+        )}
+
         <Trace runId={incident.run_id ?? null} alias={name} />
 
         <section aria-labelledby="history-title" className="flex flex-col gap-3">

@@ -204,6 +204,16 @@ class ComposeInvariants(unittest.TestCase):
             self.assertTrue(limits.get("memory") and limits.get("cpus"), name)
 
 
+class BackendImageData(unittest.TestCase):
+    """Ảnh backend chỉ chép các thư mục `data/` được liệt kê: thiếu thì tính năng đọc dữ liệu đó chết trong container."""
+
+    dockerfile = (ROOT / "backend" / "Dockerfile").read_text(encoding="utf-8")
+
+    def test_case_file_guidance_is_copied_into_the_image(self) -> None:  # spec 031 FR-011
+        self.assertIn("COPY data/case_file /app/data/case_file", self.dockerfile)
+        self.assertTrue((ROOT / "data" / "case_file" / "report_guidance.vi.yaml").is_file())
+
+
 class CaddyfileInvariants(unittest.TestCase):
     """Kiểm văn bản Caddyfile: các đường không được phơi ra Internet và bộ lọc nhật ký phải có ở CẢ logger mặc định."""
 

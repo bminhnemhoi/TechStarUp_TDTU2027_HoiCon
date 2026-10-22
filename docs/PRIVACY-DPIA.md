@@ -118,3 +118,12 @@ kênh khác ngoài `/v1/consents`.
 ### Tách role CSDL
 `infra/postgres/roles.sql`: role `hoicon_app` không sở hữu bảng, chỉ `SELECT`/`INSERT` trên `consents` và
 `incident_transitions`, không tắt được trigger bất biến (kiểm bằng quyền, không chỉ bằng trigger). Áp dụng ở prod thuộc 012.
+
+## Hồ sơ vụ việc (spec 031)
+Khi người giám hộ chọn "nghi lừa đảo", HỏiCon soạn bản nháp hồ sơ để họ mang đi trình báo nếu muốn. Dữ liệu trong `case_files.content`
+chỉ là dữ kiện máy chủ đã có: dòng thời gian, mức rủi ro, loại ứng dụng, **3 số cuối** của số gọi tới, câu trả lời E8, kết quả
+tra cứu, bí danh gia đình (không tên thật). Không số điện thoại đầy đủ, h1, HMAC, tên gói hay lời kể tự do (có test quét). Các ô
+**tự điền** (số điện thoại đã gọi tới, số tài khoản, số tiền, giờ chuyển, ngân hàng) nằm trên trình duyệt của người giám hộ,
+không gửi về máy chủ, không lưu `localStorage` (ADR-006). Đoạn tóm tắt do LLM (nếu có khóa) đi qua `llm_router` (che PII) và bộ lọc
+số/link/lời khuyên nguy hiểm. HỏiCon **không tự gửi** hồ sơ cho cơ quan nào. Giữ theo sự cố (12 tháng sau khi đóng), xóa khi xóa dữ liệu gia đình;
+hồ sơ nháp bị bỏ sau 30 ngày không ai duyệt. Mục đích dữ liệu: `guardian_alerts` (văn bản đồng ý đã thêm câu về hồ sơ, bản `2026.10-v4`, chưa phát hành).

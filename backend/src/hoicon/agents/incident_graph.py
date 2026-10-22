@@ -17,6 +17,7 @@
   `IncidentService`.
 """
 
+import logging
 import re
 import time
 from collections.abc import Mapping, Sequence
@@ -38,6 +39,7 @@ from hoicon.config import Settings
 from hoicon.db.models import AgentRun, AgentStep, Verification
 from hoicon.domain.risk import RiskLevel, raise_only
 from hoicon.jobs.queue import cancel_prefix, enqueue
+from hoicon.services import case_file_service
 from hoicon.services.incident_service import (
     GRAPH_OUTCOMES,
     IncidentNotFoundError,
@@ -57,6 +59,9 @@ Tactic = Literal[
     "legit_likely",
 ]
 Action = Literal["call_now", "call_and_stay_on_line", "visit_or_call_relative"]
+
+
+logger = logging.getLogger(__name__)
 
 
 class RiskAssessment(BaseModel):
@@ -104,6 +109,8 @@ class IncidentState(TypedDict, total=False):
     incident_id: str
     run_id: str
     family_id: str  # UUID gia đình nhận tin; vắng khi sự cố không gắn gia đình (spec 002)
+    case_ready: bool  # spec 031: dựng được hồ sơ ⇒ chờ duyệt; không ⇒ END
+    case_action: str  # spec 031: approve | discard (kết quả của `await_case_approval`)
     sim: bool  # spec 033: sự cố mô phỏng ⇒ tin người giám hộ không bao giờ gửi Zalo thật; vắng = False
     guardian_alerts: bool  # False ⇒ chưa đồng ý báo người giám hộ: không xếp tin Zalo (spec 034); vắng = True
     is_drill: bool
@@ -212,6 +219,8 @@ def _incident_uuid(state: IncidentState) -> UUID | None:
 # Sơ đồ đồ thị cho web (spec 033 FR-009): nhãn tiếng Việt, nút chờ người, và tên `agent_steps.node` của từng nút (nút
 # `verification` ghi bước tên `verify`). Thêm nút mới mà quên bảng này ⇒ `graph_topology()` báo lỗi (có test).
 NODE_LABELS_VI: dict[str, str] = {
+    "case_file": "Soạn hồ sơ vụ việc",
+    "await_case_approval": "Chờ người nhà duyệt hồ sơ",
     "ingest": "Nhận sự kiện",
     "fast_alert": "Báo nhanh người giám hộ",
     "risk_scorer": "Chấm rủi ro",
@@ -221,7 +230,7 @@ NODE_LABELS_VI: dict[str, str] = {
     "await_guardian": "Chờ người giám hộ",
     "resolve": "Kết thúc sự cố",
 }
-INTERRUPT_NODES = frozenset({"ask_elder", "await_guardian"})
+INTERRUPT_NODES = frozenset({"ask_elder", "await_guardian", "await_case_approval"})
 STEP_NODES: dict[str, list[str]] = {"verification": ["verify"]}  # còn lại: tên nút = tên bước
 
 
@@ -533,6 +542,77 @@ def build_graph(deps: Deps) -> StateGraph:
         await step(state, "resolve", started, {"outcome": outcome, "level": state["level"]})
         return {"outcome": outcome}
 
+    async def case_file(state: IncidentState) -> dict[str, Any]:
+        """Hồ sơ là việc phụ: lỗi ở đây không được làm hỏng kết cục đã resolve ⇒ ghi bước lỗi rồi đi tiếp tới END."""
+        started = time.monotonic()
+        try:
+            return await _case_file(state)
+        except Exception as exc:  # DB chớp, gia đình đang bị xóa…: không treo thread, không nhân bản tin
+            logger.warning("case_file: không dựng được hồ sơ (%s)", type(exc).__name__)
+            await step(state, "case_file", started, {"created": False, "error": type(exc).__name__})
+            return {"case_ready": False}
+
+    async def _case_file(state: IncidentState) -> dict[str, Any]:
+        """Spec 031: dựng bản nháp hồ sơ (tất định + tóm tắt LLM đã lọc), ghi `case_files`, báo người giám hộ."""
+        started = time.monotonic()
+        incident_id = _incident_uuid(state)
+        if incident_id is None:  # cạnh `resolve → case_file` chỉ đi khi có sự cố thật
+            raise RuntimeError("case_file cần sự cố thật")
+        async with deps.sessions() as session:
+            content = await case_file_service.build_content(session, incident_id)
+        reasons = content["reasons"]
+        facts = {
+            "level": content["level"],
+            "app_category": content["app_category"],
+            "authority": texts.CASE_REASON_VI["authority"] in reasons,
+            "transfer": texts.CASE_REASON_VI["transfer"] in reasons,
+            "decision": content["guardian_decision"],
+        }
+        summary = await case_file_service.llm_summary(deps.router, facts, content["elder_alias"])
+        if summary:
+            content["summary"] = summary
+        created = await case_file_service.save_draft(
+            deps.sessions,
+            incident_id=incident_id,
+            family_id=UUID(state["family_id"]),
+            content=content,
+            summary_source="llm" if summary else "template",
+            is_demo=bool(state.get("is_demo", False)),
+        )
+        sent = await notify(state, "case_file", texts.guardian_case_file(content["elder_alias"]))
+        await step(
+            state,
+            "case_file",
+            started,
+            {"created": created, "summary_source": "llm" if summary else "template", "template": "case_file"},
+        )
+        return {"outbox": sent, "case_ready": True}
+
+    async def await_case_approval(state: IncidentState) -> dict[str, Any]:
+        """Chờ người giám hộ duyệt/bỏ hồ sơ (web) hoặc job tự đóng sau 30 ngày. Chạy lại từ đầu
+        ở mỗi lần resume ⇒ trước `interrupt` không có tác dụng phụ."""
+        started = time.monotonic()
+        value = interrupt({"kind": "await_case_approval"})
+        action = value.get("case_action") if isinstance(value, dict) else None
+        action = action if action in ("approve", "discard") else "discard"
+        actor = value.get("actor") if isinstance(value, dict) else None
+        await step(state, "await_case_approval", started, {"case_action": action, "actor": actor or "guardian"})
+        return {"case_action": action}
+
+    def after_resolve(state: IncidentState) -> str:
+        """Chỉ sự cố THẬT kết cục `case_open` có hồ sơ: diễn tập, mô phỏng (cờ `sim`), eval/demo không UUID ⇒ END."""
+        if (
+            state.get("outcome") == "case_open"
+            and not state["is_drill"]
+            and not state.get("sim")
+            and state.get("guardian_alerts", True)
+            is not False  # chưa/không còn đồng ý `guardian_alerts` ⇒ không soạn hồ sơ
+            and _incident_uuid(state) is not None
+            and state.get("family_id")
+        ):
+            return "case_file"
+        return END
+
     graph = StateGraph(IncidentState)
     for name, fn in (
         ("ingest", ingest),
@@ -543,6 +623,8 @@ def build_graph(deps: Deps) -> StateGraph:
         ("intervention", intervention),
         ("await_guardian", await_guardian),
         ("resolve", resolve),
+        ("case_file", case_file),
+        ("await_case_approval", await_case_approval),
     ):
         graph.add_node(name, fn)
     graph.add_edge(START, "ingest")
@@ -563,5 +645,9 @@ def build_graph(deps: Deps) -> StateGraph:
         lambda s: "resolve" if s.get("guardian_decision") else "await_guardian",
         ["resolve", "await_guardian"],
     )
-    graph.add_edge("resolve", END)
+    graph.add_conditional_edges("resolve", after_resolve, ["case_file", END])
+    graph.add_conditional_edges(
+        "case_file", lambda s: "await_case_approval" if s.get("case_ready") else END, ["await_case_approval", END]
+    )
+    graph.add_edge("await_case_approval", END)
     return graph

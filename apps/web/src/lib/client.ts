@@ -6,6 +6,8 @@ export type GuardianSession = components["schemas"]["GuardianSession"];
 export type GuardianIncidentList = components["schemas"]["GuardianIncidentList"];
 export type GuardianIncidentSummary = components["schemas"]["GuardianIncidentSummary"];
 export type GuardianIncidentDetail = components["schemas"]["GuardianIncidentDetail"];
+export type CaseFile = components["schemas"]["CaseFileOut"];
+export type CaseFileAction = "approve" | "discard" | "mark_sent";
 export type Decision = "safe" | "false_alarm" | "emergency_pause";
 
 export class ApiError extends Error {

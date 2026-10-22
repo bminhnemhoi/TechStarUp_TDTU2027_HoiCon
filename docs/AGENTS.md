@@ -93,3 +93,12 @@ che PII, ngân sách, fallback; **không khóa API, không mạng ngoài, không
   quên nhãn ⇒ `graph_topology()` ném `MissingLabelError` (test đỏ).
 - State `sim: true` (chỉ có ở sự cố tạo qua `/v1/sim/runs`) ⇒ `notify` đặt `payload.sim` và `send_to_guardian` trả
   `"simulated"` mà không gọi Zalo, không tạo `messages_out`. `IncidentRuntime.start_prepared(..., sim=True)`.
+
+## Nhánh hồ sơ vụ việc `case_file` (spec 031)
+`resolve → case_file → [INTERRUPT await_case_approval] → END` chỉ khi kết cục `case_open`, sự cố THẬT (id là UUID, có `family_id`),
+`is_drill = false`, không cờ `sim`; diễn tập/eval/mô phỏng đi thẳng `END`. `case_file` dựng `content` **tất định**
+(`case_file_service.build_content`: câu cố định ở `texts.py`, 3 số cuối), gọi `llm_router` một lần cho đoạn tóm tắt (prompt
+`case_file@1`, lọc số/link/lời khuyên nguy hiểm; hỏng/không khóa ⇒ câu mẫu), ghi `case_files` (UNIQUE `incident_id` ⇒ chạy lại
+không nhân bản) và xếp một tin Zalo mẫu `case_file` (khóa `{incident}:msg:case_file`, không có liên kết). Resume của
+`await_case_approval`: `{"case_action": "approve"|"discard", "actor": "guardian"|"system"}`. Router chỉ có hồ sơ `fast`, nên đoạn
+tóm tắt dùng `fast` thay vì `strong` như spec nêu.

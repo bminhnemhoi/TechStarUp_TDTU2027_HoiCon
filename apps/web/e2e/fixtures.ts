@@ -96,6 +96,20 @@ export class SimMock {
   }
 }
 
+// --- Spec 031: hồ sơ vụ việc (fixture hợp đồng case_file.v1) -----------------------------------------------------------
+const CASE_DOC = strip(load("case_file.v1.valid.json")[0]);
+export const CASE_ACTIONS: Record<string, Record<string, string>> = {
+  draft: { approve: "approved", discard: "discarded" },
+  approved: { mark_sent: "sent", discard: "discarded" },
+};
+
+export class CaseMock {
+  status = "draft";
+  view(): Json {
+    return { ...CASE_DOC, status: this.status, approved_at: this.status === "draft" ? null : "2026-12-20T09:03:00Z" };
+  }
+}
+
 export interface Call {
   method: string;
   path: string;
@@ -114,6 +128,8 @@ export interface MockOptions {
   simScenarios?: () => { status: number; json?: Json };
   simStart?: (body: Json) => { status: number; json?: Json; headers?: Record<string, string> };
   topology?: () => { status: number; json?: Json };
+  caseFile?: CaseMock;
+  caseFileGet?: () => { status: number; json?: Json };
 }
 
 /** Cài bộ chặn `/v1/**`; trả danh sách lời gọi để test kiểm tra (thân lời gọi, số lần, thứ tự). */
@@ -180,6 +196,17 @@ export async function mockApi(page: Page, options: MockOptions = {}): Promise<Ca
       const r = options.decision?.(body as Json) ?? { status: 200, json: { success: true } };
       if (r.status === 200 && options.sim) options.sim.stage = "decided";
       return reply(route, r.status, r.json);
+    }
+    if (/^\/v1\/guardian\/incidents\/[^/]+\/case-file$/.test(p)) {
+      if (method === "GET") {
+        const r = options.caseFileGet?.() ?? { status: 200, json: (options.caseFile ?? new CaseMock()).view() };
+        return reply(route, r.status, r.json);
+      }
+      const mock = options.caseFile ?? new CaseMock();
+      const next = CASE_ACTIONS[mock.status]?.[(body as Json).action as string];
+      if (!next) return reply(route, 409, { detail: "x" });
+      mock.status = next;
+      return reply(route, 200, mock.view());
     }
     if (p === "/v1/graphs/incident") {
       const r = options.topology?.() ?? { status: 200, json: TOPOLOGY };

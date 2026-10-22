@@ -1,0 +1,15 @@
+# Hướng dẫn trình báo cho người giám hộ (spec 031 FR-011, D8). CHƯA DUYỆT: `approved: false` ⇒ bản chạy thật chỉ hiện câu
+# chung dưới đây. Minh duyệt nội dung + nguồn chính thức rồi đổi `approved: true` (task T018). Không ghi số điện thoại
+# đường dây nóng nào khi chưa có nguồn chính thức đã kiểm.
+approved: false
+fallback_vi: "Anh/chị liên hệ công an nơi cư trú và ngân hàng của người thân."
+steps:
+  - id: contact_bank
+    text_vi: "Gọi ngay tổng đài ghi sau thẻ của ngân hàng người thân để nhờ kiểm tra và tạm khóa giao dịch nếu còn kịp."
+    source_ref: null
+  - id: contact_police
+    text_vi: "Mang bản hồ sơ này tới công an phường hoặc xã nơi người thân cư trú để trình báo."
+    source_ref: null
+  - id: keep_evidence
+    text_vi: "Giữ nguyên tin nhắn, ảnh chụp màn hình và biên lai chuyển tiền (nếu có); không xóa."
+    source_ref: null

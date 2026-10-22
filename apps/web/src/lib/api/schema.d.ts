@@ -268,6 +268,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/guardian/incidents/{incident_id}/case-file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hồ sơ vụ việc của một sự cố (spec 031) */
+        get: operations["get_case_file_v1_guardian_incidents__incident_id__case_file_get"];
+        put?: never;
+        /** Duyệt, bỏ hoặc đánh dấu đã nộp hồ sơ (spec 031) */
+        post: operations["post_case_file_v1_guardian_incidents__incident_id__case_file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/lookups": {
         parameters: {
             query?: never;
@@ -613,6 +631,144 @@ export interface components {
              * @default false
              */
             flagged: boolean;
+        };
+        /** CaseElderAnswer */
+        CaseElderAnswer: {
+            /** Question */
+            question: string;
+            /** Answer */
+            answer: string;
+        };
+        /**
+         * CaseFileActionIn
+         * @description Khớp `docs/schemas/case_file_action.v1.json`: không có trường nội dung nào.
+         */
+        CaseFileActionIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "approve" | "discard" | "mark_sent";
+        };
+        /**
+         * CaseFileContent
+         * @description Khớp `docs/schemas/case_file.v1.json#/$defs/content`.
+         */
+        CaseFileContent: {
+            /**
+             * Schema Version
+             * @constant
+             */
+            schema_version: 1;
+            /** Ai Label */
+            ai_label: string;
+            /** Summary */
+            summary: string;
+            /** Elder Alias */
+            elder_alias: string;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "low" | "medium" | "high" | "critical";
+            /** Reasons */
+            reasons: string[];
+            /** Rule */
+            rule: string;
+            /** Caller Last3 */
+            caller_last3: string | null;
+            /**
+             * App Category
+             * @enum {string}
+             */
+            app_category: "bank" | "wallet" | "securities" | "sideloaded" | "remote_control" | "none";
+            /** Timeline */
+            timeline: components["schemas"]["CaseTimelineItem"][];
+            /** Elder Answers */
+            elder_answers: components["schemas"]["CaseElderAnswer"][];
+            /** Verifications */
+            verifications: components["schemas"]["CaseVerification"][];
+            /**
+             * Guardian Decision
+             * @enum {string}
+             */
+            guardian_decision: "scam" | "emergency_pause";
+            /** Local Fields */
+            local_fields: components["schemas"]["CaseLocalField"][];
+        };
+        /**
+         * CaseFileOut
+         * @description Khớp `docs/schemas/case_file.v1.json`.
+         */
+        CaseFileOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "approved" | "sent" | "discarded";
+            /**
+             * Summary Source
+             * @enum {string}
+             */
+            summary_source: "template" | "llm";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Approved At */
+            approved_at: string | null;
+            /** Sent At */
+            sent_at: string | null;
+            /** Discarded At */
+            discarded_at: string | null;
+            /** Is Demo */
+            is_demo: boolean;
+            content: components["schemas"]["CaseFileContent"];
+        };
+        /** CaseLocalField */
+        CaseLocalField: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+        };
+        /** CaseTimelineItem */
+        CaseTimelineItem: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Text */
+            text: string;
+        };
+        /** CaseVerification */
+        CaseVerification: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "phone" | "link";
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "dangerous" | "warning" | "unknown";
+            /** Source */
+            source: string;
+            /** List Version */
+            list_version: string | null;
         };
         /**
          * ConsentBatch
@@ -2087,6 +2243,111 @@ export interface operations {
             };
             /** @description Không thấy (hoặc không thuộc nhà) */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_case_file_v1_guardian_incidents__incident_id__case_file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseFileOut"];
+                };
+            };
+            /** @description Chưa đăng nhập */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_case_file_v1_guardian_incidents__incident_id__case_file_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaseFileActionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseFileOut"];
+                };
+            };
+            /** @description Không có bằng chứng cùng nguồn */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lệnh không hợp lệ với trạng thái hiện tại */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

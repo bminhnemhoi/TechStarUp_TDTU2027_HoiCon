@@ -20,7 +20,7 @@ from hoicon.channels.zalo import build_zalo_client
 from hoicon.config import get_settings
 from hoicon.db.session import get_sessionmaker
 from hoicon.jobs.queue import ATTEMPT_KEY, MAX_ATTEMPTS, Handler, run_once
-from hoicon.services import purge_service, retention_service
+from hoicon.services import case_file_service, purge_service, retention_service
 from hoicon.services.drill_service import DrillService
 
 logger = logging.getLogger(__name__)
@@ -74,6 +74,10 @@ def incident_handlers(runtime: IncidentRuntime, channel: ChannelDeps | None = No
         # Spec 034: hạn lưu hằng ngày. Checkpoint xóa qua bộ lưu của chính đồ thị đang chạy.
         await retention_service.run_retention(get_sessionmaker(), runtime.graph.checkpointer.adelete_thread)
 
+    async def case_autoclose(payload: dict[str, Any]) -> None:
+        # Spec 031 FR-008: sự cố `case_open` không hoạt động 30 ngày ⇒ đóng (hồ sơ nháp ⇒ bỏ).
+        await case_file_service.run_autoclose(get_sessionmaker())
+
     async def purge_family(payload: dict[str, Any]) -> None:
         # Spec 034: xóa dữ liệu gia đình theo yêu cầu. Lũy đẳng; lỗi ⇒ yêu cầu `failed` + job thử lại.
         await purge_service.purge_family(
@@ -91,6 +95,7 @@ def incident_handlers(runtime: IncidentRuntime, channel: ChannelDeps | None = No
         "start_graph": start_graph,
         "drill_expire": drill_expire,
         "retention": retention,
+        "case_autoclose": case_autoclose,
         "purge_family": purge_family,
     }
 
@@ -106,6 +111,7 @@ async def _schedule_retention(
         return scheduled, retry_at
     try:
         await retention_service.schedule_daily(sessions)
+        await case_file_service.schedule_daily_autoclose(sessions)
     except Exception as exc:
         logger.warning("retention: chưa xếp được job hằng ngày (%s)", type(exc).__name__)
         return scheduled, time.monotonic() + 60

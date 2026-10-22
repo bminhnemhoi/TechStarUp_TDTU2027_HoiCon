@@ -123,7 +123,7 @@ export function GuardianShell({ children, wide = false }: { children: ReactNode;
 
   return (
     <div className={`mx-auto flex min-h-screen w-full ${wide ? "max-w-7xl" : "max-w-3xl"} flex-col gap-5 px-4 py-5 text-foreground`}>
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-brand-navy pb-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-brand-navy pb-3 print:hidden">
         <div>
           <p className="text-body font-bold">HỏiCon</p>
           <p className="text-body" aria-live="polite">

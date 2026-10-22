@@ -19,12 +19,12 @@
 
 ## Nhóm [B-api]
 
-- [ ] T002 [B-api] [FR-001] `backend/tests/contract/test_case_file_schemas.py` chạy fixture hai lược đồ.
+- [x] T002 [B-api] [FR-001] `backend/tests/contract/test_case_file_schemas.py` chạy fixture hai lược đồ.
   · Verify: `$PYTEST tests/contract/test_case_file_schemas.py`
-- [ ] T003 [B-api] [FR-002] Migration bảng `case_files` theo FR-002 + model `CaseFile` + `tests/integration/test_schema_<số>.py`
+- [x] T003 [B-api] [FR-002] Migration bảng `case_files` theo FR-002 + model `CaseFile` + `tests/integration/test_schema_<số>.py`
   (CHECK trạng thái, UNIQUE `incident_id`, CASCADE khi xóa sự cố/gia đình, SET NULL khi xóa thành viên).
   · Verify: `uv run --directory backend alembic upgrade head && uv run --directory backend alembic downgrade -1 && uv run --directory backend alembic upgrade head && $PYTEST tests/integration/test_schema_<số>.py`
-- [ ] T004 [B-api] [FR-004, FR-011] `services/case_file_service.py::build_content(incident_id)` tất định: câu cố định mới ở
+- [x] T004 [B-api] [FR-004, FR-011] `services/case_file_service.py::build_content(incident_id)` tất định: câu cố định mới ở
   `agents/texts.py` (nhãn transition, lý do, luật, câu hỏi/đáp E8, `local_fields`), hướng dẫn từ
   `data/case_file/report_guidance.vi.yaml` (`approved: false` ⇒ câu chung FR-011). Test TDD (viết trước, đỏ): kết quả hợp lệ
   `case_file.v1#/$defs/content`; không chứa `case_secrets` của sự cố seed; thiếu `verifications` ⇒ mảng rỗng; R2 ⇒ `caller_last3:
@@ -32,36 +32,36 @@
   Thêm `COPY data/case_file /app/data/case_file` vào `backend/Dockerfile` (ảnh 012 chỉ chép các thư mục `data/` được liệt kê) và kiểm
   trong `scripts/tests/test_deploy_vps.py`.
   · Verify: `$PYTEST tests/unit/test_case_file_content.py && python3 -m unittest discover -s scripts/tests -p test_deploy_vps.py`
-- [ ] T005 [B-api] [FR-005] Đoạn tóm tắt: prompt `agents/prompts/case_file.md` (front-matter `case_file@1`, mở đầu nêu "không đưa
+- [x] T005 [B-api] [FR-005] Đoạn tóm tắt: prompt `agents/prompts/case_file.md` (front-matter `case_file@1`, mở đầu nêu "không đưa
   số, link, tên"), lời gọi `llm_router` hồ sơ `strong`, output có cấu trúc `{summary}`; lọc bằng `_UNSAFE_SUMMARY` (+ `unsafe_advice`
   nếu 036 đã merge), dài > 600 ⇒ mẫu. Test: client giả trả câu sạch ⇒ `summary_source = llm`; trả số/link/lời khuyên nguy hiểm ⇒
   `template`; quá hạn ⇒ `template`; không khóa ⇒ `template`.
   · Verify: `$PYTEST tests/unit/test_case_file_summary.py`
-- [ ] T006 [B-api] [FR-003, FR-006] Đồ thị: nút `case_file` + interrupt `await_case_approval` + cạnh theo plan §3; điều kiện bỏ qua
+- [x] T006 [B-api] [FR-003, FR-006] Đồ thị: nút `case_file` + interrupt `await_case_approval` + cạnh theo plan §3; điều kiện bỏ qua
   (`is_drill`, cờ `sim`, eval); tin Zalo mẫu `case_file` (D7, `urgent=True`, khóa `{incident}:msg:case_file`, công khai AI, nhãn
   không áp cho diễn tập vì diễn tập không tới đây); nhãn nút cho topology của 033 nếu đã merge. Test
   `tests/integration/test_case_file_graph.py`: `scam` ⇒ 1 dòng `draft` + 1 tin; `safe`/`no_response` ⇒ 0; diễn tập `scam` ⇒ 0;
   chạy lại resume ⇒ không nhân bản tin hay dòng; `kill -9` giả (dựng lại runtime) ⇒ vẫn chờ đúng interrupt; tin mở đầu "Đây là trợ
   lý AI HỏiCon".
   · Verify: `$PYTEST tests/integration/test_case_file_graph.py tests/integration/test_incident_graph.py`
-- [ ] T007 [B-api] [FR-007] `GET/POST /v1/guardian/incidents/{id}/case-file` trong `api/routers/guardian.py`: phiên `hc_guardian`,
+- [x] T007 [B-api] [FR-007] `GET/POST /v1/guardian/incidents/{id}/case-file` trong `api/routers/guardian.py`: phiên `hc_guardian`,
   gia đình khác ⇒ 404, `require_same_origin` cho POST, bảng chuyển trạng thái FR-007 (sai ⇒ 409), `approve`/`discard` resume đồ
   thị, `mark_sent`/`discard` đóng sự cố qua `IncidentService.transition()` (actor `guardian`). Test `test_api_case_file.py`: mọi cặp
   chuyển (SC-004), thân có trường lạ ⇒ 422, sai Origin ⇒ 403, gia đình khác ⇒ 404, quét phản hồi không có `case_secrets`.
   · Verify: `$PYTEST tests/integration/test_api_case_file.py tests/integration/test_guardian_incidents.py`
-- [ ] T008 [B-api] [FR-008] Job `case_autoclose` hằng ngày (đăng ký như job `retention` của 034): `case_open` không hoạt động 30
+- [x] T008 [B-api] [FR-008] Job `case_autoclose` hằng ngày (đăng ký như job `retention` của 034): `case_open` không hoạt động 30
   ngày ⇒ resume `{"case_action": "discard", "actor": "system"}` nếu còn `draft`, rồi `closed` (actor `system`). Test đồng hồ giả: 29
   ngày ⇒ giữ; 31 ngày ⇒ đóng; hồ sơ `approved` ⇒ giữ `approved`, sự cố vẫn đóng.
   · Verify: `$PYTEST tests/integration/test_case_autoclose.py`
-- [ ] T009 [B-api] [FR-009] Hạn lưu + xóa: kiểm `case_files` bị xóa theo sự cố 12 tháng sau `closed_at` (CASCADE trong
+- [x] T009 [B-api] [FR-009] Hạn lưu + xóa: kiểm `case_files` bị xóa theo sự cố 12 tháng sau `closed_at` (CASCADE trong
   `retention_service`), và theo `purge_service` khi xóa gia đình. Bổ sung `DATA-MODEL.md` §6.
   · Verify: `$PYTEST tests/integration/test_retention.py tests/integration/test_purge_family.py`
-- [ ] T010 [B-api] [FR-013] `tests/integration/test_case_file_scenarios.py`: với ≥ 5 kịch bản lừa đảo (≥ 2 chèn lệnh) — dựng sự cố
+- [x] T010 [B-api] [FR-013] `tests/integration/test_case_file_scenarios.py`: với ≥ 5 kịch bản lừa đảo (≥ 2 chèn lệnh) — dựng sự cố
   seed thật (UUID, gia đình demo), chạy đồ thị với `ReplayClient` của cassette smoke/full, quyết định `scam` ⇒ `case_file`; kiểm
   `content` hợp lệ lược đồ, không chứa `eval.cases.case_secrets(case)`, có `ai_label`; tin Zalo mở đầu công khai AI. Rồi hồi quy:
   `hoicon-eval --suite smoke --compare baseline` không đổi chỉ số.
   · Verify: `$PYTEST tests/integration/test_case_file_scenarios.py && uv run --directory backend hoicon-eval --suite smoke --compare baseline`
-- [ ] T011 [B-api] [FR-012] Văn bản đồng ý **gộp 031 + 032** (chốt 22/10, MASTER-PLAN §5 "Wave 3"): thay khối giữa
+- [x] T011 [B-api] [FR-012] Văn bản đồng ý **gộp 031 + 032** (chốt 22/10, MASTER-PLAN §5 "Wave 3"): thay khối giữa
   `BEGIN-TEXT`/`END-TEXT` của `docs/legal/consent/guardian_alerts.vi.md` bằng đúng chữ dưới (160/160 từ, `style_problems` rỗng —
   đã thử bằng `hoicon.ops.consent_texts.style_problems`); cập nhật "Nguồn của từng con số" (hồ sơ: spec 031; tóm tắt tuần + "mất
   bảo vệ": spec 032) và "Điểm chờ quyết" (xóa ghi chú "Đã BỎ câu…", thêm: câu "báo khi máy bác hết được bảo vệ" phụ thuộc I4 — Minh
@@ -75,13 +75,13 @@
   > HỏiCon giữ thông tin cuộc gọi lạ tối đa 90 ngày, các lần nhắc tối đa 12 tháng, không bán thông tin của bác.
   > Muốn ngừng báo, bác nhờ người đã cài HỏiCon cho bác. HỏiCon vẫn nhắc bác dừng lại, chỉ không báo con nữa. Bác chưa đồng ý cũng không sao.
   · Verify: `$PYTEST tests/contract/test_consent_texts.py && uv run --directory backend python -m hoicon.ops.consent_texts check`
-- [ ] T012 [B-api] [FR-001, FR-014] `bash scripts/gen-api-client.sh`; `docs/API.md`, `docs/AGENTS.md` (nhánh `case_file`),
+- [x] T012 [B-api] [FR-001, FR-014] `bash scripts/gen-api-client.sh`; `docs/API.md`, `docs/AGENTS.md` (nhánh `case_file`),
   `docs/PRIVACY-DPIA.md` (hồ sơ, ô tự điền).
   · Verify: `bash scripts/gen-api-client.sh && $WEB typecheck`
 
 ## Nhóm [B-web]
 
-- [ ] T013 [B-web] [FR-010] Trang `src/app/incidents/[id]/case-file/page.tsx` theo FR-010 (dùng `guardian-ui`, xác nhận trước khi
+- [x] T013 [B-web] [FR-010] Trang `src/app/incidents/[id]/case-file/page.tsx` theo FR-010 (dùng `guardian-ui`, xác nhận trước khi
   duyệt/bỏ, in sau khi duyệt, ô tự điền ngoài form, không `localStorage`, câu "HỏiCon không tự gửi cho cơ quan nào"), CSS `@media
   print`, link từ `incidents/[id]`. Playwright `e2e/case-file.spec.ts` trên sự cố seed `case_open`: duyệt ⇒ hiện nút in; bỏ ⇒ sự cố
   đóng; điền ô tự điền rồi duyệt + in ⇒ `page.on("request")` không thấy giá trị nào trong URL/thân (SC-003); axe 0 lỗi; ảnh
@@ -98,7 +98,7 @@
 
 ## Rà soát & nghiệm thu
 
-- [ ] T015 [AB] [FR-014] `security-privacy-reviewer` (lược đồ, content, ô tự điền, tin Zalo, hạn lưu) và `ux-elder-reviewer` (câu
+- [x] T015 [AB] [FR-014] `security-privacy-reviewer` (lược đồ, content, ô tự điền, tin Zalo, hạn lưu) và `ux-elder-reviewer` (câu
   chữ trang + tin + văn bản đồng ý). Sửa mọi Chặn/Critical/High.
   · Verify: báo cáo trong `evidence.md`, không còn mục chặn chưa xử lý
 - [ ] T016 [AB] [FR-001..FR-014] Bộ kiểm cuối: `$PYTEST`; `ruff`; `$WEB typecheck lint build e2e`; eval smoke so baseline; gitleaks

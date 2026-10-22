@@ -18,6 +18,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import String, and_, case, cast, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from hoicon.api.auth import (
     GUARDIAN_COOKIE,
@@ -38,9 +39,11 @@ from hoicon.api.routers.incidents import (
     load_transitions,
 )
 from hoicon.config import get_settings
-from hoicon.db.models import AgentRun, Family, Incident, Member
+from hoicon.db.models import AgentRun, CaseFile, Family, Incident, Member
 from hoicon.db.session import get_sessionmaker
+from hoicon.services import case_file_service, consent_gate
 from hoicon.services.action_token_service import ActionTokenError, ActionTokenService
+from hoicon.services.incident_service import ConcurrencyConflictError, InvalidTransitionError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1/guardian", tags=["guardian"])
@@ -270,3 +273,132 @@ async def get_incident_detail(
             elder_alias=alias,
             run_id=run_id,
         )
+
+
+# --- Hồ sơ vụ việc (spec 031, FR-007) -----------------------------------------------------------------------------
+class CaseTimelineItem(BaseModel):
+    at: datetime
+    text: str
+
+
+class CaseElderAnswer(BaseModel):
+    question: str
+    answer: str
+
+
+class CaseVerification(BaseModel):
+    kind: Literal["phone", "link"]
+    verdict: Literal["dangerous", "warning", "unknown"]
+    source: str
+    list_version: str | None
+
+
+class CaseLocalField(BaseModel):
+    key: str
+    label: str
+
+
+class CaseFileContent(BaseModel):
+    """Khớp `docs/schemas/case_file.v1.json#/$defs/content`."""
+
+    schema_version: Literal[1]
+    ai_label: str
+    summary: str
+    elder_alias: str
+    level: Literal["low", "medium", "high", "critical"]
+    reasons: list[str]
+    rule: str
+    caller_last3: str | None
+    app_category: Literal["bank", "wallet", "securities", "sideloaded", "remote_control", "none"]
+    timeline: list[CaseTimelineItem]
+    elder_answers: list[CaseElderAnswer]
+    verifications: list[CaseVerification]
+    guardian_decision: Literal["scam", "emergency_pause"]
+    local_fields: list[CaseLocalField]
+
+
+class CaseFileOut(BaseModel):
+    """Khớp `docs/schemas/case_file.v1.json`."""
+
+    id: UUID
+    incident_id: UUID
+    status: Literal["draft", "approved", "sent", "discarded"]
+    summary_source: Literal["template", "llm"]
+    created_at: datetime
+    approved_at: datetime | None
+    sent_at: datetime | None
+    discarded_at: datetime | None
+    is_demo: bool
+    content: CaseFileContent
+
+
+class CaseFileActionIn(BaseModel):
+    """Khớp `docs/schemas/case_file_action.v1.json`: không có trường nội dung nào."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["approve", "discard", "mark_sent"]
+
+
+async def _own_case_file(session: AsyncSession, incident_id: UUID, family_id: UUID) -> CaseFile:
+    incident = await load_incident(session, incident_id, family_id)
+    row = None
+    if incident is not None:
+        row = await session.scalar(select(CaseFile).where(CaseFile.incident_id == incident_id))
+    if row is None:  # sự cố nhà khác, không có hồ sơ: cùng một 404 (không lộ sự tồn tại)
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy hồ sơ")
+    # Hồ sơ thuộc mục đích `guardian_alerts`: chưa/không còn đồng ý ⇒ cùng 404 (dữ liệu demo hư cấu được miễn).
+    if (
+        not row.is_demo
+        and incident is not None
+        and not (await consent_gate.state_for(session, incident.member_id)).guardian_alerts
+    ):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy hồ sơ")
+    return row
+
+
+@router.get(
+    "/incidents/{incident_id}/case-file",
+    response_model=CaseFileOut,
+    summary="Hồ sơ vụ việc của một sự cố (spec 031)",
+    responses={401: {"description": "Chưa đăng nhập"}, 404: {"description": "Không thấy (hoặc không thuộc nhà)"}},
+)
+async def get_case_file(
+    incident_id: UUID, response: Response, claims: Annotated[GuardianClaims, Depends(get_current_guardian)]
+) -> CaseFileOut:
+    response.headers.update(NO_STORE)
+    async with get_sessionmaker()() as session:
+        row = await _own_case_file(session, incident_id, claims.family_id)
+        return CaseFileOut.model_validate(row, from_attributes=True)
+
+
+@router.post(
+    "/incidents/{incident_id}/case-file",
+    response_model=CaseFileOut,
+    dependencies=[Depends(require_same_origin)],
+    summary="Duyệt, bỏ hoặc đánh dấu đã nộp hồ sơ (spec 031)",
+    responses={
+        403: {"description": "Không có bằng chứng cùng nguồn"},
+        404: {"description": "Không thấy (hoặc không thuộc nhà)"},
+        409: {"description": "Lệnh không hợp lệ với trạng thái hiện tại"},
+    },
+)
+async def post_case_file(
+    incident_id: UUID,
+    body: CaseFileActionIn,
+    response: Response,
+    claims: Annotated[GuardianClaims, Depends(get_current_guardian)],
+) -> CaseFileOut:
+    response.headers.update(NO_STORE)
+    async with get_sessionmaker()() as session:
+        await _own_case_file(session, incident_id, claims.family_id)  # 404 trước mọi thay đổi
+    try:
+        async with get_sessionmaker().begin() as session:
+            row = await case_file_service.apply_action(
+                session, incident_id, body.action, actor="guardian", member_id=claims.member_id
+            )
+            return CaseFileOut.model_validate(row, from_attributes=True)
+    except (case_file_service.CaseFileConflictError, InvalidTransitionError, ConcurrencyConflictError):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, detail="Hồ sơ không còn ở trạng thái này. Anh/chị tải lại trang."
+        ) from None

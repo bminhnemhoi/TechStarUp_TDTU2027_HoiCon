@@ -60,6 +60,9 @@ def clean_resume(value: Any) -> dict[str, Any]:
         clean["timeout"] = True
     if value.get("decision") in ("safe", "scam"):
         clean["decision"] = value["decision"]
+    if value.get("case_action") in ("approve", "discard"):  # spec 031: duyệt/bỏ hồ sơ vụ việc
+        clean["case_action"] = value["case_action"]
+        clean["actor"] = value["actor"] if value.get("actor") in ("guardian", "system") else "guardian"
     if value.get("timer") in ("t1", "t2", "t3"):
         clean["timer"] = value["timer"]
     evidence = value.get("evidence")  # id một dòng `verifications` (spec 026): chỉ giữ nếu đúng là UUID

@@ -1,18 +1,18 @@
 # Bằng chứng nghiệm thu Spec 031: Hồ sơ vụ việc
 
-- **Trạng thái (18/10/2026)**: chỉ có spec/plan/tasks và hợp đồng (T001). **Chưa code.**
+- **Trạng thái (22/10/2026, Wave 3 làn B)**: T001–T013, T015 xong; T014 (Android, làn A), T016 (cổng cuối cần chạy sau khi gộp), T017/T018 BLOCKED. Số liệu dưới đây: máy dev Linux, Postgres Docker dùng chung, cassette `synthetic`, không gọi LLM thật.
 - **Nguồn số dự kiến**: pytest + Playwright trên máy dev; không có người giám hộ thật (T017 BLOCKED).
 
 ## Kết quả theo tiêu chí
 
 | Tiêu chí | Ngưỡng | Cách đo | Kết quả | Trạng thái |
 |---|---|---|---|---|
-| SC-001 có hồ sơ khi nghi lừa đảo | 100% `case_open` thật có 1 bản nháp + 1 tin; 0 cho diễn tập/eval/sim | pytest đồ thị | chưa chạy | CHƯA ĐO |
-| SC-002 không PII | 0 `case_secrets` trong content, tin, `agent_steps` | pytest | chưa chạy | CHƯA ĐO |
-| SC-003 ô tự điền không rời máy | 0 yêu cầu mạng chứa giá trị | Playwright | chưa chạy | CHƯA ĐO |
-| SC-004 máy trạng thái hồ sơ | 200/409 đúng; đóng sự cố khi `mark_sent`/`discard` | pytest | chưa chạy | CHƯA ĐO |
-| SC-005 hạn lưu chạy được | 30 ngày ⇒ `closed`; 12 tháng ⇒ xóa; purge ⇒ 0 hồ sơ | pytest đồng hồ giả | chưa chạy | CHƯA ĐO |
-| SC-006 LLM không bắt buộc | không khóa ⇒ `template`; LLM bẩn ⇒ `template` | pytest | chưa chạy | CHƯA ĐO |
+| SC-001 có hồ sơ khi nghi lừa đảo | 100% `case_open` thật có 1 bản nháp + 1 tin; 0 cho diễn tập/eval/sim | pytest đồ thị | `test_case_file_graph.py` (9) + `test_case_file_scenarios.py` (6 ca): `scam` ⇒ 1 dòng `draft` + 1 tin, chờ ở `await_case_approval`; `safe`, diễn tập, thread eval, chưa đồng ý `guardian_alerts` ⇒ 0; lỗi dựng hồ sơ không treo thread; runtime dựng lại vẫn chờ đúng interrupt. Máy dev, DB dev, n = 1 lượt/ca | ĐẠT |
+| SC-002 không PII | 0 `case_secrets` trong content, tin, `agent_steps` | pytest | 5 kịch bản (3 thường + 2 chèn lệnh) quét `case_secrets` trong `content`, tin Zalo, `agent_steps` = 0; `test_case_file_content.py` (9) quét số/HMAC/tên gói; phản hồi API cũng quét | ĐẠT |
+| SC-003 ô tự điền không rời máy | 0 yêu cầu mạng chứa giá trị | Playwright | `e2e/case-file.spec.ts`: điền số điện thoại + tài khoản/số tiền rồi duyệt và in ⇒ 0 yêu cầu chứa giá trị (URL + thân), không `<form>`, không localStorage/sessionStorage. **Giới hạn:** mạng bị chặn bằng fixture hợp đồng, chưa chạy với API thật | ĐẠT (fixture) |
+| SC-004 máy trạng thái hồ sơ | 200/409 đúng; đóng sự cố khi `mark_sent`/`discard` | pytest | `test_api_case_file.py`: 4 đường hợp lệ (đúng trạng thái hồ sơ + sự cố đóng với actor guardian, lý do `case_sent`/`case_discarded`), 8 cặp không hợp lệ ⇒ 409 không đổi gì, gia đình khác ⇒ 404, sai Origin ⇒ 403, trường lạ ⇒ 422, chưa đồng ý ⇒ 404 | ĐẠT |
+| SC-005 hạn lưu chạy được | 30 ngày ⇒ `closed`; 12 tháng ⇒ xóa; purge ⇒ 0 hồ sơ | pytest đồng hồ giả | `test_case_autoclose.py`: 29 ngày giữ, 31 ngày đóng (actor system; nháp ⇒ `discarded` + resume `discard`; `approved` giữ nguyên), lũy đẳng; `test_case_file_retention.py`: job 12 tháng chọn trúng sự cố có hồ sơ (dry-run, DB dùng chung), xóa dữ liệu gia đình ⇒ 0 hồ sơ; CASCADE ở `test_schema_0011.py`. **Giới hạn:** không chạy xóa thật 12 tháng trên DB dev dùng chung (sẽ xóa dữ liệu của người khác) | ĐẠT (có giới hạn) |
+| SC-006 LLM không bắt buộc | không khóa ⇒ `template`; LLM bẩn ⇒ `template` | pytest | `test_case_file_summary.py` (≈ 270 ca): câu sạch ⇒ dùng; số/link/kênh chat/số tiền bằng chữ/lời khuyên nguy hiểm/NFD ⇒ mẫu; không khóa, lỗi, quá hạn ⇒ mẫu; mẫu đọc ổn ở 3 alias × 5 app × 4 mức × 4 tổ hợp. Cassette smoke/full không có phản hồi `case_file` ⇒ `template` | ĐẠT |
 | SC-007 người giám hộ thật | duyệt + in, nói lại được | phỏng vấn | — | BLOCKED (thí điểm) |
 
 ## Lệnh đã chạy
@@ -20,3 +20,18 @@
 | Lệnh | Kết quả |
 |---|---|
 | jsonschema: fixture `case_file.v1` (2 valid, 7 invalid), `case_file_action.v1` (3 valid, 3 invalid) | valid hợp lệ, invalid bị từ chối |
+
+
+## Wave 3 — ghi chú thi công (làn B, 22/10/2026)
+
+- **Lệch so với chữ của tasks/spec (cần Opus):**
+  1. Router chỉ có hồ sơ `fast` ⇒ đoạn tóm tắt dùng `fast`, không phải `strong` (T005).
+  2. `unsafe_advice` của 036 chưa có trong mã ⇒ bộ lọc cụm từ riêng `_UNSAFE_ADVICE` ở `case_file_service` (cộng chặn mọi chữ số và tiền viết bằng chữ).
+  3. Hướng dẫn trình báo (`report_guidance.vi.yaml`, `approved: false`) có tệp + test + `COPY` trong Dockerfile nhưng **chưa đưa lên web**: `case_file.v1` không có trường hướng dẫn, nên trang chỉ hiện câu chung "Anh/chị liên hệ công an nơi cư trú và ngân hàng của người thân". Muốn hiện hướng dẫn đã duyệt cần thêm trường vào hợp đồng (T018, chờ Minh).
+  4. Test nội dung đặt ở `tests/integration/test_case_file_content.py` (cần DB), không phải `tests/unit/`.
+  5. T011: văn bản đồng ý gộp 031 + 032 **khác chữ Opus soạn** theo `ux-elder-reviewer` (mức Chặn: câu "HỏiCon không tự gửi cho cơ quan nào" chưa nằm trong văn bản người dùng thấy; "máy bác hết được bảo vệ" nghe như bị hack). Bản `2026.10-v4`, `draft`, 160 từ, `consent_texts check` đạt; làn A phải ghim lại sha (T014).
+  6. Hồ sơ chỉ đọc/duyệt được khi người cao tuổi còn đồng ý `guardian_alerts` (hồ sơ demo `is_demo` được miễn) và đồ thị bỏ qua hồ sơ khi chưa đồng ý — thêm theo `security-privacy-reviewer`, spec chưa nói.
+  7. Đồ thị: lỗi dựng hồ sơ không làm hỏng kết cục (ghi bước `case_file` `created: false`, đi tiếp `END`).
+- **Reviewer (T015):** `security-privacy-reviewer` 0 Critical/0 High, 4 Medium đều SỬA (đồng ý `guardian_alerts` ở đồ thị + route; bộ lọc LLM yếu — NFC, mọi chữ số, tiền bằng chữ, cụm khẳng định; `run_autoclose` không còn dừng cả vòng vì một sự cố; lỗi nút `case_file` không treo thread), Low chưa sửa: `await_case_approval` mặc định `discard` khi giá trị lạ, duyệt đến trước interrupt thì resume bị bỏ, DB không ép máy trạng thái hồ sơ, `source` chưa qua `mask_text`, GET 500 nếu đổi enum `content`, chưa có giới hạn tần suất riêng cho POST. `ux-elder-reviewer` 2 Chặn + 4 Cao + Trung bình đều SỬA (bản in giữ câu "không tự gửi" + chân trang có ngày duyệt + mã hồ sơ, 3 bước ngay đầu, nút xác nhận mang tên hành động, "Bỏ hồ sơ" tách xa + nói không hoàn lại được, trạng thái đã nộp/đã bỏ có lối ra, nhãn AI gộp một khung, ô tự điền có cảnh báo mất khi đóng + `inputMode`, tiêu đề con "{alias} trả lời", câu mẫu tóm tắt sửa ngữ pháp, ngôi thứ ba trong dòng thời gian). Chưa sửa: nút nghe đọc to cho phần tóm tắt, `aria-busy` cho nút đang gửi.
+- **Hạ tầng:** migration `0011` đã áp lên DB dev (head = 0011; 032 sẽ là 0012). Chưa chạy lại `infra/postgres/roles.sql` trên DB dev: `hoicon_app` cần quyền `case_files` (SELECT/INSERT/UPDATE/DELETE) khi áp ở prod — **việc cho Tiến**: `roles.sql` cấp theo vòng lặp mọi bảng hiện có (dòng 41) nên chỉ cần chạy lại sau migration, như ghi chú trong tệp.
+- **Lượt chạy cuối:** pytest cuối: **2627 passed, 21 skipped**; trước đó 1 lần `test_guardian_incidents::test_list_matches_the_contract_and_carries_alias_and_run_flag` đỏ trong lượt toàn bộ nhưng xanh khi chạy riêng và ở các lượt sau (nghi chạy chung DB dev, chưa tái hiện); web e2e 95 passed + 1 skipped.

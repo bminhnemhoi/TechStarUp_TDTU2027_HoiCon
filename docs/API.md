@@ -202,6 +202,19 @@ Hợp đồng: `drill_script.v1.json`, `drill_offer.v1.json`, `drill_result.v1.j
 - Lũy đẳng: gửi lại cùng nội dung ⇒ 200 `ResultOutcome.replay`; gửi xung đột nội dung ⇒ 409 `ResultConflict`.
 - Mã: 200 đã ghi nhận / chấp nhận · 401 thiếu/sai token · 404 bài không thuộc gia đình hoặc không tồn tại · 409 xung đột trạng thái / kết quả khác · 422 sai schema (có trường lạ, trường cấm `note`).
 
+## Hồ sơ vụ việc (spec 031 — phần server đã có)
+
+Chỉ phiên người giám hộ (`hc_guardian`/Bearer), chỉ sự cố gia đình mình; sự cố nhà khác hoặc không có hồ sơ ⇒ cùng một 404.
+
+| Route | Hợp đồng | Ghi chú |
+|---|---|---|
+| `GET /v1/guardian/incidents/{id}/case-file` | `case_file.v1` | bản nháp/đã duyệt; `content` chỉ có dữ kiện máy chủ đã có (3 số cuối, không số đầy đủ/h1/tên gói/lời kể) |
+| `POST /v1/guardian/incidents/{id}/case-file` | `case_file_action.v1` → `case_file.v1` | `approve` \| `discard` \| `mark_sent`; qua `require_same_origin`; trường lạ ⇒ 422; sai trạng thái ⇒ 409 |
+
+Chuyển hợp lệ: `draft → approved | discarded`, `approved → sent | discarded`. `approve`/`discard` xếp job `graph_resume` (đồ thị chờ ở
+`await_case_approval`); `discard`/`mark_sent` đóng sự cố `case_open → closed` (actor `guardian`). Ô tự điền (số điện thoại, tài
+khoản, số tiền…) **không bao giờ** gửi về máy chủ. Job `case_autoclose` hằng ngày đóng sự cố `case_open` im lặng 30 ngày.
+
 ## Mô phỏng cho BGK & sơ đồ đồ thị (spec 033 — phần server đã có)
 
 Cổng `HOICON_SIM_ENABLED` (mặc định `false`; `infra/compose.prod.yml` không đặt). Tắt ⇒ MỌI route `/v1/sim/*` trả **404**, kể
