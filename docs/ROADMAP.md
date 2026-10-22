@@ -8,11 +8,11 @@
 
 <!-- STATUS -->
 Phase 1 — Spike + hồ sơ Vòng 1 (15/10–13/11) · G0 ĐẠT 08/10 · Gate G1: 08/11 · Đội: Minh + Tiến (@Towfienes)
-22/10: Wave 2 đã gộp (`afe8707`); Wave 3 xếp ở MASTER-PLAN §5: B = F-2 an toàn (024 T014–T015, 036 T025–T028) → 033 API → 031 → 032; A = đối soát Wave 2 → 010 T028 → 031 T014
-Wave 3 chờ duyệt: ADR-012 + nới quyền làn A làm web 033 (Tiến) · F-1 phương án A (Minh, §8 mục 8)
-Rủi ro: hồ sơ Vòng 1 chưa có commit trong `docs/proposal` (còn 24 ngày) · Play Console + Firebase + khóa API (W0-3/P0-08) chặn 001, M2, số M3
-Chờ Minh: MASTER-PLAN §8 (B1–B8, I1–I5, `guardian_alerts`, 110 kịch bản `draft`, nguồn 50 kịch bản, F-1) · Chờ Tiến: trần tra cứu 30 ngày
-Cập nhật: 22/10/2026
+23/10: Wave 3 đã gộp (`07c5816`): F-2 sửa (injection 17/17), 033 `/sim` + `/trace`, 031 hồ sơ, 032 Coach đã code · spec 037/050 đã dựng
+Wave 4 (MASTER-PLAN §5): B = 024 T020–T021 → 033 T021–T024 → 031 T019–T020 → 012 T020 → 037 · A = 031 T014 (sha v4) → 010 T029 → 011 T022 → 012 T021 → 032 T011
+Rủi ro: hồ sơ Vòng 1 chưa có commit trong `docs/proposal` (còn 23 ngày) · Play Console + Firebase + khóa API (W0-3/P0-08) chặn 001, M2, số M3
+Chờ Minh: §8 (I4, F-1, `guardian_alerts`, 110 kịch bản + nguồn, chữ E3/E4/E10, Crashlytics) · Chờ Tiến: ADR-012, trần tra cứu 30 ngày
+Cập nhật: 23/10/2026
 <!-- /STATUS -->
 
 ## Mốc cứng
@@ -93,12 +93,12 @@ Cập nhật: 22/10/2026
 | P2-12 | W4 | Web tối thiểu: danh sách/chi tiết sự cố cho người giám hộ | ☑ spec [`027-guardian-web`](../specs/027-guardian-web/) (16/10, chưa commit): đăng nhập bằng liên kết một lần qua Zalo (lệnh "4", **Zalo mock**), cookie `hc_guardian` + CSRF, `/v1/guardian/*`, 4 trang web + trace trực tiếp (`EventSource`); 6/6 SC đạt trên localhost (pytest 1597, Playwright 58 + live 264 ms ≤ 1 s, axe 0 lỗi); review bảo mật 0 High, UX 0 Chặn (4 Cao đã sửa); **còn**: Zalo thật, Caddy/012, các mục Medium ở Ghi chú (g–k) |
 | P2-13 | W4 | Diễn tập v1 (E11, bảng `drills`) | ◐ spec [`028-drills`](../specs/028-drills/) (16/10): Làn A (E11 Compose, DrillEngine, workers) và Làn B (migration 0008, drill_service, API drills, guard D2) đã xong code & test; chờ E2E và Minh duyệt 3 kịch bản |
 | P2-14 | W4 | Bộ thí điểm + Play internal v0.3 → **M2** | ◐ spec [`029-pilot-kit`](../specs/029-pilot-kit/) (17/10): **làn B giai đoạn 1 XONG** (migration 0010 `device_heartbeats`, `POST /v1/heartbeat`, hạn lưu 90 ngày, `ops pilot enroll/report/gate-m2`, schema `heartbeat.v1`/`pilot_report.v1`, client TS, docs); pytest 2017 xanh; **còn**: làn A (T005 phân biệt 403 `consent_withdrawn`, test ghim fixture), T008 `release-gate.sh`, T009 tài liệu thí điểm, giai đoạn 2 chờ 012 + W0-3 |
-| P2-15 | W5 21–27/12 | CLI `hoicon-eval` + ≥ 100 ca + chạy full lần đầu | ◐ 21/10: xong CLI + 20 ca smoke (`specs/030-eval-smoke`) và **suite full 110 ca** ([`specs/036-eval-full`](../specs/036-eval-full/), bằng chứng ở `evidence.md`): recall 100% / nhầm 0% / 0 vi phạm / công khai AI 100% trên cassette `synthetic`, 110/110 ca provisional (chưa chứng minh bằng model thật, chỉ bắt hồi quy rào tất định); còn chờ CI xanh trên PR (SC-001/008) và duyệt kịch bản (Minh) |
-| P2-16 | W5 | Nhánh hồ sơ vụ việc (`case_file`, interrupt duyệt) | ◐ spec [`031-case-file`](../specs/031-case-file/) (18/10, **chưa code**): nhánh `case_file` + interrupt `await_case_approval`, nội dung tất định + tóm tắt LLM tùy chọn, ô tự điền chỉ trên trình duyệt, tự đóng `case_open` sau 30 ngày; ★ Minh: phạm vi `guardian_alerts` (MASTER-PLAN §8 mục 4) |
-| P2-17 | W5 | Đồ thị Coach hằng tuần | ◐ spec [`032-coach-weekly`](../specs/032-coach-weekly/) (18/10, **chưa code**): bản tin tuần + báo "mất bảo vệ" từ heartbeat (I4, sau cờ), không LLM, hạn mức đếm `messages_out`; ★ Minh: I4 + phạm vi `guardian_alerts` (MASTER-PLAN §8 mục 4–5) |
-| P2-18 | W6 28/12–03/01 | Bộ eval injection + lặp prompt | ◐ 21/10: có `hoicon-eval --suite injection` (17 ca, 0 vi phạm, [`specs/036-eval-full`](../specs/036-eval-full/)); lộ khoảng trống lời chèn bằng chữ thuần lọt `_UNSAFE_SUMMARY` (F-2) và F-1 (chuyển tiền chính đáng lên `critical`); **lặp prompt bằng LLM thật BLOCKED** (P0-08, chưa có khóa). **Wave 3 (22/10):** F-2 sửa ở spec 024 T014–T015, đo ở 036 T025–T028 (tiêu chí 17/17 ca injection bị chặn, 0 vi phạm, kiểm mới `brief_outside_vocabulary`); F-1 ★ chờ Minh |
-| P2-19 | W6 | Web `/trace`, `/eval`, `/sim` | ◐ spec [`033-web-sim-eval`](../specs/033-web-sim-eval/) (18/10, **chưa code**): `/sim` (gia đình demo, phát lại tất định) + `/trace` (xyflow + bản chữ) ưu tiên cho video; `/eval` P3 (danh sách cắt) |
-| P2-20 | W6 | Gia cố: `privacy-audit`, review bảo mật, job xóa theo hạn lưu, sao lưu, Crashlytics | ◐ spec [`034-hardening-core`](../specs/034-hardening-core/) (16/10): **phần lõi XONG** (migration 0009, mặc định `prod`, `/readyz`, trần 256 KB, đồng ý ở máy chủ, hạn lưu, xóa gia đình + ẩn danh, sao lưu mã hóa, `roles.sql`); pytest 1958 xanh; review: 0 Crit, 1 High đã sửa, Medium còn mở ở `evidence.md`; **BLOCKED bởi 012** (lịch sao lưu/nơi lưu ngoài máy/áp role ở prod/đo khôi phục trên VPS); Crashlytics ở 037 |
+| P2-15 | W5 21–27/12 | CLI `hoicon-eval` + ≥ 100 ca + chạy full lần đầu | ◐ 23/10: CLI + smoke 20 ca + **full 110 ca** ([`specs/036-eval-full`](../specs/036-eval-full/), 28/28 task): sau F-2 (ADR-012) recall 100% / báo nhầm 0% / 0 vi phạm / công khai AI 100%, không lệch `baseline-full` — **số rào tất định** trên cassette `synthetic`, 110/110 kịch bản `draft`, chưa phải số M3; còn: CI xanh trên PR, Minh duyệt kịch bản + nguồn (MASTER-PLAN §8 mục 6, 11), cassette `recorded` (P0-08) |
+| P2-16 | W5 | Nhánh hồ sơ vụ việc (`case_file`, interrupt duyệt) | ◐ spec [`031-case-file`](../specs/031-case-file/) (23/10: 14/18 task, **đã code**: bảng `case_files` (migration 0011), nhánh `case_file` + `await_case_approval`, API + trang web, tự đóng `case_open` 30 ngày, văn bản `guardian_alerts` `2026.10-v4`); **còn**: T014 làn A đồng bộ chuỗi Android theo sha v4, Wave 4 T019–T020 (`guidance` lên web), T016 cổng; T017 thí điểm, T018 Minh duyệt hướng dẫn trình báo — BLOCKED |
+| P2-17 | W5 | Đồ thị Coach hằng tuần | ◐ spec [`032-coach-weekly`](../specs/032-coach-weekly/) (23/10: 9/15 task, **đã code**: cột `weekly_digest_enabled` (0012), job `coach_weekly` + `protection_watch`, lệnh Zalo bật/tắt tin tuần, hạn mức đếm `messages_out`); **còn**: T011 làn A đo khoảng trống heartbeat (≳ 8 giờ máy ảo), T012–T013 rà soát/cổng; ★ Minh: I4 (MASTER-PLAN §8 mục 5), T015 duyệt `tips.vi.yaml`; T014 thí điểm BLOCKED |
+| P2-18 | W6 28/12–03/01 | Bộ eval injection + lặp prompt | ◐ 23/10: `hoicon-eval --suite injection` **17/17 ca bị chặn, 0 vi phạm** sau F-2 (ADR-012, spec 024 T014–T015 + 036 T025–T028: tóm tắt chỉ ghép câu cố định, kiểm `brief_outside_vocabulary`); Wave 4: 024 T020–T021 thứ tự ghép cố định; F-1 (024 T016–T017) ★ chờ Minh; **lặp prompt bằng LLM thật BLOCKED** (P0-08) |
+| P2-19 | W6 | Web `/trace`, `/eval`, `/sim` | ◐ spec [`033-web-sim-eval`](../specs/033-web-sim-eval/) (23/10: 15/20 task, **đã code**: `/v1/sim/*` (thiết bị demo riêng mỗi lượt, tin không bao giờ tới Zalo), `/v1/graphs/incident`, `/v1/eval/summary`, trang `/sim` + `/trace` (xyflow, bản chữ), e2e web 95 passed trên fixture hợp đồng); **còn**: Wave 4 T021–T024 (`title_vi`, nhãn MÔ PHỎNG ở `/trace`, token màu mô phỏng), T017–T019 rà soát/cổng/evidence (bảng SC chưa điền), T020 quay video; `/eval` web T016 (danh sách cắt) |
+| P2-20 | W6 | Gia cố: `privacy-audit`, review bảo mật, job xóa theo hạn lưu, sao lưu, Crashlytics | ◐ spec [`034-hardening-core`](../specs/034-hardening-core/) **phần lõi XONG** (16/10); phần còn lại spec [`037-hardening-rest`](../specs/037-hardening-rest/) (23/10, chưa code): kiểm đồng ý lúc gửi Zalo, `403 consent_withdrawn` trên app, chỉ nhận văn bản đồng ý có trong manifest, sổ xóa sau khôi phục, rà soát cuối; đo ổn định bằng Android vitals (Crashlytics ★ chờ Minh, §8 mục 13) |
 | P2-21 | W7 04–09/01 | Đóng băng 06/01; báo cáo thí điểm; poster; video 5 phút; **nộp 09/01** → **M3** | ☐ |
 
 **Gate M1 (06/12):** AVD API 34 + 36: cuộc gọi lạ → demobank → SafePause p95 ≤ 3 s · Zalo giai đoạn 1 p95 ≤ 10 s · thao tác người giám hộ đóng được sự cố · mỗi quyền đã cấp có dòng consent · **0 số điện thoại thô** trong DB/log · backend tắt vẫn hiện SafePause.
@@ -124,7 +124,7 @@ Cập nhật: 22/10/2026
 | Mã | Việc | Trạng thái |
 |---|---|---|
 | P4-01 | Sửa theo góp ý BGK Vòng 2 | ☐ |
-| P4-02 | Chế độ gian: `/booth`, `/join/[code]`, `/demo/console`, demobank, phát lại khi mất mạng (xong trước 07/02) | ☐ |
+| P4-02 | Chế độ gian: `/booth`, `/join/[code]`, `/demo/console`, demobank, phát lại khi mất mạng (xong trước 07/02) | ☐ spec [`050-booth-mode`](../specs/050-booth-mode/) (23/10, chưa code; thi công sau 09/01/2027): `/booth`, `/join/[code]`, `/demo/console` trên nền `/sim` của 033, phát lại cục bộ khi mất mạng, reset < 1 phút |
 | P4-03 | Slide 10 phút, poster, bộ câu hỏi phản biện | ☐ |
 | P4-04 | Tổng duyệt 3 lần với `judge`; đóng băng 20/02 | ☐ |
 

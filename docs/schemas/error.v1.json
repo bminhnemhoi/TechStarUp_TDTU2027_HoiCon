@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/error.v1.json",
+  "title": "Error v1",
+  "description": "Thân lỗi có mã cố định mà app/web dựa vào (spec 037 FR-002, FR-004). Chỉ mã + mục đích, không chữ hiển thị (chữ tiếng Việt nằm ở app/web). `consent_withdrawn`: 403 khi người được bảo vệ đã rút mục đích `purpose` (đã dùng ở POST /v1/events, /v1/devices — spec 034); `unknown_consent_text`: 422 khi POST /v1/consents mang phiên bản/sha không có trong manifest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "error"
+  ],
+  "properties": {
+    "error": {
+      "enum": [
+        "consent_withdrawn",
+        "unknown_consent_text"
+      ]
+    },
+    "purpose": {
+      "enum": [
+        "core_protection",
+        "call_screening",
+        "usage_monitoring",
+        "overlay_pause",
+        "guardian_alerts",
+        "llm_processing",
+        "voice_input",
+        "drills",
+        "pilot_research",
+        "lookups"
+      ],
+      "description": "Mục đích đồng ý liên quan (enum khớp docs/legal/consent/manifest.json)"
+    }
+  },
+  "if": {
+    "properties": {
+      "error": {
+        "const": "consent_withdrawn"
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "error",
+      "purpose"
+    ]
+  }
+}

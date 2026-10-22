@@ -164,3 +164,29 @@ Bỏ "Kẻ gian" khỏi màn người cao tuổi; không đổi `pause_reason_re
   · Verify: `apps/android/gradlew -p apps/android :rules:test :app:testDebugUnitTest :app:lintDebug` xanh; `emu-scenario.py` ĐẠT trên
   cả hai AVD (10/10 không bắt buộc, 1 lượt đủ cho ảnh; giữ `--runs 10` trên hc-api36 để xác nhận E7 vẫn ≤ 3 s); báo cáo reviewer
   "0 High" + đường dẫn 4 ảnh ghi vào `specs/010-design-system/evidence.md` mục mới "E7 điều khiển từ xa — Wave 3".
+
+
+---
+
+## Phase 11: Wave 4 (23/10/2026) — hai đề xuất còn lại của `ux-elder-reviewer` cho E7
+
+Quyết định (kiến trúc sư Spec Kit, theo `docs/DESIGN-SYSTEM.md` mục E7 — vốn đã gọi "Vẫn tiếp tục" là **nút phụ**):
+- **Nhận** "Vẫn tiếp tục" thành nút phụ dạng chữ (không nền, viền mảnh hoặc không viền), vẫn vùng chạm ≥ 64dp, vẫn giữ 3 giây, vẫn
+  hiện "Giữ ngón tay 3 giây", ghi kết quả như cũ (CLAUDE.md luật 4: không bao giờ khóa). Lợi: thanh nút ghim thấp hơn (Trung bình #1
+  ở 200% hc-api34: ba nút chiếm ≈ 40% màn) và hai hành động chính nổi hơn (≤ 2 hành động chính/màn).
+- **Nhận một phần** việc tách thân bài: chỉ biến thể điều khiển từ xa (thân bài dài nhất, có hành động). Biến thể ngân hàng không có
+  bước nên giữ nguyên. Chuỗi chốt:
+
+| Khóa `strings.xml` | Chốt |
+|---|---|
+| `pause_body_remote` | Ứng dụng này cho người khác nhìn thấy và điều khiển điện thoại của bác, kể cả ứng dụng ngân hàng. Công an, ngân hàng không bao giờ bảo bác cài ứng dụng này. |
+| `pause_steps_remote` (mảng mới, hiện thành danh sách đánh số 1–2) | 1. Cúp máy, rồi đóng ứng dụng đó (như AnyDesk, TeamViewer). · 2. Bấm Hỏi con. |
+
+- [ ] T029 [A] [FR-013] Sửa `SafePauseScreen.kt` + `strings.xml` theo hai quyết định trên (mảng `pause_speech_remote` không đổi — đã nói
+  đúng hai việc). Danh sách đánh số đọc được bằng TalkBack theo thứ tự ("1, Cúp máy…"). Không đổi `SafePauseActivity`, luồng giữ
+  3 giây, nhật ký kết quả. Chụp E7 cả hai biến thể ở 100% + 200% trên `hc-api36` và `hc-api34` (8 ảnh,
+  `~/hoicon-evidence/010-design-system/w4/`), `ux-elder-reviewer` ⇒ 0 Chặn/0 Cao (tối đa 2 vòng, quá ⇒ BLOCKED).
+  · Verify: `apps/android/gradlew -p apps/android :rules:test :app:testDebugUnitTest :app:lintDebug`; test Compose hiện có của
+  "Vẫn tiếp tục" (giữ 3 s ⇒ tiếp tục, thả sớm ⇒ không) vẫn xanh; `python3 scripts/emu-scenario.py --avd hc-api36 --scenario fake_police --runs 10`
+  10/10 ≤ 3 000 ms (và một lượt `HC_DEMOBANK_PACKAGE=com.anydesk.anydeskandroid` cho biến thể điều khiển từ xa); kết quả + ảnh ghi
+  `evidence.md` mục "Wave 4".

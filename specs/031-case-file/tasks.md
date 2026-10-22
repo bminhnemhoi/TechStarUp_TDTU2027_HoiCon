@@ -113,3 +113,17 @@
   · Verify: ghi chú phỏng vấn ngắn trong `evidence.md`
 - [ ] T018 [B-api] [FR-011] Minh duyệt `report_guidance.vi.yaml` (`approved: true`) kèm nguồn chính thức. **BLOCKED**: Minh.
   · Verify: test "bản prod chỉ hiện hướng dẫn đã duyệt" xanh với `approved: true`
+
+## Wave 4 (23/10/2026) — FR-015 hướng dẫn trình báo lên web; plan D11 (`fast`)
+
+Hợp đồng đã có: `case_file.v1.guidance` (tùy chọn, `approved=false` ⇒ `steps` rỗng) + fixture. Test đỏ trước.
+
+- [ ] T019 [B-api] [FR-015] `case_file_service.load_guidance()` (đọc YAML một lần, kiểm cấu trúc lúc khởi động) + route GET hồ sơ gửi
+  `guidance`. Test `tests/integration/test_api_case_file.py`: tệp `approved: false` ⇒ `steps == []`, có `fallback_vi`; tệp thử
+  `approved: true` (monkeypatch đường dẫn) ⇒ đủ bước đúng thứ tự; phản hồi hợp lệ `case_file.v1`; không có dãy ≥ 4 chữ số trong
+  `guidance`. Sửa `spec.md` FR-005 đã ghi `fast` — không đổi mã router. Sinh lại client TS.
+  · Verify: `$PYTEST tests/integration/test_api_case_file.py tests/contract -q && bash scripts/gen-api-client.sh && $WEB typecheck`
+- [ ] T020 [B-web] [FR-015] Trang `src/app/incidents/[id]/case-file/page.tsx`: khối "Các bước nên làm" (danh sách có số thứ tự khi
+  `approved`, chỉ câu chung khi chưa duyệt), nằm ngoài vùng in dữ kiện vụ việc; in (`@media print`) vẫn gồm khối này ở cuối.
+  Playwright `e2e/case-file.spec.ts` hai fixture (chưa duyệt / đã duyệt), axe 0 lỗi, ảnh 390/1440; `ux-elder-reviewer` đọc chữ.
+  Phụ thuộc T019. · Verify: `$WEB typecheck && $WEB lint && $WEB e2e case-file a11y`

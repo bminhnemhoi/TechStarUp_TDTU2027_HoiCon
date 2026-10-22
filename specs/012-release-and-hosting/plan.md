@@ -68,3 +68,11 @@ commit `3129dd3`). Phủ FR: 11/11 FR có task. **0 CRITICAL, 1 HIGH (đã sửa
 | B7 | LOW | L-2, L-5, L-9, L-12 còn mở (Low) | Giữ ở `evidence.md`; L-9 phải kiểm trên VPS thật trước khi đặt AAAA (T010) |
 
 Ghi nhận cho spec khác: 033 thêm cổng `HOICON_SIM_ENABLED` — `compose.prod.yml` **không** được đặt biến này (033 T003 có test).
+
+
+## Wave 4 (23/10/2026)
+
+| # | Quyết định | Lý do | Hệ quả |
+|---|---|---|---|
+| D12 | Thử `roles.sql` (T017) trên **một Postgres tạm, dùng một lần** (`pgvector/pgvector:pg17`, cổng 15433, xóa sau khi xong), không trên DB dev | Role `hoicon_app` trên DB dev có mật khẩu do người khác đặt; không được đổi nó. Trên DB mới role chưa có ⇒ `test_db_roles.py` tự tạo role + mật khẩu tạm sinh ngẫu nhiên và chạy đủ (không bị bỏ qua) | Không phụ thuộc mật khẩu nào có sẵn; kết quả áp được cho prod (cùng ảnh Postgres với `compose.dev.yml`) |
+| D13 | **Giữ baseline profile viết tay** (`baseline-prof.txt` + `profileinstaller`), không thêm plugin `androidx.baselineprofile` + mô-đun macrobenchmark | Số đo AVD bản `demo`: sàng lọc nguội p95 64–214 ms, rất xa hạn 5 s của Telecom; plugin cần mô-đun mới + máy để sinh hồ sơ và không có số cho thấy cần (Hiến chương VIII) | Rủi ro: hồ sơ viết tay lặng lẽ mất tác dụng khi đổi tên gói/lớp ⇒ T021 thêm kiểm "mọi mẫu khớp ≥ 1 lớp". **Xem lại khi** số máy thật (001, FTL) có `onScreenCall` p95 > 2 s hoặc E7 p95 > 2,5 s |

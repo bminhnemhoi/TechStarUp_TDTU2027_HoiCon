@@ -89,3 +89,18 @@ Thứ tự: T018 → T019 → T020; T021 độc lập. T018 làm trước 028 T0
   người cao tuổi đã rút `guardian_alerts` ⇒ danh sách chỉ còn sự cố **trước** lúc rút (hoặc rỗng — chọn theo quyết định ★ của Minh ở
   MASTER-PLAN §8, mặc định: rỗng), chi tiết ⇒ 404. Tên mục đích lấy từ một hằng số (đổi sang mục đích mới nếu Minh tách) — plan D9.
   · Verify: `$PYTEST tests/integration/test_guardian_incidents.py tests/integration/test_guardian_consent_gate.py`
+
+
+## Wave 4 (23/10/2026) — bố cục màn đồng ý theo `ux-elder-reviewer` (evidence "đọc 15 ảnh", 22/10)
+
+Tách hai loại: **bố cục** (làn A làm ngay, không đổi chữ trong `docs/legal/consent/`) và **chữ** (chờ Minh duyệt cùng T010 —
+MASTER-PLAN §8 mục 12; không tăng phiên bản văn bản trước khi Minh quyết).
+
+- [ ] T022 [A] [FR-011] Bố cục, không đổi chữ đồng ý: (a) màn "Xong rồi" (cuối E4) có dải "Kéo xuống đọc tiếp ↓" khi còn chữ phía
+  dưới — dùng lại thành phần gợi ý cuộn của E7 (`SafePauseScreen.kt`), không chép mã; (b) trang quyền E4: nút "Mở cài đặt" đứng ngay
+  sau đoạn đầu (trước 3 đoạn giải thích còn lại), vẫn ≤ 2 hành động chính; (c) nhãn "✗ Chưa bật"/"✓ Đã bật" ≥ 20sp đậm, kèm biểu
+  tượng + chữ (luật 15); (d) dòng "Đã kết nối với …" giữ tên gia đình do người giám hộ đặt (mục Cao của reviewer là dữ liệu thử, không
+  phải lỗi sản phẩm) — không sửa. Chụp E3, E4 (cả 3 trang quyền), "Xong rồi", E10 ở 100% + 200% `hc-api36`; `ux-elder-reviewer` ⇒
+  0 Chặn/0 Cao.
+  · Verify: `apps/android/gradlew -p apps/android :app:testDebugUnitTest --tests '*ConsentManifestPinTest*' :app:testDebugUnitTest :app:lintDebug`
+  (chuỗi đồng ý không đổi ⇒ sha vẫn khớp); ảnh + báo cáo reviewer trong `evidence.md` mục "Wave 4"

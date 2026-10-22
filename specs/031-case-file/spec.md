@@ -44,7 +44,7 @@ mức rủi ro, dấu hiệu, kết quả tra cứu, câu trả lời của bác
   tiếng Việt cố định), mức rủi ro + lý do (khóa enum ⇒ câu cố định), luật trên máy (`rule_id` ⇒ câu cố định), loại ứng dụng, 3 số
   cuối, câu trả lời E8, kết quả `verifications` (loại, phán quyết, tên nguồn, phiên bản danh sách), quyết định của người giám hộ.
   Không có số điện thoại đầy đủ, h1, HMAC, tên gói, lời kể tự do, tên thật.
-- **(FR-005)** Đoạn "Tóm tắt diễn biến" (tùy chọn): một lời gọi `llm_router` hồ sơ `strong` (che PII, `<untrusted>` không cần vì
+- **(FR-005)** Đoạn "Tóm tắt diễn biến" (tùy chọn): một lời gọi `llm_router` hồ sơ `fast` *(23/10: chốt `fast`, plan D11; trước ghi `strong`)* (che PII, `<untrusted>` không cần vì
   không có văn bản của kẻ gian, timeout ≤ 4 s, output có cấu trúc `{summary}` ≤ 600 ký tự). Lọc: không chữ số dài ≥ 4, không
   link/tên miền/kênh chat (dùng lại bộ lọc `_UNSAFE_SUMMARY`), không lời khuyên nguy hiểm (`unsafe_advice` của 036 nếu đã có);
   hỏng/quá hạn/không khóa ⇒ câu mẫu dựng từ dữ kiện; ghi `summary_source`. Đoạn này mở đầu bằng "Đây là trợ lý AI HỏiCon" và
@@ -80,6 +80,11 @@ mức rủi ro, dấu hiệu, kết quả tra cứu, câu trả lời của bác
   `page.on("request")` và kiểm thân mọi yêu cầu), axe 0 lỗi, ảnh 360/1280 px; `security-privacy-reviewer`, `ux-elder-reviewer`
   (câu chữ cho người giám hộ); `docs/AGENTS.md`, `docs/DATA-MODEL.md`, `docs/API.md`, `docs/PRIVACY-DPIA.md`.
 
+- **(FR-015)** *(Wave 4, 23/10/2026)*: `GET /v1/guardian/incidents/{id}/case-file` gửi `guidance` (hợp đồng `case_file.v1`): đọc
+  `data/case_file/report_guidance.vi.yaml`; `approved: false` ⇒ `steps: []` + `fallback_vi`; `approved: true` ⇒ mọi bước (`id`,
+  `text_vi`, `source_ref`). Trang hồ sơ hiện mục "Các bước nên làm" từ trường này (khối riêng, **không** in như dữ kiện vụ việc). Không
+  hiện số đường dây nóng nào không có trong tệp đã duyệt.
+
 ## 4. Tiêu chí thành công
 
 | Mã | Tiêu chí | Ngưỡng | Nguồn đo |
@@ -90,6 +95,7 @@ mức rủi ro, dấu hiệu, kết quả tra cứu, câu trả lời của bác
 | **(SC-004)** | Máy trạng thái hồ sơ | mọi cặp chuyển trạng thái hợp lệ/không hợp lệ đúng (200/409); sự cố đóng khi `mark_sent`/`discard` | pytest |
 | **(SC-005)** | Hạn lưu chạy được | `case_open` 30 ngày ⇒ `closed`; 12 tháng sau ⇒ sự cố + hồ sơ bị xóa; xóa gia đình ⇒ 0 hồ sơ | pytest đồng hồ giả |
 | **(SC-006)** | LLM không bắt buộc | không khóa ⇒ hồ sơ vẫn đủ, `summary_source = template`; LLM trả số/link ⇒ thay bằng mẫu | pytest + `ReplayClient` |
+| **(SC-008)** | Hướng dẫn trình báo lên web | Chưa duyệt ⇒ trang chỉ hiện câu chung, 0 bước; đã duyệt ⇒ đủ bước theo thứ tự tệp, có nguồn; phản hồi khớp `case_file.v1.guidance` | pytest + Playwright |
 | **(SC-007)** | Người giám hộ thật dùng được | 1 người giám hộ thí điểm duyệt + in hồ sơ, nói lại được nội dung | **BLOCKED** (thí điểm, 029 giai đoạn 2) |
 
 ## 5. Làm rõ (clarify, 18/10/2026 — tự quyết)

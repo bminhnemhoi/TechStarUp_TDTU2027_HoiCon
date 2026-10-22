@@ -124,3 +124,27 @@
 - [ ] T020 [AB] [SC-007] Quay một lượt `/sim` cho video Vòng 2 (P2-21) theo `quickstart.md`. Không phải task của Sonnet; đánh dấu
   khi đội quay xong.
   · Verify: tệp video + ghi chú trong `evidence.md`
+
+## Wave 4 (23/10/2026) — FR-015 (tên kịch bản, nhãn mô phỏng ở /trace), plan D9–D12
+
+Hợp đồng đã có (trường tùy chọn): `sim_scenarios.v1.title_vi`, `run_steps.v1.is_sim` + fixture. Test đỏ trước.
+
+- [ ] T021 [B-api] [FR-015] Test đỏ trước rồi hiện thực: `services/sim_service.py` bảng `SCENARIO_TITLE_VI` (18 nhóm, đúng chữ FR-015)
+  + `title_vi(case_id, category)`; `GET /v1/sim/scenarios` luôn gửi `title_vi`; `GET /v1/runs/{id}/steps` luôn gửi `is_sim` (thiết
+  bị của sự cố có nhãn `sim:`). Test: mọi giá trị enum `category` của `scenario.v1.json` có nhãn; `fake_police_safe_account_002` ⇒
+  "Giả danh công an · ca 2"; lượt sim ⇒ `is_sim: true`, lượt thường ⇒ `false`; phản hồi hợp lệ hợp đồng. Sinh lại client TS.
+  · Verify: `$PYTEST tests/integration/test_api_sim.py tests/integration/test_api_runs.py tests/contract -q && bash scripts/gen-api-client.sh && $WEB typecheck`
+- [ ] T022 [B-web] [FR-015] Ô chọn kịch bản hiện `title_vi` (id chỉ còn ở `title`/chú thích nhỏ); `/trace` có băng "MÔ PHỎNG" khi
+  `is_sim`; thêm token `sim.bg`/`sim.fg`/`sim.accent` vào `design-system/hoicon/tokens.json` (tệp chung của 010 — sinh cả
+  `Tokens.kt`/`colors.xml` của Android: chạy `gen-design-tokens.py` sinh đủ mọi đích, không sửa tay tệp Android; nêu trong commit để
+  người tích hợp kiểm Gradle khi gộp) (khác `drill.*`, cặp tương phản ≥ 7:1 có
+  trong `contrast_pairs`), chạy `scripts/gen-design-tokens.py`, băng ở `/sim` và `/trace` dùng token này. Kèm 3 mục Thấp còn lại của
+  reviewer: chữ hoa đầu câu `describeStep`, tab `/sim` đủ phím mũi tên, giờ tin Zalo mock theo giờ bước. Playwright: `e2e/sim.spec.ts`
+  (ô chọn có chữ tiếng Việt), `e2e/trace.spec.ts` (fixture `is_sim: true` ⇒ có băng, `false` ⇒ không), axe; ảnh 390/768/1440.
+  Phụ thuộc T021. · Verify: `python3 scripts/gen-design-tokens.py --check && $WEB typecheck && $WEB lint && $WEB e2e sim trace a11y`
+- [ ] T023 [B-api] [D9] Dọn thiết bị demo `sim:` của lượt đã kết thúc > 24 giờ (trong job `retention` có sẵn của 034; không xóa sự cố
+  — hạn lưu sự cố giữ nguyên). Test đồng hồ giả: 23 giờ ⇒ giữ, 25 giờ ⇒ xóa, thiết bị không nhãn `sim:` ⇒ không đụng.
+  · Verify: `$PYTEST tests/integration/test_sim_cleanup.py -q`
+- [ ] T024 [AB] [FR-015] Cập nhật bảng SC của `evidence.md` (SC-001…SC-006 đang ghi "CHƯA ĐO" dù T013/T014 đã đạt — điền số từ các
+  lượt pytest/Playwright đã chạy, ghi rõ e2e dùng fixture) + SC-008; `ux-elder-reviewer` đọc lại ảnh mới. Làm trong T019.
+  · Verify: `python3 scripts/check-spec-trace.py`

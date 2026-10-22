@@ -1,0 +1,16 @@
+[
+  {
+    "_name": "rút guardian_alerts",
+    "error": "consent_withdrawn",
+    "purpose": "guardian_alerts"
+  },
+  {
+    "_name": "văn bản lạ",
+    "error": "unknown_consent_text"
+  },
+  {
+    "_name": "văn bản lạ kèm mục đích",
+    "error": "unknown_consent_text",
+    "purpose": "lookups"
+  }
+]

@@ -68,3 +68,23 @@ Biến: `UT = python3 -m unittest discover -s scripts/tests -p test_deploy_vps.p
 - [ ] T015 [A] [FR-011] AAB **đã ký** lên Play internal testing + Google Group tester (P1-08). **BLOCKED**: Play Console (W0-3) và
   khóa ký (Tiến tự giữ, Claude không đọc keystore). Bản release có R8 đã có (commit `3129dd3`, 029 T011).
   · Verify: Play Console hiện bản `0.3.0 (3)` ở kênh internal; một tester cài được
+
+
+## Wave 4 (23/10/2026) — gỡ T017, ghim baseline profile (plan D12, D13)
+
+- [ ] T020 [B] [FR-001] Cách mới cho T017 (plan D12), không đụng role `hoicon_app` của DB dev:
+  1. `docker run -d --rm --name hoicon-roles-try -p 127.0.0.1:15433:5432 -e POSTGRES_USER=hoicon -e POSTGRES_DB=hoicon
+     -e POSTGRES_PASSWORD=<chuỗi ngẫu nhiên sinh trong phiên, không ghi vào tệp> pgvector/pgvector:pg17`;
+  2. với `HOICON_DATABASE_URL` trỏ tới DB tạm (role chủ `hoicon`): `alembic upgrade head`, một lần `AsyncPostgresSaver.setup()`
+     (role chủ), `psql < infra/postgres/roles.sql`;
+  3. `pytest tests/integration/test_db_roles.py` — phải **chạy thật, 0 skip** (role chưa có ⇒ test tự tạo + mật khẩu tạm);
+  4. chạy API dưới `hoicon_app` của DB tạm (mật khẩu đặt bằng `\password` trong container tạm) ⇒ `/readyz` 200, một sự kiện thử
+     qua `/v1/events` tạo sự cố, worker chạy một job; ghi quyền thiếu (nếu có) rồi sửa `roles.sql` (kể cả Medium #8 của 034:
+     `ALTER DEFAULT PRIVILEGES`);
+  5. `docker rm -f hoicon-roles-try`. Tick cả T017 khi đạt. Ghi kết quả + quyền thiếu vào `evidence.md`, cập nhật D10.
+  · Verify: `test_db_roles.py` n passed, 0 skipped; `curl -s 127.0.0.1:<cổng API thử>/readyz` 200; `docker ps -a | grep -c hoicon-roles-try` = 0
+- [ ] T021 [A] [FR-011] Kiểm hồ sơ viết tay không "chết" (plan D13): `scripts/check-baseline-profile.py` đọc
+  `apps/android/app/src/main/baseline-prof.txt` và danh sách lớp của APK `demo` chưa rút gọn (hoặc `mapping.txt` của R8), mỗi mẫu
+  (dòng `L…;` / ký tự đại diện) phải khớp ≥ 1 lớp, không khớp ⇒ thoát 1 nêu dòng; gọi từ `scripts/release-gate.sh`; test
+  `scripts/tests/test_check_baseline_profile.py` (mẫu khớp ⇒ 0, mẫu lạ ⇒ 1). Không thêm thư viện.
+  · Verify: `python3 -m unittest discover -s scripts/tests && apps/android/gradlew -p apps/android :app:bundleDemo && bash scripts/release-gate.sh <aab demo>` thoát 0

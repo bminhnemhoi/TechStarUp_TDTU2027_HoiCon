@@ -1,0 +1,24 @@
+[
+  {
+    "_name": "rút mà thiếu purpose",
+    "_why": "consent_withdrawn bắt buộc purpose",
+    "error": "consent_withdrawn"
+  },
+  {
+    "_name": "mã lạ",
+    "_why": "error ngoài enum",
+    "error": "forbidden"
+  },
+  {
+    "_name": "mục đích lạ",
+    "_why": "purpose ngoài enum",
+    "error": "consent_withdrawn",
+    "purpose": "marketing"
+  },
+  {
+    "_name": "có chữ hiển thị",
+    "_why": "additionalProperties false",
+    "error": "unknown_consent_text",
+    "message": "Văn bản không hợp lệ"
+  }
+]

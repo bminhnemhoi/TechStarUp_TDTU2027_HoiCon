@@ -7,7 +7,7 @@
 | Nguyên tắc | Áp dụng |
 |---|---|
 | II. Riêng tư | `content` chỉ dữ kiện đã che; lược đồ cấm dãy ≥ 4 chữ số, link, trường lạ; ô tự điền chỉ ở trình duyệt |
-| III. LLM | Một lời gọi tùy chọn qua `llm_router` (`strong`), lọc, rơi về mẫu; không ảnh hưởng mức rủi ro |
+| III. LLM | Một lời gọi tùy chọn qua `llm_router` (`fast` — D11), lọc, rơi về mẫu; không ảnh hưởng mức rủi ro |
 | IV. Công khai AI | `ai_label` bắt buộc mở đầu "Đây là trợ lý AI HỏiCon"; tin Zalo cũng vậy (test luật 6) |
 | IV. Đồng ý | Không enum mới; câu về hồ sơ thêm vào `guardian_alerts` cùng PR với mã — ★ Minh xác nhận phạm vi |
 | V. Hợp đồng trước | `case_file.v1`, `case_file_action.v1` + fixture (giai đoạn 0, đã làm); migration chỉ làn B |
@@ -33,7 +33,7 @@
 ```
 … → await_guardian → resolve ─┬─ outcome ≠ case_open, hoặc is_drill, hoặc sim, hoặc eval ─▶ END
                               └─ case_open ─▶ case_file ─▶ [INTERRUPT await_case_approval] ─▶ END
-case_file: dựng content (D1) → (tùy chọn) llm_router strong → lọc → ghi case_files (draft) → tin Zalo (D7) → agent_steps "case_file"
+case_file: dựng content (D1) → (tùy chọn) llm_router fast → lọc → ghi case_files (draft) → tin Zalo (D7) → agent_steps "case_file"
 ```
 
 ## 4. Bản đồ file
@@ -70,3 +70,17 @@ Phủ FR: 14/14 có task. **0 CRITICAL, 1 HIGH (đã sửa), 3 MEDIUM, 0 LOW.**
 | C2 | MEDIUM | `backend/Dockerfile` chỉ chép `data/` được liệt kê ⇒ `data/case_file` không có trong ảnh | T004 thêm `COPY` + test hạ tầng |
 | C3 | MEDIUM | `guardian_alerts` 159/160 từ, 031 và 032 cùng thêm câu | Rủi ro §5; T011 rút gọn; gộp với 032 T008 |
 | C4 | MEDIUM | Sự cố `case_open` hiện không bao giờ đóng (lỗi có sẵn, ngoài 031) ⇒ hạn lưu 12 tháng không chạy | FR-008 + T008 tự đóng sau 30 ngày |
+
+## Wave 4 (23/10/2026)
+
+- **D11 — hồ sơ LLM của đoạn tóm tắt: chấp nhận `fast`, không thêm `strong` bây giờ.** Lý do: (1) đoạn tóm tắt là *tùy chọn*,
+  phần chính của hồ sơ dựng tất định (FR-004) và mọi chữ LLM qua bộ lọc `_UNSAFE_ADVICE` (chặn chữ số, tiền bằng chữ, cụm khẳng
+  định) ⇒ chất lượng model ít ảnh hưởng an toàn; (2) chưa có khóa API (P0-08) nên không đo được lợi ích của `strong`, thêm hồ sơ
+  mới vào `llm_router` (bảng giá, ngân sách, timeout, eval) là việc không có số để biện minh (Hiến chương VIII); (3) ADR-009 để
+  `strong` cho node cần lý luận dài. **Xem lại khi:** có cassette `recorded` (P0-08) và eval hồ sơ cho thấy tóm tắt `fast` bị bộ lọc
+  thay > 30% số lần hoặc người giám hộ thí điểm (T017) báo khó hiểu. Quyết định kỹ thuật (Tiến), không phải phạm vi Minh.
+- **D12 — `guidance` đi cùng hồ sơ, không phải endpoint riêng**: một lần đọc, cùng kiểm phiên + đồng ý `guardian_alerts`; tệp YAML đọc
+  một lần lúc khởi động (đã có trong ảnh container theo T009/Dockerfile).
+- Ghi nhận các lệch thi công khác của làn B (evidence 031 "ghi chú thi công" mục 2, 4, 6, 7) là đúng và giữ nguyên: bộ lọc riêng
+  `_UNSAFE_ADVICE` (thay cho `unsafe_advice` của 036 chưa có), test nội dung ở `tests/integration/`, hồ sơ cần đồng ý
+  `guardian_alerts` (hồ sơ demo miễn), lỗi dựng hồ sơ không làm hỏng kết cục.

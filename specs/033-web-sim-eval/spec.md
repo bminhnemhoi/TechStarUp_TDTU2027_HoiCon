@@ -81,6 +81,17 @@ thực (dạng chữ), đồ thị sự cố chạy thật, Zalo mock, bộ chuy
   360 px và 1280 px; `ux-elder-reviewer` cho câu chữ phần "điện thoại của bác"; `security-privacy-reviewer`.
 - **(FR-014)** Tài liệu: `docs/API.md`, `docs/AGENTS.md` (topology), `docs/DESIGN-SYSTEM.md` (trang web mới), `docs/setup/` (cách bật
   sim trên máy dev và tạo gia đình demo bằng `ops guardian_link --seed`), quickstart quay video.
+- **(FR-015)** *(Wave 4, 23/10/2026 — theo `ux-elder-reviewer` T013/T014)*: (a) `GET /v1/sim/scenarios` gửi `title_vi` (hợp đồng
+  `sim_scenarios.v1`) dựng **tất định** = nhãn nhóm thủ đoạn + " · ca " + số thứ tự trong id bỏ số 0 đầu (ví dụ
+  `fake_police_safe_account_002` ⇒ "Giả danh công an · ca 2"); không đọc chữ tự do của kịch bản, không cần sửa `data/scenarios/`.
+  Nhãn: `fake_police` Giả danh công an · `fake_tax` Giả danh cơ quan thuế · `fake_evn` Giả danh điện lực · `deepfake_relative` Giả
+  giọng/mặt người thân · `task_scam` Việc làm online · `recovery_scam` Hứa lấy lại tiền · `fake_vneid` Giả danh VNeID · `fake_bank` Giả
+  danh ngân hàng · `investment` Mời đầu tư · `fake_delivery` Giả danh giao hàng · `prize_gift` Trúng thưởng, quà tặng · `fake_health`
+  Giả danh y tế · `benign_bank` Cuộc gọi thật: ngân hàng · `benign_relative_new_number` Cuộc gọi thật: người thân đổi số · `benign_shipper`
+  Cuộc gọi thật: người giao hàng · `benign_official` Cuộc gọi thật: cơ quan · `benign_utility` Cuộc gọi thật: điện, nước · `benign_family`
+  Cuộc gọi thật: người nhà. Nhóm mới mà thiếu nhãn ⇒ test đỏ. (b) `GET /v1/runs/{id}/steps` gửi `is_sim` (hợp đồng `run_steps.v1`) =
+  sự cố của lượt chạy là sự cố mô phỏng (thiết bị nhãn `sim:` — plan D9); `/trace` hiện băng "MÔ PHỎNG" như `/sim`. (c) Băng mô phỏng
+  dùng token màu riêng `sim.*` (không dùng màu diễn tập — luật 15 "diễn tập dùng màu riêng" phải giữ phân biệt được).
 
 ## 4. Tiêu chí thành công
 
@@ -93,6 +104,7 @@ thực (dạng chữ), đồ thị sự cố chạy thật, Zalo mock, bộ chuy
 | **(SC-005)** | Đúng đồ thị | `graph_topology` = nút/cạnh của đồ thị biên dịch; mọi nút có nhãn | pytest |
 | **(SC-006)** | Không PII | 0 số điện thoại/h1/tên gói trong phản hồi `/v1/sim/*` và DOM | pytest + Playwright quét DOM |
 | **(SC-007)** | Video | Một lượt quay `/sim` (1280×720) dùng được cho P2-21 | đội quay, **BLOCKED** tới P2-21 |
+| **(SC-008)** | Nhận ra được | 100% kịch bản trong ô chọn có `title_vi` đúng bảng FR-015; `/trace` của lượt mô phỏng có băng "MÔ PHỎNG", lượt thật không có; token `sim.*` tương phản ≥ 7:1 với chữ | pytest + Playwright + `gen-design-tokens.py --check` |
 
 ## 5. Làm rõ (clarify, 18/10/2026 — tự quyết)
 

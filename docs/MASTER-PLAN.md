@@ -286,6 +286,34 @@ vệ," (văn bản còn 153 từ), tăng phiên bản, 032 T010 đồng bộ l�
   (d) Playwright cần `HOICON_SIM_ENABLED=true` + gia đình demo trên DB `hoicon_android` ⇒ chạy `ops guardian_link --seed` ở DB đó.
 - *Hết hạn:* tự hết khi 033 T016 xong hoặc khi làn A có việc Android mới; ghi vào `docs/HANDOFF.md` nếu Tiến duyệt.
 
+**Wave 4 (xếp 23/10/2026, sau khi gộp Wave 3 `07c5816`).** Sửa các chỗ lệch spec mà hai làn ghi lại ở evidence. Đề xuất nới quyền làn A
+cho web 033 (Wave 3) **chưa được duyệt** ⇒ làn B vẫn làm mọi `apps/web/**`.
+
+| # | Làn A (Android) | Làn B (backend + web) |
+|---|---|---|
+| 1 | 031 **T014** — đồng bộ chuỗi `guardian_alerts` theo `2026.10-v4` (sha `afd2491…`), ghim lại sha | 024 **T020** (test đỏ) → **T021** (thứ tự ghép cố định, `ACTION_BUSY_VI`) |
+| 2 | 010 **T029** — E7: "Vẫn tiếp tục" thành nút phụ, thân bài điều khiển từ xa thành 2 việc đánh số | 033 **T021** (`title_vi`, `is_sim`) → **T022** (web + token `sim.*`) → **T023** (dọn thiết bị `sim:`) |
+| 3 | 011 **T022** — bố cục màn đồng ý (gợi ý cuộn "Xong rồi", nút "Mở cài đặt" lên trên, nhãn trạng thái ≥ 20sp) | 031 **T019** (`guidance` qua API) → **T020** (khối "Các bước nên làm" trên web) |
+| 4 | 012 **T021** — kiểm mọi mẫu của `baseline-prof.txt` khớp ≥ 1 lớp, gọi từ release-gate | 012 **T020** — thử `roles.sql` trên Postgres tạm (đóng T017) |
+| 5 | 032 **T011** — đo khoảng trống heartbeat (≳ 8 giờ, chạy nền khi làm 2–4) | Rà soát + cổng các spec Wave 3: 033 **T017 → T018 → T019 → T024**, 031 **T016**, 032 **T012 → T013** |
+| 6 | 037 **T007** (sau làn B 037 T004) | 037 **T002 → T003 → T004 → T005 → T006** |
+
+**Wave 5 (tới đóng băng 06/01/2027).**
+
+| # | Làn A | Làn B |
+|---|---|---|
+| 1 | 032 **T010** chỉ khi Minh bác I4 (đồng bộ lại `2026.10-v5`) | 037 **T008** (Android vitals) → **T009** (rà soát cuối toàn codebase) → **T010** |
+| 2 | 011 **T012** sau khi Minh duyệt văn bản (011 T010) | 011 **T021** (kiểm đồng ý ở route đọc web) → **T020** (thực thi lời hứa khi tính năng có thật) |
+| 3 | Việc máy thật khi có thiết bị/Firebase: 001 **T007–T010**, 029 **T012**, 012 **T015** | 024 **T016 → T017** chỉ khi Minh chọn F-1 = A (§8 mục 8) |
+| 4 | Hỗ trợ quay video 5 phút (P2-21): 033 **T020** | 033 **T016** `/eval` web (danh sách cắt — cắt đầu tiên nếu trễ) |
+| 5 | — | 037 **T011** chỉ khi Minh duyệt Crashlytics (§8 mục 13) |
+
+**Wave 6 (sau nộp Vòng 2 09/01/2027, xong trước 07/02):** spec 050. Kiến trúc sư làm 050 **T001** (hợp đồng) ở checkout chính trước.
+Làn B: **T002 → T003 → T004 → T005 → T006 → T008**; làn A: **T007** (`booth-record.py`) song song với T005; chung: **T009 → T010**.
+
+**Việc chờ người (không xếp cho Sonnet):** 002 T024/T025 (token bot Zalo), 012 T010–T015 (VPS, Play Console), 029 T013 (ghi danh gia
+đình thí điểm), 031 T017/T018, 032 T014/T015, 011 T010/T011, 036 kịch bản + cassette `recorded` (P0-08).
+
 ## 6. Cách làm một tính năng (bảng tra nhanh cho người và coding agent)
 1. **Checkout chính:** lấy số spec ở §3; ROADMAP đổi task sang `◐`, thêm link `specs/NNN-slug` (sau khi thư mục tồn tại).
 2. **Worktree/nhánh:** `git worktree add -b feat/NNN-slug ../hoicon-wt/<làn> origin/tien-collab-dev` (worktree đã có:
@@ -364,3 +392,10 @@ Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi
     Chưa duyệt ⇒ làn B tự làm, làn A rảnh sau 010 T028 tới khi 031 T011 xong.
 11. ★ **Nguồn của 50 kịch bản mới (036)**: `source_ref` chỉ tái dùng nguồn của 60 kịch bản P1-07; **chưa ai mở lại các URL** (tác tử
     không truy cập mạng). Trước khi duyệt bỏ `draft` (mục 6): kiểm từng URL còn sống và đúng thủ đoạn, hoặc đổi nguồn.
+12. ★ **Chữ màn đồng ý E3/E4/E10 (011, thêm 23/10/2026)** — đề xuất của `ux-elder-reviewer` (evidence 011, 22/10), duyệt cùng 011 T010;
+    chữ nằm trong `docs/legal/consent/`, nên đổi chữ ⇒ tăng phiên bản ⇒ người đã đồng ý được hỏi lại (luật 7). Đề xuất: (a) E3 tách 3 ý
+    có tiêu đề ngắn; (b) câu đường lui rõ hơn: "Bác muốn đổi ý lúc nào cũng được: nhờ người cài HỏiCon tắt giúp"; (c) bỏ cụm "để không bị
+    kẻ xấu lợi dụng" ở E10. Phần bố cục (không đổi chữ) đã giao làn A: 011 T022.
+13. ★ **Crashlytics (037, thêm 23/10/2026)**: gửi báo cáo lỗi app cho Google là **luồng dữ liệu mới cho bên thứ ba** ⇒ cần mục đích
+    đồng ý + văn bản + DPIA + Play data safety (luật 7). **Đề xuất: chưa dùng**; đo độ ổn định bằng Android vitals của Play Console
+    (không thêm SDK, 037 FR-008). Minh duyệt Crashlytics ⇒ 037 T011.

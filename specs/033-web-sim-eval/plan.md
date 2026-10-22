@@ -71,3 +71,12 @@ Phủ FR: 14/14 có task. **0 CRITICAL, 1 HIGH (đã sửa), 2 MEDIUM, 1 LOW.**
 | S2 | MEDIUM | Ảnh backend của 012 không có `backend/eval` (`.dockerignore` dòng 23, `Dockerfile` chỉ COPY thư mục liệt kê) ⇒ `/v1/eval/summary` và `replay` không chạy trong container | T010 thêm ngoại lệ baseline + COPY; T006: trong container `replay` ⇒ `fallback`, ghi ở `docs/setup/SIM.md` |
 | S3 | MEDIUM | `POST /v1/sim/runs` gọi đường `/v1/events` thay thiết bị demo mà không có JWT thiết bị ⇒ phải chắc chỉ cho gia đình demo | FR-003 + T003 (gia đình thật ⇒ 404) + T006 (cùng hàm, không có đường tắt) |
 | S4 | LOW | Thêm phụ thuộc `@xyflow/react` | Lý do + phiên bản ghim ở D6; đo kích thước JS (T012) |
+
+## Wave 4 (23/10/2026) — nhận các lệch thi công của làn B (evidence 033) vào plan
+
+| # | Quyết định | Lý do | Hệ quả |
+|---|---|---|---|
+| D9 | Mỗi `POST /v1/sim/runs` tạo **một thiết bị demo riêng** nhãn `sim:<kịch bản>`; nhãn này là dấu bền "sự cố mô phỏng" (không migration). `ops guardian_link --seed` không tạo thiết bị | Dùng chung một thiết bị thì `correlate_event` gom hai lượt chạy cùng lúc vào một sự cố | Số thiết bị demo tăng theo lượt chạy ⇒ T023 dọn thiết bị `sim:` cũ > 24 giờ; `is_sim` (FR-015) suy từ nhãn này |
+| D10 | "Bộ ghi mock" tin người giám hộ = `jobs.payload` (đã che PII, `sim: true`); `send_to_guardian` trả `simulated` trước `messages_out`/Zalo | Không thêm bảng; không chạm hạn mức thật | Đã có test 0 lời gọi Zalo với `ZALO_MODE=live` |
+| D11 | Đồ thị lượt sim khởi động tại chỗ (`ingest_events(defer_graph=True)` → `start_prepared(sim=True)`), sự kiện nhận id mới mỗi lượt | `build_event` cho id tất định ⇒ chạy lại sẽ trùng | Tính tất định đo trên dãy bước/chữ tin, không trên id |
+| D12 | `pending_question.expires_at` lấy từ hẹn giờ `ask_elder`, thiếu ⇒ +60 s | Khớp hẹn giờ thật của đồ thị | Không đổi hợp đồng |
