@@ -98,9 +98,12 @@ async def test_a_drill_never_gets_a_case_file(world: SimpleNamespace) -> None:
         await runtime.graph.checkpointer.adelete_thread(str(world.incident))
 
 
-async def test_eval_and_demo_threads_without_a_real_incident_have_no_case_file(world: SimpleNamespace) -> None:
+async def test_eval_and_demo_threads_without_a_real_incident_have_no_case_file(
+    world: SimpleNamespace, threads: list[str]
+) -> None:
+    thread = f"eval-test-{world.incident}"  # không phải UUID: như lượt eval
+    threads.append(thread)  # job `eval-*` còn sót làm đỏ test "không để lại job" của suite eval
     async with IncidentRuntime.open(deps()) as runtime:
-        thread = f"eval-test-{world.incident}"  # không phải UUID: như lượt eval
         status = await runtime.start(demo_event(), incident_id=thread, elder_alias="Mẹ", is_demo=True)
         while status.waiting_for == "ask_elder":
             status = await runtime.resume(thread, {"answer": "no"}, expect="ask_elder")
