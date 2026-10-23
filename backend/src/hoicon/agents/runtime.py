@@ -19,6 +19,7 @@ from uuid import UUID
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
+from psycopg import errors as pg_errors
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 from sqlalchemy import func, select, text, update
@@ -124,7 +125,12 @@ async def open_checkpointer(database_url: str) -> AsyncGenerator[AsyncPostgresSa
         _psycopg_url(database_url), min_size=1, max_size=5, kwargs=kwargs, open=False
     ) as pool:
         saver = AsyncPostgresSaver(pool)
-        await saver.setup()  # tạo/nâng bảng checkpoint của LangGraph (idempotent)
+        try:
+            await saver.setup()  # tạo/nâng bảng checkpoint của LangGraph (idempotent)
+        except pg_errors.InsufficientPrivilege:
+            # Role ứng dụng `hoicon_app` không có DDL (infra/postgres/roles.sql): bảng checkpoint do role chủ tạo trước
+            # (`scripts/try-roles.sh`, spec 012 T017). Thiếu bảng thật thì lần ghi checkpoint đầu sẽ lỗi rõ ràng.
+            logger.info("checkpoint: role không có quyền DDL, bỏ qua setup() (bảng phải có sẵn)")
         yield saver
 
 

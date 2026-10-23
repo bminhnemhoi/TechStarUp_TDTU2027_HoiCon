@@ -17,6 +17,9 @@
 --
 -- Lưu ý khi áp dụng ở prod (spec 012): `IncidentRuntime.open` gọi `AsyncPostgresSaver.setup()` (DDL `CREATE TABLE IF NOT
 -- EXISTS` của LangGraph) nên cần role chủ; với `hoicon_app` hãy chạy `setup()` một lần bằng role chủ trước.
+-- Đã thử (spec 012 T017, `scripts/try-roles.sh` trên Postgres tạm): `setup()` dưới `hoicon_app` báo InsufficientPrivilege, mã bỏ qua
+-- lỗi này (`open_checkpointer`) nên API/worker chạy bình thường, miễn bảng đã có. Thứ tự áp: migration + `setup()` bằng role chủ
+-- → `roles.sql` (cấp quyền cả bảng checkpoint vừa tạo) → đổi `HOICON_DATABASE_URL` sang `hoicon_app`.
 
 DO $$
 BEGIN

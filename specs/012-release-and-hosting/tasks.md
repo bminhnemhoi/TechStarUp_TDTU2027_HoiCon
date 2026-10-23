@@ -41,7 +41,7 @@ Biến: `UT = python3 -m unittest discover -s scripts/tests -p test_deploy_vps.p
   `CallScreeningService` → `RiskWindowService` → `SafePauseActivity`. `release-gate.sh` chạy được trên AAB `demo`.
   · Verify: `$GRADLE :app:assembleDemo :app:bundleRelease && bash scripts/release-gate.sh <aab release>` thoát 0;
   `aapt2 dump badging` của APK demo có `vn.hoicon.sentinel.demo`
-- [ ] T017 [B] [FR-001] Thử `roles.sql` trên **DB dev**: chạy `AsyncPostgresSaver.setup()` + `alembic upgrade head` bằng role chủ, rồi
+- [x] T017 [B] [FR-001] Thử `roles.sql` trên **DB dev**: chạy `AsyncPostgresSaver.setup()` + `alembic upgrade head` bằng role chủ, rồi
   chạy API + worker dưới `hoicon_app`; ghi quyền thiếu (nếu có) và sửa `roles.sql`. Quyết định ghi vào plan (D10 cập nhật).
   · Verify: `HOICON_DATABASE_URL=<url hoicon_app> uv run --directory backend pytest tests/integration/test_db_roles.py` xanh (không
   bị bỏ qua); API dev dưới `hoicon_app` qua `/readyz` 200 và một lượt `scripts/e2e-m1.sh` phần máy chủ ĐẠT
