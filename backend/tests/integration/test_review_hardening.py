@@ -6,6 +6,7 @@ import uuid
 from typing import Any
 
 import pytest
+from consent_support import SHA, purge_family
 from pydantic import SecretStr
 from sqlalchemy import select, update
 
@@ -15,11 +16,12 @@ from hoicon.channels.guardian import send_to_guardian
 from hoicon.channels.updates import handle_update
 from hoicon.channels.zalo import MockZaloClient, build_zalo_client
 from hoicon.config import Settings
-from hoicon.db.models import Family, Job, Member, MessageOut, PairingCode
+from hoicon.db.models import Consent, Family, Job, Member, MessageOut, PairingCode
 from hoicon.db.session import get_sessionmaker
 from hoicon.jobs.queue import ATTEMPT_KEY, enqueue
 from hoicon.jobs.worker import incident_handlers
 from hoicon.ops import pairing_code
+from hoicon.services import consent_gate
 
 pytestmark = pytest.mark.integration
 
@@ -50,7 +52,24 @@ async def test_real_incident_never_reaches_a_demo_family_either(zalo_world: Any)
     assert await send_to_guardian(world.deps, alert(world, is_demo=False)) == "failed"
     assert (await world.rows())[0].error == "real_to_demo_family" and world.client.sent == []
     await set_family_demo(world, False)
-    assert await send_to_guardian(world.deps, alert(world, is_demo=False)) == "sent"  # thật ↔ thật: đi
+    # spec 037: gia đình thật cần người cao tuổi đồng ý `guardian_alerts`
+    async with get_sessionmaker().begin() as session:
+        session.add(
+            Consent(
+                family_id=world.family.id,
+                member_id=world.protected_id,
+                purpose="guardian_alerts",
+                granted=True,
+                consent_version="v1.0",
+                text_sha256=SHA,
+                channel="app",
+            )
+        )
+    consent_gate.reset_cache()
+    try:
+        assert await send_to_guardian(world.deps, alert(world, is_demo=False)) == "sent"  # thật ↔ thật: đi
+    finally:
+        await purge_family(world.family.id)
 
 
 async def test_drill_incident_message_without_the_drill_label_is_refused(zalo_world: Any) -> None:

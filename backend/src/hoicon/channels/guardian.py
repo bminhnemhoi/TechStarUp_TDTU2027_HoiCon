@@ -27,9 +27,10 @@ from hoicon.agents.texts import ACTION_LINK_SLOT, AI_DISCLOSURE, DRILL_LABEL
 from hoicon.channels.zalo import ZaloClient, ZaloError
 from hoicon.config import Settings
 from hoicon.db.ids import new_id
-from hoicon.db.models import Family, Member, MessageOut
+from hoicon.db.models import Family, Incident, Member, MessageOut
 from hoicon.domain.pii import decrypt_chat_id
 from hoicon.jobs.queue import MAX_ATTEMPTS
+from hoicon.services import consent_gate
 from hoicon.services.action_token_service import ActionTokenService
 
 logger = logging.getLogger(__name__)
@@ -243,6 +244,24 @@ async def send_to_guardian(deps: ChannelDeps, payload: dict[str, Any], attempt: 
         block = "demo_to_real_family"
     elif family.is_demo and not is_demo:
         block = "real_to_demo_family"
+    # Spec 037 FR-002: đồng ý là điều kiện LÚC GỬI (không dựa vào cờ đóng băng lúc xếp job): người cao tuổi đã rút
+    # `guardian_alerts` sau khi tin được xếp thì tin không đi. Tin demo/mô phỏng (hư cấu) được miễn. Đóng mặc định:
+    # tin thật không xác định được người cao tuổi (thiếu `protected_member_id`, sự cố đã xóa) thì KHÔNG gửi.
+    if block is None and not payload.get("is_demo"):
+        protected = parse_uuid(payload.get("protected_member_id"))
+        if protected is None and (incident_id := parse_uuid(payload.get("incident_id"))) is not None:
+            async with deps.sessions() as session:
+                protected = await session.scalar(select(Incident.member_id).where(Incident.id == incident_id))
+        allowed = False
+        if protected is not None:
+            async with deps.sessions() as session:
+                allowed = (await consent_gate.state_for(session, protected)).guardian_alerts
+        if not allowed:
+            logger.info(
+                "notify_guardian template=%s: không xác định được đồng ý guardian_alerts của người cao tuổi, không gửi",
+                template,
+            )
+            return "skipped_consent"
     # Tin của sự cố mang `incident_id`; tin tổng kết diễn tập (spec 028) mang `drill_id` và không gắn sự cố nào.
     # Tin Coach mang khóa chống trùng riêng (`protection:{thiết bị}:{mốc}`, `weekly:{người}:{tuần}`).
     job_key = payload.get("job_key") or f"{payload.get('incident_id') or payload['drill_id']}:msg:{template}"

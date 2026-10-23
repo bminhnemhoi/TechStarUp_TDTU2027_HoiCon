@@ -380,12 +380,12 @@ async def test_waiting_for_the_device_lock_times_out_with_503(
 @pytest.mark.parametrize(
     "mutate",
     [
-        lambda e: e["app"].update(package="call 0912345678 now"),
+        lambda e: e["app"].update(package="call 0900000001 now"),
         lambda e: e["app"].update(package="vn.hoicon demobank"),
-        lambda e: e.update(app_version="0912345678"),
+        lambda e: e.update(app_version="0900000001"),
         lambda e: e.update(app_version="0912.3456.78"),  # đúng mẫu phiên bản nhưng ghép lại thành số điện thoại
-        lambda e: e["app"].update(package="vn.0912345678"),
-        lambda e: e.update(app_version="1.0-0912345678"),  # số điện thoại nằm trong hậu tố
+        lambda e: e["app"].update(package="vn.0900000001"),
+        lambda e: e.update(app_version="1.0-0900000001"),  # số điện thoại nằm trong hậu tố
         lambda e: e.update(app_version="0.1.0-84912345678"),
         lambda e: e.update(rules_version="1.0.0+0912.345.678"),
         lambda e: e.update(app_version="0912.3456-78"),  # một số điện thoại chia đôi qua phần chính và hậu tố

@@ -108,6 +108,7 @@ async def test_the_digest_counts_real_incidents_coverage_and_drills(require_db: 
     for job in jobs:
         assert job.payload["urgent"] is False and job.payload["quota_class"] == "digest"
         assert job.payload["is_demo"] is False and job.payload["is_drill"] is False
+        assert job.payload["protected_member_id"] == str(w.protected)  # spec 037: cổng đồng ý lúc gửi cần biết
 
 
 async def test_a_quiet_week_still_states_the_coverage_without_saying_safe(require_db: None, worlds: list) -> None:

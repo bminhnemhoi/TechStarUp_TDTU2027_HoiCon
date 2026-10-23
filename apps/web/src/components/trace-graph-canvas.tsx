@@ -39,6 +39,8 @@ function AgentNode({ data }: NodeProps<Node<AgentNodeData>>) {
 }
 
 const NODE_TYPES = { agent: AgentNode };
+const NODE_WIDTH = 224;
+const NODE_HEIGHT = 96;
 
 export default function TraceGraphCanvas({
   topology,
@@ -57,6 +59,10 @@ export default function TraceGraphCanvas({
     type: "agent",
     position: positions[n.id],
     data: { label: n.label_vi, status: statuses[n.id] ?? "idle", selected: selected === n.id },
+    // xyflow ẩn nút (visibility: hidden) cho tới khi đo xong; khai kích thước ban đầu (w-56 ≈ 224 px) để nút hiện ngay,
+    // không phụ thuộc ResizeObserver kịp chạy (có lúc không nút nào hiện khi máy bận). Đo thật vẫn thay thế sau đó.
+    initialWidth: NODE_WIDTH,
+    initialHeight: NODE_HEIGHT,
     draggable: false,
     connectable: false,
     focusable: false, // canvas aria-hidden: không để phần tử nhận Tab nằm trong vùng bị ẩn với trình đọc màn hình

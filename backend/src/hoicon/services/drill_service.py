@@ -371,6 +371,7 @@ async def _queue_debrief(session: AsyncSession, drill: Drill, script: dict[str, 
         "family_id": str(drill.family_id),
         "guardian_rank": 1,
         "drill_id": str(drill.id),
+        "protected_member_id": str(drill.member_id),  # spec 037 FR-002: kiểm đồng ý lúc gửi
         "text": texts.drill_debrief(alias, passed, dr.red_flags(script)),
         "is_demo": bool(drill.is_demo),
         "is_drill": True,

@@ -5,6 +5,9 @@ import os from "node:os";
 import path from "node:path";
 import { FAKE_TOKEN, LIST_ITEMS, RUN_ID, SimMock, mockApi } from "./fixtures";
 
+// Sơ đồ xyflow nạp động: lần đầu có thể chậm khi nhiều worker tranh CPU (vượt hạn 7,5 s mặc định). Cùng điều kiện, chỉ chờ lâu hơn.
+const XYFLOW_LOAD_MS = 20_000;
+
 // SC-005 (spec 027): 4 trang × 360/768/1280 px (+ cỡ chữ 200%): không tràn ngang, chữ ≥ 16 px, vùng chạm ≥ 44 px,
 // nút chính ≥ 64 px, axe-core 0 vi phạm serious/critical (kể cả tương phản nâng cao 7:1 cho chữ thân).
 const EVIDENCE_DIR = path.join(os.homedir(), "hoicon-evidence", "027-guardian-web");
@@ -61,7 +64,7 @@ const SCREENS: Screen[] = [
       await mockApi(page);
       await page.goto(`/trace/${RUN_ID}`);
       await expect(page.getByTestId("stream-status")).toContainText("Trợ lý AI đã làm xong các bước");
-      await expect(page.locator(".react-flow__node").first()).toBeVisible();
+      await expect(page.locator(".react-flow__node:visible").first()).toBeVisible({ timeout: XYFLOW_LOAD_MS });
     },
   },
   {

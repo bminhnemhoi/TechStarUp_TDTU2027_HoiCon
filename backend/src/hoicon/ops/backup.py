@@ -9,9 +9,12 @@ luồng và mã hóa từng khối 1 MiB bằng AES-256-GCM với `HOICON_BACKUP
 bộ nhớ và đường ống: KHÔNG bao giờ chạm đĩa. Kèm manifest JSON (số dòng từng bảng đếm trong CÙNG snapshot với dump,
 phiên bản alembic, sha256 của bản mã, kid).
 
-Định dạng `*.dump.enc`: `HCBK` | phiên bản (1 byte) | kid (1 byte) | tiền tố nonce (4 byte), rồi các khung
-`độ dài (4 byte, big-endian) | bản mã + thẻ 16 byte`. Nonce = tiền tố + chỉ số khối (8 byte). AAD =
-`hoicon:backup:v1:<kid>:<chỉ số khối>:<cờ khối cuối>` ⇒ cắt bớt, đảo, nhân đôi hay sửa bất kỳ khối nào đều bị phát hiện.
+Định dạng `*.dump.enc` (phiên bản 2, spec 037 D5): `HCBK` | phiên bản (1 byte) | kid (1 byte) | salt (16 byte),
+rồi các khung `độ dài (4 byte, big-endian) | bản mã + thẻ 16 byte`. Khóa con của TỪNG tệp =
+HKDF-SHA256(khóa chính, salt) nên hai tệp không bao giờ dùng chung khóa; nonce = 4 byte 0 + chỉ số khối (8 byte).
+AAD = `hoicon:backup:v2:<kid>:<chỉ số khối>:<cờ khối cuối>` ⇒ cắt bớt, đảo, nhân đôi hay sửa bất kỳ khối nào đều bị
+phát hiện. Phiên bản 1 (tiền tố nonce 4 byte ngẫu nhiên, dùng thẳng khóa chính) vẫn ĐỌC được để khôi phục bản sao lưu
+cũ; không còn ghi.
 
 `restore-check`: giải mã, `pg_restore` vào DB tạm `hoicon_restore_check` (trong container), kiểm `alembic_version`,
 số dòng từng bảng khớp manifest, các trigger bất biến còn ở chế độ ALWAYS; đo thời gian; luôn xóa DB tạm.
@@ -39,16 +42,21 @@ from typing import Any, BinaryIO
 
 import psycopg
 from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from sqlalchemy.engine import make_url
 
 from hoicon.config import Settings, get_settings
 
 MAGIC = b"HCBK"
-VERSION = 1
+VERSION = 2
+LEGACY_VERSION = 1
+SALT_LEN = 16
 BLOCK = 1024 * 1024
 TAG = 16
-HEADER_LEN = len(MAGIC) + 2 + 4
+HEADER_LEN = len(MAGIC) + 2 + SALT_LEN  # tiêu đề của phiên bản hiện hành (v2)
+LEGACY_PREFIX_LEN = 4
 TEMP_DB = "hoicon_restore_check"
 NAME = re.compile(r"^hoicon-(\d{8}T\d{6}Z)\.dump\.enc$")
 VN_TZ = timezone(timedelta(hours=7))  # Việt Nam không có giờ mùa hè
@@ -72,8 +80,13 @@ class BackupError(Exception):
 # --- mã hóa theo khối ---------------------------------------------------------------------------------------------
 
 
-def _aad(kid: int, index: int, final: bool) -> bytes:
-    return f"hoicon:backup:v1:{kid}:{index}:{int(final)}".encode()
+def _aad(kid: int, index: int, final: bool, version: int = VERSION) -> bytes:
+    return f"hoicon:backup:v{version}:{kid}:{index}:{int(final)}".encode()
+
+
+def _subkey(key: bytes, salt: bytes) -> bytes:
+    """Khóa con của một tệp (v2): HKDF-SHA256(khóa chính, salt riêng của tệp)."""
+    return HKDF(algorithm=hashes.SHA256(), length=32, salt=salt, info=b"hoicon:backup:v2:subkey").derive(key)
 
 
 def _nonce(prefix: bytes, index: int) -> bytes:
@@ -99,8 +112,9 @@ class Encrypted:
 
 def encrypt_stream(chunks: Iterator[bytes], key: bytes, kid: int, out: BinaryIO) -> Encrypted:
     """Mã hóa luồng `chunks` (mỗi phần ≤ BLOCK) ra `out`. Đọc trước một khối để biết khối nào là khối cuối."""
-    prefix = os.urandom(4)
-    aead = AESGCM(key)
+    salt = os.urandom(SALT_LEN)
+    prefix = b"\x00" * 4  # khóa con khác nhau theo tệp nên nonce chỉ cần duy nhất trong tệp (chỉ số khối)
+    aead = AESGCM(_subkey(key, salt))
     digest = hashlib.sha256()
     size = 0
 
@@ -110,7 +124,7 @@ def encrypt_stream(chunks: Iterator[bytes], key: bytes, kid: int, out: BinaryIO)
         digest.update(data)
         size += len(data)
 
-    emit(MAGIC + bytes([VERSION, kid]) + prefix)
+    emit(MAGIC + bytes([VERSION, kid]) + salt)
     index = plain = 0
     pending: bytes | None = None
     for chunk in chunks:
@@ -135,17 +149,22 @@ def _read_exact(src: BinaryIO, n: int) -> bytes:
 
 def decrypt_stream(src: BinaryIO, settings: Settings | None = None) -> Iterator[bytes]:
     """Giải mã từng khối; sai khóa, sửa 1 byte, cắt cụt, đảo hay chèn khối đều ném `BackupError`."""
-    header = _read_exact(src, HEADER_LEN)
-    if header[:4] != MAGIC or header[4] != VERSION:
+    head = _read_exact(src, len(MAGIC) + 2)
+    if head[:4] != MAGIC or head[4] not in (VERSION, LEGACY_VERSION):
         raise BackupError("không phải tệp sao lưu HỏiCon (hoặc phiên bản lạ)")
-    kid, prefix = header[5], header[6:]
-    aead = AESGCM(key_for(kid, settings))
+    version, kid = head[4], head[5]
+    key = key_for(kid, settings)
+    if version == VERSION:
+        salt = _read_exact(src, SALT_LEN)
+        aead, prefix = AESGCM(_subkey(key, salt)), b"\x00" * 4
+    else:  # phiên bản 1: dùng thẳng khóa chính, tiền tố nonce nằm trong tiêu đề
+        aead, prefix = AESGCM(key), _read_exact(src, LEGACY_PREFIX_LEN)
     frame = _next_frame(src)
     index = 0
     while frame is not None:
         following = _next_frame(src)
         try:
-            yield aead.decrypt(_nonce(prefix, index), frame, _aad(kid, index, following is None))
+            yield aead.decrypt(_nonce(prefix, index), frame, _aad(kid, index, following is None, version))
         except InvalidTag:
             raise BackupError("giải mã thất bại: sai khóa, tệp bị sửa, cắt bớt hoặc đảo khối") from None
         frame, index = following, index + 1
