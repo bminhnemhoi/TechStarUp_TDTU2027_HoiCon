@@ -194,7 +194,8 @@ async def _redeem(payload: PairRequest, refresh_hash: str) -> tuple[UUID, UUID, 
             member_id=member.id,
             platform=payload.platform,
             # Nhãn do người dùng gõ có thể chứa số điện thoại/tên: che trước khi lưu (luật 1, DATA-MODEL "không PII").
-            label=mask_text(payload.device_label) if payload.device_label else None,
+            # Nhãn `sim:` dành riêng cho thiết bị mô phỏng của máy chủ (`ops booth reset` xóa theo nhãn này, spec 050).
+            label=mask_text(payload.device_label).replace("sim:", "sim-", 1) if payload.device_label else None,
             app_version=payload.app_version,
             rules_version=payload.rules_version,
             device_secret_hash=refresh_hash,

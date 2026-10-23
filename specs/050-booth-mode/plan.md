@@ -26,7 +26,7 @@
 | D4 | Phát hiện mất mạng: `navigator.onLine === false` **hoặc** 2 lần liên tiếp gọi API hỏng/quá 3 giây (`AbortSignal.timeout(3000)`) **hoặc** người điều khiển chọn; băng rôn cố định, không giấu | Wi-Fi hội trường thường "còn sóng nhưng không đi được"; `onLine` đơn thuần không đủ | Chỉ `onLine` |
 | D5 | `/booth` đo `t_alert_ms` bằng `performance.now()` quanh `POST /v1/sim/runs` → khung có tin `fast_alert` đầu tiên | Không cần trường mới ở hợp đồng; ghi rõ là đo ở trình duyệt | Đo ở máy chủ (cần trường mới) |
 | D6 | Đặt lại dữ liệu = `ops/booth.py reset` (CLI, chỉ `HOICON_ENV=dev`/gia đình `is_demo`); nút trong console chỉ đặt lại **màn hình** và hiện lệnh cần chạy cho tới khi có `POST /v1/sim/reset` | Hợp đồng chưa có; CLI đã đủ cho Gate G4 (người điều khiển có máy) | API không hợp đồng |
-| D7 | Bộ đếm "đạt liên tiếp" và bảng lượt gần đây lưu `sessionStorage` (mỗi tab) | Chỉ là tiện ích của người điều khiển; không là bằng chứng — bằng chứng chính thức ghi vào `evidence.md` | Lưu DB |
+| D7 | Bộ đếm "đạt liên tiếp" và bảng lượt gần đây chỉ nằm trong bộ nhớ trang console (BroadcastChannel), **không** dùng localStorage/sessionStorage | Bất biến 5 của 027 (web không lưu gì ở trình duyệt); chỉ là tiện ích của người điều khiển, không là bằng chứng — bằng chứng chính thức ghi vào `evidence.md` | Lưu trình duyệt hoặc DB |
 
 ## 3. Luồng
 
