@@ -28,6 +28,7 @@ import vn.hoicon.sentinel.domain.events.RiskEventType
 import vn.hoicon.sentinel.domain.events.Uuid7
 import vn.hoicon.sentinel.domain.rules.LocalRulesEvaluator
 import vn.hoicon.sentinel.domain.rules.RiskWindowManager
+import vn.hoicon.sentinel.pause.AskChild
 import vn.hoicon.sentinel.pause.Dialer
 import vn.hoicon.sentinel.sensing.CallSignalStore
 import vn.hoicon.sentinel.sensing.HcSpikeLog
@@ -83,9 +84,13 @@ class SentinelServices private constructor(private val app: Context) {
      * (no contacts permission: they dial the child themselves). Returns false when the phone has no dialer that opens.
      */
     fun askChild(context: Context): Boolean {
-        val call = CallSignalStore.load(app)?.toSignal(inCallNow = false)
-        record(events.build(RiskEventType.ASK_CHILD_PRESSED, System.currentTimeMillis(), call = call))
-        return Dialer.open(context)
+        return AskChild(
+            record = {
+                val call = CallSignalStore.load(app)?.toSignal(inCallNow = false)
+                record(events.build(RiskEventType.ASK_CHILD_PRESSED, System.currentTimeMillis(), call = call))
+            },
+            dial = { Dialer.open(context) },
+        ).press()
     }
 
     /** Forgets every queued event (pairing ended): they belonged to the family that was just left. */

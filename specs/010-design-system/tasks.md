@@ -200,7 +200,7 @@ Quyết định (kiến trúc sư Spec Kit, theo `docs/DESIGN-SYSTEM.md` mục E
   khóa debug cục bộ) sau `am force-stop` (tiến trình nguội — kịch bản thật: hãng máy giết tiến trình rồi cuộc gọi đến); ghi riêng "lượt nguội" và p95 gộp.
   Lượt nguội release > 3 s ⇒ chẩn đoán (`diagnosing-bugs`: thời gian `Application.onCreate`, khởi tạo Room/Tink trên đường dừng an toàn) và sửa trong phạm vi app.
   · Verify: bảng số trong evidence 010 (nguồn: máy ảo, không phải máy thật)
-- [ ] T032 [A] [FR-013] Test cho `pause/Dialer.kt` (nút "Hỏi con" của E7; GAP-REPORT: chưa có test): mở bàn phím gọi **trống** (`ACTION_DIAL` không kèm số, luật 3 — không đọc
+- [x] T032 [A] [FR-013] Test cho `pause/Dialer.kt` (nút "Hỏi con" của E7; GAP-REPORT: chưa có test): mở bàn phím gọi **trống** (`ACTION_DIAL` không kèm số, luật 3 — không đọc
   danh bạ), bắn đúng một sự kiện `ask_child_pressed`, không ném lỗi khi máy không có ứng dụng gọi. · Verify: `apps/android/gradlew -p apps/android :app:testDebugUnitTest`
 - [x] T033 [A] [FR-013] **Ưu tiên cao** — bản release/demo trên hc-api34: `pause_release` 0/10 (hc-api36 10/10). Có thể là lỗi thật của bản R8 trên API 34
   (lớp bị cắt, quyền/appops, vai trò bị bản debug giữ) chứ không chỉ là máy ảo. Chẩn đoán bằng `diagnosing-bugs`: (a) chỉ cài bản demo (gỡ debug),

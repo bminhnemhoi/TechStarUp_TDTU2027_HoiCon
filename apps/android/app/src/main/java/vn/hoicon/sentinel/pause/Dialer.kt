@@ -10,11 +10,24 @@ import vn.hoicon.sentinel.sensing.HcSpikeLog
  * (CLAUDE.md rule 3), so the person dials the child themselves. The family is told through the `ask_child_pressed` event.
  */
 object Dialer {
-    fun open(context: Context): Boolean = try {
-        context.startActivity(Intent(Intent.ACTION_DIAL).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    fun open(context: Context): Boolean = open { action ->
+        context.startActivity(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
+    /** [start] gets the action only (never a number or data): `ACTION_DIAL` with nothing else. A phone without a dialer ⇒ false, never a throw. */
+    internal fun open(onMissing: (Exception) -> Unit = { HcSpikeLog.w("no dialer", it) }, start: (action: String) -> Unit): Boolean = try {
+        start(Intent.ACTION_DIAL)
         true
     } catch (e: ActivityNotFoundException) {
-        HcSpikeLog.w("no dialer", e)
+        onMissing(e)
         false
+    }
+}
+
+/** One press of "Hỏi con": the event goes to the family queue first, then the dialer is tried (a missing dialer never hides the press). */
+class AskChild(private val record: () -> Unit, private val dial: () -> Boolean) {
+    fun press(): Boolean {
+        record()
+        return dial()
     }
 }

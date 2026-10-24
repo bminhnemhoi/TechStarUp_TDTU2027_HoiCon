@@ -222,3 +222,9 @@ Việc kế tiếp (sau ≈ 10:45): `bash scripts/emu-start.sh hc-api34 --headle
 - **Sửa:** `CALL_SETTLE_S = 1.5` chờ trước mọi `gsm accept` (5 chỗ trong `emu-scenario.py`); test `AnswerAfterTelecomSettlesTest` (mọi `accept` đứng sau chờ) đỏ (chưa có hằng) → xanh.
 - **Verify:** `pause_release --runs 10` trên hc-api34 bản demo: **10/10**, lượt đầu 657 ms, các lượt sau p50 753 ms, **p95 gộp 847 ms ⇒ ĐẠT ≤ 3000 ms**. (hc-api36 lượt 9: p95 1205 ms. Hai AVD đều chỉ là số máy ảo, hạt đo 0,1–0,2 s.)
 - **Đính chính lượt 9:** nhận định "modem giả nuốt cuộc gọi sau cold boot" chỉ đúng một phần (một số lần `call_state` không lên 1 ngay sau boot — vẫn ghi nhận); phần lớn các lần "Telecom không thấy cuộc gọi" là **nhấc máy quá sớm** + **vai trò do bản khác giữ**. Cân nhắc chỉnh `docs/EMULATOR.md` (Opus).
+
+## Lượt 10 (làn A, 25/10/2026) — T032 test cho `pause/Dialer.kt`
+
+- `DialerTest` (4 kiểm): (1) mở bàn phím gọi bằng **`ACTION_DIAL` và không gì khác** — hàm khởi chạy chỉ nhận tên action, không nhận số hay dữ liệu (luật 3: không đọc danh bạ); (2) máy không có ứng dụng gọi ⇒ trả `false`, không ném; (3) `AskChild.press()` ghi **đúng một** `ask_child_pressed` và mở bàn phím gọi một lần; (4) kể cả khi bàn phím gọi không mở được, sự kiện vẫn đã ghi (một máy thiếu ứng dụng gọi không làm mất lần bấm).
+- Để test được, tách phần lõi khỏi `Context` (`Dialer.open(onMissing, start)` nội bộ) và đưa trình tự "ghi sự kiện rồi mở bàn phím" vào `AskChild` (dùng bởi `SentinelServices.askChild`, hành vi không đổi). Lần chạy đầu: 3/4 xanh, 1 đỏ thật — nhánh "không có ứng dụng gọi" gọi `android.util.Log` mà JVM test không có ⇒ cho `onMissing` nhận hàm (mặc định vẫn ghi log).
+- Verify: `:app:testDebugUnitTest :app:lintDebug` xanh.
