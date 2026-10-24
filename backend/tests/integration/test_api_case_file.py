@@ -197,6 +197,7 @@ async def test_a_real_family_without_guardian_alerts_consent_gets_404_until_it_c
     """Hồ sơ thuộc mục đích `guardian_alerts`: chưa/không còn đồng ý ⇒ 404 (hồ sơ demo hư cấu được miễn)."""
     from case_support import FAKE_HMAC as _  # noqa: F401
     from consent_support import SHA, purge_family
+    from sqlalchemy import update
 
     from hoicon.db.models import Consent
     from hoicon.services import consent_gate
@@ -206,6 +207,7 @@ async def test_a_real_family_without_guardian_alerts_consent_gets_404_until_it_c
         async with get_sessionmaker().begin() as session:
             content = await case_file_service.build_content(session, real.incident)
             session.add(CaseFile(incident_id=real.incident, family_id=real.family, content=content, is_demo=False))
+            await session.execute(update(Incident).where(Incident.id == real.incident).values(is_demo=False))
         token = issue_guardian_access_token(real.guardian, real.family)
         consent_gate.reset_cache()
         assert (await call("GET", url(real), token=token)).status_code == 404
@@ -223,6 +225,37 @@ async def test_a_real_family_without_guardian_alerts_consent_gets_404_until_it_c
                 )
             )
         consent_gate.reset_cache()
+        assert (await call("GET", url(real), token=token)).status_code == 200
+    finally:
+        consent_gate.reset_cache()
+        await purge_family(real.family)
+
+
+async def test_case_file_visibility_follows_the_incident_is_demo_flag_not_the_row_copy(
+    world: SimpleNamespace,
+) -> None:
+    """011 T024 #7: nguồn sự thật cho "demo được miễn" là `incident.is_demo` (như mọi route khác), không phải bản
+    sao ở dòng hồ sơ. Sự cố THẬT mà hồ sơ gắn nhãn demo nhầm không lọt qua cổng đồng ý; sự cố demo luôn đọc được."""
+    from case_support import FAKE_HMAC as _  # noqa: F401
+    from consent_support import purge_family
+    from sqlalchemy import update
+
+    from hoicon.services import consent_gate
+
+    real = await seed_case(with_run=False)
+    try:
+        async with get_sessionmaker().begin() as session:
+            content = await case_file_service.build_content(session, real.incident)
+            session.add(CaseFile(incident_id=real.incident, family_id=real.family, content=content, is_demo=True))
+            await session.execute(update(Incident).where(Incident.id == real.incident).values(is_demo=False))
+        token = issue_guardian_access_token(real.guardian, real.family)
+        consent_gate.reset_cache()
+        # sự cố thật + hồ sơ nhãn demo nhầm + chưa đồng ý ⇒ 404
+        assert (await call("GET", url(real), token=token)).status_code == 404
+        async with get_sessionmaker().begin() as session:
+            await session.execute(update(Incident).where(Incident.id == real.incident).values(is_demo=True))
+            await session.execute(update(CaseFile).where(CaseFile.incident_id == real.incident).values(is_demo=False))
+        # sự cố demo + hồ sơ nhãn thật ⇒ vẫn đọc được
         assert (await call("GET", url(real), token=token)).status_code == 200
     finally:
         consent_gate.reset_cache()

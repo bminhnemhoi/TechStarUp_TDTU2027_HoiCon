@@ -1292,6 +1292,65 @@
     }
    }
   },
+  "/v1/data-requests": {
+   "post": {
+    "tags": [
+     "data-requests"
+    ],
+    "summary": "Người được bảo vệ yêu cầu xóa dữ liệu gia đình (spec 038)",
+    "operationId": "request_deletion_v1_data_requests_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DataRequestIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReceiptOut"
+        }
+       }
+      }
+     },
+     "200": {
+      "description": "Đã có yêu cầu đang chờ (lũy đẳng)",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReceiptOut"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Đã gửi yêu cầu nhiều lần hôm nay. Bác thử lại vào ngày mai nhé."
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
   "/v1/booth/codes": {
    "post": {
     "tags": [
@@ -2890,6 +2949,27 @@
      "recorded_at"
     ],
     "title": "ConsentState"
+   },
+   "DataRequestIn": {
+    "properties": {
+     "kind": {
+      "type": "string",
+      "const": "delete",
+      "title": "Kind"
+     },
+     "confirmed": {
+      "type": "boolean",
+      "const": true,
+      "title": "Confirmed"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "kind",
+     "confirmed"
+    ],
+    "title": "DataRequestIn"
    },
    "DeviceInfo": {
     "properties": {
@@ -4744,6 +4824,42 @@
      "text"
     ],
     "title": "Reason"
+   },
+   "ReceiptOut": {
+    "properties": {
+     "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Request Id"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "pending",
+       "done",
+       "failed"
+      ],
+      "title": "Status"
+     },
+     "requested_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Requested At"
+     },
+     "deadline_hours": {
+      "type": "integer",
+      "const": 72,
+      "title": "Deadline Hours",
+      "default": 72
+     }
+    },
+    "type": "object",
+    "required": [
+     "request_id",
+     "status",
+     "requested_at"
+    ],
+    "title": "ReceiptOut"
    },
    "RiskEventIn": {
     "properties": {

@@ -75,4 +75,5 @@ async def purge_family(family_id: UUID) -> None:
             ),
             {"id": family_id},
         )
+        await conn.execute(text("delete from data_requests where family_id = :id"), {"id": family_id})
         await conn.execute(text("delete from families where id = :id"), {"id": family_id})

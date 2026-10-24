@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select, update
+from sqlalchemy import delete, or_, select, text, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from hoicon.db.ids import new_id
@@ -56,9 +56,25 @@ class FamilyNotFoundError(Exception):
 
 async def request_delete(sessions: async_sessionmaker, family_id: UUID, via: str) -> DataRequest:
     """Ghi nhận yêu cầu xóa và xếp job `purge_family` (lũy đẳng: đã có yêu cầu đang chờ thì trả lại chính nó)."""
+    return (await request_delete_detailed(sessions, family_id, via))[0]
+
+
+async def request_delete_detailed(
+    sessions: async_sessionmaker,
+    family_id: UUID,
+    via: str,
+    *,
+    notice: dict[str, Any] | None = None,
+    purge_delay_s: float = 0.0,
+) -> tuple[DataRequest, bool]:
+    """Như `request_delete` nhưng trả thêm `created` (False = trả lại yêu cầu đang chờ). `notice`: payload job
+    `notify_guardian` xếp CÙNG giao dịch và chạy TRƯỚC `purge_family` (job này hoãn `purge_delay_s` giây để tin kịp đi
+    trước khi purge xóa kênh Zalo)."""
     async with sessions.begin() as session:
         if await session.get(Family, family_id) is None:
             raise FamilyNotFoundError
+        # Hai yêu cầu đồng thời của một gia đình xếp hàng ở đây: chỉ một yêu cầu `pending`, một purge, một tin báo.
+        await session.execute(text("select pg_advisory_xact_lock(hashtext(:k))"), {"k": f"purge:{family_id}"})
         pending = await session.scalar(
             select(DataRequest)
             .where(DataRequest.family_id == family_id, DataRequest.status == "pending")
@@ -66,18 +82,22 @@ async def request_delete(sessions: async_sessionmaker, family_id: UUID, via: str
             .limit(1)
         )
         if pending is not None:
-            return pending
+            return pending, False
         request = DataRequest(id=new_id(), family_id=family_id, kind="delete", requested_via=via)
         session.add(request)
         await session.flush()
+        if notice is not None:
+            key = f"data_request:{request.id}:msg:deleted"
+            await enqueue(session, "notify_guardian", {**notice, "job_key": key}, key=key)
         await enqueue(
             session,
             "purge_family",
             {"request_id": str(request.id), "family_id": str(family_id)},
+            delay_s=purge_delay_s,
             key=f"purge:{request.id}",
         )
         logger.info("purge: đã ghi nhận yêu cầu %s", request.id)
-        return request
+        return request, True
 
 
 async def purge_family(

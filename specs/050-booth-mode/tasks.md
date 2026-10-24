@@ -75,3 +75,6 @@
 - [x] T017 [B] [FR-007, FR-008] Medium bảo mật còn lại của T013 (evidence 050): #4 làm đầy độ dài mã/so sánh hằng thời gian, #5 hạn mức SSE
   của phiên khách tách khỏi người giám hộ, #7 Caddyfile che `/join/<mã>` trong log, #8 khóa HMAC mã tham gia lấy từ khóa riêng (không dùng
   pepper số điện thoại), #9 `/join` khi cổng tắt ⇒ "Trang này chưa mở". Mỗi mục test đỏ trước. · Verify: `$PYTEST tests/integration -q -k "booth or join"` + `$WEB e2e booth join`
+
+## Lượt 10 (nhà điều phối 25/10/2026)
+- [x] T018 [B] [FR-007] Medium/Low còn lại của rà soát bảo mật T017 (evidence 050): #2 khách vào lại nhận lại ĐÚNG phiên cũ (không sinh phiên mới, không kéo dài hạn), #3 phiên khách đã đăng xuất (`RevokedSession`) không được miễn đếm, Low #5 trang `/join` chỉ nói "Trang này chưa mở" khi 404 đúng là cổng mô phỏng tắt (`detail` = "Không tìm thấy"). Test đỏ trước. · Verify: `$PYTEST tests/integration -q -k "booth or join"` + `$WEB e2e join booth`

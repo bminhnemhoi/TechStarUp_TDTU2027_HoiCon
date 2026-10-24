@@ -370,6 +370,16 @@ def guardian_protection_permission_off(alias: str) -> str:
     )
 
 
+def guardian_data_delete_notice(alias: str) -> str:
+    """Tin cho người giám hộ hạng 1 khi người được bảo vệ tự yêu cầu xóa dữ liệu từ app (spec 038 FR-004)."""
+    return _message(
+        f"{alias} vừa yêu cầu xóa dữ liệu của gia đình khỏi HỏiCon. Dữ liệu sẽ được xóa trong vòng 72 giờ, "
+        f"sau đó HỏiCon sẽ không còn nhắn tin cho anh/chị về {alias}. "
+        f"Anh/chị có thể gọi hỏi thăm {alias} nếu cần.",
+        False,
+    )
+
+
 def weekly_digest(
     alias: str, incidents: int, resolved: int, coverage: float | None, drills: int, tip: str | None
 ) -> str:
