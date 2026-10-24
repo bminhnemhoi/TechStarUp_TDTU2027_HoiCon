@@ -186,12 +186,38 @@ def prepare(prep: str) -> None:
         print(f"  cảnh báo: tiến trình vẫn sống sau prep={prep}")
 
 
+def radio_ready() -> bool:
+    """SIM đã nạp và mạng thoại ở trạng thái IN_SERVICE. Ngay sau khởi động nguội (`--no-snapshot-load`) máy ảo báo
+    sys.boot_completed trước khi modem giả đăng ký mạng; cuộc gọi giả lúc đó có thể đổ chuông (telephony.registry) mà Telecom
+    không thấy ("Telecom không thấy cuộc gọi đến")."""
+    sim = adb("shell", "getprop", "gsm.sim.state").strip()
+    registry = adb("shell", "dumpsys", "telephony.registry")
+    return sim.startswith(("LOADED", "READY")) and "mVoiceRegState=0(IN_SERVICE)" in registry
+
+
+def role_held() -> bool:
+    return SENTINEL in adb("shell", "cmd", "role", "get-role-holders", "--user", "0", "android.app.role.CALL_SCREENING")
+
+
+def ensure_ready() -> None:
+    """Chuẩn bị môi trường trước khi đo: chờ modem giả đăng ký mạng (tối đa 120 s) và bảo đảm Lính gác đang giữ vai trò
+    sàng lọc cuộc gọi (vai trò có thể không còn sau `pm clear`/cài lại). Chỉ in cảnh báo, không đổi kết quả đo."""
+    if not wait_for(radio_ready, 120, step_s=3):
+        print("  cảnh báo: modem giả chưa IN_SERVICE sau 120 s — cuộc gọi giả có thể không tới Telecom (môi trường, không phải app)")
+    if installed(SENTINEL) and not role_held():
+        print("  vai trò CALL_SCREENING không do Lính gác giữ ⇒ cấp lại bằng `cmd role add-role-holder`")
+        adb("shell", "cmd", "role", "add-role-holder", "--user", "0", "android.app.role.CALL_SCREENING", SENTINEL)
+
+
 def screening_diagnosis() -> str:
     """Vì sao không có call_screened: Telecom không nhận cuộc gọi, hết hạn chờ (khởi động nguội), hay app im lặng."""
     log = adb("logcat", "-d", "-s", "Telecom:I", "TelecomFramework:I", "ActivityManager:I")
     started = re.search(rf"Start proc \d+:{re.escape(SENTINEL)}/", log) is not None
     if "IncomingCallFilterGraph" not in log:
-        return "Telecom không thấy cuộc gọi đến (lỗi modem giả lập)"
+        return (
+            "Telecom không thấy cuộc gọi đến (lỗi modem giả lập)"
+            f" · modem IN_SERVICE={radio_ready()} · vai trò do Lính gác giữ={role_held()}"
+        )
     if "mCallScreeningPackageName='null'" in log:
         return "Telecom hết hạn chờ sàng lọc" + (" (đã khởi tiến trình, khởi động nguội quá chậm)" if started else "")
     if "SCREENING_COMPLETED" in log:
@@ -471,6 +497,7 @@ def main() -> int:
         return 2
     # Bộ đệm logcat mặc định của máy ảo (2 MiB) có thể xoay vòng mất mốc trong một lần chạy dài.
     adb("logcat", "-G", "16M", check=False)
+    ensure_ready()
     sdk = adb("shell", "getprop", "ro.build.version.sdk").strip()
     print(f"Máy ảo API {sdk}{f' ({args.avd})' if args.avd else ''}")
     if args.scenario == "smoke_call":
