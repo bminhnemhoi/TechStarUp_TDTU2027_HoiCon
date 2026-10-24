@@ -54,7 +54,7 @@
 
 - [ ] T011 [A] [FR-008, SC-006] ★ **Chờ Minh** (MASTER-PLAN §8 mục 13; đề xuất: chưa dùng Crashlytics, đo bằng Android vitals — T015). Crashlytics: SDK + mục đích đồng ý mới (`consent-copy`, luật 7) + `play-policy`. **BLOCKED**: chưa có Firebase (W0-3/P0-08). Tiêu chí gỡ chặn:
   project Firebase + `google-services.json` ngoài git. Không tạo tệp giả; SC-006 ghi "chưa đo".
-- [ ] T012 [Docs] [FR-009] **Người có quyền sửa `docs/`**: `PRIVACY-DPIA.md` thêm (a) bảng dữ liệu của `privacy_report` (T008), (b) độ trễ đệm đồng ý ≤ 60 giây khi đồng ý đổi từ kênh khác,
+- [x] T012 [Docs] [FR-009] **Người có quyền sửa `docs/`**: `PRIVACY-DPIA.md` thêm (a) bảng dữ liệu của `privacy_report` (T008), (b) độ trễ đệm đồng ý ≤ 60 giây khi đồng ý đổi từ kênh khác,
   (c) chính sách link cũ (T003); `docs/setup/BACKUP.md` thêm định dạng khóa con (T007). **BLOCKED**: ngoài quyền làn B.
 
 ## Đối soát kiến trúc sư 24/10/2026 (bổ sung từ bản của kiến trúc sư)
@@ -70,7 +70,7 @@ nào cần, karpathy: không làm trước). Quyết định cho các câu làn 
   của `routers/events.py` và `routers/devices.py` khớp lược đồ. · Verify: `$PYTEST tests/contract/test_error_schema.py -q`
 - [x] T014 [B] [FR-005] `ops restore`: một khối lỗi (`BackupError`) ⇒ bỏ **cả lượt**, DB đích không đổi (một giao dịch). Test đỏ trước: tệp sửa 1 byte ở khối giữa
   ⇒ số dòng mọi bảng trước = sau. · Verify: `$PYTEST tests/integration/test_backup_restore.py -q -k atomic`
-- [ ] T015 [AB] [FR-008] `docs/setup/STABILITY.md`: đọc độ ổn định ở Android vitals (Play Console), ngưỡng hành vi xấu của Play, cách ghi vào báo cáo thí điểm.
+- [x] T015 [AB] [FR-008] `docs/setup/STABILITY.md`: đọc độ ổn định ở Android vitals (Play Console), ngưỡng hành vi xấu của Play, cách ghi vào báo cáo thí điểm.
   SC-006 BLOCKED tới Play Console (W0-3). Người có quyền `docs/setup` làm. · Verify: review
 - [x] T016 [B] Chạy lại T010 sau T013–T014. · Verify: như T010
 

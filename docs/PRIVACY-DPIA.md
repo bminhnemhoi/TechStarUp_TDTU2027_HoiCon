@@ -104,6 +104,45 @@ Rút `core_protection` ⇒ `POST /v1/events` trả 403 `consent_withdrawn` và k
 sự kiện (an toàn người cao tuổi) nhưng không có tin Zalo nào tới người giám hộ. Trễ tối đa 60 giây (đệm) nếu đồng ý đổi từ
 kênh khác ngoài `/v1/consents`.
 
+### Đồng ý lúc gửi, độ trễ đệm và liên kết cũ (spec 037)
+- **Điều kiện lúc GỬI** (FR-002): `send_to_guardian` (và trả lời "3" chi tiết trên Zalo, bản tin tuần, tổng kết diễn tập, hồ sơ
+  vụ việc) kiểm `guardian_alerts` của người cao tuổi ngay lúc gửi, không dựa vào cờ lúc xếp job; không xác định được người cao
+  tuổi ⇒ KHÔNG gửi. Tin demo/mô phỏng (hư cấu) được miễn.
+- **Độ trễ đệm ≤ 60 giây**: trạng thái đồng ý được đệm 60 giây trong bộ nhớ máy chủ. Đổi qua `/v1/consents` thì đệm bị xóa ngay;
+  đổi bằng kênh khác (ghi thẳng sổ, thao tác vận hành) có hiệu lực trong tối đa 60 giây. Chấp nhận được vì rút đồng ý không
+  thu hồi tin đã gửi.
+- **Liên kết cũ sau khi rút `guardian_alerts`** (chính sách D2, mặc định; Minh có thể đổi — MASTER-PLAN §8 mục 14): `GET
+  /v1/action/{token}` và trang web đọc dữ liệu sự cố trả cùng 404 như liên kết không tồn tại (không lộ nhãn/mức/tóm tắt); quyết
+  định (`POST …/decision`) VẪN được ghi và đóng sự cố vì đó là đường an toàn (dừng nhắc nhở) — hiện thân phản hồi vẫn có
+  `state`/`outcome`. Rút đồng ý không chặn người giám hộ dừng một sự cố đang mở.
+- **Đăng xuất phía máy chủ**: `DELETE /v1/guardian/session` ghi mã phiên (`jti`, không PII) vào `revoked_sessions` tới khi token hết
+  hạn (≤ 7 ngày), nên bản sao cookie bị lấy cắp không còn dùng được; job `retention` xóa dòng quá hạn.
+
+### Bảng dữ liệu ↔ mục đích ↔ hạn lưu (sinh từ model)
+Nguồn duy nhất: `uv run --directory backend python -m hoicon.ops.privacy_report` (in từ `Base.metadata` + ánh xạ ở
+`ops/privacy_report.py`; bảng mới mà chưa ánh xạ ⇒ thoát khác 0; có kiểm số điện thoại thô trong mã/fixture, văn bản đồng ý ↔ mã,
+và đếm dòng nghi PII — chỉ đếm). Bản chụp 24/10/2026 (21 bảng, 0 bảng chưa ánh xạ, 0 dòng nghi PII):
+
+| Bảng | Mục đích | Hạn lưu | Dữ liệu cá nhân |
+|---|---|---|---|
+| `action_tokens` | liên kết hành động dùng một lần | 30 ngày sau hết hạn | chỉ SHA-256 của token |
+| `agent_runs`, `agent_steps` | trace tác tử (đã che) | nội dung 30 ngày; số đo giữ | đã che PII |
+| `case_files` | hồ sơ vụ việc cho người giám hộ | theo sự cố | tóm tắt đã che, 3 số cuối, bí danh |
+| `consents` | sổ đồng ý chỉ ghi thêm | không xóa (bằng chứng, NĐ 356/2025) | không |
+| `data_requests` | vết yêu cầu xóa | giữ (vết pháp lý) | không |
+| `device_heartbeats` | đo độ phủ bảo vệ | 90 ngày | không |
+| `devices`, `members`, `families`, `trusted_contacts` | tài khoản gia đình | đến khi xóa gia đình (ẩn danh) | bí danh, HMAC Zalo, chat id mã hóa, HMAC + 3 số cuối |
+| `drills` | diễn tập | 365 ngày | không (hư cấu) |
+| `incidents`, `incident_transitions` | sự cố, nhật ký chuyển | 365 ngày sau đóng | không |
+| `jobs` | hàng đợi (có toàn văn tin gửi) | 30 ngày | văn bản đã che |
+| `messages_out` | đếm hạn mức Zalo | giữ dòng, không cột văn bản | id kênh |
+| `pairing_codes` | mã ghép đôi | 15 phút / một lần | HMAC của mã |
+| `revoked_sessions` | thu hồi phiên đăng xuất | tới khi token hết hạn (≤ 7 ngày) | mã phiên ngẫu nhiên |
+| `risk_events` | sự kiện từ thiết bị | 90 ngày | HMAC + 3 số cuối |
+| `threat_indicators` | danh sách lừa đảo | theo phiên bản | HMAC + 3 số cuối |
+| `verifications` | kết quả tra cứu | 90 ngày | HMAC + 3 số cuối |
+Thiết bị demo `sim:` của `/sim` bị dọn sau 24 giờ (không thuộc dữ liệu thật).
+
 ### Gỡ cờ một số điện thoại bị gắn nhầm
 1. Người bị gắn nhầm (hoặc người giám hộ) báo cho đội; đội xác minh bằng chứng ngoài hệ thống.
 2. Lấy `h1` của số đó (SHA-256 của `"hoicon:v1:" + E.164`) ở máy đội, ghi vào tệp tạm, mỗi dòng một h1 (không bao giờ ghi
