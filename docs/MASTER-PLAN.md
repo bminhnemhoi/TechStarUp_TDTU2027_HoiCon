@@ -298,6 +298,21 @@ cho web 033 (Wave 3) **chưa được duyệt** ⇒ làn B vẫn làm mọi `app
 | 5 | 032 **T011** — đo khoảng trống heartbeat (≳ 8 giờ, chạy nền khi làm 2–4) | Rà soát + cổng các spec Wave 3: 033 **T017 → T018 → T019 → T024**, 031 **T016**, 032 **T012 → T013** |
 | 6 | 037 **T007** (sau làn B 037 T004) | 037 **T002 → T003 → T004 → T005 → T006** |
 
+**Đối soát 24/10/2026 (nhà điều phối Opus, Tiến giao).** Hai làn đã đi trước kế hoạch: gộp `feat/w4-android`, `feat/w5-server`,
+`feat/w5-android` vào `tien-collab-dev`. Wave 4 đã xong: A 031 T014; B 024 T020–T021, 011 T013/T014/T021, 012 T017 (Postgres tạm),
+037 T001–T008 (theo bản nháp của làn B, đã đối soát), 050 giai đoạn 1 (T002–T010). Việc còn lại giao theo nhánh `feat/w6-*`:
+
+| # | Làn A (`feat/w6-android`) | Làn B (`feat/w6-server`) |
+|---|---|---|
+| 1 | 010 **T029** → 011 **T022** → 012 **T021** | 012 **T020** (đối chiếu c584bea) → 033 **T021 → T022 → T023 → T024** |
+| 2 | 032 **T011** (bộ đo dừng ở d_reboot, chạy nốt) | 031 **T019 → T020** |
+| 3 | hc-api34 "Telecom không thấy cuộc gọi" + `fake_police --runs 10` (API 34, 36) | 037 **T013 → T014 → T009 → T016** |
+| 4 | 050 **T014** | 050 **T016**; bộ kiểm cuối 033 T017/T019, 031 T016, 032 T012/T013, 050 T015 |
+
+Hồ sơ thực thi: nhà điều phối = phiên Opus ở checkout chính; hai phiên Sonnet 5.5 (medium, tài khoản Orca `ngolamtien…` id `cd47ddcc`, mở lại 24/10 thay hai phiên cũ của tài khoản `towfienes…`) trong worktree `hoicon-wt/android`
+và `hoicon-wt/server`, giao việc bằng nhập lệnh vào terminal Orca (**không** phải worker có giám sát: kiểm tiến độ bằng commit +
+dòng `W6-A/W6-B XONG` + chạy lại Verify khi gộp). Trần 2 phiên ghi đồng thời; không thêm model/tài khoản dự phòng khi chưa hỏi Tiến.
+
 **Wave 5 (tới đóng băng 06/01/2027).**
 
 | # | Làn A | Làn B |
@@ -308,7 +323,7 @@ cho web 033 (Wave 3) **chưa được duyệt** ⇒ làn B vẫn làm mọi `app
 | 4 | Hỗ trợ quay video 5 phút (P2-21): 033 **T020** | 033 **T016** `/eval` web (danh sách cắt — cắt đầu tiên nếu trễ) |
 | 5 | — | 037 **T011** chỉ khi Minh duyệt Crashlytics (§8 mục 13) |
 
-**Wave 6 (sau nộp Vòng 2 09/01/2027, xong trước 07/02):** spec 050. Kiến trúc sư làm 050 **T001** (hợp đồng) ở checkout chính trước.
+**Wave 6 (sau nộp Vòng 2 09/01/2027, xong trước 07/02):** spec 050 **giai đoạn 2** (giai đoạn 1 làn B đã làm 23/10). Kiến trúc sư làm 050 **T001** (hợp đồng) ở checkout chính trước.
 Làn B: **T002 → T003 → T004 → T005 → T006 → T008**; làn A: **T007** (`booth-record.py`) song song với T005; chung: **T009 → T010**.
 
 **Việc chờ người (không xếp cho Sonnet):** 002 T024/T025 (token bot Zalo), 012 T010–T015 (VPS, Play Console), 029 T013 (ghi danh gia
@@ -399,3 +414,7 @@ Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi
 13. ★ **Crashlytics (037, thêm 23/10/2026)**: gửi báo cáo lỗi app cho Google là **luồng dữ liệu mới cho bên thứ ba** ⇒ cần mục đích
     đồng ý + văn bản + DPIA + Play data safety (luật 7). **Đề xuất: chưa dùng**; đo độ ổn định bằng Android vitals của Play Console
     (không thêm SDK, 037 FR-008). Minh duyệt Crashlytics ⇒ 037 T011.
+14. ★ **Link Zalo cũ sau khi rút `guardian_alerts` (037 FR-003, thêm 24/10/2026)**: làn B thi công mặc định D2 — `GET` trả "liên kết
+    hết hạn" không kèm nội dung; `POST …/decision` vẫn ghi quyết định và đóng sự cố nhưng trả thân tối thiểu (đường an toàn: con bấm
+    "đã gọi được bác" vẫn có tác dụng). Kiến trúc sư đề xuất giữ. Minh muốn chặn hẳn (403) ⇒ một task [B] đổi hằng số
+    `WITHDRAWN_DECISION_POLICY` + test.
