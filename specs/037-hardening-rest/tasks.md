@@ -68,7 +68,7 @@ nào cần, karpathy: không làm trước). Quyết định cho các câu làn 
 - [ ] T013 [B] [FR-001] Test hợp đồng `backend/tests/contract/test_error_schema.py` cho `docs/schemas/error.v1.json` (đã có, kiến trúc sư 23/10):
   chạy fixture valid/invalid; enum `purpose` == mục đích trong `backend/src/hoicon/consent_texts/manifest.json`; thân 403 `consent_withdrawn`
   của `routers/events.py` và `routers/devices.py` khớp lược đồ. · Verify: `$PYTEST tests/contract/test_error_schema.py -q`
-- [ ] T014 [B] [FR-005] `ops restore`: một khối lỗi (`BackupError`) ⇒ bỏ **cả lượt**, DB đích không đổi (một giao dịch). Test đỏ trước: tệp sửa 1 byte ở khối giữa
+- [x] T014 [B] [FR-005] `ops restore`: một khối lỗi (`BackupError`) ⇒ bỏ **cả lượt**, DB đích không đổi (một giao dịch). Test đỏ trước: tệp sửa 1 byte ở khối giữa
   ⇒ số dòng mọi bảng trước = sau. · Verify: `$PYTEST tests/integration/test_backup_restore.py -q -k atomic`
 - [ ] T015 [AB] [FR-008] `docs/setup/STABILITY.md`: đọc độ ổn định ở Android vitals (Play Console), ngưỡng hành vi xấu của Play, cách ghi vào báo cáo thí điểm.
   SC-006 BLOCKED tới Play Console (W0-3). Người có quyền `docs/setup` làm. · Verify: review

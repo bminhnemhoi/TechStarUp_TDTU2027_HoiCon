@@ -2,6 +2,7 @@
 
     uv run --directory backend python -m hoicon.ops.backup backup [--dir <thư mục>]
     uv run --directory backend python -m hoicon.ops.backup restore-check [--file <tệp .dump.enc>]
+    uv run --directory backend python -m hoicon.ops.backup restore --to <CSDL rỗng> [--file <tệp .dump.enc>]
     uv run --directory backend python -m hoicon.ops.backup rotate [--dry-run]
 
 `backup`: `pg_dump -Fc` chạy TRONG container Postgres (`docker exec`, vì máy dev không có `pg_dump`), đọc stdout theo
@@ -18,6 +19,8 @@ cũ; không còn ghi.
 
 `restore-check`: giải mã, `pg_restore` vào DB tạm `hoicon_restore_check` (trong container), kiểm `alembic_version`,
 số dòng từng bảng khớp manifest, các trigger bất biến còn ở chế độ ALWAYS; đo thời gian; luôn xóa DB tạm.
+`restore` (spec 037 T014): khôi phục THẬT vào một CSDL rỗng có sẵn, MỘT giao dịch (`--single-transaction`): một
+khối hỏng ⇒ bỏ cả lượt, CSDL đích không đổi. Từ chối CSDL đang chạy / hệ thống / không rỗng.
 `rotate`: giữ 7 bản theo ngày + 4 bản theo tuần (giờ Việt Nam), xóa phần còn lại.
 
 Lịch chạy và nơi lưu ngoài máy thuộc 012 (docs/setup/BACKUP.md). Chỉ in tên tệp, kích thước, số khối và số dòng.
@@ -371,6 +374,71 @@ def sha256_of(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _pg_restore(path: Path, database: str, settings: Settings, *, single_transaction: bool = False) -> None:
+    """Giải mã `path` từng khối và đẩy vào `pg_restore -d database`. Lỗi giải mã giữa chừng ⇒ giết tiến trình (với
+    `single_transaction` thì giao dịch chưa commit bị hủy ⇒ DB đích không đổi) rồi ném lại `BackupError`."""
+    user, _, _ = _target(settings)
+    flags = ["--no-owner", "--exit-on-error", *(["--single-transaction"] if single_transaction else [])]
+    with tempfile.TemporaryFile() as err:
+        proc = _docker(settings, "pg_restore", "-U", user, "-d", database, *flags, stdin=subprocess.PIPE, stderr=err)
+        try:
+            assert proc.stdin is not None  # noqa: S101 - Popen(stdin=PIPE)
+            with path.open("rb") as src:
+                for plain in decrypt_stream(src, settings):
+                    proc.stdin.write(plain)
+            proc.stdin.close()
+            code = proc.wait()
+        except BaseException:
+            proc.kill()
+            proc.wait()
+            raise
+        if code != 0:
+            raise BackupError(f"pg_restore thất bại (mã thoát {code})")  # không in stderr (kèm nội dung hàng)
+
+
+DB_NAME = re.compile(r"^[a-z][a-z0-9_]{2,62}$")
+SYSTEM_DBS = {"postgres", "template0", "template1"}
+
+
+def run_restore(path: Path, target_db: str, settings: Settings | None = None) -> dict[str, Any]:
+    """Khôi phục THẬT vào `target_db` (spec 037 T014): CSDL phải có sẵn, RỖNG và không phải CSDL đang chạy của ứng dụng
+    (không bao giờ ghi đè). Một giao dịch (`--single-transaction`): mọi `BackupError` (khối hỏng, sai khóa, cắt cụt)
+    ⇒ bỏ CẢ lượt, `target_db` không đổi. Xong thì kiểm `alembic_version` và số dòng theo manifest."""
+    settings = settings or get_settings()
+    _, live_db, _ = _target(settings)
+    if not DB_NAME.fullmatch(target_db) or target_db in SYSTEM_DBS or target_db in (live_db, TEMP_DB):
+        raise BackupError("CSDL đích không hợp lệ (không được là CSDL đang chạy, CSDL hệ thống hay CSDL kiểm tra)")
+    manifest_path = path.with_name(path.name + ".manifest.json")
+    if not manifest_path.exists():
+        raise BackupError("thiếu manifest cạnh tệp sao lưu")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if sha256_of(path) != manifest["sha256"]:
+        raise BackupError("sha256 của tệp không khớp manifest (tệp bị sửa hoặc hỏng)")
+    try:
+        with psycopg.connect(_conninfo(settings, target_db)) as conn, conn.cursor() as cur:
+            existing = _table_counts(cur)
+    except psycopg.OperationalError:
+        raise BackupError("không mở được CSDL đích (phải tạo sẵn một CSDL rỗng)") from None
+    if existing:
+        raise BackupError("CSDL đích không rỗng: không ghi đè")
+    started = time.perf_counter()
+    _pg_restore(path, target_db, settings, single_transaction=True)
+    with psycopg.connect(_conninfo(settings, target_db)) as conn, conn.cursor() as cur:
+        restored, version = _table_counts(cur), _alembic_version(cur)
+    wrong = sorted(t for t, n in manifest["tables"].items() if restored.get(t) != n)
+    if version != manifest["alembic_version"] or wrong:
+        raise BackupError("đã khôi phục nhưng không khớp manifest" + (": " + ", ".join(wrong) if wrong else ""))
+    return {
+        "file": path.name,
+        "ok": True,
+        "target": target_db,
+        "alembic_version": version,
+        "tables": len(restored),
+        "rows": sum(restored.values()),
+        "total_seconds": round(time.perf_counter() - started, 2),
+    }
+
+
 def run_restore_check(path: Path, settings: Settings | None = None) -> dict[str, Any]:
     """Khôi phục `path` vào DB tạm và kiểm theo SC-003. Mọi lỗi ⇒ `BackupError`. DB tạm luôn bị xóa."""
     settings = settings or get_settings()
@@ -380,36 +448,11 @@ def run_restore_check(path: Path, settings: Settings | None = None) -> dict[str,
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if sha256_of(path) != manifest["sha256"]:
         raise BackupError("sha256 của tệp không khớp manifest (tệp bị sửa hoặc hỏng)")
-    user, _, _ = _target(settings)
     started = time.perf_counter()
     _psql(settings, "postgres", f"DROP DATABASE IF EXISTS {TEMP_DB} WITH (FORCE)")
     _psql(settings, "postgres", f"CREATE DATABASE {TEMP_DB}")
     try:
-        with tempfile.TemporaryFile() as err:
-            proc = _docker(
-                settings,
-                "pg_restore",
-                "-U",
-                user,
-                "-d",
-                TEMP_DB,
-                "--no-owner",
-                "--exit-on-error",
-                stdin=subprocess.PIPE,
-                stderr=err,
-            )
-            try:
-                assert proc.stdin is not None  # noqa: S101 - Popen(stdin=PIPE)
-                with path.open("rb") as src:
-                    for plain in decrypt_stream(src, settings):
-                        proc.stdin.write(plain)
-                proc.stdin.close()
-                code = proc.wait()
-            except BaseException:
-                proc.kill()
-                raise
-            if code != 0:
-                raise BackupError(f"pg_restore thất bại (mã thoát {code})")  # không in stderr (kèm nội dung hàng)
+        _pg_restore(path, TEMP_DB, settings)
         restore_s = time.perf_counter() - started
         with psycopg.connect(_conninfo(settings, TEMP_DB)) as conn, conn.cursor() as cur:
             restored = _table_counts(cur)
@@ -503,6 +546,12 @@ def build_parser() -> argparse.ArgumentParser:
     check = sub.add_parser("restore-check", help="khôi phục vào DB tạm và kiểm")
     check.add_argument("--file", type=Path, help="mặc định: bản mới nhất")
     check.add_argument("--dir", type=Path)
+    restore = sub.add_parser("restore", help="khôi phục THẬT vào một CSDL rỗng có sẵn (một giao dịch)")
+    restore.add_argument(
+        "--to", required=True, dest="target_db", help="tên CSDL đích (rỗng, không phải CSDL đang chạy)"
+    )
+    restore.add_argument("--file", type=Path, help="mặc định: bản mới nhất")
+    restore.add_argument("--dir", type=Path)
     rotate = sub.add_parser("rotate", help="giữ 7 bản ngày + 4 bản tuần")
     rotate.add_argument("--dir", type=Path)
     rotate.add_argument("--dry-run", action="store_true")
@@ -527,6 +576,13 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(
                 f"Thời gian: khôi phục {report['restore_seconds']} s, tổng {report['total_seconds']} s · DB tạm đã xóa"
+            )
+        elif args.command == "restore":
+            path = args.file or newest(backup_dir(settings, args.dir))
+            report = run_restore(path, args.target_db, settings)
+            print(
+                f"Khôi phục ĐẠT vào {report['target']}: {report['file']} · alembic {report['alembic_version']} · "
+                f"{report['tables']} bảng, {report['rows']} dòng khớp manifest · {report['total_seconds']} s"
             )
         else:
             keep, remove = run_rotate(backup_dir(settings, args.dir), dry_run=args.dry_run)

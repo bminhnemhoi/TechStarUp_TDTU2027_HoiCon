@@ -374,3 +374,68 @@ def test_a_missing_container_is_reported_and_leaves_no_partial_file(
     with pytest.raises(bk.BackupError):
         bk.run_backup(get_settings(), tmp_path)
     assert list(tmp_path.iterdir()) == []  # không để lại .part hay bản dở
+
+
+# --- khôi phục thật vào DB đích: một khối lỗi ⇒ bỏ cả lượt (spec 037 T014, FR-005) -------------------------------
+
+TARGET_DB = "hoicon_restore_atomic_test"
+
+
+@pytest.fixture
+def empty_target(made: dict[str, Any]) -> Iterator[str]:
+    settings = made["settings"]
+    bk._psql(settings, "postgres", f"DROP DATABASE IF EXISTS {TARGET_DB} WITH (FORCE)")
+    bk._psql(settings, "postgres", f"CREATE DATABASE {TARGET_DB}")
+    try:
+        yield TARGET_DB
+    finally:
+        bk._psql(settings, "postgres", f"DROP DATABASE IF EXISTS {TARGET_DB} WITH (FORCE)")
+
+
+def counts_in(settings: Any, database: str) -> dict[str, int]:
+    with psycopg.connect(bk._conninfo(settings, database)) as conn, conn.cursor() as cur:
+        return bk._table_counts(cur)
+
+
+def with_manifest(source: Path, data: bytes, directory: Path) -> Path:
+    """Chép `data` thành bản sao lưu mới cạnh manifest đã sửa sha256 (để lỗi nằm ở AES-GCM chứ không ở sha)."""
+    copy = directory / source.name
+    copy.write_bytes(data)
+    manifest = json.loads(source.with_name(source.name + ".manifest.json").read_text(encoding="utf-8"))
+    manifest["sha256"] = bk.sha256_of(copy)
+    (directory / (copy.name + ".manifest.json")).write_text(json.dumps(manifest), encoding="utf-8")
+    return copy
+
+
+def test_restore_atomic_a_good_file_fills_the_empty_target_and_matches_the_manifest(
+    made: dict[str, Any], empty_target: str
+) -> None:
+    report = bk.run_restore(made["result"].path, empty_target, made["settings"])
+    assert report["ok"] is True and report["target"] == empty_target
+    assert counts_in(made["settings"], empty_target) == made["result"].manifest["tables"]
+
+
+def test_restore_atomic_a_corrupt_middle_block_leaves_the_target_untouched(
+    made: dict[str, Any], empty_target: str, tmp_path: Path
+) -> None:
+    data = bytearray(made["result"].path.read_bytes())
+    _, framed = frames(bytes(data))
+    assert len(framed) > 2  # có khối ở giữa để sửa
+    offset = bk.HEADER_LEN + sum(4 + len(f) for f in framed[: len(framed) // 2]) + 4 + 8
+    data[offset] ^= 0x01  # 1 byte trong khối giữa
+    bad = with_manifest(made["result"].path, bytes(data), tmp_path)
+    before = counts_in(made["settings"], empty_target)
+    with pytest.raises(bk.BackupError):
+        bk.run_restore(bad, empty_target, made["settings"])
+    assert counts_in(made["settings"], empty_target) == before == {}  # số dòng mọi bảng trước = sau (không có bảng nào)
+
+
+def test_restore_atomic_refuses_the_live_database_and_a_non_empty_target(
+    made: dict[str, Any], empty_target: str
+) -> None:
+    live = bk._target(made["settings"])[1]
+    with pytest.raises(bk.BackupError):
+        bk.run_restore(made["result"].path, live, made["settings"])
+    bk.run_restore(made["result"].path, empty_target, made["settings"])
+    with pytest.raises(bk.BackupError):  # đã có bảng ⇒ không ghi đè
+        bk.run_restore(made["result"].path, empty_target, made["settings"])
