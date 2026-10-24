@@ -8,11 +8,11 @@
 
 <!-- STATUS -->
 Phase 1 — Spike + hồ sơ Vòng 1 (15/10–13/11) · G0 ĐẠT 08/10 · Gate G1: 08/11 · Đội: Minh + Tiến (@Towfienes)
-24/10: Opus điều phối 2 Sonnet (feat/w6–w8-*): gộp W5/W6/W7 làn B + W4/W5 làn A; 037 gần xong (rà soát cuối 0 Critical/High), 033 23/24, 031 18/20, `/eval`, 050 giai đoạn 1
-Đang chạy: B = 028 T021 `/drills` → 050 T011–T013 (`/join`) · A = 032 T011 (heartbeat 5/5 điều kiện đã đo) → ảnh 010 T029/011 T022 → hc-api34 + `fake_police`
-Rủi ro: hồ sơ Vòng 1 chưa có commit trong `docs/proposal` (còn 22 ngày) · Play Console + Firebase + khóa API (W0-3/P0-08) chặn 001, M2, số M3
-Chờ Minh: §8 (I4, F-1, `guardian_alerts`, 110 kịch bản + nguồn, chữ E3/E4/E10, Crashlytics, mục 14 link cũ, mục 15 đồng ý người giám hộ) · Chờ Tiến: ADR-012, trần 30 ngày, push/PR
-Cập nhật: 24/10/2026
+25/10: Opus điều phối 2 Sonnet tới lượt 11 (tien-collab-dev 2c36457, pytest 2986): 037/033/031/032/026 gần đủ; spec mới 038 E12 (rút đồng ý, xóa có chờ 24 giờ hủy được); E7 release ≤ 3 s (API 34+36)
+Còn việc máy: 038 T005/T006 (làn A đang chạy). Mọi task còn lại cần người/máy thật/tài khoản: Play Console, Firebase, VPS, token Zalo, thí điểm, quay video
+Rủi ro: hồ sơ Vòng 1 chưa có commit trong `docs/proposal` (còn 21 ngày) · Play Console + Firebase + khóa API (W0-3/P0-08) chặn 001, M2, số M3
+Chờ Minh: MASTER-PLAN §8 (I4, F-1, `guardian_alerts`, 110 kịch bản + nguồn, chữ đồng ý mục 12/16, Crashlytics, 14 link cũ, 15 đồng ý người giám hộ, 17 phạm vi xóa, 029 T009 tài liệu thí điểm) · Chờ Tiến: ADR-012, trần 30 ngày, push/PR, migration 0011–0015 ở prod
+Cập nhật: 25/10/2026
 <!-- /STATUS -->
 
 ## Mốc cứng
@@ -98,7 +98,7 @@ Cập nhật: 24/10/2026
 | P2-17 | W5 | Đồ thị Coach hằng tuần | ◐ spec [`032-coach-weekly`](../specs/032-coach-weekly/) (24/10: 12/15 task; T011 heartbeat 5 điều kiện trên máy ảo hc-api36, khoảng trống dài nhất 22,1 phút ≪ ngưỡng 24 giờ; T012/T013 ĐẠT; còn T010 (chỉ khi Minh bác I4), T014 thí điểm, T015 Minh duyệt tips)
 | P2-18 | W6 28/12–03/01 | Bộ eval injection + lặp prompt | ◐ 23/10: `hoicon-eval --suite injection` **17/17 ca bị chặn, 0 vi phạm** sau F-2 (ADR-012, spec 024 T014–T015 + 036 T025–T028: tóm tắt chỉ ghép câu cố định, kiểm `brief_outside_vocabulary`); Wave 4: 024 T020–T021 thứ tự ghép cố định; F-1 (024 T016–T017) ★ chờ Minh; **lặp prompt bằng LLM thật BLOCKED** (P0-08) |
 | P2-19 | W6 | Web `/trace`, `/eval`, `/sim` | ◐ spec [`033-web-sim-eval`](../specs/033-web-sim-eval/) (24/10: 23/24 task: `/sim`, `/trace`, `/eval` (P3, chưa chia theo nhóm/miền), `title_vi`/`is_sim`, dọn thiết bị `sim:`, SIM.md + quickstart; còn T020 quay video P2-21)
-| P2-20 | W6 | Gia cố: `privacy-audit`, review bảo mật, job xóa theo hạn lưu, sao lưu, Crashlytics | ◐ E12 rút đồng ý/xóa dữ liệu từ app: spec [`038-settings-privacy`](../specs/038-settings-privacy/) (25/10, chưa code) · spec [`034-hardening-core`](../specs/034-hardening-core/) lõi XONG; [`037-hardening-rest`](../specs/037-hardening-rest/) 24/10: 19/21 (ép manifest, đồng ý lúc gửi, IDOR, sao lưu khóa con + restore một giao dịch, thu hồi phiên (0013), DPIA/BACKUP/STABILITY; rà soát cuối 0 Critical/0 High, certifi CVSS 9.1 đã nâng); còn T011 Crashlytics (chờ Minh), T021 phần SIM xong
+| P2-20 | W6 | Gia cố: `privacy-audit`, review bảo mật, job xóa theo hạn lưu, sao lưu, Crashlytics | ◐ E12 rút đồng ý/xóa dữ liệu từ app: spec [`038-settings-privacy`](../specs/038-settings-privacy/) (25/10: 5/7 task, API + E12 + khoảng chờ 24 giờ đã code; còn T005 máy ảo, T006) · spec [`034-hardening-core`](../specs/034-hardening-core/) lõi XONG; [`037-hardening-rest`](../specs/037-hardening-rest/) 24/10: 19/21 (ép manifest, đồng ý lúc gửi, IDOR, sao lưu khóa con + restore một giao dịch, thu hồi phiên (0013), DPIA/BACKUP/STABILITY; rà soát cuối 0 Critical/0 High, certifi CVSS 9.1 đã nâng); còn T011 Crashlytics (chờ Minh), T021 phần SIM xong
 | P2-21 | W7 04–09/01 | Đóng băng 06/01; báo cáo thí điểm; poster; video 5 phút; **nộp 09/01** → **M3** | ☐ |
 
 **Gate M1 (06/12):** AVD API 34 + 36: cuộc gọi lạ → demobank → SafePause p95 ≤ 3 s · Zalo giai đoạn 1 p95 ≤ 10 s · thao tác người giám hộ đóng được sự cố · mỗi quyền đã cấp có dòng consent · **0 số điện thoại thô** trong DB/log · backend tắt vẫn hiện SafePause.
