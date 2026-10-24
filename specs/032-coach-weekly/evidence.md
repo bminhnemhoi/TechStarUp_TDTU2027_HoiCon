@@ -70,3 +70,7 @@ Giới hạn đã biết: máy ảo không sạc/dùng pin thật nên Doze/stan
 
 - **Kết luận:** khoảng trống dài nhất 22,07 phút ≪ 24 giờ (ngưỡng "mất bảo vệ", Q2) ⇒ **ĐẠT**, không cần ngưỡng mới. Sau reboot/kill thiếu đúng 1 khung (chờ WorkManager lập lại lịch, ≈ một chu kỳ + độ trễ khởi động), không phải mất heartbeat kéo dài; ngưỡng 24 giờ và "2 khung `protected=false`" không bị chạm ⇒ không báo nhầm cho người giám hộ ở các điều kiện này.
 - **Giới hạn:** (a)–(c) đo 22–23/10; (d)/(e) đo lại 24/10 vì lần đo đầu của (d) hỏng khi máy chủ khởi động lại (heartbeat cuối 02:15Z 23/10, cửa sổ cũ bỏ). Một máy ảo, một lần mỗi điều kiện; `hc-api34` chưa đo. Chưa đo: hết pin/tắt máy qua đêm, tiết kiệm pin của hãng (Xiaomi/Oppo/Samsung) — cần máy thật.
+
+## Wave 6 — T013 phần [A] (làn A, 24/10/2026)
+
+- `apps/android/gradlew -p apps/android :rules:test :app:testDebugUnitTest :app:lintDebug` **xanh** trên `feat/w6-android` (gồm `ConsentManifestPinTest`); `python3 -m unittest discover -s scripts/tests` 121 OK; `check-spec-trace.py` 25 spec, 0 lỗi; gitleaks `specs/032-coach-weekly` và `docs/legal` (kết quả ở dòng lệnh cuối phiên). Phần [B] (`$PYTEST`, ruff, eval smoke, gitleaks backend/data, ROADMAP P2-17) do làn B — T013 chưa tick ở đây.
