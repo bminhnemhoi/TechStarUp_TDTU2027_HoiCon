@@ -14,7 +14,7 @@ import {
 } from "@/lib/booth";
 
 // Bảng điều khiển gian (spec 050, FR-004): điều khiển màn hình /booth ở cùng trình duyệt qua BroadcastChannel (không gọi API,
-// không lưu gì). Bảng lượt gần đây + bộ đếm "đạt liên tiếp" cho Gate G4 chỉ là tiện ích của người điều khiển: bằng chứng chính thức
+// không lưu gì). Bảng lượt gần đây + bộ đếm "đạt liên tiếp" cho kiểm tra tốc độ cảnh báo chỉ là tiện ích của người điều khiển: bằng chứng chính thức
 // ghi vào evidence.md. Đo ở trình duyệt này, máy này, chạy phát lại — không phải số ở hội trường.
 const RESET_CMD = "uv run --directory backend python -m hoicon.ops.booth reset --confirm-demo";
 const MODE_VI: Record<BoothMode, string> = { live: "Trực tiếp", recording: "Bản ghi" };
@@ -78,8 +78,8 @@ export default function ConsolePage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-5 p-4 text-foreground">
       <h1 className="text-headline">Bảng điều khiển gian</h1>
-      <p className="rounded-card border-4 border-drill-accent bg-drill-bg p-3 text-body font-bold text-drill-fg">
-        <span aria-hidden="true">ⓘ </span>MÔ PHỎNG — dữ liệu hư cấu. Số đo ở đây là ở trình duyệt này, máy này, chạy phát lại; không phải số ở hội trường.
+      <p className="rounded-card border-4 border-sim-accent bg-sim-bg p-3 text-body font-bold text-sim-fg">
+        <span aria-hidden="true">ⓘ </span>MÔ PHỎNG — dữ liệu hư cấu. Số đo ở đây là ở trình duyệt này, máy này, chạy bằng bản ghi sẵn; không phải số ở hội trường.
       </p>
 
       <p role="status" data-testid="booth-state" className="rounded-card border-2 border-brand-navy p-3 text-title font-bold">
@@ -161,9 +161,9 @@ export default function ConsolePage() {
           </p>
         )}
         <details className="text-body">
-          <summary className="min-h-11 cursor-pointer font-bold">Dành cho kỹ thuật viên: xóa cả dữ liệu mô phỏng trên máy chủ</summary>
+          <summary className="min-h-16 cursor-pointer font-bold">Dành cho kỹ thuật viên: xóa cả dữ liệu mô phỏng trên máy chủ</summary>
           <p className="py-2">Chạy lệnh này (dưới 30 giây), sau khi đã dừng màn hình gian:</p>
-          <code data-testid="reset-command" className="block overflow-x-auto rounded-card bg-risk-low-bg p-3">
+          <code data-testid="reset-command" tabIndex={0} className="block overflow-x-auto rounded-card bg-risk-low-bg p-3">
             {RESET_CMD}
           </code>
         </details>
@@ -174,7 +174,7 @@ export default function ConsolePage() {
         <p className="text-body font-bold" data-testid="streak">
           Đạt liên tiếp: {streak}/3 {streak >= 3 ? "— ĐẠT ở máy này ✓" : ""}
         </p>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Bảng kết quả (cuộn ngang được)">
           <table className="w-full min-w-[32rem] text-left text-body" data-testid="results">
             <thead>
               <tr>
@@ -214,7 +214,7 @@ export default function ConsolePage() {
           ))}
         {Object.values(recordings).map((rec) => (
           <button key={rec.scenario_id} type="button" className={BUTTON_SECONDARY} onClick={() => download(rec)}>
-            Tải bản ghi: {rec.scenario_id}
+            Tải bản ghi: {PLAYLIST.find((p) => p.scenarioId === rec.scenario_id)?.title ?? rec.scenario_id}
           </button>
         ))}
       </section>

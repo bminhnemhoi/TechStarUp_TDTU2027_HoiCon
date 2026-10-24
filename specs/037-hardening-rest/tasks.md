@@ -43,7 +43,7 @@
   quét số điện thoại thô (mẫu của hook `guard-privacy`) trong `backend/src`, `backend/tests`, `data`; chạy `consent_texts check`; đếm dòng nghi PII trong `jobs.payload`/`agent_steps` (chỉ đếm).
   Đột biến: thêm bảng giả vào metadata không ánh xạ ⇒ thoát khác 0.
   · Verify: `$PYTEST tests/unit/test_privacy_report.py && uv run --directory backend python -m hoicon.ops.privacy_report`
-- [ ] T009 [B] [FR-007, SC-005] Rà soát bảo mật cuối: gọi `security-privacy-reviewer` đọc diff từ `main` (toàn codebase) + mục 1 của spec; sửa hết Critical/High; Medium ghi chủ + ngày.
+- [x] T009 [B] [FR-007, SC-005] Rà soát bảo mật cuối: gọi `security-privacy-reviewer` đọc diff từ `main` (toàn codebase) + mục 1 của spec; sửa hết Critical/High; Medium ghi chủ + ngày.
   Quét phụ thuộc bằng `osv-scanner` hoặc `uv pip audit` nếu có (không có ⇒ `UNAVAILABLE`, ghi rõ).
   · Verify: báo cáo trong `evidence.md` không còn Critical/High chưa xử lý
 - [ ] T010 [B] Chạy bộ kiểm đầy đủ: `$PYTEST`, `ruff check` + `format --check`, `hoicon-eval --suite smoke --compare baseline --shared-db-ok` và `--suite full --compare baseline-full`,

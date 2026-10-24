@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from hoicon.agents import texts
 from hoicon.channels.guardian import TERMINAL, ChannelDeps, Outgoing, deliver
 from hoicon.db.models import ActionToken, AgentRun, Incident, Job, Member, MessageOut, PairingCode
+from hoicon.services import consent_gate
 from hoicon.services.action_token_service import ActionTokenService
 from hoicon.services.incident_service import (
     GUARDIAN_DECIDABLE,
@@ -318,6 +319,17 @@ async def _answer(
     choice = payload["choice"]
 
     if choice == "3":
+        # Spec 037 FR-002: gửi lại chi tiết cũng là một lần GỬI dữ liệu sự cố ⇒ cần đồng ý `guardian_alerts` của
+        # người cao tuổi ngay lúc này (sự cố demo hư cấu được miễn). Đã rút ⇒ chỉ báo chung, không lộ mức nguy cơ.
+        async with deps.sessions() as session:
+            inc = await session.get(Incident, incident_id)
+            allowed = inc is not None and (
+                inc.is_demo or (await consent_gate.state_for(session, inc.member_id)).guardian_alerts
+            )
+        if not allowed:
+            return await _reply(
+                deps, payload, "incident_closed", texts.reply_incident_closed(is_drill), attempt, **reply
+            )
         detail = await _job_payload(deps, f"{incident}:msg:detail")
         if detail is None:  # chi tiết chỉ có sau khi hỏi xong người cao tuổi
             return await _reply(deps, payload, "detail_pending", texts.detail_pending(is_drill), attempt, **reply)
