@@ -1351,6 +1351,60 @@
     ]
    }
   },
+  "/v1/data-requests/{request_id}": {
+   "delete": {
+    "tags": [
+     "data-requests"
+    ],
+    "summary": "Hủy yêu cầu xóa còn trong khoảng chờ 24 giờ (spec 038 FR-006)",
+    "operationId": "cancel_request_v1_data_requests__request_id__delete",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReceiptOut"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Không thấy (hoặc không thuộc gia đình này)"
+     },
+     "409": {
+      "description": "Đã quá khoảng chờ hoặc đã xóa xong"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/v1/booth/codes": {
    "post": {
     "tags": [
@@ -4837,7 +4891,8 @@
       "enum": [
        "pending",
        "done",
-       "failed"
+       "failed",
+       "cancelled"
       ],
       "title": "Status"
      },
@@ -4851,13 +4906,19 @@
       "const": 72,
       "title": "Deadline Hours",
       "default": 72
+     },
+     "execute_after": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Execute After"
      }
     },
     "type": "object",
     "required": [
      "request_id",
      "status",
-     "requested_at"
+     "requested_at",
+     "execute_after"
     ],
     "title": "ReceiptOut"
    },

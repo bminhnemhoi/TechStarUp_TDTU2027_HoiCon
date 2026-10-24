@@ -375,6 +375,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/data-requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Hủy yêu cầu xóa còn trong khoảng chờ 24 giờ (spec 038 FR-006) */
+        delete: operations["cancel_request_v1_data_requests__request_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/booth/codes": {
         parameters: {
             query?: never;
@@ -1720,7 +1737,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "pending" | "done" | "failed";
+            status: "pending" | "done" | "failed" | "cancelled";
             /**
              * Requested At
              * Format: date-time
@@ -1732,6 +1749,11 @@ export interface components {
              * @constant
              */
             deadline_hours: 72;
+            /**
+             * Execute After
+             * Format: date-time
+             */
+            execute_after: string;
         };
         /**
          * RiskEventIn
@@ -2951,6 +2973,51 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    cancel_request_v1_data_requests__request_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptOut"];
+                };
+            };
+            /** @description Không thấy (hoặc không thuộc gia đình này) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Đã quá khoảng chờ hoặc đã xóa xong */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

@@ -57,6 +57,7 @@ async def test_columns_and_defaults(family: UUID) -> None:
         "status",
         "error_code",
         "requested_at",
+        "execute_after",  # thêm ở migration 0015 (spec 038 T007)
         "completed_at",
     }
     assert cols["error_code"].is_nullable == "YES" and cols["completed_at"].is_nullable == "YES"

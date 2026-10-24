@@ -13,6 +13,7 @@ from collections import deque
 from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, ConfigDict
@@ -20,7 +21,7 @@ from pydantic import BaseModel, ConfigDict
 from hoicon.agents import texts
 from hoicon.agents.runtime import safe_alias
 from hoicon.api.auth import DeviceClaims, get_current_device
-from hoicon.db.models import Family, Member
+from hoicon.db.models import DataRequest, Family, Member
 from hoicon.db.session import get_sessionmaker
 from hoicon.services import consent_gate, purge_service
 
@@ -30,7 +31,7 @@ router = APIRouter(prefix="/v1/data-requests", tags=["data-requests"])
 PER_DAY = 3
 WINDOW_S = 86400
 MAX_TRACKED_DEVICES = 4096
-PURGE_DELAY_S = 120  # tin báo người giám hộ đi trước khi purge xóa kênh Zalo
+PURGE_DELAY_S = 24 * 3600  # khoảng chờ có thể hủy (spec 038 FR-006): tin báo đi ngay, purge sau 24 giờ
 DEADLINE_HOURS = 72
 BUSY = "Đã gửi yêu cầu nhiều lần hôm nay. Bác thử lại vào ngày mai nhé."
 NO_STORE = {"Cache-Control": "no-store"}
@@ -66,9 +67,10 @@ class DataRequestIn(BaseModel):
 
 class ReceiptOut(BaseModel):
     request_id: UUID
-    status: Literal["pending", "done", "failed"]
+    status: Literal["pending", "done", "failed", "cancelled"]
     requested_at: datetime
     deadline_hours: Literal[72] = DEADLINE_HOURS
+    execute_after: datetime  # purge bắt đầu từ lúc này; tới đó còn hủy được
 
 
 @router.post(
@@ -96,22 +98,71 @@ async def request_deletion(
     wait = _retry_after(claims.device_id, time.monotonic())
     if wait is not None:
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, detail=BUSY, headers={"Retry-After": str(wait)})
-    notice = None
-    if alerts_on:  # đã rút `guardian_alerts` ⇒ không báo ai (tin còn được kiểm lại lúc gửi, 037 FR-002)
-        notice = {
+
+    def notice_for(
+        due: datetime,
+    ) -> dict:  # đã rút `guardian_alerts` ⇒ không dựng tin (còn kiểm lại lúc gửi, 037 FR-002)
+        return {
             "template": "data_delete_notice",
             "family_id": str(claims.family_id),
             "guardian_rank": 1,
             "protected_member_id": str(claims.member_id),
-            "job_key": None,  # đặt bên dưới theo id yêu cầu
-            "text": texts.guardian_data_delete_notice(alias),
+            "job_key": None,  # đặt theo id yêu cầu ở `purge_service`
+            "text": texts.guardian_data_delete_notice(alias, _when_label(due)),
             "urgent": True,
             "is_demo": is_demo,
             "is_drill": False,
         }
+
     request, created = await purge_service.request_delete_detailed(
-        get_sessionmaker(), claims.family_id, "app", notice=notice, purge_delay_s=PURGE_DELAY_S
+        get_sessionmaker(),
+        claims.family_id,
+        "app",
+        notice_for=notice_for if alerts_on else None,
+        purge_delay_s=PURGE_DELAY_S,
     )
     if not created:
         response.status_code = status.HTTP_200_OK
-    return ReceiptOut(request_id=request.id, status=request.status, requested_at=request.requested_at)  # type: ignore[arg-type]
+    return _receipt(request)
+
+
+def _when_label(moment: datetime) -> str:
+    local = moment.astimezone(ZoneInfo("Asia/Ho_Chi_Minh"))
+    return f"{local:%H:%M} ngày {local.day} tháng {local.month}"
+
+
+def _receipt(request: DataRequest) -> ReceiptOut:
+    return ReceiptOut(
+        request_id=request.id,
+        status=request.status,  # type: ignore[arg-type]
+        requested_at=request.requested_at,
+        execute_after=request.execute_after,
+    )
+
+
+@router.delete(
+    "/{request_id}",
+    response_model=ReceiptOut,
+    summary="Hủy yêu cầu xóa còn trong khoảng chờ 24 giờ (spec 038 FR-006)",
+    responses={
+        404: {"description": "Không thấy (hoặc không thuộc gia đình này)"},
+        409: {"description": "Đã quá khoảng chờ hoặc đã xóa xong"},
+    },
+)
+async def cancel_request(
+    request_id: UUID, claims: Annotated[DeviceClaims, Depends(get_current_device)], response: Response
+) -> ReceiptOut:
+    response.headers.update(NO_STORE)
+    async with get_sessionmaker()() as session:
+        member = await session.get(Member, claims.member_id)
+    if member is None or member.role != "protected":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Chỉ người được bảo vệ mới hủy được yêu cầu xóa")
+    try:
+        request = await purge_service.cancel_delete(get_sessionmaker(), claims.family_id, request_id)
+    except purge_service.CancelRefusedError:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, detail="Đã quá thời gian chờ hoặc dữ liệu đã được xóa, không hủy được nữa"
+        ) from None
+    if request is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy yêu cầu")
+    return _receipt(request)

@@ -577,7 +577,7 @@ class DataRequest(Base):
     __table_args__ = (
         CheckConstraint("kind IN ('delete')", name="kind"),
         CheckConstraint("requested_via IN ('ops', 'app', 'web')", name="requested_via"),
-        CheckConstraint("status IN ('pending', 'done', 'failed')", name="status"),
+        CheckConstraint("status IN ('pending', 'done', 'failed', 'cancelled')", name="status"),
         CheckConstraint("(status = 'done') = (completed_at IS NOT NULL)", name="done_iff_completed"),
         Index("ix_data_requests_family", "family_id"),
     )
@@ -589,6 +589,9 @@ class DataRequest(Base):
     status: Mapped[str] = mapped_column(String(16), server_default=text("'pending'"))
     error_code: Mapped[str | None] = mapped_column(String(32))
     requested_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    execute_after: Mapped[datetime] = mapped_column(
+        server_default=func.now()
+    )  # purge chạy từ lúc này (spec 038 FR-006)
     completed_at: Mapped[datetime | None]
 
 

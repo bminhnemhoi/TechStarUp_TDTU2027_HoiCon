@@ -18,7 +18,7 @@ Không log nội dung hay định danh; chỉ log số dòng theo loại.
 
 import logging
 from collections.abc import Awaitable, Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -66,10 +66,11 @@ async def request_delete_detailed(
     *,
     notice: dict[str, Any] | None = None,
     purge_delay_s: float = 0.0,
+    notice_for: Callable[[datetime], dict[str, Any]] | None = None,
 ) -> tuple[DataRequest, bool]:
     """Như `request_delete` nhưng trả thêm `created` (False = trả lại yêu cầu đang chờ). `notice`: payload job
-    `notify_guardian` xếp CÙNG giao dịch và chạy TRƯỚC `purge_family` (job này hoãn `purge_delay_s` giây để tin kịp đi
-    trước khi purge xóa kênh Zalo)."""
+    `notify_guardian` xếp CÙNG giao dịch và đi NGAY; `purge_family` hoãn `purge_delay_s` giây (khoảng chờ có thể hủy,
+    spec 038 FR-006) và `execute_after` ghi đúng thời điểm đó. `notice_for(execute_after)` dựng tin ghi giờ xóa."""
     async with sessions.begin() as session:
         if await session.get(Family, family_id) is None:
             raise FamilyNotFoundError
@@ -83,9 +84,12 @@ async def request_delete_detailed(
         )
         if pending is not None:
             return pending, False
-        request = DataRequest(id=new_id(), family_id=family_id, kind="delete", requested_via=via)
+        due = datetime.now(UTC) + timedelta(seconds=purge_delay_s)
+        request = DataRequest(id=new_id(), family_id=family_id, kind="delete", requested_via=via, execute_after=due)
         session.add(request)
         await session.flush()
+        if notice is None and notice_for is not None:
+            notice = notice_for(due)
         if notice is not None:
             key = f"data_request:{request.id}:msg:deleted"
             await enqueue(session, "notify_guardian", {**notice, "job_key": key}, key=key)
@@ -100,6 +104,31 @@ async def request_delete_detailed(
         return request, True
 
 
+class CancelRefusedError(Exception):
+    """Không hủy được: đã quá khoảng chờ hoặc yêu cầu đã chạy xong/thất bại."""
+
+
+async def cancel_delete(sessions: async_sessionmaker, family_id: UUID, request_id: UUID) -> DataRequest | None:
+    """Hủy yêu cầu xóa còn trong khoảng chờ (spec 038 FR-006). Lũy đẳng (đã hủy ⇒ trả lại nó). Yêu cầu của gia đình khác
+    hoặc không có ⇒ None (cùng một câu trả lời). Quá `execute_after`, đã `done`/`failed` ⇒ `CancelRefusedError`.
+    Cùng khóa advisory với lúc tạo yêu cầu nên không đua với yêu cầu đồng thời."""
+    async with sessions.begin() as session:
+        await session.execute(text("select pg_advisory_xact_lock(hashtext(:k))"), {"k": f"purge:{family_id}"})
+        request = await session.get(DataRequest, request_id, populate_existing=True)
+        if request is None or request.family_id != family_id:
+            return None
+        if request.status == "cancelled":
+            return request
+        if request.status != "pending" or request.execute_after <= datetime.now(UTC):
+            raise CancelRefusedError
+        request.status = "cancelled"
+        await session.execute(
+            delete(Job).where(Job.idempotency_key == f"purge:{request_id}", Job.done_at.is_(None))
+        )  # bỏ job purge chưa chạy
+        logger.info("purge: đã hủy yêu cầu %s", request_id)
+        return request
+
+
 async def purge_family(
     sessions: async_sessionmaker,
     delete_thread: DeleteThread,
@@ -110,6 +139,11 @@ async def purge_family(
 ) -> dict[str, int]:
     """Thi hành xóa; ⇒ số dòng theo loại. Lỗi ⇒ đánh yêu cầu `failed` (mã lỗi ngắn) rồi ném lại để job thử lại."""
     moment = now or datetime.now(UTC)
+    if request_id is not None:  # kiểm lại lúc chạy: yêu cầu đã hủy ⇒ không xóa gì
+        async with sessions() as session:
+            if await session.scalar(select(DataRequest.status).where(DataRequest.id == request_id)) == "cancelled":
+                logger.info("purge: yêu cầu %s đã hủy, bỏ qua", request_id)
+                return {"cancelled": 1}
     try:
         report = await _purge(sessions, delete_thread, family_id, moment)
     except Exception as exc:
