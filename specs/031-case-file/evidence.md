@@ -54,3 +54,8 @@
   khoảng cách tiêu đề–thân thẻ; câu "Muốn ngừng báo, bác nhờ người cài HỏiCon" khiến phụ thuộc; câu "Họ được báo nếu HỏiCon bị tắt" ngắn gây lo. Thấp: "Nghe lại" nằm trước thẻ guardian (chưa kiểm bản đọc to có đọc cả thẻ),
   "Ở bước sau…" cứng, "Khi nghi bác bị lừa" nên dịu hơn.
 - Chưa làm: sửa bản đọc to `disclosure_speech` (câu về báo con qua Zalo vẫn đúng, không thêm ý mới). Tick T014.
+
+## Wave 6 — T019 (làn B, 24/10/2026)
+
+- **T019 ĐẠT**: `case_file_service.load_guidance()` (`@cache`, đọc `data/case_file/report_guidance.vi.yaml` một lần; kiểm: `approved` bool, `fallback_vi` 10–240, ≤ 8 bước, id đúng mẫu và không trùng, `text_vi` 10–240, không dãy ≥ 4 chữ số; sai ⇒ `ValueError`; chưa duyệt ⇒ `steps` rỗng dù tệp có bước) gọi lúc khởi động API (`lifespan`). `GET` và `POST /v1/guardian/incidents/{id}/case-file` luôn gửi `guidance` (`CaseGuidance` trong `CaseFileOut`, khớp `case_file.v1`). `spec.md` FR-005 đã ghi `fast` từ trước — không sửa.
+  Đỏ trước (12 đỏ) → xanh: `tests/unit/test_case_guidance.py` (tệp thật chưa duyệt ⇒ 0 bước; tệp thử đã duyệt ⇒ đủ bước đúng thứ tự; 7 kiểu tệp hỏng bị từ chối), `test_api_case_file.py` (chưa duyệt ⇒ `steps == []` + `fallback_vi`, không dãy ≥ 4 chữ số; tệp thử `approved: true` qua monkeypatch ⇒ đủ bước, hợp lệ `case_file.v1`, POST cũng có `guidance`), `tests/contract`: **325 passed**. Client TS sinh lại, typecheck sạch, ruff sạch.

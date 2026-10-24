@@ -118,7 +118,7 @@
 
 Hợp đồng đã có: `case_file.v1.guidance` (tùy chọn, `approved=false` ⇒ `steps` rỗng) + fixture. Test đỏ trước.
 
-- [ ] T019 [B-api] [FR-015] `case_file_service.load_guidance()` (đọc YAML một lần, kiểm cấu trúc lúc khởi động) + route GET hồ sơ gửi
+- [x] T019 [B-api] [FR-015] `case_file_service.load_guidance()` (đọc YAML một lần, kiểm cấu trúc lúc khởi động) + route GET hồ sơ gửi
   `guidance`. Test `tests/integration/test_api_case_file.py`: tệp `approved: false` ⇒ `steps == []`, có `fallback_vi`; tệp thử
   `approved: true` (monkeypatch đường dẫn) ⇒ đủ bước đúng thứ tự; phản hồi hợp lệ `case_file.v1`; không có dãy ≥ 4 chữ số trong
   `guidance`. Sửa `spec.md` FR-005 đã ghi `fast` — không đổi mã router. Sinh lại client TS.

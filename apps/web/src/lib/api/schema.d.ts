@@ -752,6 +752,28 @@ export interface components {
             /** Is Demo */
             is_demo: boolean;
             content: components["schemas"]["CaseFileContent"];
+            guidance?: components["schemas"]["CaseGuidance"];
+        };
+        /**
+         * CaseGuidance
+         * @description Khớp `case_file.v1#/properties/guidance`; chưa duyệt ⇒ `steps` rỗng.
+         */
+        CaseGuidance: {
+            /** Approved */
+            approved: boolean;
+            /** Steps */
+            steps: components["schemas"]["CaseGuidanceStep"][];
+            /** Fallback Vi */
+            fallback_vi: string;
+        };
+        /** CaseGuidanceStep */
+        CaseGuidanceStep: {
+            /** Id */
+            id: string;
+            /** Text Vi */
+            text_vi: string;
+            /** Source Ref */
+            source_ref?: string | null;
         };
         /** CaseLocalField */
         CaseLocalField: {

@@ -6,9 +6,12 @@ import logging
 import re
 import unicodedata
 from datetime import UTC, datetime, timedelta
+from functools import cache
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+import yaml
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
@@ -30,12 +33,50 @@ from hoicon.domain.pii import mask_text
 
 logger = logging.getLogger(__name__)
 
+GUIDANCE_FILE = Path(__file__).resolve().parents[4] / "data" / "case_file" / "report_guidance.vi.yaml"
+GUIDANCE_ID = re.compile(r"[a-z][a-z0-9_]{2,40}")
+LONG_DIGITS = re.compile(
+    r"\d{4,}"
+)  # số đường dây nóng chỉ được ghi khi có nguồn chính thức đã kiểm (ngoài bản nháp này)
+
 CONTENT_LEVELS = ("low", "medium", "high", "critical")
 APP_CATEGORIES = {"bank", "wallet", "securities", "sideloaded", "remote_control"}
 VERDICTS = {
     "dangerous": "dangerous",
     "warning": "warning",
 }  # phán quyết khác (safe/unknown) ⇒ "unknown": chưa thấy cảnh báo
+
+
+@cache
+def load_guidance() -> dict[str, Any]:
+    """Hướng dẫn trình báo (FR-011/FR-015): đọc YAML MỘT lần, kiểm cấu trúc theo `case_file.v1#/properties/guidance`.
+    Sai ⇒ ValueError (gọi lúc khởi động để lỗi lộ sớm). Chưa duyệt ⇒ `steps` rỗng dù tệp có bước (web chỉ hiện dự phòng)."""
+    doc = yaml.safe_load(GUIDANCE_FILE.read_text(encoding="utf-8"))
+    if not isinstance(doc, dict) or not isinstance(doc.get("approved"), bool):
+        raise ValueError("report_guidance: `approved` phải là true/false")
+    fallback = doc.get("fallback_vi")
+    raw_steps = doc.get("steps") or []
+    if not isinstance(fallback, str) or not 10 <= len(fallback) <= 240:
+        raise ValueError("report_guidance: `fallback_vi` phải dài 10–240 ký tự")
+    if not isinstance(raw_steps, list) or len(raw_steps) > 8:
+        raise ValueError("report_guidance: `steps` là danh sách tối đa 8 bước")
+    steps: list[dict[str, Any]] = []
+    for step in raw_steps:
+        step_id, text, source = (
+            (step.get("id"), step.get("text_vi"), step.get("source_ref"))
+            if isinstance(step, dict)
+            else (None, None, None)
+        )
+        if not isinstance(step_id, str) or not GUIDANCE_ID.fullmatch(step_id) or step_id in {s["id"] for s in steps}:
+            raise ValueError(f"report_guidance: id bước sai hoặc trùng: {step_id!r}")
+        if not isinstance(text, str) or not 10 <= len(text) <= 240:
+            raise ValueError(f"report_guidance: `text_vi` của {step_id} phải dài 10–240 ký tự")
+        if source is not None and (not isinstance(source, str) or len(source) > 300):
+            raise ValueError(f"report_guidance: `source_ref` của {step_id} sai")
+        steps.append({"id": step_id, "text_vi": text, "source_ref": source})
+    if LONG_DIGITS.search(" ".join([fallback, *(s["text_vi"] for s in steps)])):
+        raise ValueError("report_guidance: không ghi dãy ≥ 4 chữ số (số đường dây phải có nguồn chính thức đã kiểm)")
+    return {"approved": doc["approved"], "steps": steps if doc["approved"] else [], "fallback_vi": fallback}
 
 
 def _line(text: str) -> str:

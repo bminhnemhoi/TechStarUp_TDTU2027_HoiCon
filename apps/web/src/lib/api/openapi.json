@@ -2279,6 +2279,9 @@
      },
      "content": {
       "$ref": "#/components/schemas/CaseFileContent"
+     },
+     "guidance": {
+      "$ref": "#/components/schemas/CaseGuidance"
      }
     },
     "type": "object",
@@ -2296,6 +2299,62 @@
     ],
     "title": "CaseFileOut",
     "description": "Khớp `docs/schemas/case_file.v1.json`."
+   },
+   "CaseGuidance": {
+    "properties": {
+     "approved": {
+      "type": "boolean",
+      "title": "Approved"
+     },
+     "steps": {
+      "items": {
+       "$ref": "#/components/schemas/CaseGuidanceStep"
+      },
+      "type": "array",
+      "title": "Steps"
+     },
+     "fallback_vi": {
+      "type": "string",
+      "title": "Fallback Vi"
+     }
+    },
+    "type": "object",
+    "required": [
+     "approved",
+     "steps",
+     "fallback_vi"
+    ],
+    "title": "CaseGuidance",
+    "description": "Khớp `case_file.v1#/properties/guidance`; chưa duyệt ⇒ `steps` rỗng."
+   },
+   "CaseGuidanceStep": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "text_vi": {
+      "type": "string",
+      "title": "Text Vi"
+     },
+     "source_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Ref"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "text_vi"
+    ],
+    "title": "CaseGuidanceStep"
    },
    "CaseLocalField": {
     "properties": {
