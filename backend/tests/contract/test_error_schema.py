@@ -2,7 +2,7 @@
 
 Chạy được ở đây: fixture hợp lệ/không hợp lệ; enum `purpose` == mục đích trong manifest đồng ý; mã `consent_withdrawn`
 của `routers/events.py` và `routers/devices.py` thuộc enum `error`. KHÔNG kiểm được thân phản hồi thật khớp lược đồ:
-thân thật là `{"detail": "consent_withdrawn"}` (Android đọc đúng dạng này), lược đồ mô tả `{"error": ..., "purpose": ...}`.
+thân thật là `{"detail": "consent_withdrawn"}` (Android đọc dạng này), lược đồ mô tả `{"error": ..., "purpose": ...}`.
 Lệch hợp đồng: xem `tests/integration/test_error_body_contract.py` (xfail có chủ đích) và evidence 037 T013."""
 
 import json
