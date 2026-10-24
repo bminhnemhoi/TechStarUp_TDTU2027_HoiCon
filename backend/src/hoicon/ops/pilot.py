@@ -99,11 +99,8 @@ async def build_report(sessions: async_sessionmaker, days: int, *, now: datetime
                     select(Device).where(Device.family_id == family.id).order_by(Device.created_at, Device.id)
                 )
             ).all()
-            consenting = {
-                d.member_id
-                for d in family_devices
-                if (await consent_gate.state_for(session, d.member_id)).pilot_research
-            }
+            states = await consent_gate.states_for(session, {d.member_id for d in family_devices})
+            consenting = {m for m, state in states.items() if state.pilot_research}
             if not consenting:
                 continue
             devices = [

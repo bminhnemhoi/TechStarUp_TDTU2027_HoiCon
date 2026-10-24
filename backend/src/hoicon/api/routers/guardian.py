@@ -397,7 +397,9 @@ async def _own_case_file(session: AsyncSession, incident_id: UUID, family_id: UU
     if row is None:  # sự cố nhà khác, không có hồ sơ: cùng một 404 (không lộ sự tồn tại)
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy hồ sơ")
     # Hồ sơ thuộc mục đích `guardian_alerts`: chưa/không còn đồng ý ⇒ cùng 404 (dữ liệu demo hư cấu được miễn).
-    if incident is not None and not await consent_gate.web_readable(session, incident.member_id, is_demo=row.is_demo):
+    if incident is not None and not await consent_gate.web_readable(
+        session, incident.member_id, is_demo=incident.is_demo
+    ):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy hồ sơ")
     return row
 
