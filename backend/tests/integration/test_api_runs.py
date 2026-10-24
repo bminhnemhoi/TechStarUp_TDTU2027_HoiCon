@@ -279,3 +279,41 @@ async def test_steps_carry_is_sim_true_only_for_a_sim_device_incident(trace_worl
     res = await call("GET", f"/v1/runs/{run_id}/steps", token=auth(trace_world))
     assert res.json()["is_sim"] is True
     VALIDATORS["run_steps"].validate(res.json())
+
+
+async def test_each_guest_session_has_its_own_stream_slots(
+    trace_world: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """050 T017 #5: mọi khách dùng chung `member_id` của người giám hộ demo ⇒ không được chung hạn mức luồng SSE."""
+    import secrets
+    from datetime import UTC, datetime, timedelta
+
+    from hoicon.config import get_settings
+    from hoicon.db.models import BoothJoinCode
+
+    monkeypatch.setenv("HOICON_SIM_ENABLED", "true")
+    get_settings.cache_clear()
+    family, guardian = trace_world["a"]["family"], trace_world["a"]["guardian"]
+    async with get_sessionmaker().begin() as session:
+        code = BoothJoinCode(
+            family_id=family,
+            created_by=guardian,
+            code_hash=secrets.token_hex(32),
+            expires_at=datetime.now(UTC) + timedelta(minutes=10),
+        )
+        session.add(code)
+        await session.flush()
+        code_id = code.id
+    held = [trace_service.acquire_slot(guardian, family) for _ in range(trace_service.MAX_STREAMS_PER_MEMBER)]
+    try:
+        run_id = trace_world["a"]["run"]
+        guest = issue_guardian_access_token(guardian, family, guest=True, booth_code=code_id)
+        res = await call("GET", f"/v1/runs/{run_id}/stream", token=guest)
+        assert res.status_code == 200, "khách có chỗ riêng dù người trình bày đã dùng hết chỗ của mình"
+        assert (await call("GET", f"/v1/runs/{run_id}/stream", token=auth(trace_world))).status_code == 429
+    finally:
+        for slot in held:
+            slot.release()
+        async with get_sessionmaker().begin() as session:
+            await session.execute(delete(BoothJoinCode).where(BoothJoinCode.id == code_id))
+        get_settings.cache_clear()

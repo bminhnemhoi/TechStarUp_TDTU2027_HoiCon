@@ -15,10 +15,11 @@ import time
 from collections import deque
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Literal
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import select, update
+from sqlalchemy import case, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 
@@ -26,6 +27,7 @@ from hoicon.api import auth
 from hoicon.api.auth import GuardianClaims, get_current_full_guardian, require_same_origin
 from hoicon.api.routers.guardian import NO_STORE, _cookie_flags
 from hoicon.api.routers.sim import NOT_FOUND, require_sim_enabled
+from hoicon.config import get_settings
 from hoicon.db.models import BoothJoinCode, Family
 from hoicon.db.session import get_sessionmaker
 
@@ -54,9 +56,25 @@ def reset_limits() -> None:
     _global_failures.clear()
 
 
+class BoothKeyMissingError(RuntimeError):
+    """Ngoài dev chưa đặt `HOICON_BOOTH_CODE_KEY` (đã nêu ở /readyz)."""
+
+
+def _code_key() -> bytes:
+    """Khóa HMAC của mã: khóa riêng; ở dev để trống thì dùng khóa con dẫn xuất từ khóa JWT (không dùng chính nó)."""
+    settings = get_settings()
+    configured = settings.booth_code_key
+    own = configured.get_secret_value() if configured is not None else ""
+    if len(own) >= auth.MIN_KEY_LEN:
+        return own.encode()
+    if settings.is_dev_env:
+        return hmac.new(auth._key().encode(), b"hoicon:booth-code-key:v1", hashlib.sha256).digest()
+    raise BoothKeyMissingError("HOICON_BOOTH_CODE_KEY thiếu hoặc ngắn")
+
+
 def code_hash(code: str) -> str:
-    """HMAC-SHA256 theo khóa dịch vụ: DB lộ ra cũng không suy được mã (không gian mã nhỏ nên hash trần dò được)."""
-    return hmac.new(auth._key().encode(), f"hoicon:booth-join:v1:{code}".encode(), hashlib.sha256).hexdigest()
+    """HMAC-SHA256 theo khóa riêng: DB lộ ra cũng không suy được mã (không gian mã nhỏ nên hash trần dò được)."""
+    return hmac.new(_code_key(), f"hoicon:booth-join:v1:{code}".encode(), hashlib.sha256).hexdigest()
 
 
 def _client_key(host: str) -> str:
@@ -132,12 +150,17 @@ async def create_code(claims: Annotated[GuardianClaims, Depends(_demo_full)], re
     for _ in range(5):  # trùng băm (hiếm) ⇒ sinh mã khác
         code = "".join(secrets.choice(ALPHABET) for _ in range(CODE_LEN))
         try:
+            digest = code_hash(code)
+        except BoothKeyMissingError:
+            logger.error("booth: chưa cấu hình HOICON_BOOTH_CODE_KEY")
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Dịch vụ chưa sẵn sàng") from None
+        try:
             async with get_sessionmaker().begin() as session:
                 await session.execute(
                     insert(BoothJoinCode).values(
                         family_id=claims.family_id,
                         created_by=claims.member_id,
-                        code_hash=code_hash(code),
+                        code_hash=digest,
                         expires_at=expires,
                         max_guests=MAX_GUESTS,
                     )
@@ -171,10 +194,17 @@ async def join(body: JoinIn, request: Request, response: Response) -> SessionOut
     except auth.DeviceAuthNotConfiguredError:
         logger.error("booth join: chưa cấu hình khóa ký JWT")
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Dịch vụ chưa sẵn sàng") from None
+    try:
+        digest = code_hash(body.code)
+    except BoothKeyMissingError:
+        logger.error("booth join: chưa cấu hình HOICON_BOOTH_CODE_KEY")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Dịch vụ chưa sẵn sàng") from None
     stamp = datetime.now(UTC)
+    # Khách còn phiên sống của CHÍNH mã này bấm vào lại: cấp phiên mới nhưng không tính thêm một khách.
+    own = _live_guest_code(request)
+    room = BoothJoinCode.guests < BoothJoinCode.max_guests
     async with get_sessionmaker().begin() as session:
         # Một câu lệnh nguyên tử: kiểm hạn/hủy/số khách và tăng bộ đếm (không vượt 50 dù nhiều khách vào cùng lúc).
-        digest = code_hash(body.code)
         row = (
             await session.execute(
                 update(BoothJoinCode)
@@ -182,9 +212,9 @@ async def join(body: JoinIn, request: Request, response: Response) -> SessionOut
                     BoothJoinCode.code_hash == digest,
                     BoothJoinCode.revoked_at.is_(None),
                     BoothJoinCode.expires_at > stamp,
-                    BoothJoinCode.guests < BoothJoinCode.max_guests,
+                    or_(room, BoothJoinCode.id == own) if own else room,
                 )
-                .values(guests=BoothJoinCode.guests + 1)
+                .values(guests=BoothJoinCode.guests + (case((BoothJoinCode.id == own, 0), else_=1) if own else 1))
                 .returning(BoothJoinCode.id, BoothJoinCode.family_id, BoothJoinCode.created_by)
             )
         ).one_or_none()
@@ -204,6 +234,17 @@ async def join(body: JoinIn, request: Request, response: Response) -> SessionOut
     response.set_cookie(auth.GUARDIAN_COOKIE, token, max_age=max_age, **_cookie_flags())  # type: ignore[arg-type]
     logger.info("booth join: khách vào gian (đã cấp phiên xem)")
     return SessionOut(family_alias=family.display_name[:40], expires_at=stamp + GUEST_TTL)
+
+
+def _live_guest_code(request: Request) -> UUID | None:
+    token = request.cookies.get(auth.GUARDIAN_COOKIE)
+    if not token:
+        return None
+    try:
+        claims = auth.decode_guardian_access_token(token)
+    except (auth.DeviceTokenError, auth.DeviceAuthNotConfiguredError):
+        return None
+    return claims.booth_code if claims.guest else None
 
 
 async def revoke_all_codes(session) -> None:

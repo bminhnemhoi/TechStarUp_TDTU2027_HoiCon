@@ -307,3 +307,113 @@ async def test_scanning_a_revoked_or_expired_code_is_not_counted_as_a_guess(worl
     assert statuses == {404}  # QR cũ dán sẵn không khóa cả Wi-Fi gian
     fresh = (await new_code(world))["code"]
     assert (await join(fresh)).status_code == 200  # khách có mã mới vẫn vào được
+
+
+# --- T017: Medium còn lại của rà soát T013 -----------------------------------------------------------
+
+
+async def guests_of() -> int:
+    async with get_sessionmaker()() as session:
+        return int(await session.scalar(select(BoothJoinCode.guests)) or 0)
+
+
+async def test_a_guest_who_rejoins_with_a_live_session_does_not_use_up_the_50(world: SimpleNamespace) -> None:
+    """#4: một khách bấm "Vào xem" lặp lại (cookie còn sống, cùng mã) không được làm đầy mã của người khác."""
+    code = (await new_code(world))["code"]
+    first = await join(code)
+    cookie = guest_cookie(first)
+    for _ in range(3):
+        again = await join(code, cookies=cookie)
+        assert again.status_code == 200
+        guest_cookie(again)  # vẫn được cấp phiên mới
+    assert await guests_of() == 1
+    assert (await join(code)).status_code == 200  # không có cookie ⇒ khách mới
+    assert await guests_of() == 2
+
+
+async def test_a_rejoining_guest_is_let_in_even_when_the_code_is_full_but_a_stranger_is_not(
+    world: SimpleNamespace,
+) -> None:
+    code = (await new_code(world))["code"]
+    cookie = guest_cookie(await join(code))
+    async with get_sessionmaker().begin() as session:
+        await session.execute(update(BoothJoinCode).values(guests=50))
+    assert (await join(code, cookies=cookie)).status_code == 200
+    assert (await join(code)).status_code == 404
+    assert await guests_of() == 50
+
+
+async def test_a_session_of_another_or_revoked_code_does_not_skip_the_count(world: SimpleNamespace) -> None:
+    old = (await new_code(world))["code"]
+    stale = guest_cookie(await join(old))
+    assert (await call("POST", "/v1/sim/reset", token=world.demo.token, headers=ORIGIN)).status_code == 200
+    fresh = (await new_code(world))["code"]
+    assert (await join(fresh, cookies=stale)).status_code == 200  # cookie của mã cũ không miễn đếm cho mã mới
+    async with get_sessionmaker()() as session:
+        assert await session.scalar(select(BoothJoinCode.guests).where(BoothJoinCode.revoked_at.is_(None))) == 1
+
+
+async def test_the_code_hash_uses_its_own_key_not_the_jwt_key(
+    world: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#8: khóa HMAC của mã tách khỏi khóa ký JWT."""
+    monkeypatch.setenv("HOICON_BOOTH_CODE_KEY", "booth-test-key-" + "b" * 32)  # gitleaks:allow — khóa GIẢ cho test
+    get_settings.cache_clear()
+    base = booth.code_hash("ABCDEF")
+    monkeypatch.setenv("HOICON_DEVICE_JWT_SECRET", "another-jwt-key-" + "j" * 32)  # gitleaks:allow
+    get_settings.cache_clear()
+    assert booth.code_hash("ABCDEF") == base  # đổi khóa JWT không đổi băm mã
+    monkeypatch.setenv("HOICON_BOOTH_CODE_KEY", "other-booth-key-" + "c" * 32)  # gitleaks:allow
+    get_settings.cache_clear()
+    assert booth.code_hash("ABCDEF") != base
+
+
+def hmac_with_jwt_key(code: str) -> str:
+    import hashlib
+    import hmac
+
+    return hmac.new(JWT_KEY.encode(), f"hoicon:booth-join:v1:{code}".encode(), hashlib.sha256).hexdigest()
+
+
+async def test_in_dev_the_booth_key_falls_back_to_a_subkey_of_the_jwt_key(
+    world: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("HOICON_BOOTH_CODE_KEY", raising=False)
+    get_settings.cache_clear()
+    assert get_settings().is_dev_env
+    assert booth.code_hash("ABCDEF") != hmac_with_jwt_key("ABCDEF")  # khóa con, không phải chính khóa JWT
+    assert (await join((await new_code(world))["code"])).status_code == 200
+
+
+async def test_outside_dev_without_the_booth_key_codes_are_closed_and_readyz_names_it(
+    world: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from hoicon.api.main import missing_keys
+
+    monkeypatch.setenv("HOICON_ENV", "prod")
+    monkeypatch.delenv("HOICON_BOOTH_CODE_KEY", raising=False)
+    get_settings.cache_clear()
+    assert "booth_code_key" in missing_keys()  # cổng mô phỏng bật mà chưa có khóa riêng
+    body = (await call("GET", "/readyz")).json()
+    assert "booth_code_key" in body["missing"]
+    assert (await call("POST", "/v1/booth/codes", token=world.demo.token, headers=ORIGIN)).status_code == 503
+    before = len(booth._global_failures)
+    assert (await join("ABCDEF")).status_code == 503  # lỗi của ta, không tính là đoán mò
+    assert len(booth._global_failures) == before
+    monkeypatch.setenv("HOICON_BOOTH_CODE_KEY", "prod-booth-key-" + "p" * 32)  # gitleaks:allow
+    get_settings.cache_clear()
+    assert "booth_code_key" not in missing_keys()
+    monkeypatch.delenv("HOICON_BOOTH_CODE_KEY")
+    monkeypatch.setenv("HOICON_SIM_ENABLED", "false")
+    get_settings.cache_clear()
+    assert "booth_code_key" not in missing_keys()  # cổng tắt ⇒ không đòi khóa
+
+
+def test_the_booth_key_name_is_in_the_prod_example_and_the_caddy_log_hides_the_join_code() -> None:
+    root = Path(__file__).resolve().parents[3]
+    assert "HOICON_BOOTH_CODE_KEY" in (root / "infra" / "env.prod.example").read_text("utf-8")
+    caddy = (root / "infra" / "caddy" / "Caddyfile").read_text("utf-8").splitlines()
+    redact = next(line for line in caddy if "request>uri" in line)
+    pattern = re.search(r'regexp "([^"]+)"', redact).group(1)  # type: ignore[union-attr]
+    assert re.sub(pattern, r"\1REDACTED", "/join/ABCDEF?x=1") == "/join/REDACTED?x=1"
+    assert re.sub(pattern, r"\1REDACTED", "/login/tok") == "/login/REDACTED"

@@ -42,6 +42,15 @@ test("mã sai định dạng không gửi lên máy chủ; thử sai nhiều ⇒
   await expect(page.getByRole("main").getByRole("alert")).toContainText("đợi vài phút");
 });
 
+test("cổng gian đang tắt (404 không phải join_code_invalid) ⇒ \"Trang này chưa mở\", không đổ lỗi cho mã", async ({ page }) => {
+  await mockApi(page, { boothJoin: () => ({ status: 404, json: { detail: "Không tìm thấy" } }) });
+  await page.goto("/join/K7M2QX");
+  await page.getByRole("button", { name: "Vào xem bản trình diễn" }).click();
+  const alert = page.getByRole("main").getByRole("alert");
+  await expect(alert).toContainText("Trang này chưa mở");
+  await expect(alert).not.toContainText("Mã chưa đúng");
+});
+
 test("console: tạo mã hiện chữ rất lớn + liên kết + hạn; có chỉ dẫn đặt lại sẽ vô hiệu mã", async ({ page }) => {
   await mockApi(page);
   await page.goto("/demo/console");

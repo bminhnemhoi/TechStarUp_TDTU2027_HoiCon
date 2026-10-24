@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid5
 
 from sqlalchemy import func, select, tuple_
 from sqlalchemy.exc import SQLAlchemyError
@@ -160,6 +160,14 @@ class StreamSlot:
         _decrement(_open_by_member, self.member_id)
         if self.family_id is not None:
             _decrement(_open_by_family, self.family_id)
+
+
+def slot_keys(member_id: UUID, family_id: UUID | None, *, jti: str | None, guest: bool) -> tuple[UUID, UUID | None]:
+    """Khóa đếm luồng. Mọi khách gian dùng chung `member_id` của người giám hộ demo => mỗi PHIÊN khách (`jti`) có chỗ
+    riêng, không để một khách chiếm hết hạn mức của người trình bày hay của khách khác (spec 050 T017 #5)."""
+    if not guest or jti is None:
+        return member_id, family_id
+    return uuid5(member_id, jti), (uuid5(family_id, jti) if family_id is not None else None)
 
 
 def acquire_slot(member_id: UUID, family_id: UUID | None = None) -> StreamSlot:
