@@ -64,7 +64,7 @@ private val Radius = HoiConTokens.Size.RadiusCardDp.dp
 internal fun OnboardingScaffold(
     modifier: Modifier = Modifier,
     pinned: (@Composable ColumnScope.() -> Unit)? = null,
-    /** Long consent texts: say "Kéo xuống để đọc tiếp" while more is below (the fade alone looked like a cut-off screen). */
+    /** Long consent texts: say "Còn nữa ở dưới ↓" while more is below (the fade alone looked like a cut-off screen). */
     scrollHint: Boolean = false,
     actions: @Composable ColumnScope.() -> Unit,
     body: @Composable ColumnScope.() -> Unit,

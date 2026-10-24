@@ -192,11 +192,11 @@ Quyết định (kiến trúc sư Spec Kit, theo `docs/DESIGN-SYSTEM.md` mục E
   `evidence.md` mục "Wave 4".
 
 ## Lượt 9 (nhà điều phối 24/10/2026) — quyết định cho đề xuất của reviewer (evidence 010 W6)
-- [ ] T030 [A] [FR-013] E7: (a) ở `fontScale ≥ 1.5`, khối bước hành động (1–2) đứng **trước** đoạn lý do (chỉ đổi thứ tự, chuỗi giữ nguyên);
+- [x] T030 [A] [FR-013] E7: (a) ở `fontScale ≥ 1.5`, khối bước hành động (1–2) đứng **trước** đoạn lý do (chỉ đổi thứ tự, chuỗi giữ nguyên);
   (b) nút biến thể ngân hàng "Hủy giao dịch" ⇒ **"Về màn hình chính"** (nút chỉ đưa về màn hình chính — nhãn phải đúng việc); (c) gợi ý cuộn
   "Kéo xuống đọc tiếp ↓" ⇒ **"Còn nữa ở dưới ↓"** (không nêu hướng vuốt). Test chuỗi đỏ trước; ảnh 100/200% hc-api36 + `ux-elder-reviewer` 0 Chặn/Cao.
   · Verify: `apps/android/gradlew -p apps/android :app:testDebugUnitTest :app:lintDebug` + ảnh trong `~/hoicon-evidence/010-design-system/w9/`
-- [ ] T031 [A] [FR-013] Ngưỡng "E7 ≤ 3 s" (luật 4) **không bỏ lượt nguội**: đo `fake_police --runs 10` trên **bản release** (R8 + baseline profile, ký bằng
+- [x] T031 [A] [FR-013] Ngưỡng "E7 ≤ 3 s" (luật 4) **không bỏ lượt nguội**: đo `fake_police --runs 10` trên **bản release** (R8 + baseline profile, ký bằng
   khóa debug cục bộ) sau `am force-stop` (tiến trình nguội — kịch bản thật: hãng máy giết tiến trình rồi cuộc gọi đến); ghi riêng "lượt nguội" và p95 gộp.
   Lượt nguội release > 3 s ⇒ chẩn đoán (`diagnosing-bugs`: thời gian `Application.onCreate`, khởi tạo Room/Tink trên đường dừng an toàn) và sửa trong phạm vi app.
   · Verify: bảng số trong evidence 010 (nguồn: máy ảo, không phải máy thật)

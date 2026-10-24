@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
             HoiConTheme {
                 BackHandler(enabled = showPermissions) { showPermissions = false }
                 if (showPermissions) {
-                    PermissionsScreen(granted = granted, onOpen = permissions::open, onBack = { showPermissions = false })
+                    PermissionsScreen(granted = granted, onOpen = permissions::open, onBack = { showPermissions = false }, onSwitchOff = permissions::openToDisable)
                 } else {
                     ProtectionStatusScreen(
                         state = ProtectionUiState(

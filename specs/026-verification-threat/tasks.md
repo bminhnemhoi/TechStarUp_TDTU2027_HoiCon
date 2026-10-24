@@ -221,7 +221,7 @@
 - [x] T030 [AB] [FR-013] Review độc lập bằng `security-privacy-reviewer` (PII, manifest, đồng ý, `bucket_enc`, hạn mức).
   Sửa mọi mục Critical/High và ghi kết quả vào evidence.
   · Verify: báo cáo reviewer không còn Critical/High chưa xử lý
-- [ ] T031 [AB] [FR-013] Chạy đủ bộ lệnh kiểm:
+- [x] T031 [AB] [FR-013] Chạy đủ bộ lệnh kiểm:
   - `$PYTEST`;
   - `ruff check` và `ruff format --check` (`--cache-dir /tmp/ruff_cache src/ tests/`);
   - `$GRADLE :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`;

@@ -78,7 +78,7 @@
   chạy `ops pilot gate-m2 --days 7 --crash-free <số> --crash-source "Play vitals, n=…" --real-devices <số>`. Đính kèm ảnh
   Play vitals và kết quả 034.
   · Verify: đầu ra `gate-m2` trong evidence
-- [ ] T014 [AB] [FR-010] Chạy đủ bộ lệnh kiểm:
+- [x] T014 [AB] [FR-010] Chạy đủ bộ lệnh kiểm:
   - `$PYTEST`; `ruff check` và `ruff format --check`;
   - `$GRADLE :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`;
   - `hoicon-eval --suite smoke --compare baseline`;

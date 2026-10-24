@@ -45,6 +45,28 @@ class PermissionOpener(private val activity: ComponentActivity, private val onCh
         }
     }
 
+    /** Opens the page where an item that is on is switched off (withdrawing consent, ADR consent ledger). */
+    fun openToDisable(permission: SensorPermission) {
+        val action = disableAction(permission)
+        val withPackage = action == Settings.ACTION_MANAGE_OVERLAY_PERMISSION || action == Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+        if (permission == SensorPermission.NOTIFICATIONS) {
+            startSafely(Intent(action).putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName))
+        } else {
+            openSettings(action, withPackage)
+        }
+    }
+
+    companion object {
+        /** The settings page that turns an item off: the default-apps list for the call-screening role, the item's own page for the rest. */
+        fun disableAction(permission: SensorPermission): String = when (permission) {
+            SensorPermission.CALL_SCREENING_ROLE -> Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS
+            SensorPermission.DISPLAY_OVER_APPS -> Settings.ACTION_MANAGE_OVERLAY_PERMISSION
+            SensorPermission.USAGE_ACCESS -> Settings.ACTION_USAGE_ACCESS_SETTINGS
+            SensorPermission.NOTIFICATIONS -> Settings.ACTION_APP_NOTIFICATION_SETTINGS
+            SensorPermission.BATTERY_UNRESTRICTED -> Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+        }
+    }
+
     private fun openSettings(action: String, withPackage: Boolean = false) {
         val intent = Intent(action)
         if (withPackage) intent.data = Uri.fromParts("package", activity.packageName, null)

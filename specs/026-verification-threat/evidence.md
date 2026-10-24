@@ -124,3 +124,7 @@ phần cuộn của màn đồng ý (thẻ 2–3); màn lỗi/hết lượt.
 
 - **Phần B đạt**: pytest 2932 passed / 22 skipped; ruff check + format sạch; eval smoke so baseline không lệch (20 ca, recall 100%, báo nhầm 0%, vi phạm 0); gitleaks `backend/src`, `backend/tests`, `docs/schemas` (1 dương tính giả đã biết: sha256 chuỗi rỗng trong fixture "invalid"), `docs/adr`, `specs/026-verification-threat` sạch; `check-spec-trace` 0 lỗi.
 - **Chưa làm (làn A)**: `$GRADLE :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`; gitleaks `apps/android/app/src`, `apps/android/rules/src`. **T031 CHƯA TICK.**
+
+## Lượt 9 — T031 phần [A] (làn A, 24/10/2026)
+
+- gradlew :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug (nhánh feat/w9-android, 685ce92) xanh; gitleaks apps/android/app/src + apps/android/rules/src sạch; `docs/schemas` vẫn 1 dương tính giả đã biết (sha256 chuỗi rỗng trong fixture `device_me.v1.invalid.json`, `--redact`); `check-spec-trace` 25 spec 0 lỗi. Cùng phần B ở lượt 8 ⇒ **T031 ĐẠT, tick.** (ROADMAP do Opus.)

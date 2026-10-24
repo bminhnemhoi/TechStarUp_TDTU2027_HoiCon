@@ -14,7 +14,11 @@
     <!-- Màn quyền dành cho nhà phát triển (spike P1-S1), chưa phải màn E3 cho người cao tuổi. -->
     <string name="perm_screen_intro">Các mục dưới đây giúp HỏiCon nhận ra lúc có số lạ gọi rồi mở ứng dụng ngân hàng. Mục nào chưa bật, bác bấm để bật.</string>
     <string name="perm_status_on">✓ Đã bật</string>
-    <string name="perm_status_off">✗ Chưa bật</string>
+    <string name="perm_status_off">○ Chưa bật</string>
+    <string name="perm_state_on">Đã bật</string>
+    <string name="perm_state_off">Chưa bật</string>
+    <string name="perm_switch_off">Mở cài đặt để tắt</string>
+    <string name="perm_switch_off_for">Mở cài đặt để tắt mục %1$s</string>
     <string name="perm_open_settings">Mở cài đặt</string>
     <string name="perm_open_settings_for">Mở cài đặt cho mục %1$s</string>
     <string name="perm_notif_title">Thông báo</string>
@@ -78,9 +82,7 @@
     <string name="e6_back">Quay lại</string>
 
     <!-- E7 chốt (Spec 022): hủy / thoát, mật khẩu gia đình (I2, không lưu mật khẩu), một phút bình tĩnh. -->
-    <string name="pause_cancel_sub">Về màn hình chính</string>
-    <string name="pause_cancel_bank">Hủy giao dịch</string>
-    <string name="pause_cancel_remote">Về màn hình chính</string>
+    <string name="pause_cancel">Về màn hình chính</string>
     <string name="pause_family_password_title">Người gọi nói là người nhà? Hỏi mật khẩu gia đình</string>
     <string name="pause_family_password_body">Người nhà thật sẽ nói đúng ngay. Chưa đặt mật khẩu thì bác cúp máy, rồi gọi lại cho con bằng số bác đã lưu. Nếu là công an hay ngân hàng thì bác cúp máy luôn.</string>
     <string name="pause_countdown_title">Bác nghỉ một phút cho bình tĩnh</string>
@@ -193,7 +195,7 @@
     </string-array>
 
     <!-- Đồng ý tập nhận biết lừa đảo (Spec 028). Chữ đồng ý nằm ở consent_texts.xml (consent_drills). -->
-    <string name="onboarding_scroll_hint">Kéo xuống đọc tiếp ↓</string>
+    <string name="onboarding_scroll_hint">Còn nữa ở dưới ↓</string>
     <string name="e6_drills">Tập nhận biết lừa đảo</string>
     <string name="drills_consent_accept">Đồng ý để HỏiCon mời tập</string>
     <string name="drills_consent_decline">Để lúc khác</string>

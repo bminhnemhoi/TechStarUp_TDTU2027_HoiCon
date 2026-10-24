@@ -89,3 +89,7 @@ vì còn phần "Tiến/Minh tải lên kênh internal testing" và AAB chưa k�
 ## Lượt 9 — T009 bản nháp tài liệu thí điểm (làn B, 24/10/2026) — **CHỜ MINH DUYỆT BẢN CUỐI, KHÔNG TICK**
 
 Soạn `docs/setup/PILOT-ONBOARDING.md`, `docs/setup/PILOT-SUPPORT.md`, bổ sung `docs/PILOT-PROTOCOL.md` (mục 2, 4, 5 và mục 9 "Phần còn chờ"). `ux-elder-reviewer` lượt 1: 2 Chặn + 8 Cao ⇒ đã sửa; lượt 2: **0 Chặn**, 3 Cao (đồng ý của người giám hộ: nêu rõ `[CHƯA XÁC ĐỊNH]`; báo người giám hộ nói sớm; màn E12 chưa chắc có) ⇒ đã xử lý bằng cách đưa vào mục 0 của onboarding và mục 9 của protocol; Trung bình/Thấp còn lại không chặn. Đường đi pin theo Samsung/Xiaomi/Oppo **chưa kiểm trên máy thật** (ghi rõ trong tài liệu). Còn chờ Minh: số/Zalo/giờ hỗ trợ, người phụ trách, tên Google Group, bước đồng ý của người giám hộ, spec 011 cho `llm_processing`/`voice_input`. Ghi chú: DESIGN-SYSTEM liệt kê E3 = xin quyền, E4 = liên hệ tin cậy nhưng app thật là E3 = công bố & đồng ý, E4 = từng quyền (tài liệu theo app).
+
+## Lượt 9 — T014 phần [A] (làn A, 24/10/2026)
+
+- gradlew :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug (nhánh feat/w9-android, 685ce92) xanh; gitleaks apps/android/app/src + apps/android/rules/src sạch; gitleaks `scripts` và `specs/029-pilot-kit` sạch; `check-spec-trace` 0 lỗi. Cùng phần B ở lượt 8 ⇒ **T014 (bộ kiểm) ĐẠT, tick.** **Chưa làm / cần Opus:** ROADMAP `P2-14` chỉ ☑ khi `gate-m2` đạt mọi chỉ tiêu — tôi không sửa ROADMAP; để ◐ cho tới khi `gate-m2` có số.

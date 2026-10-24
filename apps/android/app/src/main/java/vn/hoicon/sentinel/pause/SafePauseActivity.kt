@@ -320,7 +320,7 @@ class SafePauseActivity : ComponentActivity(), HoldToContinue.Listener {
     }
 
     /**
-     * "Hủy giao dịch" / "Thoát ra ngoài": back to the home screen, which takes the bank (or remote-control) app out of
+     * "Về màn hình chính": back to the home screen, which takes the bank (or remote-control) app out of
      * the way. We cannot, and do not, touch the other app (CLAUDE.md rule 3).
      */
     private fun cancel() {
