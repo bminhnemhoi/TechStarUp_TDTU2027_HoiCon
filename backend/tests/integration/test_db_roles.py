@@ -214,7 +214,7 @@ def test_a_table_added_later_is_covered_when_the_script_is_rerun(role: dict[str,
 
 
 def test_a_table_added_by_a_later_migration_is_usable_without_rerunning_the_script(role: dict[str, Any]) -> None:
-    """Spec 012 T020 / Medium #8 của 034: `ALTER DEFAULT PRIVILEGES` cấp quyền cho bảng tạo sau, khỏi chạy lại roles.sql."""
+    """Spec 012 T020 / Medium #8 của 034: `ALTER DEFAULT PRIVILEGES` cấp quyền cho bảng tạo sau."""
     with psycopg.connect(owner_conninfo(), autocommit=True) as owner:
         owner.execute("create table zz_012_later (id int primary key)")
         try:

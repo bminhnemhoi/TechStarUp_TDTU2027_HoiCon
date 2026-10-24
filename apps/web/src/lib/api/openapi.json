@@ -4528,6 +4528,10 @@
       "type": "string",
       "title": "Category"
      },
+     "title_vi": {
+      "type": "string",
+      "title": "Title Vi"
+     },
      "is_benign": {
       "type": "boolean",
       "title": "Is Benign"
@@ -4549,6 +4553,7 @@
     "required": [
      "id",
      "category",
+     "title_vi",
      "is_benign",
      "injection",
      "draft",

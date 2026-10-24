@@ -80,6 +80,33 @@ def reset() -> None:
 
 # --- kịch bản ------------------------------------------------------------------------------------------------------
 
+# Nhãn nhóm thủ đoạn cho ô chọn (FR-015): nhóm mới ở `scenario.v1.json` thiếu nhãn ⇒ test đỏ, `title_vi` ném KeyError.
+SCENARIO_TITLE_VI: dict[str, str] = {
+    "fake_police": "Giả danh công an",
+    "fake_tax": "Giả danh cơ quan thuế",
+    "fake_evn": "Giả danh điện lực",
+    "deepfake_relative": "Giả giọng/mặt người thân",
+    "task_scam": "Việc làm online",
+    "recovery_scam": "Hứa lấy lại tiền",
+    "fake_vneid": "Giả danh VNeID",
+    "fake_bank": "Giả danh ngân hàng",
+    "investment": "Mời đầu tư",
+    "fake_delivery": "Giả danh giao hàng",
+    "prize_gift": "Trúng thưởng, quà tặng",
+    "fake_health": "Giả danh y tế",
+    "benign_bank": "Cuộc gọi thật: ngân hàng",
+    "benign_relative_new_number": "Cuộc gọi thật: người thân đổi số",
+    "benign_shipper": "Cuộc gọi thật: người giao hàng",
+    "benign_official": "Cuộc gọi thật: cơ quan",
+    "benign_utility": "Cuộc gọi thật: điện, nước",
+    "benign_family": "Cuộc gọi thật: người nhà",
+}
+
+
+def title_vi(case_id: str, category: str) -> str:
+    """Tên ngắn tiếng Việt, tất định: nhãn nhóm + " · ca " + số cuối của id (bỏ số 0 đầu)."""
+    return f"{SCENARIO_TITLE_VI[category]} · ca {int(case_id.rsplit('_', 1)[1])}"
+
 
 def list_scenarios() -> list[dict[str, Any]]:
     """`sim_scenarios.v1`: không có `elder_note`, `source_ref` hay tín hiệu máy (chỉ thứ BGK cần để chọn)."""
@@ -90,6 +117,7 @@ def list_scenarios() -> list[dict[str, Any]]:
             {
                 "id": raw["id"],
                 "category": raw["category"],
+                "title_vi": title_vi(raw["id"], raw["category"]),
                 "is_benign": bool(raw["is_benign"]),
                 "injection": bool(raw.get("injection", False)),
                 "draft": bool(raw.get("draft", False)),

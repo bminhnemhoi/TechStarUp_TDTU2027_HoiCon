@@ -169,6 +169,11 @@ async def test_scenarios_match_the_contract_and_the_yaml_files(sim_world: Simple
     assert ids == sorted(ids) and len(ids) == len(list(SCENARIOS_DIR.glob("*.yaml")))
     blob = json.dumps(body, ensure_ascii=False)
     assert "source_ref" not in blob and "elder_note" not in blob and "device_signals" not in blob
+    # FR-015: mọi kịch bản có tên tiếng Việt; id chỉ còn ở trường `id`
+    assert all(s["title_vi"] for s in body["scenarios"])
+    by_id = {s["id"]: s["title_vi"] for s in body["scenarios"]}
+    if "fake_police_safe_account_002" in by_id:
+        assert by_id["fake_police_safe_account_002"] == "Giả danh công an · ca 2"
 
 
 # --- một lượt phát lại (T006, T007) ----------------------------------------------------------------------------------

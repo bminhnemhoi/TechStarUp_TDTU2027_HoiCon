@@ -1609,6 +1609,8 @@ export interface components {
             id: string;
             /** Category */
             category: string;
+            /** Title Vi */
+            title_vi: string;
             /** Is Benign */
             is_benign: boolean;
             /** Injection */

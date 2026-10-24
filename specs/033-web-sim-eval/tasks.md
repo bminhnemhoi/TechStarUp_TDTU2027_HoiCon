@@ -129,7 +129,7 @@
 
 Hợp đồng đã có (trường tùy chọn): `sim_scenarios.v1.title_vi`, `run_steps.v1.is_sim` + fixture. Test đỏ trước.
 
-- [ ] T021 [B-api] [FR-015] Test đỏ trước rồi hiện thực: `services/sim_service.py` bảng `SCENARIO_TITLE_VI` (18 nhóm, đúng chữ FR-015)
+- [x] T021 [B-api] [FR-015] Test đỏ trước rồi hiện thực: `services/sim_service.py` bảng `SCENARIO_TITLE_VI` (18 nhóm, đúng chữ FR-015)
   + `title_vi(case_id, category)`; `GET /v1/sim/scenarios` luôn gửi `title_vi`; `GET /v1/runs/{id}/steps` luôn gửi `is_sim` (thiết
   bị của sự cố có nhãn `sim:`). Test: mọi giá trị enum `category` của `scenario.v1.json` có nhãn; `fake_police_safe_account_002` ⇒
   "Giả danh công an · ca 2"; lượt sim ⇒ `is_sim: true`, lượt thường ⇒ `false`; phản hồi hợp lệ hợp đồng. Sinh lại client TS.

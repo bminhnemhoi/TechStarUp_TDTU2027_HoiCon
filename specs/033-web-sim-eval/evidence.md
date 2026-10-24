@@ -46,3 +46,8 @@
 
 - **T010 ĐẠT:** `routers/eval_summary.py` sau cổng FR-002 và phiên demo (như `/v1/sim/*`); chỉ đọc `backend/eval/baseline*.json` (không `reports/`, không `cassettes/`); `gate.verdict = provisional` + lý do khi cassette `synthetic` hoặc còn kịch bản `draft` (đúng với baseline hiện tại: số rào tất định, **chưa phải số M3**). `tests/integration/test_api_eval_summary.py` (4): cổng tắt ⇒ 404, gia đình thật ⇒ 404, chỉ số đúng baseline, tệp `reports/` chứa `RUN-CANARY` không bao giờ xuất hiện. Hạ tầng: `.dockerignore` thêm ngoại lệ `!backend/eval/baseline*.json` (cassettes/reports vẫn loại), `backend/Dockerfile` `COPY backend/eval/baseline*.json`, test `test_deploy_vps.py`. Client TS sinh lại; `docs/API.md` cập nhật.
 - **Không làm:** T016 (trang web `/eval`, nằm trong danh sách cắt).
+
+## Wave 6 — T021 (làn B, 24/10/2026)
+
+- **T021 ĐẠT**: `SCENARIO_TITLE_VI` (18 nhóm, đúng chữ FR-015) + `title_vi(case_id, category)` ở `sim_service`; `GET /v1/sim/scenarios` luôn gửi `title_vi`; `GET /v1/runs/{id}/steps` luôn gửi `is_sim` (join thiết bị của sự cố, nhãn `sim:`).
+  Test đỏ trước (8 đỏ: thiếu `SCENARIO_TITLE_VI`, thiếu `title_vi`, thiếu `is_sim`) → xanh: `test_sim_titles.py` (mọi enum `category` của `scenario.v1.json` có nhãn; `fake_police_safe_account_002` ⇒ "Giả danh công an · ca 2"; nhóm lạ ⇒ KeyError), `test_api_sim.py`, `test_api_runs.py` (`is_sim` false/true), `tests/contract`: 340 passed. Client TS sinh lại, `pnpm typecheck` sạch, ruff sạch.

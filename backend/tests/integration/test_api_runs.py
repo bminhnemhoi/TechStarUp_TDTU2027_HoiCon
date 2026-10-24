@@ -251,3 +251,31 @@ async def test_family_cap_applies_across_guardians_of_the_same_family(trace_worl
     for slot in held:
         slot.release()
     assert (await call("GET", f"/v1/runs/{trace_world['a']['run']}/stream", token=auth(trace_world))).status_code == 200
+
+
+async def test_steps_carry_is_sim_true_only_for_a_sim_device_incident(trace_world: dict[str, Any]) -> None:
+    """Spec 033 FR-015: `is_sim` luôn có mặt; true khi sự cố gắn thiết bị nhãn `sim:`."""
+    import secrets
+
+    from sqlalchemy import update
+
+    from hoicon.db.models import Device, Incident
+
+    run_id = trace_world["a"]["run"]
+    res = await call("GET", f"/v1/runs/{run_id}/steps", token=auth(trace_world))
+    assert res.status_code == 200 and res.json()["is_sim"] is False
+    VALIDATORS["run_steps"].validate(res.json())
+    incident_id = trace_world["a"]["incident"]
+    async with get_sessionmaker().begin() as session:
+        incident = await session.get(Incident, incident_id)
+        assert incident is not None
+        device = Device(
+            family_id=incident.family_id, member_id=incident.member_id, platform="web", label="sim:fake_police_001",
+            app_version="sim-1", rules_version="sim-1", device_secret_hash=secrets.token_hex(32),
+        )  # fmt: skip
+        session.add(device)
+        await session.flush()
+        await session.execute(update(Incident).where(Incident.id == incident_id).values(device_id=device.id))
+    res = await call("GET", f"/v1/runs/{run_id}/steps", token=auth(trace_world))
+    assert res.json()["is_sim"] is True
+    VALIDATORS["run_steps"].validate(res.json())
