@@ -1,0 +1,22 @@
+[
+  {
+    "_why": "is_demo false",
+    "incidents": 1,
+    "devices": 1,
+    "seconds": 0.1,
+    "is_demo": false
+  },
+  {
+    "_why": "số âm",
+    "incidents": -1,
+    "devices": 0,
+    "seconds": 0.1,
+    "is_demo": true
+  },
+  {
+    "_why": "thiếu seconds",
+    "incidents": 0,
+    "devices": 0,
+    "is_demo": true
+  }
+]

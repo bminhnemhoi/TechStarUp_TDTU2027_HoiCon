@@ -132,7 +132,9 @@
 - [ ] T021 [AB] [FR-011] (P2, chỉ khi 027 đã merge) Thêm `POST /v1/guardian/drills` + trang `/drills` trên web người giám
   hộ (đặt lịch, lịch sử, nhãn `[DIỄN TẬP]`), dùng chung `DrillService.schedule`, có test Playwright. Nếu 027 chưa merge
   thì đánh BLOCKED và ghi vào evidence.
-  · Verify: `$PYTEST tests/integration/test_api_drills.py && pnpm --dir apps/web e2e drills`
+  Hợp đồng **có từ 24/10/2026**: `guardian_drill_request.v1.json`, `guardian_drill_list.v1.json` (+ fixture; lỗi 422 `{detail: <mã DrillRefused>}`).
+  Thêm test hợp đồng vào `tests/contract/test_drill_schemas.py`; sinh lại client TS.
+  · Verify: `$PYTEST tests/contract/test_drill_schemas.py tests/integration/test_api_drills.py && pnpm --dir apps/web e2e drills`
 - [x] T022 [AB] [FR-012] Chạy đủ bộ lệnh kiểm:
   - `$PYTEST`; `ruff check` và `ruff format --check`;
   - `$GRADLE :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`;

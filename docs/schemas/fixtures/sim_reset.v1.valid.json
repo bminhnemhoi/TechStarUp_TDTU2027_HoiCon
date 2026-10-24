@@ -1,0 +1,16 @@
+[
+  {
+    "_name": "đã xóa 3 lượt",
+    "incidents": 3,
+    "devices": 3,
+    "seconds": 0.42,
+    "is_demo": true
+  },
+  {
+    "_name": "không có gì",
+    "incidents": 0,
+    "devices": 0,
+    "seconds": 0.01,
+    "is_demo": true
+  }
+]

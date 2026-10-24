@@ -1,0 +1,19 @@
+[
+  {
+    "_name": "khách nhập mã",
+    "code": "K7M2QX"
+  },
+  {
+    "_name": "console tạo mã",
+    "code": "K7M2QX",
+    "expires_at": "2027-02-27T09:10:00+07:00",
+    "max_guests": 50,
+    "is_demo": true
+  },
+  {
+    "_name": "đổi mã thành công",
+    "family_alias": "Gia đình Mẫu",
+    "expires_at": "2027-02-27T09:10:00+07:00",
+    "is_demo": true
+  }
+]

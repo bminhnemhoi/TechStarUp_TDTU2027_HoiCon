@@ -13,7 +13,7 @@
 
 ## Giai đoạn 0: Hợp đồng
 
-- [ ] T001 [Opus] [FR-001] Viết `docs/schemas/sim_reset.v1.json` (số lượt đã xóa, thời gian, `is_demo`) và `booth_join.v1.json` (đổi mã lấy phiên demo) + fixture
+- [x] T001 [Opus] [FR-001] Viết `docs/schemas/sim_reset.v1.json` (số lượt đã xóa, thời gian, `is_demo`) và `booth_join.v1.json` (đổi mã lấy phiên demo) + fixture
   valid/invalid. **BLOCKED**: ngoài quyền làn B. Gỡ chặn T011–T013.
 
 ## Nhóm [B-web] — giai đoạn 1
@@ -65,7 +65,7 @@
 
 ## Đối soát kiến trúc sư 24/10/2026
 
-- T001 (hợp đồng `sim_reset.v1`, `booth_join.v1`) do kiến trúc sư làm ở checkout chính, **sau 09/01/2027** (giai đoạn 2 phục vụ chung kết, không cần cho Vòng 1/2).
+- T001 **xong 24/10/2026** (nhà điều phối, Tiến cho làm hết việc thực thi được): `sim_reset.v1.json`, `booth_join.v1.json` + fixture. Giai đoạn 2 (T011–T013) gỡ chặn. Làn B thêm test hợp đồng vào `tests/contract/test_sim_schemas.py` ở T011.
 - [x] T016 [B-web] [FR-002, FR-004] Sửa các mục Medium còn lại của `ux-elder-reviewer` (evidence 050): bỏ thuật ngữ nội bộ ở console ("Gate G4", "replay" ⇒
   "Bản ghi"), băng rôn diễn tập dùng màu diễn tập riêng (DESIGN-SYSTEM, luật 15). `?fast=1` chỉ có hiệu lực khi `NODE_ENV !== "production"`.
   · Verify: `pnpm --dir apps/web typecheck && pnpm --dir apps/web e2e booth` + ảnh 390/1440 reviewer đọc lại ⇒ 0 Medium
