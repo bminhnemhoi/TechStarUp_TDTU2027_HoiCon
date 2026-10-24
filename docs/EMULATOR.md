@@ -172,3 +172,14 @@ cuộc gọi; (b) **Firebase Test Lab** (máy vật lý) trước M2 cho test in
 (c) `android device remote` (Android Device Streaming, cần dự án Google Cloud + `android auth`) để thao tác máy thật từ
 xa; (d) máy của gia đình thí điểm + số liệu heartbeat; (e) **khuyến nghị mua máy Android cũ 1–2 triệu trước 06/12**.
 Không tuyên bố tương thích hãng nào chưa thử.
+
+## Kinh nghiệm đo trên máy ảo (làn A, 23–24/10/2026)
+- **Chờ ≥ 3 phút sau cold boot** rồi mới đo: trong ~2 phút đầu modem giả nhận `gsm call` nhưng không đổ chuông (H1, evidence 010 lượt 9);
+  một lần `system_server` khởi động lại ~20 s sau boot. Số đo lấy trong khoảng này không dùng.
+- **Không để hai bản app tranh vai trò sàng lọc**: cài cả `vn.hoicon.sentinel` (debug) và `vn.hoicon.sentinel.demo` ⇒ vai trò chỉ thuộc một bản;
+  `emu-scenario.py` kiểm bằng `holds_role()` (so đúng tên gói, không so tiền tố).
+- Sau `pm clear` hoặc cài lại: `appops set <gói> SYSTEM_ALERT_WINDOW allow` và `GET_USAGE_STATS allow`.
+- Đã ghép đôi thì E8 có thể chen lên E7 ⇒ chụp E7 khi chưa ghép đôi.
+- Máy dev chỉ đủ RAM cho **một** AVD tại một thời điểm.
+- Ngưỡng "E7 ≤ 3 s" (luật 4) đo trên **bản release** và **gộp cả lượt nguội** (`--scenario pause_release`); không bỏ lượt đầu.
+
