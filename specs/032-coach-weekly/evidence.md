@@ -55,3 +55,18 @@ Chỉ đọc cột `device_id`, `slot` của `device_heartbeats` (không định
 và `log.txt` (sự kiện: API/emulator tắt). Tiến độ: `cat state.json`. Điều kiện Verify: khoảng trống dài nhất mọi điều kiện < 24 giờ (1 440 phút); nếu không ⇒ đề xuất ngưỡng mới trong spec. **Không tick T011 tới khi results.json đủ 5 điều kiện.**
 Nếu phiên làm việc đóng: driver là tiến trình `setsid` độc lập, không phụ thuộc phiên; nếu máy chủ bị khởi động lại, chạy lại lệnh `driver.py <device_id>` (không mất `state.json`).
 Giới hạn đã biết: máy ảo không sạc/dùng pin thật nên Doze/standby không phản ánh Samsung/Xiaomi/Oppo; chỉ là trần trên của hành vi AOSP.
+
+## Wave 6 — T011 đo khoảng trống heartbeat (làn A, 24/10/2026)
+
+**Nguồn: máy ảo `hc-api36` (API 36), backend dev cổng 18001, DB `hoicon_android`, bảng `device_heartbeats` (chỉ đếm khung 15 phút, không in định danh). Máy ảo ≠ máy thật** — số ở máy thật (Doze/hãng) chưa đo. Bộ đo: `~/hoicon-evidence/032-coach-weekly/heartbeat-gap/` (driver.py, log.txt, results.json; ngoài repo).
+
+| Điều kiện | Cách làm | Thời gian | Khung có heartbeat | Khoảng trống dài nhất |
+|---|---|---|---|---|
+| (a) bình thường | không can thiệp | 2 giờ | 8/8 | 15,0 phút |
+| (b) Doze | `dumpsys deviceidle force-idle` (đặt lại mỗi 15 phút) | 2 giờ | 8/8 | 15,0 phút |
+| (c) standby rare | `am set-standby-bucket vn.hoicon.sentinel rare` | 4 giờ | 16/16 | 15,0 phút |
+| (d) khởi động lại | `adb reboot`, đo 60 phút sau | 1 giờ | 3/4 | 21,95 phút |
+| (e) kill tiến trình | `am kill vn.hoicon.sentinel` | 1 giờ | 3/4 | 22,07 phút |
+
+- **Kết luận:** khoảng trống dài nhất 22,07 phút ≪ 24 giờ (ngưỡng "mất bảo vệ", Q2) ⇒ **ĐẠT**, không cần ngưỡng mới. Sau reboot/kill thiếu đúng 1 khung (chờ WorkManager lập lại lịch, ≈ một chu kỳ + độ trễ khởi động), không phải mất heartbeat kéo dài; ngưỡng 24 giờ và "2 khung `protected=false`" không bị chạm ⇒ không báo nhầm cho người giám hộ ở các điều kiện này.
+- **Giới hạn:** (a)–(c) đo 22–23/10; (d)/(e) đo lại 24/10 vì lần đo đầu của (d) hỏng khi máy chủ khởi động lại (heartbeat cuối 02:15Z 23/10, cửa sổ cũ bỏ). Một máy ảo, một lần mỗi điều kiện; `hc-api34` chưa đo. Chưa đo: hết pin/tắt máy qua đêm, tiết kiệm pin của hãng (Xiaomi/Oppo/Samsung) — cần máy thật.

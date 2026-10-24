@@ -59,7 +59,7 @@
 
 - [ ] T010 [A] [FR-009] Đồng bộ chuỗi `guardian_alerts` trên Android đã làm chung ở 031 T014 (bản gộp). Task này chỉ chạy khi T008 đổi chữ (Minh bác I4); không đổi ⇒ chạy Verify của 031 T014 một lần nữa rồi tick.
   · Verify: `$GRADLE :app:testDebugUnitTest --tests '*ConsentManifestPinTest*'`
-- [ ] T011 [A] [FR-010] Đo khoảng trống heartbeat trên `hc-api36` (và `hc-api34` nếu kịp) với backend dev: (a) bình thường 2 giờ, (b)
+- [x] T011 [A] [FR-010] Đo khoảng trống heartbeat trên `hc-api36` (và `hc-api34` nếu kịp) với backend dev: (a) bình thường 2 giờ, (b)
   `adb shell dumpsys deviceidle force-idle` 2 giờ, (c) `adb shell am set-standby-bucket vn.hoicon.sentinel rare` 4 giờ, (d) khởi động
   lại máy, (e) `adb shell am kill vn.hoicon.sentinel`. Đọc `device_heartbeats` bằng truy vấn đếm (không in định danh). Ghi khoảng
   trống dài nhất mỗi điều kiện vào evidence, ghi "máy ảo ≠ máy thật".
