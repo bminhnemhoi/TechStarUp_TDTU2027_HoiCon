@@ -164,7 +164,7 @@ class ActionTokenService:
         Trả None nếu token hoàn toàn không tồn tại trong CSDL.
         """
         record = await cls.get_token_record(session, raw_token)
-        if record is None:
+        if record is None or record.scope != "incident_decision":  # token xem/diễn tập không mở trang hành động
             return None
 
         # Lấy thông tin incident liên kết

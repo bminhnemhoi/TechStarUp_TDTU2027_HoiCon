@@ -77,7 +77,7 @@ nào cần, karpathy: không làm trước). Quyết định cho các câu làn 
 ## Lượt 7 (nhà điều phối 24/10/2026) — mục reviewer T009 còn mở, tài liệu
 
 Quyền làn B mở thêm cho lượt này: `docs/setup/**`, `docs/PRIVACY-DPIA.md`, `infra/compose.prod.yml` (chỉ chuyển biến).
-- [ ] T017 [B] [FR-007] Low #6/#7/#8 của T009: `/v1/lookups` phía người giám hộ kiểm `web_readable`; `elder.py` khóa theo `member_id`;
+- [x] T017 [B] [FR-007] Low #6/#7/#8 của T009: `/v1/lookups` phía người giám hộ kiểm `web_readable`; `elder.py` khóa theo `member_id`;
   `get_action_view_data` kiểm scope token. Mỗi mục test đỏ trước (thêm ô vào `test_idor_matrix.py` nếu hợp).
   · Verify: `$PYTEST tests/integration/test_idor_matrix.py tests/integration/test_api_lookups.py -q` + test mới
 - [ ] T018 [B] [FR-007] Low #9: `DELETE /v1/guardian/session` thu hồi phía máy chủ (danh sách `jti` thu hồi tới khi hết hạn, bảng hoặc cột

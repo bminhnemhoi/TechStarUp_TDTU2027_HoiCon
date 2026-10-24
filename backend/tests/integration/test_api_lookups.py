@@ -26,6 +26,7 @@ from hoicon.db.models import Consent, Family, Incident, Job, Member, ThreatIndic
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain.pii import hmac_h1
 from hoicon.ops import threat_list
+from hoicon.services import consent_gate
 
 pytestmark = pytest.mark.integration
 
@@ -676,4 +677,29 @@ async def test_device_cannot_attach_a_lookup_to_another_members_incident(consent
     assert (await level_of(sibling_incident))[0] == "high"  # không bị nâng
     assert (
         await post(consented.guardian_token, phone_body("high", incident_id=str(sibling_incident)))
+    ).status_code == 200
+
+
+async def test_a_guardian_cannot_attach_to_the_incident_of_an_elder_who_withdrew_guardian_alerts(
+    consented: World,
+) -> None:
+    """Rà soát 037 T009 #6: sự cố thật + chưa có `guardian_alerts` ⇒ cùng 404; máy của chính người đó vẫn được."""
+    async with get_sessionmaker().begin() as session:
+        await session.execute(text("update incidents set is_demo = false where id = :i"), {"i": consented.incident_id})
+        session.add(
+            Consent(
+                family_id=consented.family_id,
+                member_id=consented.device_member,
+                purpose="guardian_alerts",
+                granted=False,
+                consent_version="v1.0",
+                text_sha256=SHA,
+                channel="app",
+            )
+        )  # đã rút (ghép đôi mặc định cấp đồng ý)
+    consent_gate.invalidate(consented.device_member)
+    resp = await post(consented.guardian_token, phone_body("high", incident_id=str(consented.incident_id)))
+    assert resp.status_code == 404, resp.text
+    assert (
+        await post(consented.device_token, phone_body("high", incident_id=str(consented.incident_id)))
     ).status_code == 200

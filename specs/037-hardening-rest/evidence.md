@@ -75,3 +75,7 @@
 - `tests/contract/test_error_schema.py`: bỏ test enum `purpose`; mã của `events`/`devices` ∈ `$defs.code`; câu `consents.UNKNOWN_TEXT` hợp lệ.
   `tests/integration/test_error_body_contract.py`: gỡ `xfail` ⇒ **PASSED** (403 thật của `POST /v1/events` khớp lược đồ).
 - Verify: `uv run --directory backend pytest tests/contract tests/integration/test_error_body_contract.py -q` ⇒ 307 passed; ruff sạch.
+
+## Lượt 7 — T017 (làn B, 24/10/2026)
+
+- **T017 ĐẠT**: Low #6 `/v1/lookups` phía người giám hộ: sự cố của người cao tuổi chưa/đã rút `guardian_alerts` ⇒ cùng 404 (demo miễn; máy của chính người đó vẫn được); #7 `elder.py` `_own_incident` khóa thêm `member_id` (nhà nhiều người cao tuổi); #8 `get_action_view_data` chỉ nhận scope `incident_decision`. 3 test đỏ trước (`test_api_lookups`, `test_api_elder`, `test_action_token_service`) → xanh; `-k "action or elder or lookups or idor or token"` 162 passed; ruff sạch. (Ma trận IDOR không cần thêm ô: ba tuyến đã có, đổi là về quy tắc theo thành viên/đồng ý.)

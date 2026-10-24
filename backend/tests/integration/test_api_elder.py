@@ -17,11 +17,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import pytest
 from consent_support import call, pair_device, purge_family
 from jsonschema import Draft202012Validator, FormatChecker
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from test_api_events import make_event, post
 from test_incident_graph import deps
 
@@ -257,3 +258,30 @@ async def test_elder_answer_raises_level_above_floor(threads: list[str]) -> None
 def test_clean_resume_keeps_only_known_boolean_flags() -> None:
     value = {"answer": "yes", "note_flags": {"mentions_code": True, "mentions_money": True, "mentions_secrecy": "x"}}
     assert clean_resume(value) == {"answer": "yes", "note_flags": {"mentions_code": True}}
+
+
+async def test_a_device_cannot_touch_the_incident_of_another_elder_in_the_same_family(
+    device_world: Any, token: str, threads: list[str]
+) -> None:
+    """Rà soát 037 T009 #7: nhà có hai người cao tuổi, máy của A không đọc/trả lời sự cố của B."""
+    from hoicon.db.models import Member
+
+    me = (await call("GET", "/v1/devices/me", token=token)).json()["device"]
+    async with get_sessionmaker().begin() as session:
+        other = Member(family_id=UUID(me["family_id"]), role="protected")
+        session.add(other)
+        await session.flush()
+        incident = Incident(
+            family_id=UUID(me["family_id"]), member_id=other.id, level="high", rule_floor="high", is_demo=True
+        )
+        session.add(incident)
+        await session.flush()
+        incident_id = incident.id
+    try:
+        assert (await call("GET", f"/v1/incidents/{incident_id}/pending-question", token=token)).status_code == 404
+        body = {"question_id": "q_caller_authority", "answer": "yes"}
+        assert (await call("POST", f"/v1/incidents/{incident_id}/answers", token=token, json=body)).status_code == 404
+    finally:
+        async with get_sessionmaker().begin() as session:
+            await session.execute(delete(Incident).where(Incident.id == incident_id))
+            await session.execute(delete(Member).where(Member.id == other.id))

@@ -72,7 +72,8 @@ class PendingQuestionOut(BaseModel):
 async def _own_incident(incident_id: UUID, claims: DeviceClaims) -> Incident:
     async with get_sessionmaker()() as session:
         incident = await session.get(Incident, incident_id)
-    if incident is None or incident.family_id != claims.family_id:
+    # Nhà có thể có nhiều người cao tuổi: máy chỉ đụng sự cố CỦA MÌNH (rà soát 037 T009 #7); lạ ⇒ cùng một 404.
+    if incident is None or incident.family_id != claims.family_id or incident.member_id != claims.member_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=NOT_FOUND)
     return incident
 
