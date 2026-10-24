@@ -27,7 +27,7 @@ class ConsentSync(private val storage: TokenStorage, private val api: PairingApi
             val purposes = buildSet {
                 if (storage.acceptedDisclosureVersion == ConsentLedger.DISCLOSURE_VERSION) {
                     add(ConsentLedger.CORE_PROTECTION)
-                    add(ConsentLedger.GUARDIAN_ALERTS)
+                    if (!storage.guardianAlertsOff) add(ConsentLedger.GUARDIAN_ALERTS) // switched off in E12 (Spec 038)
                 }
                 // E10, asked just in time on first use: recorded under the current words, never forces the others again.
                 if (storage.acceptedLookupsVersion == ConsentLedger.VERSION) add(ConsentLedger.LOOKUPS)

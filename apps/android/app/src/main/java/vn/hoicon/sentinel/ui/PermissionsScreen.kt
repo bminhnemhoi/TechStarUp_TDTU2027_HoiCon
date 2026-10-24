@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.stateDescription
@@ -77,6 +78,15 @@ fun PermissionsScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     onSwitchOff: (SensorPermission) -> Unit = {},
+    /** E12 (Spec 038): purpose -> on?, for the consents that have no system permission; empty hides the section. */
+    switches: Map<String, Boolean> = emptyMap(),
+    onTurnOff: (String) -> Unit = {},
+    onTurnOn: (String) -> Unit = {},
+    notice: String? = null,
+    /** E12 delete (Spec 038): when the pending request starts purging (already formatted), or null; both callbacks are optional. */
+    deletePendingAt: String? = null,
+    onDelete: (() -> Unit)? = null,
+    onCancelDelete: () -> Unit = {},
 ) {
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -92,15 +102,68 @@ fun PermissionsScreen(
                 modifier = Modifier.semantics { heading() },
             )
             Text(text = stringResource(R.string.hello_ai_disclosure), style = MaterialTheme.typography.bodyLarge)
+            notice?.let { NoticePanel(text = it) }
             Text(text = stringResource(R.string.perm_screen_intro), style = MaterialTheme.typography.bodyMedium)
             for ((permission, row) in permissionRows()) {
                 HorizontalDivider()
                 PermissionItem(row = row, isGranted = permission in granted, onOpen = { onOpen(permission) }, onSwitchOff = { onSwitchOff(permission) })
             }
+            if (switches.isNotEmpty()) {
+                HorizontalDivider()
+                Text(
+                    text = stringResource(R.string.switch_section_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.semantics { heading() },
+                )
+                for ((purpose, isOn) in switches) {
+                    SwitchCard(purpose = purpose, isOn = isOn, onTurnOff = { onTurnOff(purpose) }, onTurnOn = { onTurnOn(purpose) })
+                }
+            }
+            if (onDelete != null) {
+                HorizontalDivider()
+                Text(
+                    text = stringResource(R.string.delete_section_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.semantics { heading() },
+                )
+                if (deletePendingAt != null) {
+                    NoticePanel(text = stringResource(R.string.delete_pending_panel, deletePendingAt))
+                    SecondaryButton(text = stringResource(R.string.delete_cancel), onClick = onCancelDelete)
+                } else {
+                    // Neutral navy outline, not the risk colours: this is a calm choice, not an alarm.
+                    SecondaryButton(text = stringResource(R.string.delete_button), onClick = onDelete)
+                }
+            }
             if (onBack != null) {
                 HorizontalDivider()
                 SecondaryButton(text = stringResource(R.string.e6_back), onClick = onBack)
             }
+        }
+    }
+}
+
+/** One consent without a system permission: what it is for (the first paragraph of its own consent text), its state, one button. */
+@Composable
+private fun SwitchCard(purpose: String, isOn: Boolean, onTurnOff: () -> Unit, onTurnOn: () -> Unit) {
+    val parts = rememberConsentParts(purpose)
+    val stateWords = stringResource(if (isOn) R.string.perm_state_on else R.string.perm_state_off)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(text = parts.title.trimEnd('.'), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+        parts.paragraphs.firstOrNull()?.let { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
+        Text(
+            text = stringResource(if (isOn) R.string.switch_status_on else R.string.switch_status_off),
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.clearAndSetSemantics { stateDescription = stateWords }, // the words, not the mark
+        )
+        val label = stringResource(if (isOn) R.string.switch_turn_off_for else R.string.switch_turn_on_for, parts.title)
+        OutlinedButton(
+            onClick = if (isOn) onTurnOff else onTurnOn,
+            shape = RoundedCornerShape(32.dp),
+            border = BorderStroke(2.dp, BrandNavy),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).semantics { contentDescription = label },
+        ) {
+            Text(text = stringResource(if (isOn) R.string.switch_turn_off else R.string.switch_turn_on), style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -122,7 +185,7 @@ private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () ->
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
             // The mark is a character: TalkBack gets the state in words (stateDescription), not "dấu kiểm"/"hình tròn".
-            modifier = Modifier.semantics { stateDescription = stateWords },
+            modifier = Modifier.clearAndSetSemantics { stateDescription = stateWords },
         )
         // UX-9: an item already on needs no action — only its status remains. The button comes right after the first
         // paragraph so a reader at 200% reaches it before the three explanatory ones (reviewer, 22/10).

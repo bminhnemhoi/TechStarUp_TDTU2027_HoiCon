@@ -89,6 +89,25 @@ class TokenStorage(private val prefs: SharedPreferences?) {
             write { putString(DRILLS_VERSION, value) }
         }
 
+    /** The person switched `guardian_alerts` off in E12 (Spec 038). Local and immediate: nothing is sent to the family from now on. */
+    var guardianAlertsOff: Boolean
+        get() = read { getBoolean(GUARDIAN_ALERTS_OFF, false) } ?: false
+        set(value) {
+            write { putBoolean(GUARDIAN_ALERTS_OFF, value) }
+        }
+
+    /** The E12 delete request that was sent and can still be cancelled (spec 038 FR-006): its id and when the server starts purging. */
+    var pendingDeleteId: String?
+        get() = read { getString(PENDING_DELETE_ID, null) }
+        set(value) {
+            write { putString(PENDING_DELETE_ID, value) }
+        }
+    var pendingDeleteAfterMs: Long
+        get() = read { getLong(PENDING_DELETE_AFTER, 0L) } ?: 0L
+        set(value) {
+            write { putLong(PENDING_DELETE_AFTER, value) }
+        }
+
     /**
      * What the server's ledger already holds as granted, one `purpose|version|textHash` key per purpose, so a new
      * consent version or new wording is recorded again (see ConsentLedger.key).
@@ -127,6 +146,9 @@ class TokenStorage(private val prefs: SharedPreferences?) {
         private const val DISCLOSURE_VERSION = "disclosure_version"
         private const val LOOKUPS_VERSION = "lookups_version"
         private const val DRILLS_VERSION = "drills_version"
+        private const val GUARDIAN_ALERTS_OFF = "guardian_alerts_off"
+        private const val PENDING_DELETE_ID = "pending_delete_id"
+        private const val PENDING_DELETE_AFTER = "pending_delete_after"
         private const val RECORDED_CONSENTS = "recorded_consents"
         private const val MASTER_KEY_ALIAS = "_androidx_security_master_key_"
 

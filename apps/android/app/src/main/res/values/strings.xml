@@ -13,6 +13,50 @@
 
     <!-- Màn quyền dành cho nhà phát triển (spike P1-S1), chưa phải màn E3 cho người cao tuổi. -->
     <string name="perm_screen_intro">Các mục dưới đây giúp HỏiCon nhận ra lúc có số lạ gọi rồi mở ứng dụng ngân hàng. Mục nào chưa bật, bác bấm để bật.</string>
+    <!-- E12: mục không gắn quyền hệ thống (Spec 038) -->
+    <string name="switch_section_title">Các việc khác HỏiCon làm khi bác đồng ý</string>
+    <string name="switch_status_on">✓ Đã bật</string>
+    <string name="switch_status_off">○ Chưa bật</string>
+    <string name="switch_turn_off">Tắt</string>
+    <string name="switch_turn_off_for">Tắt mục %1$s</string>
+    <string name="switch_turn_on">Bật</string>
+    <string name="switch_turn_on_for">Bật mục %1$s</string>
+    <string name="switch_noun_guardian_alerts">việc báo cho con cháu</string>
+    <string name="switch_noun_lookups">việc kiểm tra giúp bác</string>
+    <string name="switch_noun_drills">việc tập nhận biết lừa đảo</string>
+    <string name="switch_off_title">Tắt %1$s?</string>
+    <string name="switch_on_title">Bật lại %1$s?</string>
+    <string name="switch_notice_off">Đã tắt %1$s. Bác bật lại lúc nào cũng được.</string>
+    <string name="switch_notice_on">Đã bật lại %1$s.</string>
+    <string name="switch_off_consequence_guardian_alerts">HỏiCon sẽ không báo cho con cháu khi có dấu hiệu lạ nữa. HỏiCon vẫn nhắc bác dừng lại khi có dấu hiệu lừa đảo.</string>
+    <string name="switch_off_consequence_lookups">HỏiCon sẽ không kiểm tra số hay đường link bác gửi nữa. Bác bật lại lúc nào cũng được.</string>
+    <string name="switch_off_consequence_drills">HỏiCon sẽ không mời bác tập nhận biết lừa đảo nữa. Bác bật lại lúc nào cũng được.</string>
+    <string name="switch_off_confirm">Đúng, tắt</string>
+    <string name="switch_off_back">Quay lại</string>
+    <string name="switch_on_confirm">Đồng ý, bật lại</string>
+    <string name="switch_on_intro">Bác đọc lại rồi quyết định nhé.</string>
+    <!-- E12: xóa dữ liệu của gia đình (Spec 038 FR-003/FR-006) -->
+    <string name="delete_section_title">Xóa dữ liệu</string>
+    <string name="delete_button">Xóa dữ liệu của gia đình</string>
+    <string name="delete_title">Xóa dữ liệu của gia đình?</string>
+    <string name="delete_what">HỏiCon sẽ xóa các sự việc, tin nhắn và liên kết với gia đình bác trên máy chủ.</string>
+    <string name="delete_keep">HỏiCon giữ lại sổ ghi những điều bác đã đồng ý, vì luật yêu cầu như vậy.</string>
+    <string name="delete_wait">HỏiCon chờ 24 giờ rồi mới xóa. Trong lúc chờ, HỏiCon vẫn bảo vệ bác, và bác đổi ý thì bấm Hủy. Xóa xong trong 72 giờ.</string>
+    <string name="delete_guardian">Con bác sẽ nhận một tin báo về việc này.</string>
+    <string name="delete_hold">Giữ ngón tay 3 giây để gửi yêu cầu</string>
+    <string name="delete_hold_a11y">Gửi yêu cầu xóa. Bấm giữ 3 giây.</string>
+    <string name="delete_back">Quay lại</string>
+    <string name="delete_sending">Đang gửi…</string>
+    <string name="delete_offline">Chưa gửi được. Bác thử lại khi có mạng nhé.</string>
+    <string name="delete_busy">Hôm nay bác đã gửi nhiều lần. Bác thử lại vào ngày mai nhé.</string>
+    <string name="delete_refused">Điện thoại này chưa kết nối được với gia đình bác nên chưa gửi được.</string>
+    <string name="delete_failed">Chưa gửi được. Bác thử lại sau một lúc nhé.</string>
+    <string name="delete_pending_panel">Sẽ xóa lúc %1$s. Trong lúc chờ, HỏiCon vẫn bảo vệ bác.</string>
+    <string name="delete_cancel">Hủy yêu cầu xóa</string>
+    <string name="delete_cancelled">Đã hủy yêu cầu xóa.</string>
+    <string name="delete_cancel_too_late">Đã quá giờ hủy, việc xóa đã bắt đầu.</string>
+    <string name="delete_cancel_unavailable">Chưa hủy được lúc này. Bác thử lại sau nhé.</string>
+    <string name="delete_done_welcome">Dữ liệu của gia đình bác đã được xóa. Muốn dùng lại, bác kết nối với con nhé.</string>
     <string name="perm_status_on">✓ Đã bật</string>
     <string name="perm_status_off">○ Chưa bật</string>
     <string name="perm_state_on">Đã bật</string>

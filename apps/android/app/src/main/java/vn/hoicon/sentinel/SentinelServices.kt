@@ -74,7 +74,7 @@ class SentinelServices private constructor(private val app: Context) {
     /** See [ConsentLedger.mayShareWithFamily]. Reads small private prefs: call from the background thread. */
     fun mayShare(): Boolean {
         val tokens = TokenStorage.create(app)
-        return tokens.load() != null &&
+        return tokens.load() != null && !tokens.guardianAlertsOff && // E12 switch: effective at once, before the ledger row reaches the server
             ConsentLedger.mayShareWithFamily(tokens.acceptedDisclosureVersion, tokens.recordedConsents, consentTexts(app.resources))
     }
 
