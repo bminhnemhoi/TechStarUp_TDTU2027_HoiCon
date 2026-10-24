@@ -1135,6 +1135,27 @@ export interface components {
             /** Incident Opened */
             incident_opened: boolean;
         };
+        /** FormElder */
+        FormElder: {
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Alias */
+            alias: string;
+            /** Drills Consent */
+            drills_consent: boolean;
+        };
+        /** FormScript */
+        FormScript: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+        };
         /**
          * GraphTopologyOut
          * @description Khớp `docs/schemas/graph_topology.v1.json`.
@@ -1156,6 +1177,10 @@ export interface components {
         GuardianDrillListOut: {
             /** Drills */
             drills: components["schemas"]["GuardianDrillOut"][];
+            /** Elders */
+            elders?: components["schemas"]["FormElder"][] | null;
+            /** Scripts */
+            scripts?: components["schemas"]["FormScript"][] | null;
         };
         /** GuardianDrillOut */
         GuardianDrillOut: {

@@ -168,6 +168,6 @@
   P2-13 vì FR-011 là P2).
 
 ## Lượt 9 (nhà điều phối 24/10/2026)
-- [ ] T022 [B-api][B-web] [FR-011] Hợp đồng `guardian_drill_list.v1` có thêm `elders` (`member_id`, `alias`, `drills_consent`) và `scripts`
+- [x] T022 [B-api][B-web] [FR-011] Hợp đồng `guardian_drill_list.v1` có thêm `elders` (`member_id`, `alias`, `drills_consent`) và `scripts`
   (`id`, `title`, `summary`) — GET luôn gửi. Bỏ cách tạm (lấy người nhận từ sự cố, 3 kịch bản viết cứng ở web); biểu mẫu `/drills` dùng hai danh sách
   này; chưa đồng ý `drills` ⇒ nút tắt + câu giải thích. Sinh lại client TS. · Verify: `$PYTEST tests/contract/test_drill_schemas.py tests/integration/test_api_drills.py -q && pnpm --dir apps/web e2e drills`

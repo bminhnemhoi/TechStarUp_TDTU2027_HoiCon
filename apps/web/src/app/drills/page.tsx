@@ -3,17 +3,15 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BUTTON_PRIMARY, DrillTag, ErrorBox, GuardianShell, Icon, LINK_TOUCH, useLoginRedirect } from "@/components/guardian-ui";
-import { ApiError, api, errorMessage, type GuardianDrill, type GuardianDrillList, type GuardianIncidentList } from "@/lib/client";
-import { DRILL_DURATIONS, DRILL_REFUSAL_VI, DRILL_SCRIPTS, DRILL_STATUS_VI } from "@/lib/drills";
+import { ApiError, api, errorMessage, type GuardianDrill, type GuardianDrillList } from "@/lib/client";
+import { DRILL_DURATIONS, DRILL_REFUSAL_VI, DRILL_STATUS_VI } from "@/lib/drills";
 import { aliasName } from "@/lib/steps";
 
 // Diễn tập cho người nhà (spec 028, FR-011): đặt lịch một bài và xem lịch sử. Bài diễn tập là cuộc gọi GIẢ do HỏiCon tổ chức,
 // luôn có nhãn [DIỄN TẬP] và màu diễn tập riêng (drill.*). Thân gửi đi chỉ có 4 trường (không văn bản tự do).
-// Người nhận lấy từ danh sách sự cố của gia đình (hợp đồng chưa có danh sách thành viên).
-interface Elder {
-  id: string;
-  alias: string;
-}
+// Người nhận và kịch bản do máy chủ gửi kèm danh sách (`elders`, `scripts`); người chưa đồng ý `drills` thì nút đặt lịch tắt.
+type Elder = NonNullable<GuardianDrillList["elders"]>[number];
+type Script = NonNullable<GuardianDrillList["scripts"]>[number];
 
 const VN_DAY = new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", day: "2-digit", month: "2-digit", year: "numeric" });
 const VN_HOUR = new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit" });
@@ -61,7 +59,8 @@ export default function DrillsPage() {
   const [elders, setElders] = useState<Elder[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [memberId, setMemberId] = useState("");
-  const [scriptId, setScriptId] = useState(DRILL_SCRIPTS[0].id);
+  const [scripts, setScripts] = useState<Script[]>([]);
+  const [scriptId, setScriptId] = useState("");
   const [start, setStart] = useState("");
   const [minutes, setMinutes] = useState(60);
   const [busy, setBusy] = useState(false);
@@ -71,19 +70,13 @@ export default function DrillsPage() {
 
   const load = useCallback(async () => {
     try {
-      const [list, open, closed] = await Promise.allSettled([
-        api<GuardianDrillList>("/v1/guardian/drills"),
-        api<GuardianIncidentList>("/v1/guardian/incidents?status=open"),
-        api<GuardianIncidentList>("/v1/guardian/incidents?status=closed"),
-      ]);
-      if (list.status === "rejected") throw list.reason; // thiếu danh sách người nhận thì vẫn xem được lịch sử
-      const seen = new Map<string, string>();
-      const incidents = [open, closed].flatMap((r) => (r.status === "fulfilled" ? r.value.incidents : []));
-      for (const i of incidents) if (!seen.has(i.member_id)) seen.set(i.member_id, aliasName(i.elder_alias, true));
-      const found = [...seen].map(([id, alias]) => ({ id, alias }));
-      setDrills(list.value.drills);
+      const list = await api<GuardianDrillList>("/v1/guardian/drills");
+      const found = list.elders ?? [];
+      setDrills(list.drills);
       setElders(found);
-      setMemberId((current) => current || found[0]?.id || "");
+      setScripts(list.scripts ?? []);
+      setMemberId((current) => current || found.find((e) => e.drills_consent)?.member_id || found[0]?.member_id || "");
+      setScriptId((current) => current || list.scripts?.[0]?.id || "");
       setLoadError(null);
     } catch (error) {
       if (redirectIfUnauthorized(error)) return;
@@ -104,8 +97,8 @@ export default function DrillsPage() {
     setProblem(null);
     setDone(null);
     const window = windowOf(start, minutes);
-    if (!memberId) {
-      setProblem("Anh/chị chọn người nhận trước khi đặt lịch.");
+    if (!memberId || !scriptId) {
+      setProblem("Anh/chị chọn người nhận và kịch bản trước khi đặt lịch.");
       return;
     }
     if (!window) {
@@ -130,6 +123,9 @@ export default function DrillsPage() {
   }
 
   const noElders = elders !== null && elders.length === 0;
+  const pickedElder = elders?.find((e) => e.member_id === memberId);
+  const noConsent = pickedElder !== undefined && !pickedElder.drills_consent;
+  const pickedScript = scripts.find((x) => x.id === scriptId);
   const picked = windowOf(start, minutes);
   const field = "min-h-16 rounded-button border-2 border-brand-navy bg-background px-3 text-body";
 
@@ -161,8 +157,9 @@ export default function DrillsPage() {
           </label>
           <select id="drill-member" className={field} value={memberId} onChange={(e) => setMemberId(e.target.value)} >
             {elders.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.alias}
+              <option key={e.member_id} value={e.member_id}>
+                {aliasName(e.alias, true)}
+                {e.drills_consent ? "" : " (chưa đồng ý diễn tập)"}
               </option>
             ))}
           </select>
@@ -170,16 +167,21 @@ export default function DrillsPage() {
             Kịch bản
           </label>
           <select id="drill-script" className={field} value={scriptId} onChange={(e) => setScriptId(e.target.value)}>
-            {DRILL_SCRIPTS.map((s) => (
+            {scripts.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.title}
               </option>
             ))}
           </select>
+          {pickedScript && (
+            <p className="text-body" data-testid="script-summary">
+              {pickedScript.summary}
+            </p>
+          )}
           <label htmlFor="drill-start" className="text-body font-bold">
             Bắt đầu lúc (giờ Việt Nam)
           </label>
-          <input id="drill-start" type="datetime-local" className={field} value={start} min={minStart} onChange={(e) => setStart(e.target.value)} />
+          <input id="drill-start" lang="vi" type="datetime-local" className={field} value={start} min={minStart} onChange={(e) => setStart(e.target.value)} />
           <label htmlFor="drill-length" className="text-body font-bold">
             Kéo dài
           </label>
@@ -208,8 +210,25 @@ export default function DrillsPage() {
               {done}
             </p>
           )}
-          <button type="submit" disabled={busy} className={BUTTON_PRIMARY}>
-            {busy ? "Đang đặt lịch…" : "Đặt lịch diễn tập"}
+          {noConsent && (
+            <p
+              id="no-consent-msg"
+              role="status"
+              className="rounded-card border-2 border-brand-navy bg-surface-muted p-4 text-body font-bold"
+              data-testid="no-consent"
+            >
+              <Icon>!</Icon>
+              {aliasName(pickedElder.alias, true)} chưa đồng ý tham gia diễn tập nên HỏiCon chưa đặt lịch được. Diễn tập chỉ bắt đầu khi chính người đó đồng ý. Anh/chị nhờ{" "}
+              {aliasName(pickedElder.alias)} bật lựa chọn diễn tập trong ứng dụng HỏiCon rồi quay lại nhé, hoặc chọn người khác ở trên.
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={busy || noConsent}
+            aria-describedby={noConsent ? "no-consent-msg" : undefined}
+            className={`${BUTTON_PRIMARY} disabled:border-2 disabled:border-brand-navy disabled:bg-surface-muted disabled:text-foreground disabled:opacity-100`}
+          >
+            {busy ? "Đang đặt lịch…" : noConsent ? "Chưa đặt lịch được" : "Đặt lịch diễn tập"}
           </button>
         </form>
         )}

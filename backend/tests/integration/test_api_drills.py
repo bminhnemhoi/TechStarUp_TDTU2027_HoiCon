@@ -845,7 +845,7 @@ async def test_refusals_are_422_with_the_service_code_and_write_nothing(
 ) -> None:
     res = await schedule_via_api(world, request_body(world, **changes))
     assert res.status_code == 422 and res.json() == {"detail": code}
-    assert (await call("GET", "/v1/guardian/drills", token=guardian_token(world))).json() == {"drills": []}
+    assert (await call("GET", "/v1/guardian/drills", token=guardian_token(world))).json()["drills"] == []
 
 
 async def test_a_member_of_another_family_and_a_missing_consent_are_refused(world: World) -> None:
@@ -872,3 +872,38 @@ async def test_guardian_drill_routes_need_a_guardian_session_and_a_valid_body(wo
     assert (await schedule_via_api(world, extra)).status_code == 422  # extra="forbid": không trường tự do
     bad_time = request_body(world, window_start="không-phải-giờ")
     assert (await schedule_via_api(world, bad_time)).status_code == 422
+
+
+# --- Lượt 9 (T022): GET gửi `elders` + `scripts` cho biểu mẫu ------------------------------------------------
+
+
+async def test_the_list_carries_the_form_data_elders_and_scripts(world: World) -> None:
+    res = await call("GET", "/v1/guardian/drills", token=guardian_token(world))
+    body = res.json()
+    assert res.status_code == 200 and list(GUARDIAN_LIST.iter_errors(body)) == []
+    by_id = {e["member_id"]: e for e in body["elders"]}
+    assert set(by_id) == {str(world.member_id), str(world.sibling_id)}  # chỉ người được bảo vệ cùng nhà
+    assert by_id[str(world.member_id)] == {"member_id": str(world.member_id), "alias": "Mẹ", "drills_consent": True}
+    assert by_id[str(world.sibling_id)]["drills_consent"] is False  # chưa đồng ý ⇒ web tắt nút
+    assert {s["id"] for s in body["scripts"]} == set(dr.load_scripts())  # ở dev: kịch bản chưa duyệt vẫn đặt được
+    assert all(s["title"] and s["summary"] for s in body["scripts"])
+
+
+async def test_the_form_data_hides_another_family_and_withdrawn_consent_and_unapproved_scripts(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await grant(world.member_id, world.family_id, granted=False)  # rút đồng ý
+    body = (await call("GET", "/v1/guardian/drills", token=guardian_token(world))).json()
+    assert str(world.other_member_id) not in {e["member_id"] for e in body["elders"]}
+    assert {e["member_id"]: e["drills_consent"] for e in body["elders"]}[str(world.member_id)] is False
+    monkeypatch.setattr("hoicon.services.drill_service.get_settings", lambda: type("S", (), {"env": "prod"})())
+    body = (await call("GET", "/v1/guardian/drills", token=guardian_token(world))).json()
+    assert body["scripts"] == []  # ngoài dev, chưa duyệt ⇒ không mời chọn (đặt lịch sẽ bị từ chối)
+
+
+async def test_a_member_from_the_elders_list_can_be_scheduled(world: World) -> None:
+    body = (await call("GET", "/v1/guardian/drills", token=guardian_token(world))).json()
+    elder = next(e for e in body["elders"] if e["drills_consent"])
+    script = body["scripts"][0]
+    res = await schedule_via_api(world, request_body(world, member_id=elder["member_id"], script_id=script["id"]))
+    assert res.status_code == 201

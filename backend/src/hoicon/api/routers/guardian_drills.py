@@ -19,7 +19,7 @@ from hoicon.api.auth import GuardianClaims, get_current_full_guardian
 from hoicon.db.models import Drill, Member
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain import drill as dr
-from hoicon.services.drill_service import DrillRefused, DrillService
+from hoicon.services.drill_service import DrillRefused, DrillService, elders_for_form, schedulable_scripts
 
 router = APIRouter(prefix="/v1/guardian/drills", tags=["guardian"])
 NO_STORE = {"Cache-Control": "no-store"}
@@ -47,8 +47,27 @@ class GuardianDrillOut(BaseModel):
     is_drill: Literal[True] = True
 
 
+class FormElder(BaseModel):
+    member_id: UUID
+    alias: str
+    drills_consent: bool
+
+
+class FormScript(BaseModel):
+    id: str
+    title: str
+    summary: str
+
+
 class GuardianDrillListOut(BaseModel):
     drills: list[GuardianDrillOut]
+    elders: list[FormElder] | None = None  # chỉ GET gửi
+    scripts: list[FormScript] | None = None
+
+
+def _summary(script: dict) -> str:
+    agency = script.get("agency_fictional", "một cơ quan hư cấu")
+    return f"Cuộc gọi giả từ “{agency}”, {len(script['steps'])} bước."[:280]
 
 
 async def _view(session: AsyncSession, drills: list[Drill]) -> GuardianDrillListOut:
@@ -74,21 +93,36 @@ async def _view(session: AsyncSession, drills: list[Drill]) -> GuardianDrillList
                 window_end=d.window_end,
                 status=d.status,  # type: ignore[arg-type]
                 score=d.score,
+                is_drill=True,
             )
         )
     return GuardianDrillListOut(drills=out)
 
 
-@router.get("", response_model=GuardianDrillListOut, summary="Lịch và lịch sử diễn tập của gia đình (spec 028)")
+@router.get(
+    "",
+    response_model=GuardianDrillListOut,
+    response_model_exclude_unset=True,
+    summary="Lịch và lịch sử diễn tập của gia đình (spec 028)",
+)
 async def list_drills(claims: Guardian, response: Response) -> GuardianDrillListOut:
     response.headers.update(NO_STORE)
     async with get_sessionmaker()() as session:
-        return await _view(session, await DrillService.list_for_family(session, claims.family_id))
+        view = await _view(session, await DrillService.list_for_family(session, claims.family_id))
+        view.elders = [
+            FormElder(member_id=m.id, alias=safe_alias(m.alias), drills_consent=ok)
+            for m, ok in await elders_for_form(session, claims.family_id)
+        ]
+        view.scripts = [
+            FormScript(id=s["id"], title=str(s["title"])[:120], summary=_summary(s)) for s in schedulable_scripts()
+        ][:20]
+        return view
 
 
 @router.post(
     "",
     response_model=GuardianDrillListOut,
+    response_model_exclude_unset=True,
     status_code=status.HTTP_201_CREATED,
     summary="Đặt lịch một bài diễn tập (spec 028)",
     responses={422: {"description": "Bị từ chối: `{detail: <mã DrillRefused>}`"}},

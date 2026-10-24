@@ -111,6 +111,24 @@ async def _has_consent(session: AsyncSession, member_id: UUID) -> bool:
     return latest is True
 
 
+async def elders_for_form(session: AsyncSession, family_id: UUID, limit: int = 10) -> list[tuple[Member, bool]]:
+    """Người được bảo vệ của gia đình + đã đồng ý `drills` chưa (cho biểu mẫu đặt lịch của người giám hộ)."""
+    members = (
+        await session.scalars(
+            select(Member)
+            .where(Member.family_id == family_id, Member.role == "protected")
+            .order_by(Member.created_at)
+            .limit(limit)
+        )
+    ).all()
+    return [(m, await _has_consent(session, m.id)) for m in members]
+
+
+def schedulable_scripts() -> list[dict[str, Any]]:
+    """Kịch bản mà `schedule` sẽ chấp nhận (đã duyệt, hoặc ở dev/test/ci)."""
+    return [s for s in dr.load_scripts().values() if _approved_or_dev(s)]
+
+
 def _trusted_time(value: datetime | None, now: datetime) -> datetime:
     """Mốc do máy báo chỉ là thông tin: lệch quá xa thì dùng giờ máy chủ."""
     if value is None or value > now + CLIENT_CLOCK_SLACK or value < now - timedelta(days=7):
