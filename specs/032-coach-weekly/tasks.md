@@ -67,7 +67,7 @@
 
 ## Rà soát & nghiệm thu
 
-- [ ] T012 [AB] [FR-011] `ux-elder-reviewer` (5 mẫu tin) và `security-privacy-reviewer` (job, `agent_steps`, lệnh Zalo, đồng ý, hạn
+- [x] T012 [AB] [FR-011] `ux-elder-reviewer` (5 mẫu tin) và `security-privacy-reviewer` (job, `agent_steps`, lệnh Zalo, đồng ý, hạn
   mức). Sửa mọi Chặn/Critical/High.
   · Verify: báo cáo trong `evidence.md`, không còn mục chặn chưa xử lý
 - [ ] T013 [AB] [FR-001..FR-011] Bộ kiểm cuối: `$PYTEST`; `ruff`; `hoicon-eval --suite smoke --compare baseline`; `$GRADLE
