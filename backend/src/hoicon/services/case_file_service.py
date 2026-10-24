@@ -50,7 +50,7 @@ VERDICTS = {
 @cache
 def load_guidance() -> dict[str, Any]:
     """Hướng dẫn trình báo (FR-011/FR-015): đọc YAML MỘT lần, kiểm cấu trúc theo `case_file.v1#/properties/guidance`.
-    Sai ⇒ ValueError (gọi lúc khởi động để lỗi lộ sớm). Chưa duyệt ⇒ `steps` rỗng dù tệp có bước (web chỉ hiện dự phòng)."""
+    Sai ⇒ ValueError (gọi lúc khởi động để lỗi lộ sớm). Chưa duyệt ⇒ `steps` rỗng dù tệp có bước."""
     doc = yaml.safe_load(GUIDANCE_FILE.read_text(encoding="utf-8"))
     if not isinstance(doc, dict) or not isinstance(doc.get("approved"), bool):
         raise ValueError("report_guidance: `approved` phải là true/false")
