@@ -33,6 +33,8 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
     } catch (error) {
       if (error instanceof ApiError && error.status === 429) {
         setProblem("Đã thử nhiều lần. Anh/chị đợi vài phút rồi thử lại, hoặc hỏi người trình bày.");
+      } else if (error instanceof ApiError && error.status === 404 && error.code !== "join_code_invalid") {
+        setProblem("Trang này chưa mở. Gian trình diễn chưa bật phần cho khách xem, anh/chị hỏi người trình bày nhé.");
       } else if (error instanceof ApiError && error.status === 0) {
         setProblem(error.message);
       } else {

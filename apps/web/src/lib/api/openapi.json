@@ -3371,6 +3371,53 @@
     ],
     "title": "EventsResult"
    },
+   "FormElder": {
+    "properties": {
+     "member_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Member Id"
+     },
+     "alias": {
+      "type": "string",
+      "title": "Alias"
+     },
+     "drills_consent": {
+      "type": "boolean",
+      "title": "Drills Consent"
+     }
+    },
+    "type": "object",
+    "required": [
+     "member_id",
+     "alias",
+     "drills_consent"
+    ],
+    "title": "FormElder"
+   },
+   "FormScript": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "summary": {
+      "type": "string",
+      "title": "Summary"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "summary"
+    ],
+    "title": "FormScript"
+   },
    "GraphTopologyOut": {
     "properties": {
      "graph": {
@@ -3415,6 +3462,34 @@
       },
       "type": "array",
       "title": "Drills"
+     },
+     "elders": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/FormElder"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Elders"
+     },
+     "scripts": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/FormScript"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scripts"
      }
     },
     "type": "object",

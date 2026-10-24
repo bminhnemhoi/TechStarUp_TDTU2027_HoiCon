@@ -85,3 +85,7 @@ vì còn phần "Tiến/Minh tải lên kênh internal testing" và AAB chưa k�
 
 - **Phần B đạt**: pytest 2932 passed / 22 skipped; ruff sạch; `hoicon-eval --suite smoke --compare baseline` không lệch; gitleaks `backend/src`, `backend/tests`, `docs/schemas`, `scripts`, `specs/029-pilot-kit` sạch; `check-spec-trace` 0 lỗi.
 - **Chưa làm (làn A)**: Gradle (`:rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`), gitleaks `apps/android/app/src`, và điều kiện ROADMAP `P2-14` ☑ (cần `gate-m2` đạt mọi chỉ tiêu). **T014 CHƯA TICK.**
+
+## Lượt 9 — T009 bản nháp tài liệu thí điểm (làn B, 24/10/2026) — **CHỜ MINH DUYỆT BẢN CUỐI, KHÔNG TICK**
+
+Soạn `docs/setup/PILOT-ONBOARDING.md`, `docs/setup/PILOT-SUPPORT.md`, bổ sung `docs/PILOT-PROTOCOL.md` (mục 2, 4, 5 và mục 9 "Phần còn chờ"). `ux-elder-reviewer` lượt 1: 2 Chặn + 8 Cao ⇒ đã sửa; lượt 2: **0 Chặn**, 3 Cao (đồng ý của người giám hộ: nêu rõ `[CHƯA XÁC ĐỊNH]`; báo người giám hộ nói sớm; màn E12 chưa chắc có) ⇒ đã xử lý bằng cách đưa vào mục 0 của onboarding và mục 9 của protocol; Trung bình/Thấp còn lại không chặn. Đường đi pin theo Samsung/Xiaomi/Oppo **chưa kiểm trên máy thật** (ghi rõ trong tài liệu). Còn chờ Minh: số/Zalo/giờ hỗ trợ, người phụ trách, tên Google Group, bước đồng ý của người giám hộ, spec 011 cho `llm_processing`/`voice_input`. Ghi chú: DESIGN-SYSTEM liệt kê E3 = xin quyền, E4 = liên hệ tin cậy nhưng app thật là E3 = công bố & đồng ý, E4 = từng quyền (tài liệu theo app).

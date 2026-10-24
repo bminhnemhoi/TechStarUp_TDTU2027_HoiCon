@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     zalo_mode: Literal["mock", "live"] = "mock"
     # Spec 033 FR-002: cổng bật `/v1/sim/*` và `/v1/eval/*` (mô phỏng cho BGK). Mặc định TẮT; compose.prod không đặt.
     sim_enabled: bool = False
+    # Spec 050 T017: khóa HMAC RIÊNG của mã tham gia gian (>= 32 ký tự), tách khỏi khóa ký JWT. Ngoài dev mà bật
+    # `sim_enabled` thì bắt buộc (thiếu => /readyz nêu tên, tạo/đổi mã 503); ở dev để trống => khóa con dẫn xuất từ JWT.
+    booth_code_key: SecretStr | None = None
     # Spec 037 FR-001: ép văn bản đồng ý theo manifest. Chưa đặt ⇒ bật ngoài dev (`consent_strict_on`).
     consent_strict: bool | None = None
     # Spec 032 D7: báo "mất bảo vệ" cho người giám hộ (ý I4 chưa được Minh duyệt) — tắt được mà không gỡ mã.

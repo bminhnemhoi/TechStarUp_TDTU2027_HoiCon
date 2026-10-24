@@ -139,7 +139,10 @@ async def stream_run(
             )
 
     try:
-        slot = trace_service.acquire_slot(claims.member_id, claims.family_id)
+        slot = trace_service.acquire_slot(
+            *trace_service.slot_keys(claims.member_id, claims.family_id, jti=claims.jti, guest=claims.guest),
+            family_limit=trace_service.MAX_GUEST_STREAMS if claims.guest else trace_service.MAX_STREAMS_PER_FAMILY,
+        )
     except StreamLimitError as exc:
         detail = {
             "member": "Bạn đang mở quá nhiều luồng theo dõi. Hãy đóng bớt rồi thử lại.",

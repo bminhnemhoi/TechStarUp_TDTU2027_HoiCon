@@ -10,8 +10,9 @@
 - Mỗi người tự đồng ý cho chính mình; không ai đồng ý thay người khác (kể cả con cho cha mẹ).
 
 ## 2. Tuyển & cài đặt
-- Cài qua Play closed testing (ADR-005), hướng dẫn qua video call có hình minh họa; ghi thời gian onboarding.
-- Trước khi cài, đội đọc to và giải thích các văn bản đồng ý trong `docs/legal/consent/` (mỗi mục đích một văn bản, có phiên bản và sha256).
+- Cài qua Play closed testing (ADR-005), hướng dẫn qua video call có hình minh họa theo `docs/setup/PILOT-ONBOARDING.md` (kịch bản gọi, không hứa thời lượng; quyền, pin theo hãng); ghi thời gian onboarding.
+- Ghi danh gia đình bằng `python -m hoicon.ops.pilot enroll --family <id> --confirm-adult` **sau khi** đã hỏi tuổi bằng lời (lệnh từ chối nếu thiếu cờ).
+- Trước khi mở app (app đã cài sẵn), đội đọc to và giải thích các văn bản đồng ý trong `docs/legal/consent/` (mỗi mục đích một văn bản, có phiên bản và sha256).
   Người tham gia xem đủ chữ rồi mới bấm đồng ý trên app; bản ghi vào sổ `consents` kèm phiên bản và sha256 của đúng chữ đã đọc.
 - Mục đích cần cho thí điểm: `core_protection`, `call_screening`, `usage_monitoring`, `overlay_pause`, `guardian_alerts`,
   `pilot_research`, `drills`; `lookups` hỏi đúng lúc khi dùng lần đầu. `llm_processing` và `voice_input` chỉ khi máy chủ/app đã thực thi (xem DPIA).
@@ -27,7 +28,7 @@
 - Dừng ngay nếu người tham gia tỏ ra lo âu hoặc bối rối; ghi sự cố đạo đức (xem mục 7).
 
 ## 4. Quyền rút lui và xóa dữ liệu
-- **Rút lui bất cứ lúc nào**, không cần nêu lý do: tắt quyền trong Cài đặt điện thoại (HỏiCon thôi canh chừng). **Từ spec 032, nếu quyền bị tắt hoặc điện thoại im lặng hơn 24 giờ thì HỏiCon nhắn Zalo cho người giám hộ** (một tin mỗi đợt, không gửi 21:00–07:00; tắt được bằng cờ `HOICON_PROTECTION_WATCH` nếu Minh bác ý I4); nói rõ điều này với người tham gia khi giải thích rút lui,
+- **Rút lui bất cứ lúc nào**, không cần nêu lý do. Có **ba việc khác nhau**, người tham gia chọn việc nào cũng được: (1) **tắt quyền** trong Cài đặt điện thoại (HỏiCon thôi canh chừng, chưa xóa gì); (2) **rút đồng ý từng mục** (màn E12 Cài đặt & quyền riêng tư của app, hoặc nhờ đội làm giúp); (3) **xóa dữ liệu** (nói với đội, bên dưới). Người cao tuổi không dùng Zalo vẫn rút được: nói với người giám hộ hoặc gọi số hỗ trợ (mục 5); người giám hộ chỉ **chuyển lời**, không quyết thay. Khi hỗ trợ viên thấy quyền bị tắt, **hỏi trước** xem là rút lui hay lỡ tay và **không xin bật lại** nếu là rút lui. **Từ spec 032, nếu quyền bị tắt hoặc điện thoại im lặng hơn 24 giờ thì HỏiCon nhắn Zalo cho người giám hộ** (một tin mỗi đợt, không gửi 21:00–07:00; tắt được bằng cờ `HOICON_PROTECTION_WATCH` nếu Minh quyết định tắt); nói rõ điều này với người tham gia khi giải thích rút lui,
   hoặc nhờ đội. Rút đồng ý `core_protection` thì máy chủ thôi nhận sự kiện từ máy đó.
 - **Yêu cầu xóa dữ liệu**: nói với đội qua kênh hỗ trợ. Đội chạy `python -m hoicon.ops.data request-delete --family <id>` (ghi vết trong `data_requests`),
   mục tiêu hoàn tất trong 72 giờ. Xóa mọi dữ liệu nhận diện của gia đình; sổ đồng ý được giữ nhưng không còn định danh.
@@ -35,8 +36,9 @@
 - Xóa thiết bị bị mất: `python -m hoicon.ops.devices revoke --device <id>`.
 
 ## 5. Kênh hỗ trợ
+Cách xử lý từng loại yêu cầu (mất bảo vệ, báo nhầm, gỡ cài đặt, xóa dữ liệu, vào web): `docs/setup/PILOT-SUPPORT.md`.
 - Người phụ trách thí điểm: `[CHỜ MINH ĐIỀN: tên, vai trò]`.
-- Số/Zalo/email hỗ trợ người tham gia: `[CHỜ MINH ĐIỀN]`. Giờ hỗ trợ: `[CHỜ MINH ĐIỀN]`.
+- Số/Zalo/email hỗ trợ người tham gia: `[CHỜ MINH ĐIỀN]`; **bắt buộc có số điện thoại** (người cao tuổi chưa chắc dùng Zalo). Giờ hỗ trợ: `[CHỜ MINH ĐIỀN]`.
 - Khi nghi bị lừa thật: bảo người tham gia gọi người thân và ngân hàng của họ trước; HỏiCon không thay thế cơ quan chức năng và không hứa lấy lại tiền.
 - Ghi mọi yêu cầu hỗ trợ không kèm số điện thoại, tài khoản hay tên thật.
 
@@ -52,3 +54,11 @@ report --days N --json` và `gate-m2` (đầu ra không chứa danh tính); ghi 
 
 ## 8. Gate
 M2 ≥ 5 gia đình (≥ 1 máy thật) · M3 ≥ 20 gia đình, ≥ 20 buổi diễn tập · G3 ≥ 30 gia đình, ≥ 50 buổi diễn tập.
+
+## 9. Phần còn chờ (ghi rõ để không ai tưởng đã xong)
+- **Chờ Minh duyệt bản cuối** toàn bộ tài liệu này, `docs/setup/PILOT-ONBOARDING.md` và `docs/setup/PILOT-SUPPORT.md`; mọi chỗ `[CHỜ MINH ĐIỀN]` (người phụ trách, số/Zalo/email hỗ trợ, giờ trực, tên và liên kết Google Group tester).
+- **Chưa xác nhận màn E12 (rút đồng ý từng mục) đã có trong app**; nếu chưa có thì việc rút đồng ý từng mục do đội làm giúp qua số hỗ trợ. Màn "Còn thiếu một bước" có cho tắt nhắc hay không cũng chưa xác nhận.
+- **Chưa xác định bước đồng ý của người giám hộ** (mục 1: mỗi người tự đồng ý cho chính mình): luồng hiện có chỉ cho thấy E3 của người cao tuổi; Minh chốt bước và chỗ ghi `consents` cho người giám hộ trước khi dùng với người thật.
+- **Chờ spec 011 (thực thi đồng ý)** cho `llm_processing` và `voice_input`: chỉ đưa vào buổi cài đặt khi máy chủ và app đã thực thi đúng mục đích (xem `docs/PRIVACY-DPIA.md`). Văn bản đồng ý cuối cùng và phiên bản do Minh chốt (`docs/legal/consent/`).
+- **Chưa kiểm trên máy thật**: đường đi bật "không giới hạn pin" theo Samsung/Xiaomi/Oppo; ngưỡng 24 giờ của "mất bảo vệ" (đo ở máy ảo ở spec 032, máy ảo ≠ máy thật).
+- **Chưa có Play Console/bản phát hành** (W0-3): chưa thể cài qua closed testing nên chưa chạy thử quy trình này với gia đình nào.

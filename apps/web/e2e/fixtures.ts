@@ -148,8 +148,16 @@ export const DRILL_HISTORY = (DRILL_DOC[1].drills as Json[]).map((d) => ({ ...d 
 export class DrillMock {
   drills: Json[] = DRILL_HISTORY.map((d) => ({ ...d }));
   refuse: string | null = null; // mã DrillRefused ⇒ POST trả 422 {detail}
+  elders: Json[] = [
+    { member_id: "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e82", alias: "Mẹ", drills_consent: true },
+    { member_id: "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e83", alias: "Bà Nội", drills_consent: false },
+  ];
+  scripts: Json[] = [
+    { id: "drill_bank_card_locked", title: "Cuộc gọi báo thẻ bị khóa", summary: "Cuộc gọi giả từ “Ngân hàng Sen Xanh”, 3 bước." },
+    { id: "drill_police_safe_account", title: "Cuộc gọi từ 'điều tra viên'", summary: "Cuộc gọi giả từ một cơ quan hư cấu, 3 bước." },
+  ];
   view(): Json {
-    return { drills: this.drills };
+    return { drills: this.drills, elders: this.elders, scripts: this.scripts };
   }
   create(body: Json): Json {
     const item = {

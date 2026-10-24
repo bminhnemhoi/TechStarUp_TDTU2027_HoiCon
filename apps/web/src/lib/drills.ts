@@ -1,10 +1,4 @@
 // Diễn tập của người giám hộ (spec 028 FR-011): chữ hiển thị cho mã trạng thái và mã từ chối của `DrillService`.
-// 3 kịch bản v1 trùng `data/drills/*.yaml` (có test `test_web_drill_scripts_match_data` kiểm id + tên).
-export const DRILL_SCRIPTS: { id: string; title: string }[] = [
-  { id: "drill_bank_card_locked", title: "Cuộc gọi báo thẻ bị khóa" },
-  { id: "drill_police_safe_account", title: "Cuộc gọi từ 'điều tra viên'" },
-  { id: "drill_relative_urgent_money", title: "Cuộc gọi 'cháu cần tiền gấp'" },
-];
 
 export const DRILL_DURATIONS = [
   { minutes: 30, label: "30 phút" },

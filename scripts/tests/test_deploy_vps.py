@@ -265,7 +265,7 @@ class CaddyfileInvariants(unittest.TestCase):
         self.assertNotIn("write ", self.text.split("timeouts {", 1)[1].split("}", 1)[0])  # SSE giữ kết nối dài
 
     def test_token_redaction_also_covers_double_slash_and_location(self) -> None:  # review 012 L-1
-        self.assertIn('^(/+(?:login|a|v1/action)/)', self.text)
+        self.assertIn('^(/+(?:login|a|join|v1/action)/)', self.text)  # 050 T017: cả /join/<mã> của gian
         self.assertIn("resp_headers>Location delete", self.text)
 
     def test_port_80_is_declared_so_it_gets_the_timeouts_too(self) -> None:

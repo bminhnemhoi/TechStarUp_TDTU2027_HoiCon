@@ -76,11 +76,36 @@ test("bị từ chối ⇒ câu tiếng Việt dễ hiểu, không lộ mã kỹ
 test("chưa có bài nào / chưa biết người nhận: nói rõ, không hiện biểu mẫu hỏng", async ({ page }) => {
   const empty = new DrillMock();
   empty.drills = [];
-  await mockApi(page, { drills: empty, list: () => ({ status: 200, json: { incidents: [], next_cursor: null } }) });
+  empty.elders = [];
+  await mockApi(page, { drills: empty });
   await page.goto("/drills");
   await expect(page.getByText("Chưa có bài diễn tập nào")).toBeVisible();
   await expect(page.getByTestId("no-elders")).toContainText("mời người thân cài ứng dụng");
   await expect(page.getByRole("button", { name: "Đặt lịch diễn tập" })).toHaveCount(0); // không hiện biểu mẫu hỏng
+});
+
+test("người nhận chưa đồng ý diễn tập ⇒ nút tắt kèm câu giải thích; chọn người đã đồng ý ⇒ nút bật", async ({ page }) => {
+  await mockApi(page, { drills: new DrillMock() });
+  await page.goto("/drills");
+  const submit = page.getByRole("button", { name: "Đặt lịch diễn tập" });
+  await expect(submit).toBeEnabled();
+  await page.getByLabel("Người nhận diễn tập").selectOption({ label: "Bà Nội (chưa đồng ý diễn tập)" });
+  const disabled = page.getByRole("button", { name: "Chưa đặt lịch được" });
+  await expect(disabled).toBeDisabled();
+  await expect(disabled).toHaveAttribute("aria-describedby", "no-consent-msg");
+  await expect(page.getByTestId("no-consent")).toContainText("chưa đồng ý");
+  await page.getByLabel("Người nhận diễn tập").selectOption({ label: "Mẹ" });
+  await expect(submit).toBeEnabled();
+  await expect(page.getByTestId("no-consent")).toHaveCount(0);
+});
+
+test("kịch bản trong ô chọn lấy từ máy chủ, không viết cứng", async ({ page }) => {
+  const mock = new DrillMock();
+  mock.scripts = [{ id: "drill_bank_card_locked", title: "Kịch bản chỉ có ở máy chủ", summary: "Cuộc gọi giả, 2 bước." }];
+  await mockApi(page, { drills: mock });
+  await page.goto("/drills");
+  await expect(page.getByLabel("Kịch bản").locator("option")).toHaveText(["Kịch bản chỉ có ở máy chủ"]);
+  await expect(page.getByTestId("script-summary")).toContainText("Cuộc gọi giả, 2 bước.");
 });
 
 for (const view of [
