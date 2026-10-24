@@ -96,7 +96,7 @@ Thứ tự: T018 → T019 → T020; T021 độc lập. T018 làm trước 028 T0
 Tách hai loại: **bố cục** (làn A làm ngay, không đổi chữ trong `docs/legal/consent/`) và **chữ** (chờ Minh duyệt cùng T010 —
 MASTER-PLAN §8 mục 12; không tăng phiên bản văn bản trước khi Minh quyết).
 
-- [ ] T022 [A] [FR-011] Bố cục, không đổi chữ đồng ý: (a) màn "Xong rồi" (cuối E4) có dải "Kéo xuống đọc tiếp ↓" khi còn chữ phía
+- [x] T022 [A] [FR-011] Bố cục, không đổi chữ đồng ý: (a) màn "Xong rồi" (cuối E4) có dải "Kéo xuống đọc tiếp ↓" khi còn chữ phía
   dưới — dùng lại thành phần gợi ý cuộn của E7 (`SafePauseScreen.kt`), không chép mã; (b) trang quyền E4: nút "Mở cài đặt" đứng ngay
   sau đoạn đầu (trước 3 đoạn giải thích còn lại), vẫn ≤ 2 hành động chính; (c) nhãn "✗ Chưa bật"/"✓ Đã bật" ≥ 20sp đậm, kèm biểu
   tượng + chữ (luật 15); (d) dòng "Đã kết nối với …" giữ tên gia đình do người giám hộ đặt (mục Cao của reviewer là dữ liệu thử, không
