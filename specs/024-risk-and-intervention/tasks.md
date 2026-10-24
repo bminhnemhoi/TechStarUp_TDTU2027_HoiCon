@@ -95,3 +95,15 @@ nguyên enum; thứ tự enum chính là thứ tự ghép). **Dừng** khi một
   `uv run --directory backend python -m hoicon.eval.cassettes check`;
   `hoicon-eval --suite smoke --compare baseline --shared-db-ok`, `--suite full --compare baseline-full --shared-db-ok`,
   `--suite injection --shared-db-ok` đều exit 0; reviewer 0 Chặn/Cao ghi vào `evidence.md` (SC-009).
+
+## Lượt 10 (nhà điều phối 25/10/2026) — lỗi từ GAP-REPORT làn A (có chứng cứ trong evidence 024)
+- [ ] T022 [A] [FR-005] E8 đúng luật 15 (≤ 2 hành động chính): hai câu trả lời chính là nút đặc ≥ 64dp; lựa chọn thứ ba ("Không rõ"/tương đương theo
+  `elder_question.v1`) là nút chữ phụ; không đổi mã trả lời gửi máy chủ. Khi thiếu quyền "hiển thị trên ứng dụng khác" ⇒ thông báo ưu tiên cao (kênh có sẵn,
+  không xin quyền mới — luật 3) mở E8 khi chạm. Test Compose + đơn vị đỏ trước; ảnh 100/200%; `ux-elder-reviewer` 0 Chặn/Cao.
+  · Verify: `apps/android/gradlew -p apps/android :app:testDebugUnitTest :app:lintDebug`
+- [ ] T023 [B] [FR-005] Mức rủi ro nâng sau câu trả lời E8 ghi ngược `incidents.level` (chỉ nâng, không hạ — luật 5; không phải chuyển trạng thái nên
+  không qua `transition()`, nhưng ghi `agent_steps`). Test đỏ: trả lời làm nâng ⇒ `incidents.level` = mức mới; trả lời không nâng ⇒ giữ nguyên.
+  · Verify: `uv run --directory backend pytest -q tests/integration -k "elder_answer"`
+- [ ] T024 [B] [SC-001] Đo đúng SC-001 "tóm tắt tới người giám hộ ≤ 15 s": từ `received_at` của sự kiện tới lúc job `notify_guardian` gọi client Zalo
+  (mock, có dấu thời gian) qua đồ thị thật ở chế độ replay, 20 lượt; ghi p50/p95 + nguồn ("máy dev, Zalo mock") vào evidence 024; sửa câu cũ dùng nhầm
+  số eval 227/327 ms. · Verify: `uv run --directory backend pytest -q tests/integration -k "summary_latency"` + bảng số trong evidence
