@@ -51,7 +51,7 @@ RETENTION: dict[str, timedelta] = {
     "device_heartbeats": timedelta(days=90),  # từ `slot` (spec 029)
 }
 
-# Thiết bị demo của /sim (spec 033 D9) sống ngắn hơn mọi dữ liệu khác: không nằm trong RETENTION (bảng §6 là dữ liệu thật).
+# Thiết bị demo của /sim (spec 033 D9) sống ngắn hơn dữ liệu thật: không nằm trong RETENTION (bảng §6).
 SIM_DEVICE_TTL = timedelta(hours=24)
 SIM_LABEL_PREFIX = "sim:"  # trùng `sim_service.SIM_LABEL_PREFIX` (có test); không import vì sim_service kéo cả router
 
@@ -206,7 +206,7 @@ async def purge_device_heartbeats(sessions: async_sessionmaker, *, now: datetime
 
 async def purge_sim_devices(sessions: async_sessionmaker, *, now: datetime, dry_run: bool = False) -> int:
     """Thiết bị `sim:` quá 24 giờ mà mọi sự cố của nó đã đóng quá 24 giờ (không sự cố ⇒ theo tuổi thiết bị).
-    Sự cố KHÔNG bị xóa (`incidents.device_id` SET NULL, hạn lưu sự cố giữ nguyên) nên lượt cũ không còn nhận ra là sim."""
+    Sự cố KHÔNG bị xóa (`incidents.device_id` SET NULL, hạn lưu sự cố giữ nguyên) nên lượt cũ không còn là sim."""
     cutoff = now - SIM_DEVICE_TTL
     still_live = (
         select(Incident.id)
