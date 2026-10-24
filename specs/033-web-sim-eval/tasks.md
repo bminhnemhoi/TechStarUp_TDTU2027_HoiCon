@@ -142,7 +142,7 @@ Hợp đồng đã có (trường tùy chọn): `sim_scenarios.v1.title_vi`, `ru
   reviewer: chữ hoa đầu câu `describeStep`, tab `/sim` đủ phím mũi tên, giờ tin Zalo mock theo giờ bước. Playwright: `e2e/sim.spec.ts`
   (ô chọn có chữ tiếng Việt), `e2e/trace.spec.ts` (fixture `is_sim: true` ⇒ có băng, `false` ⇒ không), axe; ảnh 390/768/1440.
   Phụ thuộc T021. · Verify: `python3 scripts/gen-design-tokens.py --check && $WEB typecheck && $WEB lint && $WEB e2e sim trace a11y`
-- [ ] T023 [B-api] [D9] Dọn thiết bị demo `sim:` của lượt đã kết thúc > 24 giờ (trong job `retention` có sẵn của 034; không xóa sự cố
+- [x] T023 [B-api] [D9] Dọn thiết bị demo `sim:` của lượt đã kết thúc > 24 giờ (trong job `retention` có sẵn của 034; không xóa sự cố
   — hạn lưu sự cố giữ nguyên). Test đồng hồ giả: 23 giờ ⇒ giữ, 25 giờ ⇒ xóa, thiết bị không nhãn `sim:` ⇒ không đụng.
   · Verify: `$PYTEST tests/integration/test_sim_cleanup.py -q`
 - [ ] T024 [AB] [FR-015] Cập nhật bảng SC của `evidence.md` (SC-001…SC-006 đang ghi "CHƯA ĐO" dù T013/T014 đã đạt — điền số từ các

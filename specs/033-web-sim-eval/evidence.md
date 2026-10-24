@@ -58,3 +58,10 @@
   3 mục Thấp: chữ hoa đầu chi tiết `describeStep`, tab `/sim` đủ ←/→/Home/End (vòng tròn, `tabIndex` chỉ ở tab chọn), giờ tin Zalo mô phỏng lấy theo giờ bước tạo tin (`fast_alert`→`fast_alert`, `detail`→`intervention`; không khớp thì giữ `at` của tin).
   Đỏ trước: 5 e2e đỏ trên bản build cũ (ô chọn, giờ tin, phím tab, chữ hoa, băng /trace) → sau `pnpm build`: `e2e sim trace a11y` **52 passed**; `gen-design-tokens.py --check` OK; `unittest discover scripts/tests` 114 OK (7 skipped); typecheck + lint sạch. Ảnh 390/768/1440 ở `~/hoicon-evidence/033-sim-trace/`.
 - **Lưu ý cho người tích hợp**: `gen-design-tokens.py` sinh lại `Tokens.kt` (thêm `Sim*`) của Android — kiểm Gradle khi gộp. Màu "Kịch bản nháp" đổi từ màu diễn tập sang `sim.*` (màu diễn tập chỉ cho diễn tập).
+
+## Wave 6 — T023 (làn B, 24/10/2026)
+
+- **T023 ĐẠT**: `retention_service.purge_sim_devices` (và khóa `sim_devices` trong báo cáo `run_retention`): xóa thiết bị nhãn `sim:` tạo > 24 giờ mà mọi sự cố của nó đã đóng > 24 giờ (không có sự cố ⇒ theo tuổi thiết bị; sự cố còn mở ⇒ giữ). Sự cố không bị xóa (`device_id` SET NULL). Hằng `SIM_DEVICE_TTL` đứng ngoài `RETENTION` vì bảng §6 của DATA-MODEL là dữ liệu thật (test `RETENTION` so khớp tập khóa).
+  Đỏ trước (5 đỏ, thiếu hàm) → `test_sim_cleanup.py` 6 passed (23 giờ giữ, 25 giờ xóa, không nhãn/`xsim:`/nhãn khác không đụng, sự cố còn mở giữ, dry-run, tiền tố khớp `sim_service`) + `test_retention.py` vẫn xanh (26 passed cùng lượt).
+- **Hệ quả cần biết**: sau khi dọn, `/trace` của lượt sim cũ > 24 giờ không còn băng MÔ PHỎNG (`is_sim` suy từ nhãn thiết bị — plan D9) và `/v1/sim/runs/{id}` trả 404. Gia đình vẫn `is_demo`. Muốn giữ cờ bền ⇒ cần cột/migration (quyết định phạm vi, không làm ở đây).
+- Chưa cập nhật `docs/DATA-MODEL.md` §6 / `PRIVACY-DPIA.md` (cấm `docs/**` ở Wave 6): thiết bị demo `sim:` 24 giờ — việc của người có quyền sửa docs.
