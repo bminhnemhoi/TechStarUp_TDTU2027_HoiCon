@@ -425,3 +425,6 @@ Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi
     bot + giá trị enum mới; làm trước thí điểm (G2). Minh quyết ⇒ kiến trúc sư viết spec nhỏ.
 16. ★ **Chữ đồng ý — bổ sung cho mục 12 (24/10/2026, reviewer 011 W6):** thống nhất dấu nháy “ ” trong văn bản đồng ý; đoạn "Nhờ vậy…" đứng sau nút nên câu an toàn bị
     đẩy xuống — cân nhắc viết lại. Phần bố cục/nhãn không thuộc văn bản đồng ý đã giao làn A (011 T023).
+17. ★ **Phạm vi xóa khi nhà có ≥ 2 người được bảo vệ (038, thêm 25/10/2026)**: hiện `purge_family` xóa cả gia đình. Đề xuất (reviewer): nhà có
+    ≥ 2 `protected` thì yêu cầu từ app chỉ xóa phần của người yêu cầu (cần `purge_member` mới). Thí điểm hiện 1 người/nhà nên chưa gấp.
+    Khoảng chờ 24 giờ có thể hủy đã quyết và giao (038 FR-006, T007).

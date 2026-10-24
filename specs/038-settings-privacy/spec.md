@@ -26,6 +26,13 @@ phát hiện (GAP-REPORT 23/10): E12 không spec nào sở hữu. Soạn 25/10/2
   cho người giám hộ hạng 1 qua `messages_out` **chỉ khi `guardian_alerts` còn hiệu lực** (đồng ý lúc gửi — 037 FR-002; đã rút ⇒ không gửi gì) (mẫu soạn sẵn, mở đầu "Đây là trợ lý AI HỏiCon", luật 6), gửi **trước** khi purge xóa kênh.
 - **(FR-005)** *[A]* Chữ tiếng Việt ấm áp, không gây hoảng sợ; E12 dùng được ở chữ 200%; mỗi màn ≤ 2 hành động chính; `ux-elder-reviewer` 0 Chặn/Cao.
 
+- **(FR-006)** *[B-api + A]* **Khoảng chờ 24 giờ có thể hủy** (quyết định nhà điều phối 25/10/2026, rà soát Medium #2: kẻ gian có thể dụ bác
+  "bấm xóa" để tắt bảo vệ): `POST` ghi `execute_after = now + 24 giờ`, xếp `purge_family` với `run_at = execute_after`; trong khoảng chờ app và máy chủ
+  **vẫn bảo vệ bình thường**, E12 hiện "Sẽ xóa lúc {giờ, ngày}" + nút "Hủy yêu cầu xóa" ⇒ `DELETE /v1/data-requests/{id}` ⇒ `cancelled`, job purge bị bỏ.
+  Tin báo người giám hộ (nếu còn `guardian_alerts`) gửi ngay lúc yêu cầu, ghi rõ giờ xóa và "nếu bác không muốn, nhắc bác bấm Hủy". App **chỉ xóa dữ
+  liệu cục bộ khi máy chủ đã purge** (token bị từ chối 401 sau `execute_after`) — thay cho xóa ngay ở FR-003. Tổng thời gian vẫn ≤ 72 giờ.
+  Phạm vi "chỉ xóa phần người yêu cầu khi nhà có ≥ 2 người được bảo vệ" ⇒ chờ Minh (MASTER-PLAN §8 mục 17).
+
 ## 3. Tiêu chí thành công
 - **(SC-001)** FR-001: tắt từng mục không gắn quyền ⇒ 1 bản ghi `granted=false` tới máy chủ; đường gửi của mục đó dừng (test máy chủ của 037 đã phủ).
 - **(SC-002)** FR-003/FR-004: từ E12 tới `data_requests.status='done'` trên máy ảo + backend dev; app về E1, token bị thu hồi (403/401 sau đó).

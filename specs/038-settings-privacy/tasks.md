@@ -9,8 +9,13 @@
   · Verify: `$PYTEST tests/contract tests/integration/test_api_data_requests.py tests/integration/test_purge_family.py -q`
 - [ ] T003 [A] [FR-001, FR-002] E12 trong `PermissionsScreen.kt`: thẻ mỗi mục đích; "Tắt" + xác nhận cho mục không gắn quyền ⇒ `ConsentLedger` ghi `granted=false`.
   Test đơn vị + Compose đỏ trước. · Verify: `$GRADLE :app:testDebugUnitTest :app:lintDebug`
-- [ ] T004 [A] [FR-003] `PrivacyDeleteScreen.kt` (giữ 3 giây, offline ⇒ không xóa cục bộ) + client `POST /v1/data-requests` + xóa cục bộ + về E1.
+- [ ] T004 [A] [FR-003, FR-006] `PrivacyDeleteScreen.kt` (giữ 3 giây, offline ⇒ không gửi) + client `POST /v1/data-requests`; sau khi gửi **không xóa cục bộ ngay**:
+  E12 hiện "Sẽ xóa lúc …" + "Hủy yêu cầu xóa" (`DELETE /v1/data-requests/{id}`); chỉ xóa cục bộ + về E1 khi máy chủ từ chối token (401) sau `execute_after`.
   · Verify: `$GRADLE :app:testDebugUnitTest` (test client với MockWebServer: 200/202, offline, 429)
 - [ ] T005 [A] [FR-005, SC-002, SC-003, SC-004] Máy ảo hc-api36 + backend dev: đi hết E12 ⇒ xóa ⇒ `data_requests.done`; tắt `overlay_pause` rồi `fake_police --runs 3`;
   ảnh 100/200% + `ux-elder-reviewer` 0 Chặn/Cao. · Verify: evidence.md (lệnh + kết quả)
 - [ ] T006 [AB] Bộ kiểm cuối ($PYTEST, ruff, Gradle, check-spec-trace) + evidence SC-001…SC-004. · Verify: lệnh thoát 0
+- [ ] T007 [B] [FR-006] Khoảng chờ 24 giờ: migration (`data_requests.execute_after`, trạng thái `cancelled`), `POST` trả `execute_after`, `purge_family` xếp với
+  `run_at = execute_after` và kiểm lại trạng thái lúc chạy, `DELETE /v1/data-requests/{id}` (chỉ thiết bị protected của gia đình đó; đã `done` ⇒ 409),
+  tin báo người giám hộ ghi giờ xóa. Test đỏ trước (hủy trong khoảng chờ ⇒ 0 dòng bị xóa; quá giờ ⇒ purge chạy). · Verify:
+  `$PYTEST tests/contract tests/integration/test_api_data_requests.py tests/integration/test_purge_family.py -q`
