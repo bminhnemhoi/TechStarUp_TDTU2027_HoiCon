@@ -124,3 +124,8 @@ FILTERING_COMPLETED" = hết bộ lọc của Telecom. Hạn của Telecom là 5
   `scripts/try-roles.sh` chạy lại: `test_db_roles.py` **22 passed, 0 skipped**; `/readyz` 200; `agent_runs=1 jobs=3`; `docker ps -a | grep -c hoicon-db-t017` = 0.
 - Lệch chữ task: sự kiện thử qua `POST /v1/events` KHÔNG làm (cần JWT thiết bị); thay bằng một lượt đồ thị + job dưới `hoicon_app` (`roles_smoke.py`). Tên container là `hoicon-db-t017` chứ không phải `hoicon-roles-try`.
 - Lưu ý: sổ chỉ-ghi-thêm MỚI (nếu có) phải thêm tay vào hai dòng REVOKE, vì quyền mặc định cấp cả UPDATE/DELETE.
+
+## Wave 6 — T021 (làn A, 24/10/2026)
+
+- **T021 ĐẠT.** `scripts/check-baseline-profile.py <baseline-prof.txt> (--mapping mapping.txt | --classes tsv)`: mỗi mẫu `[HSP]*L…;` phải khớp ≥ 1 lớp (`**` khớp cả `/`, `*` không); không khớp ⇒ thoát 1 kèm số dòng; không có danh sách lớp ⇒ thoát 2 (không tính đạt). `release-gate.sh` thêm mục "Hồ sơ khởi động" (AAB: `proguard.map` trong BUNDLE-METADATA; APK chưa rút gọn: tên lớp apkanalyzer; APK đã rút gọn không mapping ⇒ [KIỂM TAY]).
+- Test đỏ trước (3/4 trượt khi chưa có script) → xanh. Verify: `python3 -m unittest discover -s scripts/tests` 117 OK; `:app:bundleDemo` OK; `release-gate.sh app-demo.aab` thoát 0, dòng mới: `[ĐẠT] Hồ sơ khởi động: 12 mẫu … khớp ≥ 1 lớp (trong 4718 lớp)`.

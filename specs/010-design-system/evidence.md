@@ -168,3 +168,23 @@ Wave 3 và Wave 4 khởi động nguội hc-api34 thêm ba lần: cả ba lần 
 
 **Chưa làm được (chặn):** đo lại "10/10 sau cold boot" trên hc-api36 và hc-api34. hc-api36 đang chạy bộ đo heartbeat 032 T011 (Wave 4, 23/10 00:42 → ≈ 10:45 +07; khởi động lại máy ảo sẽ làm hỏng phép đo), và máy chỉ đủ RAM cho một AVD.
 Việc kế tiếp (sau ≈ 10:45): `bash scripts/emu-start.sh hc-api34 --headless --cold` rồi chạy ngay `fake_police --runs 10` (chưa chờ gì) để thử H1; nếu trượt, dùng thông báo mới để phân biệt H1/H2; lặp lại trên hc-api36. Kết luận "hạn chế AVD" hay "lỗi app" **chưa có**.
+
+## Wave 6 (làn A, 24/10/2026) — T029 và chẩn đoán hc-api34
+
+**Nguồn: máy ảo (hc-api36 = API 36, hc-api34 = API 34), bản debug, máy ảo ≠ máy thật.**
+
+### T029 — E7 điều khiển từ xa (đã tick)
+- Mã: `SafePauseScreen.kt` + `strings.xml` (chuỗi chốt Wave 4: `pause_body_remote` một đoạn + mảng `pause_steps_remote` hiện "1. …/2. …"; "Vẫn tiếp tục" viền 1 dp, vùng chạm ≥ 64 dp, vẫn giữ 3 s). `PauseRemoteStringsTest` đỏ → xanh. `:rules:test :app:testDebugUnitTest :app:lintDebug` xanh (gồm `ConsentManifestPinTest`).
+- `fake_police --runs 10` hc-api36: lần 1 (ngay sau cài lại APK, tiến trình nguội) 10/10 hiện E7 nhưng SafePause p95 3414 ms ⇒ TRƯỢT ngưỡng 3000 ms vì 1 lượt đầu (3414 ms); lần 2 ngay sau đó: **10/10, SafePause p50 1160 / p95 1467 ms ⇒ ĐẠT**. Biến thể điều khiển từ xa (`HC_DEMOBANK_PACKAGE=com.anydesk.anydeskandroid`, n = 3): 3/3, p95 1888 ms.
+- Ảnh: `~/hoicon-evidence/010-design-system/w4r/` — `api36-` và `api34-{remote,bank}-{100,200}-{top,scroll1,scroll2,scroll3}.png` (32 ảnh, có cuộn thật). Thư mục `w4/` là lượt đầu vuốt hỏng (không cuộn), bỏ.
+- `ux-elder-reviewer` vòng 1 (ảnh w4/): 1 Chặn = thiếu bằng chứng (ảnh không cuộn) ⇒ chụp lại. **Vòng 2 (w4r/, 12 ảnh api36 đã xem): nhóm lỗi bản dựng 0 Chặn / 0 Cao / 1 Trung bình / 3 Thấp.** Trung bình: thứ tự nhãn/tiêu đề/"Nghe lại" đổi giữa 100% và 200% (bố cục thích ứng có từ trước, không do T029). Thấp: danh sách không thụt lề treo; mép trên vùng cuộn cắt chữ không mờ dần; nhãn phụ "Giữ ngón tay 3 giây" ↔ "Giữ 3 giây" theo cỡ chữ. Ảnh api34: chỉ tôi xem (cùng bố cục), reviewer chưa đọc riêng.
+- **Cần Opus/Minh (đề xuất ngoài quyết định đã chốt, không làm):** (1) đặt hành động trước lý do hoặc rút thân bài để bước 1–2 lên trên mép gập (200%: phải vuốt ~2 lần mới thấy bước 1–2; nút Hỏi con ghim + tự đọc to giảm nhẹ); (2) "Hủy giao dịch" ở biến thể ngân hàng chỉ đưa về màn hình chính — cân nhắc "Về màn hình chính" cả hai biến thể; (3) "Kéo xuống đọc tiếp ↓" dễ hiểu nhầm hướng (đề xuất "Vuốt lên…", là chữ nên cần duyệt).
+
+### Chẩn đoán hc-api34 "Telecom không thấy cuộc gọi" (CHƯA kết luận)
+- Khởi động nguội hc-api34 hai lần liên tiếp (`emu-start.sh hc-api34 --headless --cold`), chạy `fake_police --runs 10` ngay sau khi sẵn sàng:
+  - **Lần 1:** chỉ 4/10 hiện SafePause. 5 lượt "cuộc gọi giả KHÔNG đổ chuông (lỗi môi trường)" + 1 lượt kẹt "máy ảo vẫn còn cuộc gọi treo"; lượt qua đầu tiên SafePause 7998 ms (watchdog dự phòng bật), lượt kế 3410 ms, rồi 1306/881 ms. (Lỗi nằm ở bước đổ chuông của modem giả, TRƯỚC khi tới Telecom; chưa có chẩn đoán kèm vì thông báo mới thêm sau lần này.)
+  - **Lần chạy lại ngay (không khởi động lại): 10/10 ĐẠT**, SafePause p50 554 / p95 660 ms.
+  - **Lần 2 (cold boot thứ hai, đã có chẩn đoán mới):** 10/10 hiện E7, không có lượt không-đổ-chuông; lượt đầu 3907 ms (p95 3907 ⇒ TRƯỢT ngưỡng 3000 ms vì lượt đầu), 9 lượt sau 315–1194 ms.
+- **Kết luận có thể nói:** (a) triệu chứng "modem giả không đổ chuông / Telecom không thấy cuộc gọi" tái hiện **1/2** lần cold boot, xảy ra ở vài lượt đầu rồi tự hết ⇒ phù hợp H1 (modem chưa sẵn sàng sau cold boot) nhưng **không xác nhận** (lần 2 không tái hiện; chưa có `gsm list`/trạng thái modem của lần 1); (b) lượt đầu sau cold boot/cài lại luôn chậm: 7998 ms (hc-api34 lần 1), 3907 ms (hc-api34 lần 2), 3414 ms (hc-api36 sau cài lại) — tiến trình nguội + bản debug không có baseline profile; từ lượt thứ hai ≤ 1.5 s. Kết luận "hạn chế AVD" hay "lỗi app" **vẫn chưa có**; số máy thật mới quyết định (gate 012/T018: onScreenCall p95 ≤ 214 ms trên bản `demo`).
+- `scripts/emu-scenario.py` `ring()` nay in kèm chẩn đoán khi cuộc gọi không đổ chuông: trả lời console modem, `gsm list` (số đã che), `call_state`, modem IN_SERVICE, vai trò — để lần tới phân biệt được.
+- **Đề xuất Opus:** khi đo ngưỡng "E7 ≤ 3 s" tại gian/gate, bỏ lượt khởi động nguội đầu hoặc ghi riêng "lượt đầu sau cold boot"; không tuyên bố p95 ≤ 3 s gộp cả lượt đầu cho debug AVD.

@@ -182,7 +182,7 @@ Quyết định (kiến trúc sư Spec Kit, theo `docs/DESIGN-SYSTEM.md` mục E
 | `pause_body_remote` | Ứng dụng này cho người khác nhìn thấy và điều khiển điện thoại của bác, kể cả ứng dụng ngân hàng. Công an, ngân hàng không bao giờ bảo bác cài ứng dụng này. |
 | `pause_steps_remote` (mảng mới, hiện thành danh sách đánh số 1–2) | 1. Cúp máy, rồi đóng ứng dụng đó (như AnyDesk, TeamViewer). · 2. Bấm Hỏi con. |
 
-- [ ] T029 [A] [FR-013] Sửa `SafePauseScreen.kt` + `strings.xml` theo hai quyết định trên (mảng `pause_speech_remote` không đổi — đã nói
+- [x] T029 [A] [FR-013] Sửa `SafePauseScreen.kt` + `strings.xml` theo hai quyết định trên (mảng `pause_speech_remote` không đổi — đã nói
   đúng hai việc). Danh sách đánh số đọc được bằng TalkBack theo thứ tự ("1, Cúp máy…"). Không đổi `SafePauseActivity`, luồng giữ
   3 giây, nhật ký kết quả. Chụp E7 cả hai biến thể ở 100% + 200% trên `hc-api36` và `hc-api34` (8 ảnh,
   `~/hoicon-evidence/010-design-system/w4/`), `ux-elder-reviewer` ⇒ 0 Chặn/0 Cao (tối đa 2 vòng, quá ⇒ BLOCKED).

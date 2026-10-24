@@ -1,5 +1,6 @@
 package vn.hoicon.sentinel.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -31,7 +33,11 @@ import androidx.compose.ui.unit.dp
 import vn.hoicon.sentinel.R
 import vn.hoicon.sentinel.data.consent.ConsentLedger
 import vn.hoicon.sentinel.sensing.SensorPermission
+import vn.hoicon.sentinel.ui.theme.BrandNavy
 import vn.hoicon.sentinel.ui.theme.HoiConTheme
+
+/** First paragraph and the remaining ones (still joined by a blank line); the rest is "" for a one-paragraph text. */
+internal fun splitLead(text: String): Pair<String, String> = text.substringBefore("\n\n") to text.substringAfter("\n\n", "")
 
 private class PermissionRow(val title: String, val why: String, val how: String)
 
@@ -105,18 +111,22 @@ private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () ->
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.semantics { heading() },
         )
-        Text(text = row.why, style = MaterialTheme.typography.bodyMedium)
+        val (lead, rest) = splitLead(row.why)
+        Text(text = lead, style = MaterialTheme.typography.bodyMedium)
         // Status is words with a symbol, same navy colour (brand green is only ~5:1 on white, below 7:1).
         Text(
             text = stringResource(if (isGranted) R.string.perm_status_on else R.string.perm_status_off),
             style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
         )
-        // UX-9: an item already on needs no action — only its status remains.
+        // UX-9: an item already on needs no action — only its status remains. The button comes right after the first
+        // paragraph so a reader at 200% reaches it before the three explanatory ones (reviewer, 22/10).
         if (!isGranted) {
             val a11yLabel = stringResource(R.string.perm_open_settings_for, row.title)
             OutlinedButton(
                 onClick = onOpen,
                 shape = RoundedCornerShape(32.dp),
+                border = BorderStroke(2.dp, BrandNavy), // same navy edge as the other secondary buttons (reviewer: pale edge read as disabled)
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 64.dp)
@@ -125,6 +135,7 @@ private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () ->
                 Text(text = stringResource(R.string.perm_open_settings), style = MaterialTheme.typography.labelLarge)
             }
         }
+        if (rest.isNotEmpty()) Text(text = rest, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -147,7 +158,7 @@ fun PermissionStepScreen(
     if (index == null) {
         // Without the three sensing-chain permissions HỏiCon cannot protect: never say "ready" then (UX review).
         val missing = all.filter { ConsentLedger.purposeOf(it) != null && it !in granted }
-        OnboardingScaffold(modifier = modifier, actions = {
+        OnboardingScaffold(modifier = modifier, scrollHint = true, actions = {
             if (missing.isEmpty()) {
                 PrimaryButton(text = stringResource(R.string.perm_done_button), onClick = onFinish)
             } else {
@@ -169,6 +180,7 @@ fun PermissionStepScreen(
                 InfoCard(
                     title = row.title,
                     body = stringResource(if (permission in granted) R.string.perm_status_on else R.string.perm_status_off),
+                    bodyBold = true, // status = symbol + words, bold (rule 15)
                 )
             }
             if (consentPending) NoticePanel(text = stringResource(R.string.perm_consent_pending))

@@ -61,3 +61,22 @@ Giới hạn đã biết: máy ảo không sạc/dùng pin thật nên Doze/stan
 - **T012 ĐẠT**: `ux-elder-reviewer` (5 mẫu tin: `guardian_protection_silent`, `guardian_protection_permission_off`, `weekly_digest`, `digest_off_ack`, `digest_on_ack`; đều qua `_message` nên mở bằng câu công khai AI): 0 Chặn, 4 Cao, 4 Trung bình, 4 Thấp. **Cao đã sửa** trong `agents/texts.py`: bản tin "chưa thể nói gì" ⇒ "chưa có số liệu để tóm tắt"; bản tin thêm việc cụ thể (có sự cố ⇒ "hỏi thăm {alias}", độ phủ < 70% ⇒ "nhờ {alias} mở lại ứng dụng"); `digest_off_ack` hết câu sai nghĩa "HỏiCon vẫn nhận cảnh báo" (+ test đỏ→xanh, `test_coach_texts.py` 37 passed). **Cao chưa sửa — chủ Minh** (tệp `data/coach/tips.vi.yaml`, ngoài quyền làn B và đang chờ duyệt T015): mẹo viết cứng "bác" trong khi bí danh do người dùng đặt ⇒ dùng chỗ trống `{alias}` hoặc viết mẹo không nhắc người (cần thêm thay thế ở `texts.py`). Trung bình/Thấp còn lại (câu trấn an ở tin mất bảo vệ, "chiều Chủ nhật" vs gửi 19:00, "độ phủ" thuật ngữ, "chưa làm bài luyện tập" nghe trách): chủ Tiến.
   `security-privacy-reviewer` (job, `agent_steps`, lệnh Zalo, đồng ý, hạn mức): **0 Critical, 0 High, 3 Medium, 3 Low**. **Medium #2 ĐÃ SỬA**: `ack_digest_on/off` coi là khẩn và không nằm trong `QUIET_TEMPLATES` ⇒ lặp "tắt/bật tin tuần" đốt hạn mức Zalo; nay im lặng sau 10 tin/giờ và không khẩn (test `test_repeatable_replies_are_not_urgent…` đỏ→xanh). **Chưa sửa (chủ Tiến, hạn đề xuất 08/11/2026)**: #1 `protection_watch`/`coach_weekly` chưa kiểm `core_protection` (rút `core_protection` ⇒ heartbeat dừng ⇒ có thể sinh tin "mất bảo vệ" sai và bản tin tuần vẫn dùng heartbeat cũ); #3 bản tin tuần đếm sự cố theo gia đình nhưng đồng ý/thiết bị lấy theo thiết bị đầu tiên (nhà nhiều người cao tuổi) — cần xác nhận ràng buộc "một người cao tuổi/gia đình"; Low: lọc `deleted_at` lúc gửi, tên thật trong bí danh nằm ở `jobs.payload.text` 30 ngày (luật 1; nghi vấn luồng nhập bí danh), hạn mức heartbeat theo tiến trình (ADR-002).
 - **T013 CHƯA TICK (phần [A] chờ làn A)**: phần backend/web đạt — pytest 2881 passed / 22 skipped / 1 xfailed; ruff sạch; eval smoke không lệch baseline; gitleaks `backend/src`, `backend/tests`, `data/coach`, `docs/legal`, `specs/032-coach-weekly` sạch; `check-spec-trace` 0 lỗi. Chờ làn A: `$GRADLE :app:testDebugUnitTest` và ROADMAP `P2-17`.
+
+## Wave 6 — T011 đo khoảng trống heartbeat (làn A, 24/10/2026)
+
+**Nguồn: máy ảo `hc-api36` (API 36), backend dev cổng 18001, DB `hoicon_android`, bảng `device_heartbeats` (chỉ đếm khung 15 phút, không in định danh). Máy ảo ≠ máy thật** — số ở máy thật (Doze/hãng) chưa đo. Bộ đo: `~/hoicon-evidence/032-coach-weekly/heartbeat-gap/` (driver.py, log.txt, results.json; ngoài repo).
+
+| Điều kiện | Cách làm | Thời gian | Khung có heartbeat | Khoảng trống dài nhất |
+|---|---|---|---|---|
+| (a) bình thường | không can thiệp | 2 giờ | 8/8 | 15,0 phút |
+| (b) Doze | `dumpsys deviceidle force-idle` (đặt lại mỗi 15 phút) | 2 giờ | 8/8 | 15,0 phút |
+| (c) standby rare | `am set-standby-bucket vn.hoicon.sentinel rare` | 4 giờ | 16/16 | 15,0 phút |
+| (d) khởi động lại | `adb reboot`, đo 60 phút sau | 1 giờ | 3/4 | 21,95 phút |
+| (e) kill tiến trình | `am kill vn.hoicon.sentinel` | 1 giờ | 3/4 | 22,07 phút |
+
+- **Kết luận:** khoảng trống dài nhất 22,07 phút ≪ 24 giờ (ngưỡng "mất bảo vệ", Q2) ⇒ **ĐẠT**, không cần ngưỡng mới. Sau reboot/kill thiếu đúng 1 khung (chờ WorkManager lập lại lịch, ≈ một chu kỳ + độ trễ khởi động), không phải mất heartbeat kéo dài; ngưỡng 24 giờ và "2 khung `protected=false`" không bị chạm ⇒ không báo nhầm cho người giám hộ ở các điều kiện này.
+- **Giới hạn:** (a)–(c) đo 22–23/10; (d)/(e) đo lại 24/10 vì lần đo đầu của (d) hỏng khi máy chủ khởi động lại (heartbeat cuối 02:15Z 23/10, cửa sổ cũ bỏ). Một máy ảo, một lần mỗi điều kiện; `hc-api34` chưa đo. Chưa đo: hết pin/tắt máy qua đêm, tiết kiệm pin của hãng (Xiaomi/Oppo/Samsung) — cần máy thật.
+
+## Wave 6 — T013 phần [A] (làn A, 24/10/2026)
+
+- `apps/android/gradlew -p apps/android :rules:test :app:testDebugUnitTest :app:lintDebug` **xanh** trên `feat/w6-android` (gồm `ConsentManifestPinTest`); `python3 -m unittest discover -s scripts/tests` 121 OK; `check-spec-trace.py` 25 spec, 0 lỗi; gitleaks `specs/032-coach-weekly` và `docs/legal` (kết quả ở dòng lệnh cuối phiên). Phần [B] (`$PYTEST`, ruff, eval smoke, gitleaks backend/data, ROADMAP P2-17) do làn B — T013 chưa tick ở đây.

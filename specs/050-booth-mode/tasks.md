@@ -56,7 +56,7 @@
 
 ## Nhóm [A]
 
-- [ ] T014 [A] [FR-009] `:demobank` + kịch bản máy ảo tại gian: `emu-scenario` gọi theo tên danh sách phát, tài liệu bấm máy trong `docs/EMULATOR.md`. Làn A; không làm ở đây.
+- [x] T014 [A] [FR-009] `:demobank` + kịch bản máy ảo tại gian: `emu-scenario` gọi theo tên danh sách phát, tài liệu bấm máy trong `docs/EMULATOR.md`. Làn A; không làm ở đây.
 
 ## Hoàn tất
 
