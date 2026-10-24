@@ -86,6 +86,6 @@ Quyền làn B mở thêm cho lượt này: `docs/setup/**`, `docs/PRIVACY-DPIA.
   cho các yêu cầu xóa sau thời điểm sao lưu (đọc bảng xóa có sẵn nếu có; không có thì chỉ in cảnh báo). · Verify: `$PYTEST tests/integration/test_backup_restore.py -q`
 - [x] T020 [B] Medium #3: `infra/compose.prod.yml` chuyển `HOICON_CONSENT_STRICT` vào container (mặc định `true`, không đổi hành vi).
   · Verify: `$PYTEST tests -q -k "compose or prod_config"`
-- [ ] T021 [B] [FR-009] Tài liệu: 037 T012 (`docs/PRIVACY-DPIA.md`: bảng `privacy_report`, độ trễ đệm đồng ý ≤ 60 s, chính sách link cũ D2),
+- [x] T021 [B] [FR-009] Tài liệu: 037 T012 (`docs/PRIVACY-DPIA.md`: bảng `privacy_report`, độ trễ đệm đồng ý ≤ 60 s, chính sách link cũ D2),
   `docs/setup/BACKUP.md` (khóa con, `ops restore`, phát lại `purge_family`), 037 T015 (`docs/setup/STABILITY.md`), 033 T018 (`docs/setup/SIM.md`).
   Tick 037 T012/T015 và 033 T018 khi xong. · Verify: review + `python3 scripts/check-spec-trace.py`

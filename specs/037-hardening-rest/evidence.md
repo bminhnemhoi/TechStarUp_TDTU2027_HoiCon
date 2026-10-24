@@ -105,3 +105,4 @@
 ## Lượt 7 — bộ kiểm cuối (làn B, 24/10/2026)
 
 - pytest **2892 passed, 22 skipped, 0 xfail** (xfail của T013 đã được điều phối gỡ); `ruff check` + `format --check` sạch; `check-spec-trace` 25 spec 0 lỗi; `unittest scripts/tests` 116 OK (7 skipped); web e2e **124 passed**; gitleaks `docs/setup` sạch. Migration mới `0013` (đã áp dev; áp prod cùng 012 T013).
+- **T021 tick (nhà điều phối 25/10/2026)**: PRIVACY-DPIA/BACKUP/STABILITY (e28e63b, lượt 7 làn B) + SIM.md/quickstart/DESIGN-SYSTEM (033 T018, d5f1b29) đều đã có.
