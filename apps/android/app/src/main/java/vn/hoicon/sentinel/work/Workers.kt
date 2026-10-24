@@ -238,7 +238,8 @@ class ElderAnswerWorker(context: Context, params: WorkerParameters) : CoroutineW
         val questionId = inputData.getString(QUESTION_ID)
         val answer = inputData.getString(ANSWER)
         val session = TokenStorage.create(applicationContext).load()
-        if (incidentId == null || questionId == null || answer == null || session == null) {
+        // A switch-off of guardian_alerts in E12 stops this too, even for an answer already queued (security review, 25/10).
+        if (incidentId == null || questionId == null || answer == null || session == null || !SentinelServices.of(applicationContext).mayShare()) {
             Result.success()
         } else {
             val result = ElderApiClient(BuildConfig.API_BASE_URL)
@@ -386,9 +387,13 @@ class ElderQuestionWorker(context: Context, params: WorkerParameters) : Coroutin
                 is PollOutcome.Ask -> {
                     val q = outcome.question
                     if (PrefsElderQuestionStore(applicationContext).claim(q)) {
-                        applicationContext.startActivity(
-                            ElderQuestionActivity.createIntent(applicationContext, q.incidentId, q.questionId, q.text, q.isDrill),
-                        )
+                        val open = ElderQuestionActivity.createIntent(applicationContext, q.incidentId, q.questionId, q.text, q.isDrill)
+                        // Without "display over other apps" Android blocks an activity started from the background: the question then comes as a
+                        // high-priority notification (the existing channel, no new permission: CLAUDE.md rule 3) and opens E8 when touched.
+                        when (elderQuestionOpenMode(android.provider.Settings.canDrawOverlays(applicationContext))) {
+                            ElderQuestionOpen.ACTIVITY -> applicationContext.startActivity(open)
+                            ElderQuestionOpen.NOTIFICATION -> Notifications.showElderQuestion(applicationContext, open)
+                        }
                     }
                     Result.success()
                 }
@@ -409,6 +414,11 @@ class ElderQuestionWorker(context: Context, params: WorkerParameters) : Coroutin
         const val INCIDENT_ID = "incident_id"
     }
 }
+
+enum class ElderQuestionOpen { ACTIVITY, NOTIFICATION }
+
+fun elderQuestionOpenMode(canDrawOverlays: Boolean): ElderQuestionOpen =
+    if (canDrawOverlays) ElderQuestionOpen.ACTIVITY else ElderQuestionOpen.NOTIFICATION
 
 object ElderQuestionScheduler {
     /** KEEP per incident: the same incident reported by several batches is asked about once at a time. */

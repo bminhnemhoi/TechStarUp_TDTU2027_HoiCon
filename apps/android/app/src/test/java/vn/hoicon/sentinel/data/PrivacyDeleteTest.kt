@@ -91,6 +91,13 @@ class PrivacyDeleteTest {
     }
 
     @Test
+    fun aReceiptWhoseIdIsNotAUuidIsRejectedBecauseItGoesIntoTheDeletePath() {
+        postBody = postBody.replace("6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f", "../x")
+        assertEquals(PrivacyDelete.Outcome.Failed, delete.request())
+        assertNull(delete.pending())
+    }
+
+    @Test
     fun aRefusedTokenIsNotTreatedAsSent() {
         postStatus = 401
         assertEquals(PrivacyDelete.Outcome.Refused, delete.request())

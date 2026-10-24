@@ -164,6 +164,8 @@
     <string name="pause_fallback_speech_extra">Bác chạm vào dòng chữ HỏiCon ở đầu màn hình nhé.</string>
 
     <!-- Thông báo dự phòng (khi không mở được màn E7). -->
+    <string name="elder_question_title">Trợ lý AI HỏiCon hỏi bác</string>
+    <string name="elder_question_text">Chạm để trả lời, chỉ vài giây.</string>
     <string name="fallback_title">Khoan chuyển tiền đã — HỏiCon nhắc bác</string>
     <string name="fallback_text">Hỏi con trước nhé. Chạm vào đây để xem.</string>
     <string name="fallback_big_text">Công an, ngân hàng không bao giờ bảo chuyển tiền qua điện thoại. Chạm vào đây để hỏi con.</string>

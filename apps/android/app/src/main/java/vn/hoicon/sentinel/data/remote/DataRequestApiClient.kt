@@ -56,6 +56,8 @@ class DataRequestApiClient(baseUrl: String, private val timeoutMs: Int = 10_000)
             }
         } catch (_: IOException) {
             return Reply.NetworkError
+        } catch (_: RuntimeException) {
+            return Reply.ServerError // e.g. a mis-set base URL: never crash the delete screen
         } finally {
             connection.disconnect()
         }
@@ -76,12 +78,14 @@ class DataRequestApiClient(baseUrl: String, private val timeoutMs: Int = 10_000)
     private fun parse(text: String): Receipt? = try {
         val json = JSONObject(text)
         Receipt(
-            requestId = json.getString("request_id"),
+            requestId = json.getString("request_id").also { require(UUID_FORMAT.matches(it)) }, // goes into a DELETE path: only a UUID
             status = json.getString("status"),
             requestedAtMs = OffsetDateTime.parse(json.getString("requested_at")).toInstant().toEpochMilli(),
             executeAfterMs = json.optString("execute_after").takeIf { it.isNotBlank() }?.let { OffsetDateTime.parse(it).toInstant().toEpochMilli() },
         )
     } catch (_: JSONException) {
+        null
+    } catch (_: IllegalArgumentException) {
         null
     } catch (_: DateTimeParseException) {
         null
@@ -89,6 +93,7 @@ class DataRequestApiClient(baseUrl: String, private val timeoutMs: Int = 10_000)
 
     private companion object {
         const val MAX_REPLY = 16 * 1024
+        val UUID_FORMAT = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
         const val DEFAULT_RETRY_S = 3600
     }
 }
