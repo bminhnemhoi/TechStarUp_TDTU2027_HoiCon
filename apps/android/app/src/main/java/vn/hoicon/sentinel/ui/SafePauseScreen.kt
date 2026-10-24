@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -185,6 +186,12 @@ fun SafePauseScreen(
                         text = stringResource(if (kind == PauseKind.REMOTE_CONTROL) R.string.pause_body_remote else R.string.pause_body),
                         style = MaterialTheme.typography.bodyLarge,
                     )
+                    if (kind == PauseKind.REMOTE_CONTROL) {
+                        // The two things to do, as a numbered list read in order by TalkBack ("1. Cúp máy…").
+                        stringArrayResource(R.array.pause_steps_remote).forEachIndexed { i, step ->
+                            Text(text = "${i + 1}. $step", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                        }
+                    }
                     Text(text = reason, style = MaterialTheme.typography.bodyMedium)
                     // I2: ask for the family password. The app never stores or asks for it: the person on the phone does.
                     InfoCard(
@@ -330,10 +337,10 @@ private fun HoldButton(progress: Float, actions: SafePauseActions, large: Boolea
         contentAlignment = Alignment.Center,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 72.dp)
+            .heightIn(min = 64.dp)
             .clip(shape)
             .background(SurfaceWhite)
-            .border(width = 2.dp, color = BrandNavy, shape = shape)
+            .border(width = 1.dp, color = BrandNavy, shape = shape)
             .pointerInput(Unit) {
                 // Leaving the button's bounds cancels the gesture (tryAwaitRelease = false) ⇒ treated as too short.
                 detectTapGestures(onPress = {

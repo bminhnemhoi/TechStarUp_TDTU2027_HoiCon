@@ -89,7 +89,11 @@
     <string name="pause_countdown_a11y">Bác nghỉ một phút cho bình tĩnh. Chưa cần làm gì cả.</string>
     <!-- Ứng dụng điều khiển điện thoại từ xa (luật R5, ý tưởng I1). -->
     <string name="pause_title_remote">Bác ơi, khoan cho người lạ điều khiển điện thoại</string>
-    <string name="pause_body_remote">Ứng dụng này cho người khác nhìn thấy và điều khiển điện thoại của bác, kể cả ứng dụng ngân hàng. Công an, ngân hàng không bao giờ bảo bác cài ứng dụng này. Bác cúp máy, đóng ứng dụng đó (như AnyDesk, TeamViewer), rồi bấm Hỏi con.</string>
+    <string name="pause_body_remote">Ứng dụng này cho người khác nhìn thấy và điều khiển điện thoại của bác, kể cả ứng dụng ngân hàng. Công an, ngân hàng không bao giờ bảo bác cài ứng dụng này.</string>
+    <string-array name="pause_steps_remote">
+        <item>Cúp máy, rồi đóng ứng dụng đó (như AnyDesk, TeamViewer).</item>
+        <item>Bấm Hỏi con.</item>
+    </string-array>
     <string name="pause_reason_remote_active">HỏiCon nhắc vì bác đang nghe một số lạ và vừa mở ứng dụng điều khiển điện thoại từ xa.</string>
     <string name="pause_reason_remote_ended">HỏiCon nhắc vì bác vừa nói chuyện với một số lạ rồi mở ứng dụng điều khiển điện thoại từ xa.</string>
     <string-array name="pause_speech_remote">
