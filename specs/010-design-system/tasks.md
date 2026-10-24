@@ -192,7 +192,7 @@ Quyết định (kiến trúc sư Spec Kit, theo `docs/DESIGN-SYSTEM.md` mục E
   `evidence.md` mục "Wave 4".
 
 ## Lượt 9 (nhà điều phối 24/10/2026) — quyết định cho đề xuất của reviewer (evidence 010 W6)
-- [ ] T030 [A] [FR-013] E7: (a) ở `fontScale ≥ 1.5`, khối bước hành động (1–2) đứng **trước** đoạn lý do (chỉ đổi thứ tự, chuỗi giữ nguyên);
+- [x] T030 [A] [FR-013] E7: (a) ở `fontScale ≥ 1.5`, khối bước hành động (1–2) đứng **trước** đoạn lý do (chỉ đổi thứ tự, chuỗi giữ nguyên);
   (b) nút biến thể ngân hàng "Hủy giao dịch" ⇒ **"Về màn hình chính"** (nút chỉ đưa về màn hình chính — nhãn phải đúng việc); (c) gợi ý cuộn
   "Kéo xuống đọc tiếp ↓" ⇒ **"Còn nữa ở dưới ↓"** (không nêu hướng vuốt). Test chuỗi đỏ trước; ảnh 100/200% hc-api36 + `ux-elder-reviewer` 0 Chặn/Cao.
   · Verify: `apps/android/gradlew -p apps/android :app:testDebugUnitTest :app:lintDebug` + ảnh trong `~/hoicon-evidence/010-design-system/w9/`

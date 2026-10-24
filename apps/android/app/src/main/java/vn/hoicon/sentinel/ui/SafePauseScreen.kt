@@ -85,7 +85,7 @@ const val PAUSE_COUNTDOWN_SECONDS = 60
  * E7 "Khoan chuyển tiền đã" (Spec 022 FR-006). The shipping UI; the View layout `activity_safe_pause.xml` stays only
  * as the debug A/B variant of spec 001.
  * UX-1: only the text scrolls; the action bar is pinned to the bottom so every button shows at any font scale.
- * At most two main actions ("Hỏi con", "Hủy giao dịch"); "Vẫn tiếp tục" is the quiet third, held 3 s (CLAUDE.md rule 4).
+ * At most two main actions ("Hỏi con", "Về màn hình chính"); "Vẫn tiếp tục" is the quiet third, held 3 s (CLAUDE.md rule 4).
  */
 @Composable
 fun SafePauseScreen(
@@ -102,7 +102,7 @@ fun SafePauseScreen(
     // From 150% text the chrome is trimmed so the reading area keeps room (Spec 010 FR-013, found on the smallest AVD 1080×2340:
     // at 200% the pinned bar took half the screen and the body showed less than one line). Buttons stay ≥ 64dp, at most
     // two main actions, and "Vẫn tiếp tục" is still the quiet third, held 3 s. The words of the buttons do not change with
-    // the text size (the cancel button keeps "Hủy giao dịch" + "Về màn hình chính": the reviewer found no space gained).
+    // the text size (the cancel button says "Về màn hình chính" at every size).
     val large = LocalDensity.current.fontScale >= LARGE_TEXT_SCALE
     val gap = if (large) 8.dp else 16.dp
     Surface(modifier = modifier.fillMaxSize(), color = SurfaceWhite) {
@@ -182,15 +182,27 @@ fun SafePauseScreen(
                         levelRow()
                         title()
                     }
-                    Text(
-                        text = stringResource(if (kind == PauseKind.REMOTE_CONTROL) R.string.pause_body_remote else R.string.pause_body),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    if (kind == PauseKind.REMOTE_CONTROL) {
-                        // The two things to do, as a numbered list read in order by TalkBack ("1. Cúp máy…").
-                        stringArrayResource(R.array.pause_steps_remote).forEachIndexed { i, step ->
-                            Text(text = "${i + 1}. $step", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                    val bodyText: @Composable () -> Unit = {
+                        Text(
+                            text = stringResource(if (kind == PauseKind.REMOTE_CONTROL) R.string.pause_body_remote else R.string.pause_body),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                    val steps: @Composable () -> Unit = {
+                        if (kind == PauseKind.REMOTE_CONTROL) {
+                            // The two things to do, as a numbered list read in order by TalkBack ("1. Cúp máy…").
+                            stringArrayResource(R.array.pause_steps_remote).forEachIndexed { i, step ->
+                                Text(text = "${i + 1}. $step", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                            }
                         }
+                    }
+                    // From 150% the steps come before the reason: they were below the fold at 200% (reviewer, 24/10).
+                    if (pauseStepsFirst(kind, large)) {
+                        steps()
+                        bodyText()
+                    } else {
+                        bodyText()
+                        steps()
                     }
                     Text(text = reason, style = MaterialTheme.typography.bodyMedium)
                     // I2: ask for the family password. The app never stores or asks for it: the person on the phone does.
@@ -252,7 +264,7 @@ fun SafePauseScreen(
                     }
                 }
                 PrimaryButton(text = stringResource(R.string.pause_ask_child), onClick = actions.onAskChild)
-                CancelButton(kind = kind, onClick = actions.onCancel)
+                CancelButton(onClick = actions.onCancel)
                 HoldButton(progress = progress, actions = actions, large = large, modifier = Modifier.padding(top = if (large) 0.dp else 4.dp))
             }
         }
@@ -260,26 +272,24 @@ fun SafePauseScreen(
     }
 }
 
-/** "Hủy giao dịch" (bank) / "Về màn hình chính" (remote control): it only goes home, and the second line says so. */
+/** At large text the remote-control steps lead the reason (Spec 010 T030a); the strings and the order at 100% do not change. */
+internal fun pauseStepsFirst(kind: PauseKind, large: Boolean): Boolean = large && kind == PauseKind.REMOTE_CONTROL
+
+/** "Về màn hình chính" for both variants: the button only goes home, so its label says exactly that (Spec 010 T030). */
 @Composable
-private fun CancelButton(kind: PauseKind, onClick: () -> Unit) {
+private fun CancelButton(onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
         shape = RoundedCornerShape(36.dp),
         border = BorderStroke(2.dp, BrandNavy),
         modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = stringResource(if (kind == PauseKind.REMOTE_CONTROL) R.string.pause_cancel_remote else R.string.pause_cancel_bank),
-                style = MaterialTheme.typography.labelLarge,
-                color = BrandNavy,
-                textAlign = TextAlign.Center,
-            )
-            if (kind == PauseKind.FINANCIAL) {
-                Text(text = stringResource(R.string.pause_cancel_sub), style = MaterialTheme.typography.bodyMedium, color = BrandNavy)
-            }
-        }
+        Text(
+            text = stringResource(R.string.pause_cancel),
+            style = MaterialTheme.typography.labelLarge,
+            color = BrandNavy,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

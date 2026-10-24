@@ -78,9 +78,7 @@
     <string name="e6_back">Quay lại</string>
 
     <!-- E7 chốt (Spec 022): hủy / thoát, mật khẩu gia đình (I2, không lưu mật khẩu), một phút bình tĩnh. -->
-    <string name="pause_cancel_sub">Về màn hình chính</string>
-    <string name="pause_cancel_bank">Hủy giao dịch</string>
-    <string name="pause_cancel_remote">Về màn hình chính</string>
+    <string name="pause_cancel">Về màn hình chính</string>
     <string name="pause_family_password_title">Người gọi nói là người nhà? Hỏi mật khẩu gia đình</string>
     <string name="pause_family_password_body">Người nhà thật sẽ nói đúng ngay. Chưa đặt mật khẩu thì bác cúp máy, rồi gọi lại cho con bằng số bác đã lưu. Nếu là công an hay ngân hàng thì bác cúp máy luôn.</string>
     <string name="pause_countdown_title">Bác nghỉ một phút cho bình tĩnh</string>
@@ -193,7 +191,7 @@
     </string-array>
 
     <!-- Đồng ý tập nhận biết lừa đảo (Spec 028). Chữ đồng ý nằm ở consent_texts.xml (consent_drills). -->
-    <string name="onboarding_scroll_hint">Kéo xuống đọc tiếp ↓</string>
+    <string name="onboarding_scroll_hint">Còn nữa ở dưới ↓</string>
     <string name="e6_drills">Tập nhận biết lừa đảo</string>
     <string name="drills_consent_accept">Đồng ý để HỏiCon mời tập</string>
     <string name="drills_consent_decline">Để lúc khác</string>
