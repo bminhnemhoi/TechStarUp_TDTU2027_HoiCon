@@ -110,7 +110,7 @@
 - [x] T017 [AB] [FR-013] `ux-elder-reviewer` trên ảnh + câu chữ cột "điện thoại của bác" và nhãn "MÔ PHỎNG";
   `security-privacy-reviewer` trên `routers/sim.py`, `sim_service.py`, cờ `sim` ở kênh Zalo, cổng. Sửa mọi Chặn/Critical/High.
   · Verify: báo cáo hai reviewer trong `evidence.md`, không còn mục chặn chưa xử lý
-- [ ] T018 [AB] [FR-014] `docs/setup/SIM.md` (bật cổng trên máy dev, seed gia đình demo, sinh liên kết đăng nhập, chọn replay),
+- [x] T018 [AB] [FR-014] `docs/setup/SIM.md` (bật cổng trên máy dev, seed gia đình demo, sinh liên kết đăng nhập, chọn replay),
   `specs/033-web-sim-eval/quickstart.md` (kịch bản quay video 1280×720), `docs/DESIGN-SYSTEM.md` (3 trang web).
   · Verify: làm theo `docs/setup/SIM.md` từ DB trống tới `/sim` chạy được (ghi lệnh + kết quả vào evidence)
 - [x] T019 [AB] [FR-001..FR-014] Bộ kiểm cuối: `$PYTEST`; `ruff check` + `ruff format --check`; `$WEB typecheck lint build e2e`;

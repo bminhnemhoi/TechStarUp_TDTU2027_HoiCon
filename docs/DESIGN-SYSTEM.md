@@ -110,3 +110,16 @@ chữ ≥ 16 px (thực tế dùng token `body` = 20 px), vùng chạm ≥ 44 px
   trạng thái luồng: "Đang theo dõi trực tiếp" / "Đang kết nối lại…" / "Đã xong".
 - **Kiểm tra**: `pnpm --dir apps/web e2e a11y` chụp 4 màn hình × 360/768/1280 px (+ chữ 200%) vào
   `~/hoicon-evidence/027-guardian-web/` và chạy axe-core (0 vi phạm serious/critical).
+
+### Web mô phỏng và đánh giá (spec 033)
+Cùng chuẩn với web người giám hộ (027); thêm:
+- **Nhãn cố định** đầu mọi trang: "MÔ PHỎNG — dữ liệu hư cấu, không có cuộc gọi hay tin Zalo thật" (`SimBanner`, token `sim.*`, không
+  mượn màu rủi ro hay `drill.*`). Kịch bản `draft` có nhãn "kịch bản nháp".
+- **`/sim`**: ba cột "Điện thoại của bác (mô phỏng)" · "Trợ lý AI" · "Zalo của con (mô phỏng)"; < 768 px thành ba thẻ có tab (phím mũi
+  tên chuyển tab). Nút trả lời E8 ≥ 64 px; nút quyết định có bước xác nhận như 027. Ô chọn kịch bản hiện `title_vi`, id chỉ ở chú thích.
+- **`/trace/[runId]`**: sơ đồ `@xyflow/react` bố cục tĩnh từ `graph_topology`; trạng thái nút = màu + biểu tượng + chữ (đã chạy / đang
+  chờ / lỗi / rơi về mẫu); **bản chữ bắt buộc** bên dưới (danh sách bước có thứ tự); trên màn hẹp sơ đồ cuộn ngang trong khung, trang
+  không tràn ngang; `prefers-reduced-motion` tắt hiệu ứng. Sự cố mô phỏng (`is_sim`) có băng MÔ PHỎNG.
+- **`/eval`** (P3): mỗi bộ kiểm một bảng chỉ số tiếng Việt; khi `gate.verdict ≠ recorded` hiện dòng "Số rào tất định — CHƯA PHẢI SỐ M3".
+- **Trạng thái**: 404 ⇒ "Trang này chưa mở"; rỗng; lỗi; đang tải — đủ cả bốn ở cả ba trang.
+- **Kiểm tra**: `pnpm --dir apps/web e2e sim trace eval a11y` (axe 0 serious/critical, ảnh 390/768/1440 vào `~/hoicon-evidence/033-sim-trace/`).

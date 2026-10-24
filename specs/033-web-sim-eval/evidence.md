@@ -79,3 +79,8 @@
 
 - **T016 ĐẠT (có hạn chế)**: trang `/eval` (`src/app/eval/page.tsx`) đọc `GET /v1/eval/summary`: mỗi bộ kiểm một bảng chỉ số tiếng Việt (số ca, recall, báo nhầm, vi phạm an toàn, công khai AI, dùng câu soạn sẵn, thời gian, chi phí), dòng "Số rào tất định — CHƯA PHẢI SỐ M3" (+ lý do) khi `gate.verdict ≠ recorded`, băng MÔ PHỎNG (`SimBanner`), trạng thái 404 ("Trang này chưa mở"), rỗng và lỗi. Đỏ trước (6 e2e đỏ khi chưa có trang) → `e2e eval` 6 passed (axe 0 lỗi nghiêm trọng, không tràn ngang, ảnh 390/768/1440 `~/hoicon-evidence/033-sim-trace/eval-*.png`, đã xem ảnh 390). **Hạn chế**: "theo nhóm/miền" chưa làm — API hiện chỉ trả số cấp bộ kiểm (không có số theo nhóm thủ đoạn); thêm cần mở rộng `/v1/eval/summary` (chọn: tính từ `cases` của baseline) — quyết định phạm vi, ghi lại.
 - **T018 vẫn CHƯA TICK**: xem evidence 037 (Lượt 7 — T021): `SIM.md` xong + đã chạy từ DB trống; còn `quickstart.md` và DESIGN-SYSTEM (ngoài quyền).
+
+## T018 xong (nhà điều phối, 24/10/2026)
+
+- `docs/setup/SIM.md` (làn B, đã chạy từ DB trống — mục Lượt 7) + `quickstart.md` (kịch bản quay 1280×720) + `docs/DESIGN-SYSTEM.md` mục "Web mô phỏng và đánh giá (spec 033)". Verify của task (chạy theo SIM.md từ DB trống) do làn B đã ghi ở trên.
+- **T016 hạn chế "theo nhóm/miền"**: chấp nhận ở mức hiện tại (FR-012 là P3, nằm trong danh sách cắt; số eval hiện là số rào tất định, chia nhỏ theo nhóm chưa có ý nghĩa). Làm khi có cassette `recorded` (P0-08) — ghi ở ROADMAP "Ghi chú".
