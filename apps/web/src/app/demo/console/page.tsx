@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BUTTON_PRIMARY, BUTTON_SECONDARY } from "@/components/guardian-ui";
+import { api } from "@/lib/client";
 import {
   ALERT_LIMIT_MS,
   CHANNEL,
@@ -74,6 +75,19 @@ export default function ConsolePage() {
     streak += 1;
   }
   const disabled = !connected;
+
+  // Màn hình gian đặt lại ngay (không cần mạng); rồi xóa dữ liệu mô phỏng trên máy chủ (`POST /v1/sim/reset`, spec 050 FR-005c).
+  async function resetAll() {
+    send({ type: "cmd", cmd: "reset" });
+    const screen = "Đã dừng và xóa màn hình gian. Bảng kết quả bên dưới vẫn được giữ.";
+    setNotice(`${screen} Đang xóa dữ liệu mô phỏng trên máy chủ…`);
+    try {
+      const done = await api<{ incidents: number }>("/v1/sim/reset", { method: "POST" });
+      setNotice(`${screen} Đã xóa ${done.incidents} lượt mô phỏng trên máy chủ.`);
+    } catch {
+      setNotice(`${screen} Nhưng chưa xóa được dữ liệu trên máy chủ: dùng lệnh ở mục kỹ thuật bên dưới.`);
+    }
+  }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-5 p-4 text-foreground">
@@ -148,10 +162,7 @@ export default function ConsolePage() {
         <button
           type="button"
           className={BUTTON_SECONDARY}
-          onClick={() => {
-            send({ type: "cmd", cmd: "reset" });
-            setNotice("Đã dừng và xóa màn hình gian. Bảng kết quả bên dưới vẫn được giữ.");
-          }}
+          onClick={() => void resetAll()}
         >
           Đặt lại cho khách mới
         </button>

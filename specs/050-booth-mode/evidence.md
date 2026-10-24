@@ -44,3 +44,8 @@
 ## Wave 6 — T015 bộ kiểm cuối (làn B, 24/10/2026)
 
 - **T015 ĐẠT (trừ phần [A])**: pytest 2881 passed / 22 skipped / 1 xfailed; ruff sạch; `alembic heads` = 1 (0012); web typecheck + e2e 118 passed (3 test live/record bị bỏ qua, cần `HOICON_E2E_LIVE=1`; SC-001/002 ở bảng trên là số đo máy dev lượt trước, không đo lại); eval smoke 20 / full 110 không lệch baseline; gitleaks `apps/web`, `backend`, `specs/050-booth-mode` sạch; `check-spec-trace` 0 lỗi. SC nào chưa đo ở hội trường vẫn ghi "máy dev".
+
+## Lượt 8 — T011 (làn B, 24/10/2026)
+
+- **T011 ĐẠT**: `POST /v1/sim/reset` (sau cổng `HOICON_SIM_ENABLED`, chỉ phiên demo, cùng Origin như các lệnh ghi) gọi `ops.booth.reset_sim`, đóng runtime phát lại đang giữ (`sim_service.drop_all`), trả `sim_reset.v1` (`incidents`, `devices`, `seconds`, `is_demo: true`), `no-store`. Console: nút "Đặt lại cho khách mới" đặt lại màn hình ngay rồi gọi API; thành công ⇒ "Đã xóa N lượt mô phỏng trên máy chủ"; lỗi ⇒ màn hình vẫn được đặt lại + chỉ cách dùng lệnh ở mục kỹ thuật.
+  Test (đỏ trước → xanh): contract `test_sim_schemas.py` thêm `sim_reset` + `booth_join` (fixture hợp lệ/không hợp lệ); `test_api_sim.py`: cổng tắt ⇒ 404, gia đình thật 404, không phiên 401, Origin lạ 403, reset xóa lượt (GET run ⇒ 404), lũy đẳng, hợp đồng; Playwright `booth` **17 passed** (có ca máy chủ lỗi). Chạy lệnh thật `ops booth reset` đã đo ở lượt trước (SC-004).

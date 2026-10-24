@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 
 from hoicon.api.auth import GuardianClaims, get_current_guardian, require_same_origin
@@ -17,6 +17,7 @@ from hoicon.api.routers.elder import ElderAnswerIn, resume_value
 from hoicon.config import get_settings
 from hoicon.db.models import Family
 from hoicon.db.session import get_sessionmaker
+from hoicon.ops import booth
 from hoicon.services import sim_service
 from hoicon.services.sim_service import SimError
 
@@ -107,6 +108,25 @@ async def post_run(body: SimRunIn, claims: Guardian) -> dict[str, Any]:
         return await sim_service.start_run(claims.member_id, claims.family_id, body.scenario_id, body.llm)
     except SimError as exc:
         raise _http(exc) from None
+
+
+class SimResetOut(BaseModel):
+    """Khớp `docs/schemas/sim_reset.v1.json`."""
+
+    incidents: int
+    devices: int
+    seconds: float
+    is_demo: Literal[True] = True
+
+
+@router.post("/reset", response_model=SimResetOut, dependencies=[Depends(require_same_origin)])
+async def post_reset(_: Guardian, response: Response) -> dict[str, Any]:
+    """Nút Đặt lại của `/demo/console` (spec 050 FR-005c): cùng `ops.booth.reset_sim` — xóa mọi lượt mô phỏng của
+    gia đình demo (sự cố, chạy, job, checkpoint, thiết bị `sim:`); không đụng gì khác."""
+    response.headers["Cache-Control"] = "no-store"
+    done = await booth.reset_sim(get_sessionmaker())
+    await sim_service.drop_all()
+    return done | {"is_demo": True}
 
 
 @router.get("/runs/{incident_id}", response_model=SimRunOut)

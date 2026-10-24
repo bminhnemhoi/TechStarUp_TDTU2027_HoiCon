@@ -78,6 +78,12 @@ def reset() -> None:
     _starts.clear()
 
 
+async def drop_all() -> None:
+    """Đóng mọi runtime phát lại đang giữ (đặt lại gian: các lượt đã bị xóa khỏi DB, không còn gì để tiếp tục)."""
+    for key in list(_registry):
+        await _drop(key)
+
+
 # --- kịch bản ------------------------------------------------------------------------------------------------------
 
 # Nhãn nhóm thủ đoạn cho ô chọn (FR-015): nhóm mới ở `scenario.v1.json` thiếu nhãn ⇒ test đỏ, `title_vi` ném KeyError.

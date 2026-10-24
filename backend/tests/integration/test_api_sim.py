@@ -46,6 +46,7 @@ def _validator(name: str) -> Draft202012Validator:
 
 
 RUN = _validator("sim_run")
+RESET = _validator("sim_reset")
 SCENARIOS = _validator("sim_scenarios")
 
 
@@ -122,6 +123,7 @@ async def finish(run: dict[str, Any], who: Any, case_id: str = SCAM) -> dict[str
         ("POST", "/v1/sim/runs"),
         ("GET", "/v1/sim/runs/5b0c1f3e-0000-4000-8000-000000000001"),
         ("POST", "/v1/sim/runs/5b0c1f3e-0000-4000-8000-000000000001/answer"),
+        ("POST", "/v1/sim/reset"),
     ],
 )
 async def test_gate_off_makes_every_route_a_404_even_without_a_session(
@@ -381,3 +383,30 @@ async def test_registry_keeps_at_most_twenty_runtimes_and_drops_the_expired(sim_
     sim_service._registry[UUID(int=999)] = sim_service._Entry("replay", time.monotonic() - 1)
     await sim_service._prune(time.monotonic())
     assert UUID(int=999) not in sim_service._registry
+
+
+# --- đặt lại gian (spec 050 T011, FR-005c) ---------------------------------------------------------------------------
+
+
+async def test_reset_removes_the_sim_runs_of_the_demo_family_and_matches_the_contract(
+    sim_world: SimpleNamespace,
+) -> None:
+    started = await post(sim_world.demo, "/v1/sim/runs", {"scenario_id": SCAM, "llm": "replay"})
+    assert started.status_code == 200, started.text
+    incident = started.json()["incident_id"]
+    res = await post(sim_world.demo, "/v1/sim/reset")
+    assert res.status_code == 200, res.text
+    body = res.json()
+    RESET.validate(body)
+    assert body["incidents"] >= 1 and body["devices"] >= 1 and body["is_demo"] is True
+    assert res.headers["cache-control"] == "no-store"
+    assert (await get(sim_world.demo, f"/v1/sim/runs/{incident}")).status_code == 404  # lượt đã bị xóa
+    again = (await post(sim_world.demo, "/v1/sim/reset")).json()
+    assert again["incidents"] == 0  # lũy đẳng
+
+
+async def test_reset_needs_a_demo_session_and_the_same_origin(sim_world: SimpleNamespace) -> None:
+    assert (await post(sim_world.real, "/v1/sim/reset")).status_code == 404  # gia đình thật không thấy tính năng
+    assert (await call("POST", "/v1/sim/reset", headers=ORIGIN)).status_code == 401
+    evil = await call("POST", "/v1/sim/reset", token=sim_world.demo.token, headers={"Origin": "https://evil.example"})
+    assert evil.status_code == 403

@@ -186,6 +186,7 @@ export interface MockOptions {
   simScenarios?: () => { status: number; json?: Json };
   evalSummary?: () => { status: number; json?: Json };
   drills?: DrillMock;
+  simReset?: () => { status: number; json?: Json };
   simStart?: (body: Json) => { status: number; json?: Json; headers?: Record<string, string> };
   topology?: () => { status: number; json?: Json };
   caseFile?: CaseMock;
@@ -270,6 +271,10 @@ export async function mockApi(page: Page, options: MockOptions = {}): Promise<Ca
     }
     if (p === "/v1/graphs/incident") {
       const r = options.topology?.() ?? { status: 200, json: TOPOLOGY };
+      return reply(route, r.status, r.json);
+    }
+    if (p === "/v1/sim/reset" && method === "POST") {
+      const r = options.simReset?.() ?? { status: 200, json: { incidents: 2, devices: 2, seconds: 0.1, is_demo: true } };
       return reply(route, r.status, r.json);
     }
     if (p === "/v1/guardian/drills") {

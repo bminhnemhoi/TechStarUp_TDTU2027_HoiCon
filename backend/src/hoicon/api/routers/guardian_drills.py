@@ -26,7 +26,7 @@ NO_STORE = {"Cache-Control": "no-store"}
 Guardian = Annotated[GuardianClaims, Depends(get_current_guardian)]
 
 
-class DrillRequestIn(BaseModel):
+class GuardianDrillRequestIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     member_id: UUID
@@ -35,7 +35,7 @@ class DrillRequestIn(BaseModel):
     window_end: AwareDatetime
 
 
-class DrillOut(BaseModel):
+class GuardianDrillOut(BaseModel):
     drill_id: UUID
     member_alias: str
     script_id: str
@@ -47,11 +47,11 @@ class DrillOut(BaseModel):
     is_drill: Literal[True] = True
 
 
-class DrillListOut(BaseModel):
-    drills: list[DrillOut]
+class GuardianDrillListOut(BaseModel):
+    drills: list[GuardianDrillOut]
 
 
-async def _view(session: AsyncSession, drills: list[Drill]) -> DrillListOut:
+async def _view(session: AsyncSession, drills: list[Drill]) -> GuardianDrillListOut:
     members = (
         {
             m.id: m
@@ -65,7 +65,7 @@ async def _view(session: AsyncSession, drills: list[Drill]) -> DrillListOut:
         script = dr.get_script(d.script_id) or {}
         member = members.get(d.member_id)
         out.append(
-            DrillOut(
+            GuardianDrillOut(
                 drill_id=d.id,
                 member_alias=safe_alias(member.alias if member else None),
                 script_id=d.script_id,
@@ -76,11 +76,11 @@ async def _view(session: AsyncSession, drills: list[Drill]) -> DrillListOut:
                 score=d.score,
             )
         )
-    return DrillListOut(drills=out)
+    return GuardianDrillListOut(drills=out)
 
 
-@router.get("", response_model=DrillListOut, summary="Lịch và lịch sử diễn tập của gia đình (spec 028)")
-async def list_drills(claims: Guardian, response: Response) -> DrillListOut:
+@router.get("", response_model=GuardianDrillListOut, summary="Lịch và lịch sử diễn tập của gia đình (spec 028)")
+async def list_drills(claims: Guardian, response: Response) -> GuardianDrillListOut:
     response.headers.update(NO_STORE)
     async with get_sessionmaker()() as session:
         return await _view(session, await DrillService.list_for_family(session, claims.family_id))
@@ -88,12 +88,12 @@ async def list_drills(claims: Guardian, response: Response) -> DrillListOut:
 
 @router.post(
     "",
-    response_model=DrillListOut,
+    response_model=GuardianDrillListOut,
     status_code=status.HTTP_201_CREATED,
     summary="Đặt lịch một bài diễn tập (spec 028)",
     responses={422: {"description": "Bị từ chối: `{detail: <mã DrillRefused>}`"}},
 )
-async def schedule_drill(body: DrillRequestIn, claims: Guardian, response: Response) -> DrillListOut:
+async def schedule_drill(body: GuardianDrillRequestIn, claims: Guardian, response: Response) -> GuardianDrillListOut:
     response.headers.update(NO_STORE)
     try:
         async with get_sessionmaker().begin() as session:
