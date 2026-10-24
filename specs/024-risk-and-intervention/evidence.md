@@ -18,7 +18,7 @@
 
 | Tiêu chí | Kết quả | Trạng thái |
 |---|---|---|
-| SC-001 tóm tắt p95 ≤ 15 s | Chưa đo với LLM thật (chưa có khóa). Trần LLM 4 s/lần gọi + mẫu dự phòng giữ nguyên | **CHƯA ĐO** |
+| SC-001 tóm tắt p95 ≤ 15 s | Đo ở lượt 10 (T024, xem "Lượt 10" bên dưới): đồ thị thật + LLM giả + Zalo mock, p95 ≈ 0,13 s. **Với LLM thật/Zalo thật vẫn CHƯA ĐO** (chưa có khóa); trần LLM 4 s/lần gọi + mẫu dự phòng giữ nguyên | ĐẠT (máy dev, Zalo mock); **chưa đo với LLM thật** |
 | SC-002 `level ≥ rule_floor`, E8 "có" ⇒ nâng | `test_elder_answer_raises_level_above_floor`: sàn `medium`, LLM giả cố hạ `low`, "Không quen" ⇒ `high`; eval smoke 0 vi phạm | ĐẠT |
 | SC-003 công khai AI, chỉ enum | `test_every_elder_question_discloses_ai` (mọi câu, thật + diễn tập); schema + API chỉ nhận enum + cờ bool | ĐẠT |
 | SC-004 màn E8 | Ảnh máy ảo API 36 ở cỡ chữ 100% và 200% (bên dưới); chữ ≥ 20sp, vùng chạm ≥ 64dp, "CÓ" trắng trên `BrandOrangeText` ≈ 8,5:1, "KHÔNG" trắng trên `BrandNavy` ≈ 11,5:1; 200% vẫn thấy đủ 3 nút | ĐẠT (máy ảo) |
@@ -73,7 +73,7 @@ chuẩn đã cài lại; `am start` từ shell giờ bị từ chối như mong 
 
 - **E8 mở trên máy bằng đường tự kéo, chưa có FCM thật** (T013, 18/10/2026): xem mục "T013" bên dưới. FCM thật chờ P0-08 (Firebase);
   máy chủ chỉ có FCM mock.
-- SC-001 với LLM thật; mức rủi ro đồ thị nâng (sau E8) chưa ghi ngược vào `incidents.level` (trang `/a/` vẫn hiện mức do luật đặt).
+- SC-001 với LLM thật. (Câu cũ "mức nâng sau E8 chưa ghi ngược vào `incidents.level`" **sai**: node `verification` chạy sau `risk_scorer` và đã ghi xuyên `incidents.level` bằng `IncidentService.raise_level`; xem T023 ở "Lượt 10".)
 - FR-006 "nâng mức ⇒ đánh thức đồ thị": đồ thị khởi động khi sự cố đạt `high`/`critical` (mở mới hoặc được nâng), chưa
   đánh thức lượt đang chạy khi mức tăng thêm.
 - Client TS (`apps/web/src/lib/api/schema.d.ts`) chưa sinh lại từ spec 020 tới nay (`scripts/gen-api-client.sh`).
@@ -96,3 +96,19 @@ chuẩn đã cài lại; `am start` từ shell giờ bị từ chối như mong 
 - Số đo: `cassettes check` khớp (không cần sinh lại); smoke 20 ca, full 110 ca, injection 17/17 — recall 100%, báo nhầm 0%, 0 vi phạm, công khai AI 100%, không lệch baseline (cassette `synthetic`, chưa phải số M3).
 - `ux-elder-reviewer` đọc 3 tin mẫu: 0 High, 5 Medium. **CHƯA sửa, cần Opus** (đều đổi chữ bảng spec §5/`ACTION_VI`, ngoài quyền): (1) tin rất cao mở bằng "Mức nguy cơ: rất cao." trước việc cần làm — đề xuất "Cần anh/chị gọi ngay cho {alias} (mức nguy cơ: rất cao)."; (2) hai câu "{alias} cho biết…" liên tiếp — đề xuất gộp, thêm "(OTP)"; (3) tin có `call_still_ongoing` đã có câu bận nhưng tin không có nó thì thiếu hướng dẫn khi bác không nghe máy; (4) câu `common_scam_pattern` đứng cạnh `call_still_ongoing` — đề xuất "giống các cuộc gọi giả danh… nhưng trợ lý chưa chắc chắn"; (5) tóm tắt rỗng chỉ còn mức + lệnh gọi, người nhận không biết vì sao — đề xuất một câu trung tính thay phần bị bỏ.
 - Cổng cuối: pytest 2726 passed/21 skipped; ruff sạch; `alembic heads` = 1 (0012); `check-spec-trace` 0 lỗi; gitleaks quét từng thư mục (`backend/src|tests|eval`, `data`, `specs`, `infra`, `apps/web/src`) sạch. `docs` có 1 dương tính giả: `docs/schemas/fixtures/device_me.v1.invalid.json:28` là SHA-256 của chuỗi rỗng (fixture "invalid" của Opus, không phải bí mật). Lưu ý: `gitleaks dir` chỉ nhận một đường dẫn; lệnh nhiều đường dẫn trong chỉ dẫn lần này quét cả `apps/web/.next` và `backend/.env` (bị ignore).
+
+## Lượt 10 (làn B, 25/10/2026)
+
+### T023 — mức nâng sau E8 ghi ngược `incidents.level`
+Đọc đồ thị: `ask_elder → risk_scorer → verification → intervention`; `verification` gọi `IncidentService.raise_level(..., "graph_verify")` với mức hiện hành của state (đã gồm mức `risk_scorer` nâng sau câu trả lời), nên **hành vi đã đúng từ 026**; ghi chú "chưa ghi ngược" của evidence cũ là sai. Không đổi mã. Thêm `tests/integration/test_graph_elder_answer_level.py` (3 ca): trả lời "có" (đang bị bảo chuyển tiền) ⇒ `incidents.level` = `critical`, `rule_floor` giữ `high`; trả lời không nâng ⇒ level và `version` không đổi; LLM nói `low` ⇒ không hạ dưới `high`. Test KHÔNG đỏ trước khi đổi mã (không có gì để đổi); kiểm hiệu lực bằng đột biến: thay lời gọi `raise_level` bằng lỗi ⇒ ca đầu đỏ, bỏ đột biến ⇒ xanh. Verify: `pytest tests/integration -k elder_answer` xanh.
+
+### T024 — đo SC-001 (tóm tắt tới người giám hộ)
+`tests/integration/test_summary_latency.py`: 20 lượt qua `IncidentRuntime` thật (Postgres thật), LLM giả trả tức thì, client Zalo mock có dấu thời gian; đo từ lúc nhận lô sự kiện (mốc `time.monotonic()` ngay trước `runtime.start`) tới lúc `send_to_guardian` gọi `send_message` cho tin `detail` (node `intervention`).
+
+| Số đo | Giá trị | Nguồn |
+|---|---|---|
+| n | 20 | máy dev, Zalo mock, LLM giả |
+| p50 / p95 / max | 0,091 s / 0,128 s / 0,128 s | một lần chạy, 25/10/2026 |
+| Trần SC-001 | p95 ≤ 15 s | test khẳng định |
+
+Giới hạn: không gồm nhịp thăm dò worker (≤ 0,5 s/tin), độ trễ LLM thật (trần cứng 4 s/lần, 2 lần gọi ⇒ ≤ 8 s + điều phối) hay độ trễ mạng Zalo thật; số này KHÔNG dùng làm số M3. **Câu cũ "p50/p95 227/327 ms" là số eval smoke (LLM ghi sẵn), đã bị gỡ khỏi mọi tuyên bố SC-001** (dòng bảng "Ghi trước đây" ở đầu tệp đã ghi rõ).
