@@ -101,3 +101,7 @@
 - **037 T015 ĐẠT**: `docs/setup/STABILITY.md` — đọc Android vitals ở Play Console, ngưỡng hành vi xấu (tổng 1,09% sự cố / 0,47% ANR, 8% theo kiểu máy; **ghi rõ là số tại thời điểm viết, kiểm lại trước khi dùng**), điều kiện cỡ mẫu, mẫu dòng ghi vào báo cáo thí điểm. SC-006 vẫn BLOCKED (Play Console).
 - **033 T018 CHƯA TICK (làm 1/3)**: `docs/setup/SIM.md` đã cập nhật và **chạy thử từ DB trống** (Postgres tạm 15435): migration → head 0013; API với `HOICON_SIM_ENABLED=true`: `/healthz` 200, `/readyz` 200; `guardian_link --seed` in liên kết; đổi token lấy phiên 200; `/v1/sim/scenarios` 110 kịch bản có `title_vi`; `POST /v1/sim/runs` `llm: replay` ⇒ `replay`, có câu hỏi, `is_demo: true`. Chưa làm: `specs/033-web-sim-eval/quickstart.md` (ngoài danh sách tệp làn B được ghi) và `docs/DESIGN-SYSTEM.md` mục 3 trang web (ngoài quyền) — kịch bản quay video 1280×720 đã đặt tạm trong `SIM.md`; cần chuyển sang `quickstart.md` + DESIGN-SYSTEM.
 - Ghi nhận: `docs/DATA-MODEL.md` §6 vẫn chưa có dòng `revoked_sessions` và thiết bị `sim:` 24 giờ (ngoài quyền lượt này).
+
+## Lượt 7 — bộ kiểm cuối (làn B, 24/10/2026)
+
+- pytest **2892 passed, 22 skipped, 0 xfail** (xfail của T013 đã được điều phối gỡ); `ruff check` + `format --check` sạch; `check-spec-trace` 25 spec 0 lỗi; `unittest scripts/tests` 116 OK (7 skipped); web e2e **124 passed**; gitleaks `docs/setup` sạch. Migration mới `0013` (đã áp dev; áp prod cùng 012 T013).

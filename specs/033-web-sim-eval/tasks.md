@@ -101,7 +101,7 @@
   backend của 012 không có baseline. Thêm ngoại lệ `!backend/eval/baseline*.json` (giữ loại `cassettes/`, `reports/`) + dòng `COPY`
   tương ứng, và test hạ tầng (`scripts/tests/test_deploy_vps.py`) kiểm cả hai.
   · Verify: `$PYTEST tests/integration/test_api_eval_summary.py`
-- [ ] T016 [B-web] [FR-012] Trang `src/app/eval/page.tsx`: bảng chỉ số, theo nhóm/miền, dòng cảnh báo "Số rào tất định — CHƯA PHẢI
+- [x] T016 [B-web] [FR-012] Trang `src/app/eval/page.tsx`: bảng chỉ số, theo nhóm/miền, dòng cảnh báo "Số rào tất định — CHƯA PHẢI
   SỐ M3" khi verdict ≠ `pass` hoặc không có `gate`. Playwright `e2e/eval.spec.ts` + axe + ảnh.
   · Verify: `$WEB e2e eval`
 
