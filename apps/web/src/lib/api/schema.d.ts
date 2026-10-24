@@ -358,6 +358,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/data-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Người được bảo vệ yêu cầu xóa dữ liệu gia đình (spec 038) */
+        post: operations["request_deletion_v1_data_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/booth/codes": {
         parameters: {
             query?: never;
@@ -958,6 +975,19 @@ export interface components {
              * Format: date-time
              */
             recorded_at: string;
+        };
+        /** DataRequestIn */
+        DataRequestIn: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "delete";
+            /**
+             * Confirmed
+             * @constant
+             */
+            confirmed: true;
         };
         /** DeviceInfo */
         DeviceInfo: {
@@ -1678,6 +1708,30 @@ export interface components {
             code: string;
             /** Text */
             text: string;
+        };
+        /** ReceiptOut */
+        ReceiptOut: {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "done" | "failed";
+            /**
+             * Requested At
+             * Format: date-time
+             */
+            requested_at: string;
+            /**
+             * Deadline Hours
+             * @default 72
+             * @constant
+             */
+            deadline_hours: 72;
         };
         /**
          * RiskEventIn
@@ -2848,6 +2902,55 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    request_deletion_v1_data_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DataRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Đã có yêu cầu đang chờ (lũy đẳng) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptOut"];
+                };
+            };
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Đã gửi yêu cầu nhiều lần hôm nay. Bác thử lại vào ngày mai nhé. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

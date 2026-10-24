@@ -22,6 +22,7 @@ from hoicon.api.routers import (
     actions,
     booth,
     consents,
+    data_requests,
     devices,
     drills,
     elder,
@@ -87,6 +88,7 @@ app.include_router(runs.router)
 app.include_router(guardian.router)
 app.include_router(lookups.router)
 app.include_router(drills.router)
+app.include_router(data_requests.router)
 app.include_router(booth.router)
 app.include_router(guardian_drills.router)
 app.include_router(actions.router)

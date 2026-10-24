@@ -4,7 +4,7 @@
 `$GRADLE` = `apps/android/gradlew -p apps/android`. Dừng khi Verify đỏ 2 lần liên tiếp.
 
 - [x] T001 [AB] [FR-003, FR-004] *(kiến trúc sư)* `docs/schemas/data_request.v1.json` + fixture valid/invalid. · Verify: kiểm fixture bằng jsonschema
-- [ ] T002 [B] [FR-004] Test hợp đồng + test đỏ `tests/integration/test_api_data_requests.py`: chỉ thiết bị `protected`; lũy đẳng; 3/ngày; được phép khi đã rút
+- [x] T002 [B] [FR-004] Test hợp đồng + test đỏ `tests/integration/test_api_data_requests.py`: chỉ thiết bị `protected`; lũy đẳng; 3/ngày; được phép khi đã rút
   đồng ý; ghi `requested_via='app'`; xếp tin báo (mở đầu công khai AI) trước `purge_family` chỉ khi còn `guardian_alerts` (đã rút ⇒ 0 tin); purge xong ⇒ token cũ 401/403. Rồi hiện thực.
   · Verify: `$PYTEST tests/contract tests/integration/test_api_data_requests.py tests/integration/test_purge_family.py -q`
 - [ ] T003 [A] [FR-001, FR-002] E12 trong `PermissionsScreen.kt`: thẻ mỗi mục đích; "Tắt" + xác nhận cho mục không gắn quyền ⇒ `ConsentLedger` ghi `granted=false`.
