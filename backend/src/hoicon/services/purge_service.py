@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select, update
+from sqlalchemy import delete, or_, select, text, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from hoicon.db.ids import new_id
@@ -73,6 +73,8 @@ async def request_delete_detailed(
     async with sessions.begin() as session:
         if await session.get(Family, family_id) is None:
             raise FamilyNotFoundError
+        # Hai yêu cầu đồng thời của một gia đình xếp hàng ở đây: chỉ một yêu cầu `pending`, một purge, một tin báo.
+        await session.execute(text("select pg_advisory_xact_lock(hashtext(:k))"), {"k": f"purge:{family_id}"})
         pending = await session.scalar(
             select(DataRequest)
             .where(DataRequest.family_id == family_id, DataRequest.status == "pending")

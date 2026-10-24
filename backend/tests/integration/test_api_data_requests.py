@@ -186,3 +186,14 @@ async def test_after_the_purge_the_old_token_is_refused(world: World) -> None:
     await purge_service.purge_family(get_sessionmaker(), no_thread, world.family_id)
     assert (await call("GET", "/v1/devices/me", token=world.token)).status_code == 401
     assert (await post(world)).status_code == 401
+
+
+async def test_two_simultaneous_requests_make_one_request_one_purge_and_one_notice(world: World) -> None:
+    """Rà soát lượt 10 Medium #1: bấm đúp/thử lại chập chờn không được sinh hai yêu cầu, hai purge, hai tin."""
+    import asyncio
+
+    results = await asyncio.gather(*[post(world) for _ in range(3)])
+    assert sorted(r.status_code for r in results) == [200, 200, 202]
+    assert len({r.json()["request_id"] for r in results}) == 1
+    assert len(await requests_of(world)) == 1
+    assert len(await jobs_of("purge_family", world)) == 1 and len(await jobs_of("notify_guardian", world)) == 1
