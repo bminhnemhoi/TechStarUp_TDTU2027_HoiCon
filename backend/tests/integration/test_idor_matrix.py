@@ -60,6 +60,10 @@ EXEMPT = {
     ("GET", "/v1/runs/{run_id}/stream"): "SSE; kiểm ở test_api_runs / test_guardian_consent_gate",
     ("GET", "/v1/sim/runs/{incident_id}"): "cổng HOICON_SIM_ENABLED + chỉ gia đình demo; ma trận riêng ở test_api_sim",
     ("POST", "/v1/sim/runs/{incident_id}/answer"): "như trên",
+    (
+        "DELETE",
+        "/v1/data-requests/{request_id}",
+    ): "yêu cầu xóa, không phải sự cố: IDOR (nhà khác/id lạ ⇒ cùng 404, 401, 409) ở test_api_data_requests (038)",
     ("POST", "/webhooks/zalo/{bot_id}"): "xác thực bằng bí mật webhook, không theo gia đình",
 }
 
