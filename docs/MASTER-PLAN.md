@@ -163,6 +163,7 @@ Làn: **A** = Android · **B** = backend/AI/web · **H** = hồ sơ, vận hành
 | **032-coach-weekly** | P2-17: Coach hằng tuần + **I4** (tin "Tuần này nhà mình an toàn", báo "mất bảo vệ" từ heartbeat) | B | 022, 023 | trong hạn mức Zalo (đếm `messages_out`) |
 | **033-web-sim-eval** | P2-19: `/trace` (xyflow), `/eval`, `/sim` | B | 025, 036 | US-10 |
 | **037-hardening-rest** | P2-20 còn lại: Crashlytics, rà soát cuối | A+B | 034 | crash-free đo được |
+| **038-settings-privacy** | P2-20 / US-09: E12 rút từng đồng ý, xóa dữ liệu gia đình từ app (`POST /v1/data-requests`) — thêm 25/10 (lỗ hổng GAP-REPORT) | A+B | 034, 037 | US-09; dừng an toàn không đổi |
 | H-2 | P2-21: báo cáo thí điểm, poster, video 5', nộp 09/01 | H | — | `pitch-sync` sạch |
 
 ### Đợt 6 — Thí điểm + chung kết (14/12–27/02)
