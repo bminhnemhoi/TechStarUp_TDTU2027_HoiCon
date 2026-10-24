@@ -31,14 +31,18 @@ def router(client: ReplayClient) -> LlmRouter:
 async def ask_risk(r: LlmRouter, context: dict[str, Any] | None = None):
     fallback = RiskAssessment(level="medium", tactic="unknown", reasons=[], ask_question="none")
     return await r.structured(
-        prompt=load_prompt("risk_scorer"), context=context or {"k": "v"}, output=RiskAssessment, fallback=fallback
+        prompt=load_prompt("risk_scorer"),
+        context=context or {"k": "v"},
+        output=RiskAssessment,
+        fallback=fallback,
+        consented=True,
     )
 
 
 async def ask_brief(r: LlmRouter):
     fallback = GuardianBrief(points=["common_scam_pattern"], action="call_now")
     return await r.structured(
-        prompt=load_prompt("intervention"), context={"k": "v"}, output=GuardianBrief, fallback=fallback
+        prompt=load_prompt("intervention"), context={"k": "v"}, output=GuardianBrief, fallback=fallback, consented=True
     )
 
 

@@ -1,102 +1,77 @@
-# Feature Specification: 050 — Chế độ gian trưng bày (P4-02)
+# Spec 050: Chế độ gian trưng bày (`/booth`, `/join/[code]`, `/demo/console`, phát lại khi mất mạng, reset < 1 phút)
 
-**Feature Branch**: `feat/050-booth-mode` · **Created**: 23/10/2026 · **Status**: Draft (specify + clarify tự quyết, MASTER-PLAN §2.6)
+> **Đã đối soát 24/10/2026 (kiến trúc sư):** bản của làn B được giữ làm gốc (giai đoạn 1 đã thi công). Giai đoạn 2 (T001, T011–T013) làm sau 09/01/2027 (MASTER-PLAN §5 Wave 6).
+> specify → clarify → plan → tasks → analyze (0 CRITICAL, 2 HIGH đã xử lý bằng cách tách giai đoạn, xem `plan.md` mục 5).
+> **Chưa có hợp đồng mới** (Opus viết `docs/schemas` ở giai đoạn 0): phần cần hợp đồng nằm trong nhóm BLOCKED.
 
-**Input**: ROADMAP P4-02 + Gate G4; MASTER-PLAN §3 Đợt 6 (`/booth`, `/join/[code]`, `/demo/console`, phát lại khi mất mạng,
-reset demo < 1 phút). Thời điểm thi công: **sau nộp Vòng 2 (09/01/2027)**, xong trước 07/02/2027.
+**Mã ROADMAP**: `P4-02` · **Làn**: A+B (`[B-web]` = `apps/web/**`; `[B-api]` = `backend/**`; `[A]` = `apps/android/**`)
+· **Cột mốc**: chung kết 27/02/2027, xong trước 07/02/2027; **Gate G4 (26/02)**: chạy gian 3 lần liên tiếp thành công, cảnh báo < 5 s,
+phát lại khi mất mạng hoạt động, có video dự phòng, reset demo < 1 phút · **Phụ thuộc**: 033 (`/v1/sim/*`, `/sim`, `/trace`, cổng
+`HOICON_SIM_ENABLED`), 027 (phiên `hc_guardian`), 012 (hồ sơ `demo`, khởi động nguội), 036 (cassette tất định) · **US**: US-10
+· **ADR**: ADR-002, ADR-009 (không đổi).
 
-## Truy vết *(mandatory)*
+> **Chỉ nói phần chênh lệch.** 033 đã có điện thoại mô phỏng `/sim` cho một người dùng tương tác. Gian trưng bày khác ở chỗ:
+> (1) **tự chạy** không cần người thao tác, trên màn hình lớn, chữ to; (2) **nhiều khách** cùng xem trên điện thoại riêng;
+> (3) người điều khiển có **bảng điều khiển**; (4) **mất mạng vẫn trình diễn được**; (5) **dọn sạch trong một phút** giữa hai lượt khách.
 
-- **Mã ROADMAP**: P4-02 · **Gate**: G4 (26/02/2027): chạy gian 3 lần liên tiếp thành công, cảnh báo < 5 s, phát lại khi mất mạng,
-  video dự phòng, reset demo < 1 phút
-- **User story PRD**: US-10 (BGK thử toàn luồng) mở rộng cho khách tham quan gian
-- **ADR liên quan**: ADR-002, ADR-003/010 (Zalo — gian **không** gửi Zalo thật cho khách), ADR-012
-- **Phụ thuộc spec**: 033 (`/sim`, `/trace`, cờ `sim`, thiết bị demo riêng mỗi lượt), 012 (bản `demo` Android, VPS), 028 (nhãn diễn tập)
-- **Làn**: A+B
+---
 
-## Bối cảnh (chỉ phần chênh lệch)
+## 1. Bối cảnh
 
-033 đã có điện thoại mô phỏng trên web cho một người xem. Ở gian chung kết (bình chọn tại gian = 30% điểm), cần: một màn lớn
-cho đám đông (`/booth`), khách quét QR để **xem trên điện thoại của mình** tin cảnh báo như người giám hộ (`/join/[code]`, không
-Zalo, không thu số điện thoại), một bàn điều khiển cho đội (`/demo/console`: chọn kịch bản, chạy trên máy Android `demo` thật hoặc
-mô phỏng, reset), và đường dự phòng khi mạng gian chập chờn.
+Chung kết là gian trưng bày với Wi-Fi hội trường không đáng tin và khách đi qua trong vài chục giây. Cần: màn hình tự kể câu chuyện
+"cuộc gọi lạ → bác được nhắc dừng → con nhận tin → hồ sơ", đo được thời gian cảnh báo (< 5 s), không phụ thuộc mạng, không làm lộ
+dữ liệu thật, và đặt lại nhanh cho khách sau.
 
-## User Scenarios & Testing *(mandatory)*
+| Trang | Ai dùng | Dữ liệu | Mức |
+|---|---|---|---|
+| `/booth` | khách đứng trước màn hình lớn | gia đình **demo** (`is_demo`), kịch bản hư cấu, đồ thị thật qua `/v1/sim/*` (cờ `sim`) | P1 |
+| `/demo/console` | người điều khiển gian (đội) | như trên + chỉ số lần chạy | P1 |
+| `/join/[code]` | khách quét QR bằng điện thoại | vai người giám hộ của gia đình demo, chỉ xem + quyết định | P2 |
 
-### User Story 1 — Đội chạy một lượt demo từ bàn điều khiển (Priority: P1)
-Thành viên đội chọn kịch bản trên `/demo/console`, bấm "Chạy" ⇒ máy Android `demo` (hoặc điện thoại mô phỏng) hiện E7, màn `/booth`
-hiện từng bước tác tử, khách đã quét QR thấy tin cảnh báo trên điện thoại mình **< 5 s** sau sự kiện.
+## 2. User story
 
-**Independent Test**: Playwright 3 trình duyệt (console, booth, join) trên API dev + `HOICON_BOOTH_ENABLED=true`, replay.
+| # | Ưu tiên | Câu chuyện |
+|---|---|---|
+| US-50.1 | **P1** | Là khách đi qua gian, tôi thấy màn hình tự chạy một kịch bản lừa đảo từ đầu tới cuối trong dưới 90 giây, chữ đủ to để đọc từ xa, và hiểu HỏiCon làm gì mà không cần ai giải thích |
+| US-50.2 | **P1** | Là người điều khiển, tôi bấm một nút để chạy kịch bản, chuyển chế độ, đặt lại, và thấy thời gian từ "bắt đầu" tới "tin cho con xuất hiện" của mỗi lượt |
+| US-50.3 | **P1** | Là người điều khiển khi Wi-Fi sập, màn hình tự chuyển sang phát lại bản ghi đã lưu, **ghi rõ đó là bản ghi**, và quay lại chạy trực tiếp khi có mạng |
+| US-50.4 | **P1** | Là người điều khiển giữa hai khách, tôi đặt lại gian trong dưới 1 phút (xóa lượt mô phỏng, dừng vòng lặp, đóng liên kết tham gia) |
+| US-50.5 | **P2** | Là khách có điện thoại, tôi quét QR và vào `/join/<mã>` để xem cùng câu chuyện dưới vai con của bác, bấm "Tôi đã gọi cho bác, an toàn" |
 
-**Acceptance Scenarios**:
-1. **Given** gian bật, 1 khách đã vào `/join/<mã>`, **When** console chạy `fake_police_safe_account_002`, **Then** khách thấy tin mở
-   đầu "Đây là trợ lý AI HỏiCon" + nhãn "MÔ PHỎNG" trong < 5 s; `/booth` hiện sơ đồ + bản chữ.
-2. **Given** lượt đang chạy, **When** console bấm "Làm lại", **Then** < 1 phút mọi màn về trạng thái đầu, không còn sự cố/thiết bị
-   `sim:` của lượt trước.
+## 3. Yêu cầu chức năng
 
-### User Story 2 — Khách tham quan tự xem (Priority: P1)
-Khách quét QR trên màn `/booth` ⇒ `/join/<mã>` (mã đổi mỗi lượt, hết hạn 15 phút), không đăng nhập, không nhập số điện thoại, không
-cookie theo dõi; thấy đúng tin người giám hộ sẽ nhận và nút "nghi lừa đảo / an toàn" (chỉ ghi phiếu bình chọn ẩn danh nếu có, không
-đổi sự cố).
+- **(FR-001)** *[Opus, giai đoạn 0]* Hợp đồng cho phần cần máy chủ mới: `docs/schemas/sim_reset.v1.json` (kết quả đặt lại: số lượt đã xóa, thời gian)
+  và `booth_join.v1.json` (đổi mã tham gia lấy phiên người giám hộ demo) + fixture valid/invalid. Chưa có ⇒ FR-005 phần máy chủ và FR-007 **BLOCKED**; mọi phần còn lại dùng hợp đồng `sim_*` có sẵn.
+- **(FR-002)** *[B-web]* `/booth`: trang toàn màn hình, tự chạy **danh sách phát** (mặc định 3 kịch bản: giả danh công an, thẻ ngân hàng bị khóa, và một cuộc gọi
+  hợp lệ để thấy HỏiCon không báo nhầm) qua `/v1/sim/*` (`llm: "replay"`); trả lời của bác và quyết định của con do kịch bản tự thực hiện, mỗi bước có nhịp
+  dừng đủ đọc. Bố cục 3 cột (điện thoại của bác · trợ lý AI · Zalo của con) trên màn hình ≥ 1280 px, một cột trên điện thoại. Chữ ≥ 28 px ở khối nội dung chính, tương phản ≥ 7:1,
+  mọi trạng thái có biểu tượng + chữ (luật 15). Nhãn "MÔ PHỎNG — dữ liệu hư cấu" luôn hiện.
+- **(FR-003)** *[B-web]* Đo cảnh báo: mỗi lượt đo `t_alert_ms` = từ lúc bấm bắt đầu tới lúc tin `fast_alert` của con có trong `GET /v1/sim/runs/{id}` (đo bằng đồng hồ trình duyệt,
+  ghi rõ "đo ở trình duyệt, gồm độ trễ mạng nội bộ"). Hiển thị ở console; lượt đạt khi `t_alert_ms < 5000`.
+- **(FR-004)** *[B-web]* `/demo/console`: danh sách kịch bản + nút Bắt đầu, chọn chế độ (Trực tiếp · Bản ghi), nút Đặt lại, trạng thái kết nối (API, luồng), bảng các lượt gần đây
+  (kịch bản, `t_alert_ms`, đạt/không, chế độ) và **bộ đếm "đạt liên tiếp"** cho Gate G4 (3 lượt liên tiếp đạt). Cần phiên `hc_guardian` của gia đình demo (như `/sim`).
+- **(FR-005)** *Đặt lại < 1 phút.* (a) *[B-web]* phía màn hình: dừng danh sách phát, xóa trạng thái lượt, đóng luồng — tức thì. (b) *[B-api]* phía dữ liệu:
+  `python -m hoicon.ops.booth reset` xóa lượt mô phỏng của gia đình demo (sự cố + `agent_runs` + job + checkpoint + token tham gia), in thời gian; **mục tiêu < 30 giây ở máy dev**
+  (đo, ghi nguồn). (c) *[B-api, BLOCKED bởi FR-001]* `POST /v1/sim/reset` cho nút Đặt lại của console.
+- **(FR-006)** *[B-web]* Phát lại khi mất mạng: gói **bản ghi** (khung `sim_run` đã ghi, có thời điểm tương đối) nằm trong bản dựng web (`public/booth/replay/*.json`), kiểm theo
+  `sim_run.v1`; trang chuyển sang phát lại khi (i) `navigator.onLine === false`, (ii) 2 lần liên tiếp gọi API hỏng/quá 3 giây, hoặc (iii) người điều khiển chọn "Bản ghi".
+  Trong phát lại: băng rôn **cố định** "ĐANG PHÁT LẠI BẢN GHI — không phải trực tiếp" (không giấu), không gọi API, vẫn đo nhịp. Có mạng trở lại ⇒ thông báo và chuyển về trực tiếp ở lượt kế.
+- **(FR-007)** *[B-api + B-web, BLOCKED bởi FR-001]* `/join/[code]`: mã tham gia ngắn hạn (≤ 10 phút, dùng nhiều lần trong hạn, tối đa 50 khách/mã) do console tạo; đổi mã lấy phiên
+  `hc_guardian` của gia đình demo với quyền như `/sim` (xem + quyết định, không đặt lịch, không đổi cấu hình); hết hạn/đặt lại ⇒ mã vô hiệu. Trang chào bằng chữ lớn: "Bạn đang xem bản trình diễn — mọi dữ liệu là hư cấu".
+- **(FR-008)** *[Ràng buộc chung]* Mọi dữ liệu gian mang `is_demo`; mọi sự cố mang cờ `sim` (không Zalo thật, kể cả `HOICON_ZALO_MODE=live`); không có số điện thoại/tên/tài khoản thật
+  (kịch bản và bản ghi chỉ dùng số hư cấu đã đăng ký); các trang trả "Trang này chưa mở" khi `HOICON_SIM_ENABLED=false` (404 từ API); `compose.prod.yml` không bật cổng.
+- **(FR-009)** *[A]* Ứng dụng Ngân hàng Mẫu (`:demobank`) và kịch bản máy ảo để diễn cảnh "mở app ngân hàng" tại gian: tài liệu bấm máy và một lệnh `emu-scenario` gọi tên danh sách phát. **Làn A**, không làm ở đây.
+- **(FR-010)** *[B-web]* Kiểm chứng: Playwright cho `/booth`, `/demo/console` (ảnh 390/768/1440 px, axe 0 lỗi), kịch bản **mất mạng** (chặn mạng giữa chừng ⇒ băng rôn + tiếp tục), và 3 lượt liên tiếp có `t_alert_ms` ghi lại.
 
-### User Story 3 — Mất mạng vẫn demo được (Priority: P1)
-Mạng gian rớt ⇒ console chuyển "phát lại cục bộ": `/booth` chạy bản ghi sẵn của lượt replay (tệp tĩnh trong web), E7 trên máy Android
-vẫn hiện (không cần mạng — luật 4); `/join` hiện "Mạng đang chập chờn, mời bác/anh/chị xem trên màn lớn".
+## 4. Tiêu chí thành công
 
-### Edge Cases
-- > 50 khách cùng vào ⇒ SSE fan-out không làm chậm `/booth` (đo).
-- Mã QR cũ (lượt trước) ⇒ "Lượt này đã xong, mời quét mã mới".
-- Gian không được chạm gia đình thật: cổng `HOICON_BOOTH_ENABLED` + chỉ gia đình demo (như 033 FR-002/003).
+- **(SC-001)** Một lượt `/booth` (kịch bản giả danh công an) chạy từ đầu tới hết trong ≤ 90 giây ở chế độ trực tiếp-replay. Đo: Playwright ghi thời gian.
+- **(SC-002)** `t_alert_ms` < 5000 ở 3 lượt liên tiếp (Gate G4) trên máy dev với API + web chạy cục bộ. Đo: bảng 3 lượt trong `evidence.md`, ghi rõ nguồn ("máy dev, replay, mạng cục bộ"; **không** phải số ở hội trường).
+- **(SC-003)** Mất mạng giữa lượt ⇒ trong ≤ 6 giây băng rôn "BẢN GHI" hiện và lượt kết thúc đủ 3 cột; có mạng ⇒ lượt kế chạy trực tiếp. Đo: Playwright chặn mạng.
+- **(SC-004)** Đặt lại: `ops.booth reset` ≤ 30 giây và sau đó 0 lượt mô phỏng còn lại của gia đình demo; tổng thao tác người điều khiển (dừng phát + reset + bắt đầu lại) ≤ 60 giây. Đo: thời gian lệnh + đếm DB.
+- **(SC-005)** 0 chữ nào từ bản ghi/kịch bản chứa số điện thoại thô hoặc tên thật; mọi khung bản ghi hợp lệ `sim_run.v1`. Đo: quét `gitleaks`/mẫu số điện thoại + kiểm lược đồ trong test.
+- **(SC-006)** axe 0 lỗi và chữ chính ≥ 28 px ở `/booth` 1440 px; một cột đọc được ở 390 px. Đo: Playwright (`getComputedStyle`).
 
-## Requirements *(mandatory)*
+## 5. Ngoài phạm vi
 
-### Functional Requirements
-- **FR-001** Hợp đồng trước: `booth_session.v1.json` (mã tham gia, hạn, trạng thái lượt, `run_id`), `booth_event.v1.json` (sự kiện
-  SSE cho khách: tin người giám hộ đã che PII, bước tóm tắt) + fixture.
-- **FR-002** Cổng `HOICON_BOOTH_ENABLED` (mặc định tắt, `compose.prod.yml` không đặt); mọi route `/v1/booth/*` 404 khi tắt; console cần
-  phiên demo (như `/v1/sim/*`).
-- **FR-003** `POST /v1/booth/sessions` (console) tạo lượt = một lượt `/v1/sim/runs` (033) + mã tham gia 6 ký tự (không ký tự dễ nhầm),
-  hạn 15 phút; `POST /v1/booth/sessions/{id}/reset` xóa sự cố/thiết bị `sim:` của lượt (< 1 phút, đo).
-- **FR-004** `GET /v1/booth/join/{code}/stream` (SSE, không đăng nhập): chỉ phát `booth_event` của đúng lượt; giới hạn 200 kết nối/lượt,
-  30 lần mở/phút/IP (IP không lưu quá bộ nhớ đệm giới hạn tần suất).
-- **FR-005** Lượt gian có thể dùng **máy Android `demo` thật**: console hiện mã ghép đôi của gia đình demo; sự kiện của máy đó đi đường
-  `/v1/events` thường, sự cố mang `sim` nhờ thiết bị thuộc gia đình demo đã gắn "chế độ gian" (không gửi Zalo thật — như 033 D10).
-- **FR-006** Web: `/booth` (màn lớn 1920×1080, chữ ≥ 32 px, QR, sơ đồ + bản chữ, nhãn "MÔ PHỎNG" token `sim.*`), `/join/[code]` (điện
-  thoại, chữ ≥ 18 px, nút ≥ 44 px), `/demo/console` (chọn kịch bản theo `title_vi`, chạy, làm lại, chuyển phát lại cục bộ).
-- **FR-007** Phát lại cục bộ: `apps/web/public/booth/replay/<kịch bản>.json` sinh từ một lượt replay thật (`scripts/booth-record.py`),
-  không chứa PII; `/booth` chạy được khi API không trả lời.
-- **FR-008** Tài liệu `docs/setup/BOOTH.md` (bật gian, chuẩn bị máy `demo`, quy trình reset, dự phòng video) + kịch bản tổng duyệt G4.
-
-### Key Entities
-- `booth_sessions` (bảng mới, làn B tạo migration): `id`, `code`, `run_id`, `expires_at`, `state`; xóa sau 24 giờ.
-
-## Bất biến an toàn *(mandatory)*
-Không đổi đường dừng an toàn; máy `demo` vẫn hiện E7 offline. Không tin Zalo thật nào từ lượt gian. Công khai AI ở mọi tin khách thấy.
-
-## Quyền riêng tư & đồng ý *(mandatory)*
-Khách không cung cấp dữ liệu cá nhân nào; không cookie theo dõi; dữ liệu demo hư cấu, `is_demo`. IP chỉ dùng cho giới hạn tần suất
-trong bộ nhớ. Không mục đích đồng ý mới.
-
-## UX người cao tuổi
-`/join` có thể do người cao tuổi đến gian mở: chữ ≥ 18 px, tương phản ≥ 7:1, câu ấm áp; `ux-elder-reviewer` đọc ảnh.
-
-## Success Criteria *(mandatory)*
-
-### Measurable Outcomes
-- **SC-001**: Tin tới `/join` < 5 s sau sự kiện (p95, 20 lượt, mạng LAN gian giả lập).
-- **SC-002**: Reset < 1 phút (n = 10).
-- **SC-003**: 3 lượt liên tiếp không lỗi trên máy Android `demo` thật (Gate G4) — **BLOCKED** tới khi có máy thật.
-- **SC-004**: Ngắt API ⇒ `/booth` phát lại cục bộ đủ bước (Playwright, chặn mạng).
-- **SC-005**: 0 PII trong `booth_event` và DOM ba trang; cổng tắt ⇒ 404 (pytest + Playwright).
-- **SC-006**: 100 kết nối SSE đồng thời ⇒ `/booth` vẫn nhận bước < 1 s (đo trên máy dev).
-
-## Kế hoạch bằng chứng *(mandatory)*
-`evidence.md`: SC-001…006 (SC-003 BLOCKED nếu chưa có máy thật), ảnh 1920/390, báo cáo `ux-elder-reviewer` + `security-privacy-reviewer`.
-
-## Ngoài phạm vi & mốc cắt
-Bình chọn trong app (BTC tự tổ chức). Cắt khi trễ (theo thứ tự): FR-005 (máy thật ⇒ chỉ mô phỏng), US-2 nút trả lời của khách.
-**Không cắt**: FR-002, FR-007 (dự phòng mất mạng), công khai AI.
-
-## Assumptions
-Mạng gian là Wi-Fi BTC hoặc điểm phát của đội; ≤ 200 khách/lượt; một màn lớn HDMI.
+Gian vật lý (bàn, poster, QR in), mạng 4G dự phòng, cấp phát tài khoản Zalo thật cho khách, đăng nhập khách bằng danh tính thật, ghi hình khách, thu thập số liệu khách (không có phân tích/cookie theo dõi).

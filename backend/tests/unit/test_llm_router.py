@@ -47,7 +47,12 @@ def ok(output: RiskAssessment, stop: str = "end_turn") -> SimpleNamespace:
 
 async def call(router: LlmRouter, untrusted: str | None = None) -> Any:
     return await router.structured(
-        prompt=PROMPT, context={"rule_floor": "high"}, output=RiskAssessment, fallback=FALLBACK, untrusted=untrusted
+        prompt=PROMPT,
+        context={"rule_floor": "high"},
+        output=RiskAssessment,
+        fallback=FALLBACK,
+        untrusted=untrusted,
+        consented=True,
     )
 
 
@@ -124,3 +129,22 @@ def test_prompts_are_versioned() -> None:
 async def test_unexpected_sdk_errors_also_fall_back() -> None:
     result = await call(LlmRouter(FakeClient(error=TypeError("unexpected param")), "claude-haiku-5-5", Decimal(1)))
     assert result.fallback_used and result.error == "TypeError"
+
+
+# --- Đồng ý `llm_processing` (spec 011 FR-006, T013) -----------------------------------------------------------
+
+
+async def test_without_consent_the_provider_is_never_called_even_with_a_key() -> None:
+    client = FakeClient(ok(RiskAssessment(level="critical", tactic="unknown", reasons=[], ask_question="none")))
+    result = await LlmRouter(client, "claude-haiku-5-5", Decimal(10)).structured(
+        prompt=PROMPT, context={"k": "v"}, output=RiskAssessment, fallback=FALLBACK, consented=False
+    )
+    assert client.calls == [] and result.output == FALLBACK
+    assert result.fallback_used and result.error == "consent" and result.cost_usd == 0
+
+
+async def test_consent_is_required_by_the_signature() -> None:
+    with pytest.raises(TypeError, match="consented"):
+        await LlmRouter(FakeClient(), "claude-haiku-5-5", Decimal(10)).structured(  # type: ignore[call-arg]
+            prompt=PROMPT, context={}, output=RiskAssessment, fallback=FALLBACK
+        )

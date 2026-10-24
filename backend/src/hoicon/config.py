@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     zalo_mode: Literal["mock", "live"] = "mock"
     # Spec 033 FR-002: cổng bật `/v1/sim/*` và `/v1/eval/*` (mô phỏng cho BGK). Mặc định TẮT; compose.prod không đặt.
     sim_enabled: bool = False
+    # Spec 037 FR-001: ép văn bản đồng ý theo manifest. Chưa đặt ⇒ bật ngoài dev (`consent_strict_on`).
+    consent_strict: bool | None = None
     # Spec 032 D7: báo "mất bảo vệ" cho người giám hộ (ý I4 chưa được Minh duyệt) — tắt được mà không gỡ mã.
     protection_watch: bool = True
     # Bot nhận webhook (một bot dev ở spike; 3 bot thí điểm sau: thêm khóa + token theo bot_id).
@@ -79,6 +81,10 @@ class Settings(BaseSettings):
     # Số bit đầu của h1 trong ảnh chụp danh sách đe dọa phát xuống máy (spec 026, ADR-011): 22 ⇒ ≈ 86 số di động mỗi
     # bucket. Nâng lên 23–24 khi tỉ lệ khớp nhầm N/2^bits vượt 0,25%; hạ xuống làm máy khớp nhầm nhiều hơn.
     threat_bucket_bits: int = Field(default=22, ge=16, le=24)
+
+    @property
+    def consent_strict_on(self) -> bool:
+        return (not self.is_dev_env) if self.consent_strict is None else self.consent_strict
 
     @property
     def is_dev_env(self) -> bool:

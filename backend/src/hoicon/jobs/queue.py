@@ -8,6 +8,7 @@
 """
 
 import logging
+import traceback
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import Any
@@ -103,7 +104,10 @@ async def run_once(sessions: async_sessionmaker, handlers: dict[str, Handler], w
         try:
             await handler({**job.payload, ATTEMPT_KEY: job.attempts})
         except Exception as exc:  # job lỗi không được làm chết worker; giữ tên lớp lỗi để chẩn đoán
-            logger.exception("job %s (%s) failed", job.id, job.kind)
+            # Không `exc_info`/`logger.exception`: thông điệp lỗi (nhất là SQLAlchemy) nhúng cả tham số SQL
+            # ⇒ có thể lộ PII. Chỉ ghi tên lớp lỗi và các dòng mã (không kèm giá trị): spec 037 FR-005.
+            frames = "".join(traceback.format_tb(exc.__traceback__))
+            logger.error("job %s (%s) failed: %s\n%s", job.id, job.kind, type(exc).__name__, frames)
             await complete(sessions, job, error=type(exc).__name__)
         else:
             await complete(sessions, job)

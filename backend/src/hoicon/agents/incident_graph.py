@@ -23,7 +23,7 @@ import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Annotated, Any, Literal, TypedDict
+from typing import Annotated, Any, Literal, TypedDict, get_args
 from uuid import UUID
 
 from langgraph.graph import END, START, StateGraph
@@ -36,10 +36,10 @@ from hoicon.agents import texts
 from hoicon.agents.llm_router import LlmResult, LlmRouter, load_prompt
 from hoicon.channels.fcm import notify_elder_fcm
 from hoicon.config import Settings
-from hoicon.db.models import AgentRun, AgentStep, Verification
+from hoicon.db.models import AgentRun, AgentStep, Incident, Verification
 from hoicon.domain.risk import RiskLevel, raise_only
 from hoicon.jobs.queue import cancel_prefix, enqueue
-from hoicon.services import case_file_service
+from hoicon.services import case_file_service, consent_gate
 from hoicon.services.incident_service import (
     GRAPH_OUTCOMES,
     IncidentNotFoundError,
@@ -180,16 +180,29 @@ def _brief_conditions(state: Mapping[str, Any], level: RiskLevel) -> dict[str, b
     }
 
 
+_BRIEF_ORDER: tuple[str, ...] = get_args(BriefPoint)  # = cột "#" của spec 024 §5: sự kiện → bác kể → nhận định
+_BRIEF_JUDGMENT = ("common_scam_pattern", "may_be_routine")
+
+
 def brief_points(state: Mapping[str, Any], level: RiskLevel, points: Sequence[str]) -> list[str]:
-    """Điểm LLM chọn, bỏ mã lạ/trùng/điều kiện sai, giữ thứ tự; rỗng ⇒ bộ mặc định (mã ứng dụng đúng + chung)."""
+    """Điểm gửi người giám hộ (spec 024 FR-013): LLM chọn điểm nào, máy chủ quyết thứ tự.
+
+    1) bỏ mã lạ/trùng/điều kiện sai, lấy tối đa 3; 2) nhóm nhận định giữ một mã (cả hai ⇒ bỏ `may_be_routine`);
+    3) chỉ còn mã nhận định ⇒ bộ mặc định (mã ứng dụng đúng + `common_scam_pattern`, hoặc rỗng nếu không có ứng dụng);
+    4) sắp theo thứ tự cố định, không theo thứ tự LLM."""
     conditions = _brief_conditions(state, level)
     kept: list[str] = []
     for point in points:
         if conditions.get(point) and point not in kept:
             kept.append(point)
-    if kept:
-        return kept[:3]
-    return [p for p in ("unknown_call_then_finance_app", "sideloaded_app") if conditions[p]] + ["common_scam_pattern"]
+    kept = kept[:3]
+    if all(p in kept for p in _BRIEF_JUDGMENT):
+        kept.remove("may_be_routine")
+    if all(p in _BRIEF_JUDGMENT for p in kept):
+        kept = [p for p in ("unknown_call_then_finance_app", "sideloaded_app") if conditions[p]]
+        if kept:
+            kept.append("common_scam_pattern")
+    return sorted(kept, key=_BRIEF_ORDER.index)
 
 
 @dataclass
@@ -244,6 +257,21 @@ def build_graph(deps: Deps) -> StateGraph:
             return None
         async with deps.sessions() as session:
             return await decided_state(session, incident_id)
+
+    async def llm_consented(state: IncidentState) -> bool:
+        """Spec 011 FR-006/D8: người cao tuổi còn đồng ý `llm_processing`? Đọc lúc gọi (rút giữa chừng có hiệu lực, đệm
+        ≤ 60 s). Eval/demo/mô phỏng và thread không có sự cố thật: chỉ dữ liệu hư cấu ⇒ True. Không đọc được ⇒ False."""
+        incident_id = _incident_uuid(state)
+        if incident_id is None or state.get("is_demo") or state.get("sim"):
+            return True
+        try:
+            async with deps.sessions() as session:
+                member_id = await session.scalar(select(Incident.member_id).where(Incident.id == incident_id))
+                # Không có dòng sự cố, hoặc người cao tuổi đã bị xóa (`member_id` NULL) ⇒ không biết đồng ý ⇒ đóng.
+                return member_id is not None and (await consent_gate.state_for(session, member_id)).llm_processing
+        except Exception as exc:  # đóng mặc định: không xác định được đồng ý ⇒ không gửi gì cho dịch vụ AI
+            logger.warning("llm consent unreadable: %s", type(exc).__name__)
+            return False
 
     async def step(
         state: IncidentState,
@@ -365,7 +393,11 @@ def build_graph(deps: Deps) -> StateGraph:
         )
         # Không có văn bản tự do nào: lời kể của người cao tuổi chỉ còn là cờ tất định (runtime.clean_resume).
         llm = await deps.router.structured(
-            prompt=risk_prompt, context=context(state), output=RiskAssessment, fallback=fallback
+            prompt=risk_prompt,
+            context=context(state),
+            output=RiskAssessment,
+            fallback=fallback,
+            consented=await llm_consented(state),
         )
         assessed = llm.output
         level = raise_only(floor, RiskLevel(state["level"]), RiskLevel(assessed.level), forced_level)
@@ -463,7 +495,8 @@ def build_graph(deps: Deps) -> StateGraph:
         level = RiskLevel(state["level"])
         # Không còn câu mẫu tự do: fallback cũng chỉ là bộ điểm mặc định (ADR-012), câu ghép từ `BRIEF_POINT_VI`.
         fallback = GuardianBrief(
-            points=brief_points(state, level, []),  # type: ignore[arg-type]
+            # `GuardianBrief` đòi ≥ 1 mã: sự cố không có điểm nào ⇒ mã nhận định, `brief_points` lọc lại thành rỗng.
+            points=brief_points(state, level, []) or ["common_scam_pattern"],  # type: ignore[arg-type]
             action="call_and_stay_on_line" if level == RiskLevel.CRITICAL else "call_now",
         )
         # Chỉ siêu dữ liệu + enum; cách xưng hô thật không gửi cho LLM (chỗ giữ "{alias}" được thay sau).
@@ -475,7 +508,11 @@ def build_graph(deps: Deps) -> StateGraph:
             "is_drill": state["is_drill"],
         }
         llm = await deps.router.structured(
-            prompt=brief_prompt, context=brief_context, output=GuardianBrief, fallback=fallback
+            prompt=brief_prompt,
+            context=brief_context,
+            output=GuardianBrief,
+            fallback=fallback,
+            consented=await llm_consented(state),
         )
         # Chữ của LLM không bao giờ tới người giám hộ: chỉ giữ mã điểm có dữ kiện đúng, câu do `texts` ghép (ADR-012).
         chosen = list(llm.output.points)
@@ -483,7 +520,9 @@ def build_graph(deps: Deps) -> StateGraph:
         summary = texts.brief_summary(state["elder_alias"], kept)
         # Mức rất cao luôn kèm "gọi ngay và giữ máy" — LLM không được làm nhẹ lời khuyên.
         action = "call_and_stay_on_line" if level == RiskLevel.CRITICAL else llm.output.action
-        text = texts.guardian_detail(state["elder_alias"], level, summary, action, state["is_drill"])
+        text = texts.guardian_detail(
+            state["elder_alias"], level, summary, action, state["is_drill"], call_ongoing="call_still_ongoing" in kept
+        )
         sent = await notify(state, "detail", text)
         output = {
             "action": action,
@@ -568,7 +607,9 @@ def build_graph(deps: Deps) -> StateGraph:
             "transfer": texts.CASE_REASON_VI["transfer"] in reasons,
             "decision": content["guardian_decision"],
         }
-        summary = await case_file_service.llm_summary(deps.router, facts, content["elder_alias"])
+        summary = await case_file_service.llm_summary(
+            deps.router, facts, content["elder_alias"], consented=await llm_consented(state)
+        )
         if summary:
             content["summary"] = summary
         created = await case_file_service.save_draft(

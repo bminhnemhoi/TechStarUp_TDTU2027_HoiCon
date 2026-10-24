@@ -1,113 +1,76 @@
-# Feature Specification: 037 — Gia cố phần còn lại (P2-20)
+# Spec 037: Gia cố phần còn lại (rà soát quyền riêng tư cuối, bảo mật cuối, Crashlytics)
 
-**Feature Branch**: `feat/037-hardening-rest` · **Created**: 23/10/2026 · **Status**: Draft (specify + clarify tự quyết, MASTER-PLAN §2.6)
+> **Đã đối soát 24/10/2026 (kiến trúc sư):** bản của làn B được giữ làm gốc vì mã đã thi công theo nó; bổ sung từ bản kiến trúc sư ở cuối `tasks.md` (T013–T016).
+> specify → clarify → plan → tasks → analyze (0 CRITICAL/HIGH, xem `plan.md` mục 5). Chưa qua mắt Opus; không sửa nội dung
+> chữ của văn bản đồng ý ở đây.
 
-**Input**: phần ngoài phạm vi của `specs/034-hardening-core` (§6 + "Medium chưa sửa" trong evidence 034) và MASTER-PLAN §3 Đợt 5
-("Crashlytics, rà soát cuối; AC: crash-free đo được").
+**Mã ROADMAP**: `P2-20` (phần còn lại sau `034-hardening-core`) · **Làn**: A+B (`[B]` = `backend/**`, `infra/**`, `scripts/**`;
+`[A]` = `apps/android/**`) · **Cột mốc**: Gate M3 (23/12/2026) cần "0 Critical/High chưa xử lý"; Vòng 2 đóng băng code 06/01/2027
+· **Phụ thuộc**: 034 (lõi gia cố), 011 (thực thi đồng ý), 012 (`roles.sql`, VPS) · **US**: US-11 (đồng ý và quyền riêng tư),
+US-12 (xóa dữ liệu) · **ADR**: ADR-002, ADR-006 (không đổi).
 
-## Truy vết *(mandatory)*
+> **Chỉ nói phần chênh lệch.** 034 đã làm lõi (migration 0009, mặc định `prod`, `/readyz`, trần 256 KB, đồng ý ở máy chủ, hạn
+> lưu, xóa gia đình, sao lưu mã hóa, `roles.sql`). Spec này gom **mọi mục còn mở** của 034 (`evidence.md`, mục "Medium chưa sửa"
+> và "Low còn lại"), các mục nảy sinh ở 011/012/031/032, rà soát cuối và Crashlytics.
 
-- **Mã ROADMAP**: P2-20 (phần còn lại; lõi ở 034)
-- **User story PRD**: không có story mới; bảo vệ US-01…US-07 trước M3
-- **ADR liên quan**: ADR-005 (Play testing), ADR-006, ADR-010; không đổi quyết định nào
-- **Gate nghiệm thu**: M3 (09/01/2027) — "0 Critical/High chưa xử lý", "crash-free đo được"
-- **Phụ thuộc spec**: 034 (lõi), 011 (văn bản đồng ý, phiên bản đã duyệt), 012 (Play internal testing, VPS), 029 (thí điểm)
-- **Làn**: A+B (A: `apps/android/**`; B: `backend/**`)
+---
 
-## Bối cảnh (chỉ phần chênh lệch)
+## 1. Bối cảnh
 
-Evidence 034 để lại 4 Medium + 5 Low có chủ đích "làm ở spec sau". Bốn Medium chạm đúng chỗ nhạy nhất của sản phẩm: đồng ý bị rút
-mà tin vẫn đi (#4), app thử lại vô hạn khi đồng ý bị rút (#5), máy chủ nhận phiên bản văn bản không có trong danh sách (#7), sao
-lưu cũ làm sống lại dữ liệu đã xóa (#6). Crashlytics trong kế hoạch ban đầu cần Firebase (W0-3, BLOCKED) **và** là luồng dữ liệu
-mới gửi cho bên thứ ba (Google) ⇒ cần mục đích đồng ý + DPIA (luật 7) — phạm vi Minh.
+Trước Gate M3 và trước khi người thật dùng (thí điểm 029), phải rà lại toàn bộ lời hứa về quyền riêng tư và những chỗ bảo mật
+đã biết còn hở. Danh sách đã có, rải ở `034/evidence.md`, `011/evidence.md` (reviewer bảo mật Wave 5), `012/evidence.md`:
 
-## User Scenarios & Testing *(mandatory)*
+| Mục | Nguồn | Tình trạng |
+|---|---|---|
+| Máy chủ chưa ép `consent_version`/`text_sha256` thuộc danh sách văn bản đã duyệt | 034 Medium #7 | mở |
+| `send_to_guardian` và tin tổng kết diễn tập không kiểm đồng ý lúc gửi | 034 Medium #4 | mở |
+| Link Zalo cũ (`/action/{token}`) và `POST /incidents/{id}/decision` vẫn dùng được sau khi người cao tuổi rút `guardian_alerts` | 011 Wave 5 High #1 | mở — **cần quyết định chính sách** |
+| Thiếu test IDOR đầy đủ (`POST /v1/lookups`, token chéo audience, token của gia đình đã xóa) | 034 reviewer | mở |
+| `/v1/consents` không có giới hạn tần suất; nonce 32 bit của sao lưu; `exc_info` của `queue.py` có thể kèm tham số SQL; fixture dùng số `0912345678` | 034 Low #9, #12, #14, #15 | mở |
+| Bảng mới sau 034 (`case_files`, `device_heartbeats`, `members.weekly_digest_enabled`) chưa có hàng trong bảng dữ liệu ↔ mục đích ↔ hạn lưu | 031, 032, 029 | mở |
+| Crashlytics (đo crash-free cho Gate M2/M3) | 034, 012 | **BLOCKED**: chưa có Firebase (W0-3/P0-08) |
 
-### User Story 1 — Rút đồng ý là dừng ngay (Priority: P1)
-Bác (hoặc người hướng dẫn) rút `guardian_alerts` giữa lúc sự cố đang mở ⇒ không tin Zalo nào đi nữa, kể cả nhắc T1/T2 và tin tổng
-kết diễn tập; app nhận `403 consent_withdrawn` thì hiện đúng câu "đã ngừng báo cho con" và **không** thử lại.
+## 2. User story
 
-**Independent Test**: pytest: sự cố mở → rút đồng ý → hẹn giờ T1 chạy ⇒ 0 dòng `messages_out` mới. Android unit test: 403 thân
-`consent_withdrawn` ⇒ một trạng thái, 0 lần thử lại.
+| # | Ưu tiên | Câu chuyện |
+|---|---|---|
+| US-37.1 | **P1** | Là người cao tuổi (hoặc con cháu thay mặt), khi tôi rút một đồng ý thì **mọi** đường dữ liệu liên quan dừng lại, kể cả link cũ và tin tổng kết |
+| US-37.2 | **P1** | Là Tiến/Minh, tôi chạy một lệnh và nhận báo cáo quyền riêng tư cuối: số điện thoại thô, bảng dữ liệu ↔ mục đích ↔ hạn lưu, văn bản đồng ý ↔ mã |
+| US-37.3 | **P1** | Là BGK hỏi "app bảo mật thế nào", tôi trả lời bằng báo cáo rà soát bảo mật cuối (0 Critical/High) và danh sách việc còn mở có chủ |
+| US-37.4 | **P2** | Là đội, tôi đo được tỷ lệ không-sập (crash-free) của bản chạy thật — **BLOCKED** tới khi có Firebase |
 
-**Acceptance Scenarios**:
-1. **Given** sự cố đang chờ người giám hộ, **When** rút `guardian_alerts` rồi T1 đến hạn, **Then** job `notify_guardian` kết thúc
-   `skipped_consent`, không gọi Zalo, có `agent_steps`/log mã (không nội dung).
-2. **Given** app gửi heartbeat, **When** máy chủ trả `403 {"error":"consent_withdrawn"}`, **Then** app dừng gửi kênh đó, E6 hiện
-   trạng thái đúng, WorkManager không xếp lại.
+## 3. Yêu cầu chức năng
 
-### User Story 2 — Chỉ nhận văn bản đã có (Priority: P1)
-`POST /v1/consents` với `consent_version`/`text_sha256` không có trong `docs/legal/consent/manifest.json` (bản đang phục vụ) ⇒ 422.
+- **(FR-001)** *[B]* Máy chủ ép văn bản đồng ý: `POST /v1/consents` từ chối (422, không ghi) bản ghi có cặp
+  (`purpose`, `consent_version`, `text_sha256`) không thuộc `docs/legal/consent/manifest.json` (nguồn có sẵn: `ops/consent_texts.load_manifest`).
+  Lỗi không nêu sha mong đợi. Bản nháp (`draft`) vẫn được nhận ở môi trường `dev`; ở `prod` chỉ nhận bản `approved`/`released` — nếu Minh chưa duyệt (011 T010) thì **tắt cờ** `HOICON_CONSENT_STRICT` (mặc định `true` ở `prod`).
+- **(FR-002)** *[B]* Kiểm đồng ý lúc gửi: `send_to_guardian` (và mọi tin do máy chủ soạn: bản tin tuần, tổng kết diễn tập, hồ sơ vụ việc)
+  đọc `consent_gate` ngay trước khi gửi, không dựa vào cờ đóng băng trong state đồ thị. Payload `notify_guardian` mang `protected_member_id`.
+- **(FR-003)** *[B]* Đường liên kết cũ: chính sách sau khi rút `guardian_alerts` — **mặc định (đề xuất)**: `GET /action/{token}` trả
+  "liên kết hết hạn" không kèm dữ liệu; `POST /incidents/{id}/decision` và `POST /action/{token}/decision` vẫn **ghi** quyết định
+  (đóng sự cố, dừng nhắc) nhưng không trả `state`/`outcome`/mức rủi ro (thân tối thiểu). *Chờ Minh xác nhận* (★ MASTER-PLAN §8); mã đặt sau một hằng số `WITHDRAWN_DECISION_POLICY`.
+- **(FR-004)** *[B]* Ma trận IDOR: một test tham số hóa chạy **mọi** route có `{id}` hoặc token với (a) token của gia đình khác,
+  (b) token sai audience (thiết bị ↔ người giám hộ ↔ hành động), (c) token của gia đình đã bị xóa. Kỳ vọng: cùng một 404/401, không phân biệt "không có" và "không thuộc nhà".
+- **(FR-005)** *[B]* Các mục Low: giới hạn tần suất `/v1/consents` theo thiết bị; sao lưu dẫn xuất khóa phụ theo từng tệp (nonce 96 bit hoặc khóa con) — **bản sao lưu cũ vẫn khôi phục được**; `queue.py` không đưa tham số SQL vào log (`exc_info` chỉ tên lớp lỗi); fixture dùng số hư cấu đã đăng ký.
+- **(FR-006)** *[B]* Báo cáo quyền riêng tư cuối: lệnh `uv run --directory backend python -m hoicon.ops.privacy_report` in (a) bảng
+  dữ liệu ↔ mục đích ↔ hạn lưu **sinh từ metadata của model** (mọi bảng phải có dòng, bảng mới mà thiếu ⇒ thoát khác 0), (b) quét số điện thoại
+  thô trong mã nguồn + fixture, (c) văn bản đồng ý ↔ mã (`consent_texts check`), (d) `jobs`/`agent_steps` không chứa PII (mẫu số điện thoại, CCCD, OTP).
+  Không in dữ liệu thật (chỉ đếm). Test chạy được không cần DB người dùng.
+- **(FR-007)** *[B]* Rà soát bảo mật cuối: `security-privacy-reviewer` đọc toàn bộ diff từ `main` + danh sách ở mục 1; kết quả vào
+  `evidence.md`; sửa hết Critical/High; Medium còn lại có chủ + ngày. Quét phụ thuộc (`uv pip audit`/`osv-scanner` nếu có trên máy; không có ⇒ ghi `UNAVAILABLE`, không tính là sạch).
+- **(FR-008)** *[A]* Crashlytics: thêm SDK + khai báo mục đích trong văn bản đồng ý (`consent-copy`: mục đích mới ⇒ enum + phiên bản — luật 7) + `play-policy` kiểm dữ liệu thu. **BLOCKED**: chưa có Firebase; ghi tiêu chí gỡ chặn (project Firebase + `google-services.json` ngoài git). Không tạo tệp giả.
+- **(FR-009)** *[B]* Tài liệu: cập nhật `docs/PRIVACY-DPIA.md` (bảng dữ liệu, độ trễ đệm đồng ý ≤ 60 giây, chính sách link cũ), `docs/setup/BACKUP.md` (khóa con) — **do Opus/Tiến** (làn B không sửa `docs/`); task ghi sẵn nội dung cần thêm.
 
-### User Story 3 — Đo được độ ổn định trước M3 (Priority: P2)
-Đội thấy tỉ lệ không crash của bản internal testing **mà không thêm SDK** (Play Console Android vitals); Crashlytics chỉ thêm nếu
-Minh duyệt mục đích dữ liệu mới.
+## 4. Tiêu chí thành công
 
-### User Story 4 — Rà soát cuối (Priority: P2)
-`privacy-audit` + `security-privacy-reviewer` toàn codebase trước đóng băng 06/01 ⇒ 0 Critical/High chưa xử lý.
+- **(SC-001)** FR-001: mọi cặp (purpose, version, sha) ngoài manifest bị từ chối ở `prod`; mọi cặp trong manifest được nhận; 0 thay đổi cho `dev`. Đo: `test_consent_manifest_enforcement.py`.
+- **(SC-002)** FR-002: rút `guardian_alerts` ⇒ 0 tin `notify_guardian` mới được gửi (kể cả sự cố mở từ trước và bản tin tuần). Đo: test tích hợp với client Zalo giả đếm lời gọi.
+- **(SC-003)** FR-004: ma trận IDOR 100% cùng mã trả về cho "không có" và "không thuộc nhà". Đo: số ô ma trận / số ô đạt.
+- **(SC-004)** FR-006: báo cáo quyền riêng tư thoát 0 và liệt kê 100% bảng; thêm bảng giả không có metadata ⇒ thoát khác 0 (đột biến).
+- **(SC-005)** FR-007: 0 Critical, 0 High chưa xử lý trên toàn codebase; số Medium còn lại có chủ + ngày. Đo: báo cáo reviewer trong `evidence.md`.
+- **(SC-006)** FR-008: crash-free ≥ 99% đo bằng Crashlytics trên máy thật — **BLOCKED** (Firebase), ghi nguồn số liệu khi đo được; không tuyên bố trước.
 
-### Edge Cases
-- Rút rồi cấp lại đồng ý giữa T1 và T2 ⇒ T2 đi (kiểm lúc gửi, không đóng băng lúc mở sự cố).
-- Tin Zalo của sự cố `sim`/`is_demo` không qua kiểm đồng ý thật (giữ hành vi 033/034).
-- Khôi phục sao lưu mà sổ xóa trống ⇒ cảnh báo, không chặn khôi phục.
+## 5. Ngoài phạm vi
 
-## Requirements *(mandatory)*
-
-### Functional Requirements
-
-- **FR-001** `send_to_guardian` kiểm đồng ý `guardian_alerts` của người được bảo vệ **lúc gửi** (034 Medium #4): payload job mang
-  `protected_member_id`; chưa/không còn đồng ý ⇒ trả `skipped_consent`, không chạm `messages_out`/Zalo. Áp cho mọi mẫu (sự cố, nhắc,
-  leo thang, bằng chứng, hồ sơ 031, Coach 032, tổng kết diễn tập 028). Job cũ không có trường ⇒ tra theo `incident_id`.
-- **FR-002** Thân `403` khi đồng ý bị rút thống nhất `{"error": "consent_withdrawn", "purpose": <enum>}` (hợp đồng
-  `docs/schemas/error.v1.json` — thêm mã nếu chưa có) ở mọi route thiết bị.
-- **FR-003** Android (034 Medium #5): nhận `consent_withdrawn` ⇒ trạng thái riêng (không gộp "cần ghép đôi lại"), dừng worker của
-  mục đích đó, không thử lại; E6 hiện câu trong `strings.xml` (`ux-elder-reviewer`).
-- **FR-004** (034 Medium #7) `POST /v1/consents`: `consent_version` + `text_sha256` phải khớp một dòng của `manifest.json` (nạp lúc
-  khởi động); không khớp ⇒ 422 `unknown_consent_text`. Bản phát hành (`HOICON_ENV=prod`) chỉ nhận dòng `released`; dev/test nhận cả
-  `draft`.
-- **FR-005** (034 Low #9) Giới hạn tần suất `POST /v1/consents`: 30 lượt/giờ/thiết bị, 429 + `Retry-After`.
-- **FR-006** (034 Medium #6, phối hợp 012) "Sổ xóa": mỗi lần `purge_family` ghi một dòng mã hóa (chỉ id gia đình + thời điểm) vào tệp
-  ngoài DB cạnh bản sao lưu; `ops restore` chạy lại `purge_family` cho mọi id trong sổ sau khi khôi phục; có test khôi phục bản cũ ⇒
-  dữ liệu đã xóa không sống lại.
-- **FR-007** (034 Low #12, #14, #15) Nonce sao lưu dẫn xuất khóa phụ theo tệp (HKDF, thư viện `cryptography` đã có); `queue.py` bỏ
-  `exc_info` có thể kèm tham số SQL (log tên lớp lỗi); fixture `0912345678` đổi sang dải hư cấu `0900000xxx`.
-- **FR-008** Đo ổn định không thêm SDK: tài liệu `docs/setup/STABILITY.md` (đọc Android vitals của Play Console: crash/ANR theo phiên
-  bản, ngưỡng "bad behavior" của Play) + mục trong `ops pilot report` ghi số đọc tay. **Crashlytics: chỉ khi Minh duyệt** mục đích
-  dữ liệu mới (MASTER-PLAN §8 mục 13); khi đó thêm giá trị enum đồng ý + văn bản (luật 7), bật thu thập chỉ sau đồng ý.
-- **FR-009** Rà soát cuối: `privacy-audit` + `security-privacy-reviewer` (toàn codebase, ma trận IDOR mọi route `{id}`) + quét
-  `gitleaks`/`osv-scanner`; mọi Critical/High sửa trong spec này, Medium ghi quyết định.
-
-### Key Entities
-- Sổ xóa (tệp, không phải bảng): `{family_id, purged_at}` mã hóa bằng khóa sao lưu.
-
-## Bất biến an toàn *(mandatory)*
-Không đụng đường dừng an toàn và luật trên máy. Kiểm đồng ý lúc gửi **không** được chặn câu nhắc trên máy của bác (E7 vẫn hiện khi
-rút `guardian_alerts` — chỉ thôi báo con, đúng câu trong văn bản đồng ý).
-
-## Quyền riêng tư & đồng ý *(mandatory)*
-FR-001/003/004 làm đúng lời hứa của văn bản `guardian_alerts` ("chỉ không báo con nữa"). Không mục đích mới trừ Crashlytics (chờ Minh).
-Sổ xóa chỉ chứa id gia đình (giả danh), mã hóa.
-
-## UX người cao tuổi
-Một câu mới ở E6 (FR-003): `ux-elder-reviewer` đọc ở 100% + 200%.
-
-## Success Criteria *(mandatory)*
-
-### Measurable Outcomes
-- **SC-001**: Rút đồng ý ⇒ 0 tin Zalo mới trên 7 loại mẫu (pytest, mỗi loại ≥ 1 ca).
-- **SC-002**: App: 403 `consent_withdrawn` ⇒ 0 lần thử lại trong 24 giờ giả lập (unit test WorkManager).
-- **SC-003**: `POST /v1/consents` văn bản lạ ⇒ 422; 31 lượt/giờ ⇒ 429 (pytest).
-- **SC-004**: Khôi phục bản sao lưu cũ + sổ xóa ⇒ 0 dòng của gia đình đã xóa (pytest với DB tạm).
-- **SC-005**: Rà soát cuối 0 Critical/High chưa xử lý (báo cáo reviewer).
-- **SC-006**: Tỉ lệ phiên không crash đọc được từ Android vitals cho bản internal testing — **BLOCKED** tới khi có Play Console (W0-3)
-  và người cài thật.
-
-## Kế hoạch bằng chứng *(mandatory)*
-`evidence.md` theo mẫu: SC-001…005 có số + môi trường; SC-006 BLOCKED có lý do; báo cáo reviewer; lệnh cổng.
-
-## Ngoài phạm vi & mốc cắt
-Màn E12 xóa dữ liệu trên app, xuất dữ liệu, `/v1/auth/refresh` + xoay khóa JWT (ghi ROADMAP "Ghi chú"). Cắt khi trễ: FR-005 rồi FR-007.
-**Không bao giờ cắt**: FR-001, FR-003, FR-004 (sổ đồng ý, che PII).
-
-## Assumptions
-Gia đình thí điểm < 50 ⇒ nạp manifest vào bộ nhớ đủ. Play Console có Android vitals cho internal testing khi có ≥ vài người cài.
+Áp `roles.sql` ở prod và lịch sao lưu trên VPS (012 T013), thay mật khẩu/khóa thật, thuê pentest, chứng nhận (ISO/SOC), WAF.
+Quyết định chính sách FR-003 (Minh); văn bản đồng ý (011 T010).

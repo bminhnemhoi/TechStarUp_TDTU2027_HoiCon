@@ -147,3 +147,7 @@ nhãn ô ngắn lại, nút đổi thành "Đồng ý để HỏiCon mời tập
 
 `gradlew :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` xanh; `emu-scenario.py --scenario fake_police` (n = 10) 10/10 ĐẠT trên hc-api36 và hc-api34 (số máy ảo).
 Log E2E (lời mời diễn tập xuất hiện sau khi đồng ý), ảnh 100%/200% và báo cáo `ux-elder-reviewer` (0 Chặn, 0 Cao về thiết kế) là các mục "Đồng ý `drills` trên máy" ở trên (21/10); không chạy lại E2E drills ở Wave 3. Tick T023.
+
+## Wave 5 — T021 BLOCKED (cần hợp đồng), làn B, 23/10/2026
+
+- **T021 BLOCKED, không tick:** `POST /v1/guardian/drills` và danh sách lịch sử chưa có schema trong `docs/schemas/` (chỉ có `drill_offer|drill_result|drill_script.v1`). Hợp đồng đi trước (CLAUDE.md luật 10) và làn B không được thêm/đổi `docs/schemas`. **Cần Opus:** viết `guardian_drill_request.v1.json` (khung giờ, kịch bản) + `guardian_drill_list.v1.json` + fixture; sau đó làm: route dùng chung `DrillService.schedule`/`list_for_family`, trang `/drills`, Playwright. `DrillService.schedule` đã có sẵn (hạn mức, đồng ý, khóa gia đình).

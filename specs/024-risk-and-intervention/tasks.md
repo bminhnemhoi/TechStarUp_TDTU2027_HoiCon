@@ -77,7 +77,7 @@ Thứ tự: T014 → T015 → (036 T025 → T026 → T027) → T018 → T019. T0
 **Chế độ chạy**: làn B (`[B-api]`, chỉ `backend/**`), một mạch, test đỏ trước. Không đổi hợp đồng (`guardian_brief.v2.json` giữ
 nguyên enum; thứ tự enum chính là thứ tự ghép). **Dừng** khi một ca smoke/full đổi recall/báo nhầm/vi phạm so baseline.
 
-- [ ] T020 [B-api] [FR-013] Test đỏ trước trong `backend/tests/unit/test_brief_points.py`:
+- [x] T020 [B-api] [FR-013] Test đỏ trước trong `backend/tests/unit/test_brief_points.py`:
   (a) `BRIEF_POINT_VI` == bảng spec §5 (11 câu, đúng chữ — chép bảng vào test làm hằng số kỳ vọng);
   (b) thứ tự khóa `BRIEF_POINT_VI` == enum `points` của `docs/schemas/guardian_brief.v2.json` == cột "#";
   (c) đặc tính: mọi tập con ≤ 3 mã hợp lệ, mọi hoán vị ⇒ cùng `brief_summary` (dùng `itertools.permutations`, state dựng sao cho
@@ -86,7 +86,7 @@ nguyên enum; thứ tự enum chính là thứ tự ghép). **Dừng** khi một
   có hai dấu cách liền, không có ". ." ; (g) `call_still_ongoing` + `call_now` ⇒ tin có `ACTION_BUSY_VI`, không có `call_still_ongoing`
   ⇒ không có.
   · Verify (đỏ): `uv run --directory backend pytest tests/unit/test_brief_points.py -q` đỏ ở (c)(d)(f)(g).
-- [ ] T021 [B-api] [FR-013] Sửa `incident_graph.py::brief_points` theo 5 bước của FR-013 và `texts.py` (`ACTION_BUSY_VI`,
+- [x] T021 [B-api] [FR-013] Sửa `incident_graph.py::brief_points` theo 5 bước của FR-013 và `texts.py` (`ACTION_BUSY_VI`,
   `guardian_detail` bỏ phần tóm tắt khi rỗng); cassette smoke/full không cần sinh lại (mã không đổi) — chạy `cassettes check` để
   chắc. `ux-elder-reviewer` đọc 3 tin mẫu (lừa đảo đủ 3 nhóm; ca có `call_still_ongoing`; ca tóm tắt rỗng).
   Phụ thuộc: T020.

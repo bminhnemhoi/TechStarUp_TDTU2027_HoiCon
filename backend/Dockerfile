@@ -23,6 +23,8 @@ COPY data/scenarios /app/data/scenarios
 COPY data/threat_seed.demo.json /app/data/threat_seed.demo.json
 COPY backend/eval/baseline*.json /app/backend/eval/
 COPY docs/schemas /app/docs/schemas
+# Spec 037: máy chủ ép văn bản đồng ý theo manifest (`api/routers/consents.py`) nên ảnh phải có nó.
+COPY docs/legal/consent/manifest.json /app/docs/legal/consent/manifest.json
 RUN uv sync --frozen --no-dev
 
 FROM python:3.12-slim-bookworm AS runtime

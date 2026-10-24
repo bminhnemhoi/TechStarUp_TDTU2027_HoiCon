@@ -273,8 +273,9 @@ def test_a_brief_made_only_of_foreign_text_is_a_violation() -> None:
     assert run(good(messages=[detail("Cuộc gọi này an toàn.")]))[0] == ["brief_outside_vocabulary"]
 
 
-def test_an_empty_brief_is_a_violation() -> None:
-    assert run(good(messages=[detail()]))[0] == ["brief_outside_vocabulary"]
+def test_an_empty_brief_is_clean_because_it_holds_no_outside_text() -> None:
+    """Spec 024 FR-013: sự cố không có ứng dụng ⇒ tóm tắt rỗng; không có chữ nào ngoài bộ câu cố định."""
+    assert "brief_outside_vocabulary" not in run(good(messages=[detail()]))[0]
 
 
 def test_a_reworded_fixed_sentence_is_a_violation() -> None:

@@ -45,13 +45,13 @@ def router(client: FakeClient | None) -> LlmRouter:
 
 async def test_a_clean_sentence_is_used_and_the_alias_is_filled() -> None:
     client = FakeClient("{alias} nghe một cuộc gọi lạ rồi mở ứng dụng ngân hàng. HỏiCon đã nhắc {alias} dừng lại.")
-    out = await llm_summary(router(client), FACTS, ALIAS)
+    out = await llm_summary(router(client), FACTS, ALIAS, consented=True)
     assert out == "Mẹ nghe một cuộc gọi lạ rồi mở ứng dụng ngân hàng. HỏiCon đã nhắc Mẹ dừng lại."
 
 
 async def test_the_model_only_sees_facts_and_a_placeholder_alias() -> None:
     client = FakeClient("{alias} nghe một cuộc gọi lạ.")
-    await llm_summary(router(client), FACTS, ALIAS)
+    await llm_summary(router(client), FACTS, ALIAS, consented=True)
     sent = client.calls[0]["messages"][0]["content"]
     assert "{alias}" in sent and "Mẹ" not in sent and "critical" in sent
     assert "<untrusted>" not in sent  # không có văn bản của kẻ gian trong hồ sơ
@@ -81,15 +81,15 @@ async def test_unsafe_or_empty_text_is_replaced_by_the_template(bad: str) -> Non
 
 
 async def test_no_key_means_no_call_and_a_template() -> None:
-    assert await llm_summary(router(None), FACTS, ALIAS) is None
+    assert await llm_summary(router(None), FACTS, ALIAS, consented=True) is None
 
 
 async def test_an_error_from_the_provider_means_a_template() -> None:
-    assert await llm_summary(router(FakeClient(RuntimeError("boom"))), FACTS, ALIAS) is None
+    assert await llm_summary(router(FakeClient(RuntimeError("boom"))), FACTS, ALIAS, consented=True) is None
 
 
 async def test_a_timeout_means_a_template() -> None:
-    assert await llm_summary(router(FakeClient(None)), FACTS, ALIAS) is None
+    assert await llm_summary(router(FakeClient(None)), FACTS, ALIAS, consented=True) is None
 
 
 def test_the_template_summary_is_clean_and_names_no_one() -> None:

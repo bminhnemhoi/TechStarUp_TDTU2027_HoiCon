@@ -221,6 +221,7 @@ async def run_protection_watch(
                 "family_id": str(lapse.family_id),
                 "guardian_rank": guardian.guardian_rank or 1,
                 "member_id": str(guardian.id),
+                "protected_member_id": str(protected.id),  # spec 037 FR-002: kiểm đồng ý lúc gửi
                 "text": text,
                 "is_demo": False,
                 "is_drill": False,
@@ -376,6 +377,7 @@ async def _weekly_for_family(
                 "family_id": str(family_id),
                 "guardian_rank": guardian.guardian_rank or 1,
                 "member_id": str(guardian.id),
+                "protected_member_id": str(device.member_id),  # spec 037 FR-002: kiểm đồng ý lúc gửi
                 "text": text,
                 "is_demo": False,
                 "is_drill": False,

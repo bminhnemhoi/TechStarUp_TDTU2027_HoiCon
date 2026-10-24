@@ -12,7 +12,7 @@ import asyncio
 import json
 import logging
 import time
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -239,6 +239,7 @@ async def stream_run(
     run_id: UUID,
     last_event_id: str | None,
     is_disconnected: Callable[[], Any],
+    still_allowed: Callable[[], Awaitable[bool]] | None = None,
 ) -> AsyncIterator[str]:
     """Phát các khung SSE của một lượt cho tới khi lượt kết thúc (hoặc `MAX_STREAM_S`, lỗi DB, client ngắt).
 
@@ -255,6 +256,8 @@ async def stream_run(
         while True:
             if await is_disconnected():
                 return
+            if still_allowed is not None and not await still_allowed():
+                return  # người cao tuổi vừa rút đồng ý: luồng đang mở cũng dừng (spec 011 D9)
             run: AgentRun | None
             rows: list[AgentStep] = []
             total = 0

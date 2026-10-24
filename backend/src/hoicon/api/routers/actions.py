@@ -16,6 +16,7 @@ from pydantic import BaseModel, StringConstraints
 
 from hoicon.db.models import Incident
 from hoicon.db.session import get_sessionmaker
+from hoicon.services import consent_gate
 from hoicon.services.action_token_service import (
     ActionTokenService,
     InvalidTokenError,
@@ -80,6 +81,14 @@ async def get_action_view(token: str) -> dict[str, Any]:
     async with get_sessionmaker()() as session:
         view = await ActionTokenService.get_action_view_data(session, clean_token)
         if view is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy liên kết hành động")
+        # Spec 037 FR-003: người cao tuổi đã rút (hoặc chưa có) `guardian_alerts` ⇒ liên kết cũ không cho đọc
+        # dữ liệu sự cố, cùng một 404 như liên kết không tồn tại. Quyết định (POST) vẫn ghi được: đóng sự cố là
+        # đường an toàn.
+        incident = await session.get(Incident, UUID(view["incident"]["id"]))
+        if incident is not None and not await consent_gate.web_readable(
+            session, incident.member_id, is_demo=incident.is_demo
+        ):
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy liên kết hành động")
         return view
 

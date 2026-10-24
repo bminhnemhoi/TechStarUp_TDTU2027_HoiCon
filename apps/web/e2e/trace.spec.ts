@@ -5,6 +5,9 @@ import os from "node:os";
 import path from "node:path";
 import { RUN_ID, STEPS, doneFrame, mockApi, sse, step, stepFrame } from "./fixtures";
 
+// Sơ đồ xyflow nạp động: lần đầu có thể chậm khi nhiều worker tranh CPU (vượt hạn 7,5 s mặc định). Cùng điều kiện, chỉ chờ lâu hơn.
+const XYFLOW_LOAD_MS = 20_000;
+
 // Spec 033, FR-011: `/trace/[runId]` — sơ đồ + bản chữ + chi tiết bước, bằng fixture hợp đồng.
 const EVIDENCE_DIR = path.join(os.homedir(), "hoicon-evidence", "033-sim-trace");
 
@@ -14,7 +17,7 @@ test("bản chữ có đủ các bước của lượt chạy và sơ đồ vẽ
   await expect(page.getByTestId("stream-status")).toContainText("Trợ lý AI đã làm xong các bước");
   await expect(page.getByTestId("steps").getByRole("listitem")).toHaveCount(STEPS.length);
   await expect(page.getByTestId("trace-canvas")).toBeVisible();
-  await expect(page.locator(".react-flow__node")).toHaveCount(10); // 8 nút + bắt đầu + kết thúc
+  await expect(page.locator(".react-flow__node")).toHaveCount(10, { timeout: XYFLOW_LOAD_MS }); // 8 nút + bắt đầu + kết thúc
 });
 
 test("chọn một khối ở danh sách hiện chi tiết bước", async ({ page }) => {
@@ -63,7 +66,7 @@ for (const view of [
     await mockApi(page);
     await page.goto(`/trace/${RUN_ID}`);
     await expect(page.getByTestId("stream-status")).toContainText("Trợ lý AI đã làm xong các bước");
-    await expect(page.locator(".react-flow__node").first()).toBeVisible();
+    await expect(page.locator(".react-flow__node:visible").first()).toBeVisible({ timeout: XYFLOW_LOAD_MS });
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
     const results = await new AxeBuilder({ page })
