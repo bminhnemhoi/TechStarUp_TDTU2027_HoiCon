@@ -101,6 +101,7 @@ class MainActivity : ComponentActivity() {
                         sending = deleteSending,
                         messageRes = deleteMessage,
                         onHeld = ::sendDeleteRequest,
+                        onTooShort = { deleteMessage = R.string.delete_too_short },
                         onBack = { deleteScreen = false },
                     )
                 } else if (pending != null) {
