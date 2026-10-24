@@ -1292,6 +1292,216 @@
     }
    }
   },
+  "/v1/booth/codes": {
+   "post": {
+    "tags": [
+     "booth"
+    ],
+    "summary": "Console tạo mã tham gia gian (spec 050 FR-007)",
+    "operationId": "create_code_v1_booth_codes_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CodeOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/booth/join": {
+   "post": {
+    "tags": [
+     "booth"
+    ],
+    "summary": "Khách đổi mã lấy phiên xem gian (spec 050 FR-007)",
+    "operationId": "join_v1_booth_join_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/JoinIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionOut"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "`join_code_invalid` (mã sai/hết hạn/hủy/đầy)"
+     },
+     "429": {
+      "description": "Thử sai quá nhiều"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/guardian/drills": {
+   "get": {
+    "tags": [
+     "guardian"
+    ],
+    "summary": "Lịch và lịch sử diễn tập của gia đình (spec 028)",
+    "operationId": "list_drills_v1_guardian_drills_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GuardianDrillListOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "guardian"
+    ],
+    "summary": "Đặt lịch một bài diễn tập (spec 028)",
+    "operationId": "schedule_drill_v1_guardian_drills_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GuardianDrillRequestIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GuardianDrillListOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Bị từ chối: `{detail: <mã DrillRefused>}`"
+     }
+    }
+   }
+  },
   "/v1/action/{token}": {
    "get": {
     "tags": [
@@ -1674,6 +1884,61 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/SimRunOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/sim/reset": {
+   "post": {
+    "tags": [
+     "sim"
+    ],
+    "summary": "Post Reset",
+    "description": "Nút Đặt lại của `/demo/console` (spec 050 FR-005c): cùng `ops.booth.reset_sim` — xóa mọi lượt mô phỏng của\ngia đình demo (sự cố, chạy, job, checkpoint, thiết bị `sim:`); không đụng gì khác.",
+    "operationId": "post_reset_v1_sim_reset_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SimResetOut"
         }
        }
       }
@@ -2473,6 +2738,36 @@
     ],
     "title": "CaseVerification"
    },
+   "CodeOut": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Expires At"
+     },
+     "max_guests": {
+      "type": "integer",
+      "title": "Max Guests"
+     },
+     "is_demo": {
+      "type": "boolean",
+      "const": true,
+      "title": "Is Demo",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "expires_at",
+     "max_guests"
+    ],
+    "title": "CodeOut"
+   },
    "ConsentBatch": {
     "properties": {
      "items": {
@@ -3111,6 +3406,129 @@
     ],
     "title": "GraphTopologyOut",
     "description": "Khớp `docs/schemas/graph_topology.v1.json`."
+   },
+   "GuardianDrillListOut": {
+    "properties": {
+     "drills": {
+      "items": {
+       "$ref": "#/components/schemas/GuardianDrillOut"
+      },
+      "type": "array",
+      "title": "Drills"
+     }
+    },
+    "type": "object",
+    "required": [
+     "drills"
+    ],
+    "title": "GuardianDrillListOut"
+   },
+   "GuardianDrillOut": {
+    "properties": {
+     "drill_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Drill Id"
+     },
+     "member_alias": {
+      "type": "string",
+      "title": "Member Alias"
+     },
+     "script_id": {
+      "type": "string",
+      "title": "Script Id"
+     },
+     "script_title": {
+      "type": "string",
+      "title": "Script Title"
+     },
+     "window_start": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Window Start"
+     },
+     "window_end": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Window End"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "scheduled",
+       "offered",
+       "in_progress",
+       "passed",
+       "failed",
+       "aborted",
+       "declined",
+       "expired"
+      ],
+      "title": "Status"
+     },
+     "score": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Score"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "const": true,
+      "title": "Is Drill",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "drill_id",
+     "member_alias",
+     "script_id",
+     "script_title",
+     "window_start",
+     "window_end",
+     "status",
+     "score"
+    ],
+    "title": "GuardianDrillOut"
+   },
+   "GuardianDrillRequestIn": {
+    "properties": {
+     "member_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Member Id"
+     },
+     "script_id": {
+      "type": "string",
+      "pattern": "^drill_[a-z0-9_]{3,40}$",
+      "title": "Script Id"
+     },
+     "window_start": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Window Start"
+     },
+     "window_end": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Window End"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "member_id",
+     "script_id",
+     "window_start",
+     "window_end"
+    ],
+    "title": "GuardianDrillRequestIn"
    },
    "GuardianIncidentDetail": {
     "properties": {
@@ -3885,6 +4303,21 @@
     ],
     "title": "IncidentSummary"
    },
+   "JoinIn": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "pattern": "^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$",
+      "title": "Code"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "code"
+    ],
+    "title": "JoinIn"
+   },
    "LookupIn": {
     "properties": {
      "kind": {
@@ -4401,6 +4834,31 @@
     ],
     "title": "SessionIn"
    },
+   "SessionOut": {
+    "properties": {
+     "family_alias": {
+      "type": "string",
+      "title": "Family Alias"
+     },
+     "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Expires At"
+     },
+     "is_demo": {
+      "type": "boolean",
+      "const": true,
+      "title": "Is Demo",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "family_alias",
+     "expires_at"
+    ],
+    "title": "SessionOut"
+   },
    "SimMessageOut": {
     "properties": {
      "at": {
@@ -4477,6 +4935,36 @@
      "expires_at"
     ],
     "title": "SimQuestionOut"
+   },
+   "SimResetOut": {
+    "properties": {
+     "incidents": {
+      "type": "integer",
+      "title": "Incidents"
+     },
+     "devices": {
+      "type": "integer",
+      "title": "Devices"
+     },
+     "seconds": {
+      "type": "number",
+      "title": "Seconds"
+     },
+     "is_demo": {
+      "type": "boolean",
+      "const": true,
+      "title": "Is Demo",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "incidents",
+     "devices",
+     "seconds"
+    ],
+    "title": "SimResetOut",
+    "description": "Khớp `docs/schemas/sim_reset.v1.json`."
    },
    "SimRunIn": {
     "properties": {

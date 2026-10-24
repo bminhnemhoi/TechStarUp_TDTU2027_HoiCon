@@ -74,6 +74,7 @@ test("bảng điều khiển: chạy một kịch bản, dừng, đặt lại m�
   await page.goto("/booth?fast=1&autoplay=0");
   await expect(page.getByTestId("booth-title")).toHaveText("Sẵn sàng trình diễn");
   const panel = await context.newPage();
+  const panelCalls = await mockApi(panel, { sim: new SimMock() }); // trang console có mạng chặn riêng
   await panel.goto("/demo/console");
   await expect(panel.getByTestId("booth-link")).toContainText("Màn hình gian đã kết nối");
   await panel.getByRole("button", { name: "Dùng bản ghi" }).click();
@@ -84,6 +85,8 @@ test("bảng điều khiển: chạy một kịch bản, dừng, đặt lại m�
   await expect(panel.getByTestId("results")).toContainText("bản ghi (không tính)");
   await panel.getByRole("button", { name: "Đặt lại cho khách mới" }).click();
   await expect(panel.getByTestId("reset-note")).toContainText("Đã dừng và xóa màn hình gian");
+  await expect(panel.getByTestId("reset-note")).toContainText("Đã xóa 2 lượt mô phỏng trên máy chủ");
+  expect(panelCalls.filter((c) => c.method === "POST" && c.path === "/v1/sim/reset")).toHaveLength(1);
   await expect(panel.getByTestId("reset-command")).toContainText("hoicon.ops.booth reset");
   await expect(page.getByTestId("booth-title")).toHaveText("Sẵn sàng trình diễn");
 });
@@ -161,4 +164,15 @@ test("console: không còn chữ kỹ thuật nội bộ; băng rôn mô phỏng
   await page.goto("/booth?autoplay=0");
   await expect(page.getByTestId("sim-banner")).toHaveClass(/border-sim-accent/);
   await expect(page.getByTestId("sim-banner")).not.toHaveClass(/drill/);
+});
+
+
+test("đặt lại: máy chủ lỗi thì màn hình gian vẫn được đặt lại và console chỉ cách xóa bằng lệnh", async ({ page }) => {
+  await mockApi(page, { sim: new SimMock(), simReset: () => ({ status: 503, json: { detail: "x" } }) });
+  await page.goto("/demo/console");
+  await page.getByRole("button", { name: "Đặt lại cho khách mới" }).click();
+  const note = page.getByTestId("reset-note");
+  await expect(note).toContainText("Đã dừng và xóa màn hình gian");
+  await expect(note).toContainText("chưa xóa được dữ liệu trên máy chủ");
+  await expect(note).not.toContainText("Đã xóa");
 });

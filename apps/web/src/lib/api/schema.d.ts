@@ -358,6 +358,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/booth/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Console tạo mã tham gia gian (spec 050 FR-007) */
+        post: operations["create_code_v1_booth_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/booth/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Khách đổi mã lấy phiên xem gian (spec 050 FR-007) */
+        post: operations["join_v1_booth_join_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/drills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lịch và lịch sử diễn tập của gia đình (spec 028) */
+        get: operations["list_drills_v1_guardian_drills_get"];
+        put?: never;
+        /** Đặt lịch một bài diễn tập (spec 028) */
+        post: operations["schedule_drill_v1_guardian_drills_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/action/{token}": {
         parameters: {
             query?: never;
@@ -505,6 +557,27 @@ export interface paths {
         put?: never;
         /** Post Run */
         post: operations["post_run_v1_sim_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Reset
+         * @description Nút Đặt lại của `/demo/console` (spec 050 FR-005c): cùng `ops.booth.reset_sim` — xóa mọi lượt mô phỏng của
+         *     gia đình demo (sự cố, chạy, job, checkpoint, thiết bị `sim:`); không đụng gì khác.
+         */
+        post: operations["post_reset_v1_sim_reset_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -813,6 +886,24 @@ export interface components {
             /** List Version */
             list_version: string | null;
         };
+        /** CodeOut */
+        CodeOut: {
+            /** Code */
+            code: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Max Guests */
+            max_guests: number;
+            /**
+             * Is Demo
+             * @default true
+             * @constant
+             */
+            is_demo: true;
+        };
         /**
          * ConsentBatch
          * @description Khớp `docs/schemas/consent_record.v1.json`, chặt hơn ở hai điểm (xem mô tả schema): kênh `app` và purpose không
@@ -1060,6 +1151,68 @@ export interface components {
             nodes: components["schemas"]["TopologyNode"][];
             /** Edges */
             edges: components["schemas"]["TopologyEdge"][];
+        };
+        /** GuardianDrillListOut */
+        GuardianDrillListOut: {
+            /** Drills */
+            drills: components["schemas"]["GuardianDrillOut"][];
+        };
+        /** GuardianDrillOut */
+        GuardianDrillOut: {
+            /**
+             * Drill Id
+             * Format: uuid
+             */
+            drill_id: string;
+            /** Member Alias */
+            member_alias: string;
+            /** Script Id */
+            script_id: string;
+            /** Script Title */
+            script_title: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "scheduled" | "offered" | "in_progress" | "passed" | "failed" | "aborted" | "declined" | "expired";
+            /** Score */
+            score: number | null;
+            /**
+             * Is Drill
+             * @default true
+             * @constant
+             */
+            is_drill: true;
+        };
+        /** GuardianDrillRequestIn */
+        GuardianDrillRequestIn: {
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Script Id */
+            script_id: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
         };
         /** GuardianIncidentDetail */
         GuardianIncidentDetail: {
@@ -1338,6 +1491,11 @@ export interface components {
             /** Closed At */
             closed_at: string | null;
         };
+        /** JoinIn */
+        JoinIn: {
+            /** Code */
+            code: string;
+        };
         /**
          * LookupIn
          * @description Một chủ thể tra cứu. Cấm mọi trường lạ (kể cả `number`/`phone`): số thô không được phép tới đây.
@@ -1548,6 +1706,22 @@ export interface components {
             /** Token */
             token: string;
         };
+        /** SessionOut */
+        SessionOut: {
+            /** Family Alias */
+            family_alias: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Is Demo
+             * @default true
+             * @constant
+             */
+            is_demo: true;
+        };
         /** SimMessageOut */
         SimMessageOut: {
             /**
@@ -1583,6 +1757,24 @@ export interface components {
              * Format: date-time
              */
             expires_at: string;
+        };
+        /**
+         * SimResetOut
+         * @description Khớp `docs/schemas/sim_reset.v1.json`.
+         */
+        SimResetOut: {
+            /** Incidents */
+            incidents: number;
+            /** Devices */
+            devices: number;
+            /** Seconds */
+            seconds: number;
+            /**
+             * Is Demo
+             * @default true
+             * @constant
+             */
+            is_demo: true;
         };
         /** SimRunIn */
         SimRunIn: {
@@ -2634,6 +2826,148 @@ export interface operations {
             };
         };
     };
+    create_code_v1_booth_codes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    join_v1_booth_join_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description `join_code_invalid` (mã sai/hết hạn/hủy/đầy) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Thử sai quá nhiều */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_drills_v1_guardian_drills_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianDrillListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    schedule_drill_v1_guardian_drills_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardianDrillRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianDrillListOut"];
+                };
+            };
+            /** @description Bị từ chối: `{detail: <mã DrillRefused>}` */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     get_action_view_v1_action__token__get: {
         parameters: {
             query?: never;
@@ -2872,6 +3206,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SimRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_reset_v1_sim_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimResetOut"];
                 };
             };
             /** @description Validation Error */

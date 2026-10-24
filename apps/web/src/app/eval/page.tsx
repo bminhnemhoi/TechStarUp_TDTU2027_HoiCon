@@ -21,8 +21,8 @@ const ROWS: { key: string; label: string; format: (v: number) => string }[] = [
   { key: "safety_violations", label: "Vi phạm an toàn", format: String },
   { key: "ai_disclosure_rate", label: "Tin có câu “Đây là trợ lý AI HỏiCon”", format: pct },
   { key: "fallback_rate", label: "Lần dùng câu soạn sẵn thay cho trợ lý AI", format: pct },
-  { key: "latency_p50_ms", label: "Thời gian xử lý (trung vị)", format: ms },
-  { key: "latency_p95_ms", label: "Thời gian xử lý (chậm nhất 5%)", format: ms },
+  { key: "latency_p50_ms", label: "Thời gian xử lý (trung vị)", format: ms }, // gitleaks:allow — tên chỉ số, không phải khóa
+  { key: "latency_p95_ms", label: "Thời gian xử lý (chậm nhất 5%)", format: ms }, // gitleaks:allow — tên chỉ số, không phải khóa
   { key: "cost_usd", label: "Chi phí gọi model (USD)", format: (v) => v.toFixed(2) },
 ];
 const SUITE_VI: Record<string, string> = { smoke: "Bộ nhanh (smoke)", full: "Bộ đầy đủ", injection: "Bộ chống chèn lệnh" };

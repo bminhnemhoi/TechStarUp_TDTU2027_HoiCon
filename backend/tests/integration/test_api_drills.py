@@ -762,3 +762,113 @@ async def test_an_illegal_transition_is_refused_by_the_one_function(world: World
         with pytest.raises(InvalidDrillTransition):
             DrillService.advance(drill, "passed")  # scheduled → passed: không có cạnh
         assert drill.status == "scheduled"
+
+
+# --- Web người giám hộ: POST/GET /v1/guardian/drills (spec 028 FR-011, T021) ------------------------------------------
+
+
+def _guardian_validator(name: str) -> Draft202012Validator:
+    resources = []
+    for path in SCHEMAS.glob("*.json"):
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        resources.append((doc["$id"], Resource.from_contents(doc)))
+    schema = json.loads((SCHEMAS / f"{name}.v1.json").read_text(encoding="utf-8"))
+    return Draft202012Validator(schema, registry=Registry().with_resources(resources), format_checker=FormatChecker())
+
+
+GUARDIAN_LIST = _guardian_validator("guardian_drill_list")
+GUARDIAN_REQUEST = _guardian_validator("guardian_drill_request")
+GUARDIAN_ORIGIN = {"Origin": "http://localhost:3100"}
+
+
+def guardian_token(w: World) -> str:
+    from hoicon.api.auth import issue_guardian_access_token
+
+    return issue_guardian_access_token(w.guardian_id, w.family_id)
+
+
+def request_body(w: World, **changes: Any) -> dict[str, Any]:
+    start = utc_now() + timedelta(hours=2)
+    body = {
+        "member_id": str(w.member_id),
+        "script_id": SCRIPT_ID,
+        "window_start": start.isoformat(),
+        "window_end": (start + timedelta(hours=1)).isoformat(),
+    }
+    return {**body, **changes}
+
+
+async def schedule_via_api(w: World, body: dict[str, Any], token: str | None = None) -> Any:
+    return await call(
+        "POST", "/v1/guardian/drills", token=token or guardian_token(w), json=body, headers=GUARDIAN_ORIGIN
+    )
+
+
+async def test_guardian_schedules_a_drill_and_it_shows_in_the_list(world: World) -> None:
+    body = request_body(world)
+    assert list(GUARDIAN_REQUEST.iter_errors(body)) == []
+    res = await schedule_via_api(world, body)
+    assert res.status_code == 201, res.text
+    created = res.json()
+    assert list(GUARDIAN_LIST.iter_errors(created)) == [] and len(created["drills"]) == 1
+    item = created["drills"][0]
+    assert item["status"] == "scheduled" and item["is_drill"] is True and item["member_alias"] == "Mẹ"
+    assert item["script_title"] == SCRIPT["title"] and item["score"] is None
+    assert res.headers["cache-control"] == "no-store"
+    stored = await row(UUID(item["drill_id"]))
+    assert stored.scheduled_by == str(world.guardian_id)  # người đặt lịch được ghi lại
+    listing = await call("GET", "/v1/guardian/drills", token=guardian_token(world))
+    assert listing.status_code == 200 and list(GUARDIAN_LIST.iter_errors(listing.json())) == []
+    assert [d["drill_id"] for d in listing.json()["drills"]] == [item["drill_id"]]
+
+
+async def test_the_list_is_newest_first_and_never_shows_another_family(world: World) -> None:
+    older = await make_drill(world.family_id, world.member_id, start=timedelta(days=-3), status="expired")
+    newer = await make_drill(world.family_id, world.member_id, start=timedelta(hours=3))
+    await make_drill(world.other_family_id, world.other_member_id)
+    ids = [
+        d["drill_id"] for d in (await call("GET", "/v1/guardian/drills", token=guardian_token(world))).json()["drills"]
+    ]
+    assert ids == [str(newer), str(older)]
+
+
+@pytest.mark.parametrize(
+    ("changes", "code"),
+    [
+        ({"script_id": "drill_khong_co"}, "script_unknown"),
+        ({"window_start": "2020-01-01T00:00:00+00:00", "window_end": "2020-01-01T01:00:00+00:00"}, "window_past"),
+        ({"member_id": str(new_id())}, "member_not_found"),
+    ],
+)
+async def test_refusals_are_422_with_the_service_code_and_write_nothing(
+    world: World, changes: dict[str, Any], code: str
+) -> None:
+    res = await schedule_via_api(world, request_body(world, **changes))
+    assert res.status_code == 422 and res.json() == {"detail": code}
+    assert (await call("GET", "/v1/guardian/drills", token=guardian_token(world))).json() == {"drills": []}
+
+
+async def test_a_member_of_another_family_and_a_missing_consent_are_refused(world: World) -> None:
+    res = await schedule_via_api(world, request_body(world, member_id=str(world.other_member_id)))
+    assert res.status_code == 422 and res.json() == {"detail": "member_not_found"}
+    res = await schedule_via_api(world, request_body(world, member_id=str(world.sibling_id)))  # chưa có đồng ý `drills`
+    assert res.status_code == 422 and res.json() == {"detail": "consent_missing"}
+
+
+async def test_overlap_and_monthly_limit_come_back_as_codes(world: World) -> None:
+    assert (await schedule_via_api(world, request_body(world))).status_code == 201
+    assert (await schedule_via_api(world, request_body(world))).json() == {"detail": "window_overlaps"}
+
+
+async def test_guardian_drill_routes_need_a_guardian_session_and_a_valid_body(world: World) -> None:
+    assert (await call("GET", "/v1/guardian/drills")).status_code == 401
+    assert (
+        await call("POST", "/v1/guardian/drills", json=request_body(world), headers=GUARDIAN_ORIGIN)
+    ).status_code == 401
+    assert (
+        await call("GET", "/v1/guardian/drills", token=world.token)
+    ).status_code == 401  # JWT thiết bị không phải phiên web
+    extra = request_body(world, note="văn bản tự do")
+    assert (await schedule_via_api(world, extra)).status_code == 422  # extra="forbid": không trường tự do
+    bad_time = request_body(world, window_start="không-phải-giờ")
+    assert (await schedule_via_api(world, bad_time)).status_code == 422

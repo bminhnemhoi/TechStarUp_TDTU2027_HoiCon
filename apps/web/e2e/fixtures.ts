@@ -141,6 +141,33 @@ export class CaseMock {
   }
 }
 
+// --- Spec 028 T021: diễn tập của người giám hộ (fixture hợp đồng guardian_drill_list.v1) ------------------------------------
+const DRILL_DOC = load("guardian_drill_list.v1.valid.json");
+export const DRILL_HISTORY = (DRILL_DOC[1].drills as Json[]).map((d) => ({ ...d }));
+
+export class DrillMock {
+  drills: Json[] = DRILL_HISTORY.map((d) => ({ ...d }));
+  refuse: string | null = null; // mã DrillRefused ⇒ POST trả 422 {detail}
+  view(): Json {
+    return { drills: this.drills };
+  }
+  create(body: Json): Json {
+    const item = {
+      drill_id: "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e99",
+      member_alias: "Mẹ",
+      script_id: body.script_id,
+      script_title: "Cuộc gọi báo thẻ bị khóa",
+      window_start: body.window_start,
+      window_end: body.window_end,
+      status: "scheduled",
+      score: null,
+      is_drill: true,
+    };
+    this.drills = [item, ...this.drills];
+    return { drills: [item] };
+  }
+}
+
 export interface Call {
   method: string;
   path: string;
@@ -158,6 +185,10 @@ export interface MockOptions {
   sim?: SimMock;
   simScenarios?: () => { status: number; json?: Json };
   evalSummary?: () => { status: number; json?: Json };
+  drills?: DrillMock;
+  simReset?: () => { status: number; json?: Json };
+  boothJoin?: (code: string) => { status: number; json?: Json };
+  boothCode?: () => { status: number; json?: Json };
   simStart?: (body: Json) => { status: number; json?: Json; headers?: Record<string, string> };
   topology?: () => { status: number; json?: Json };
   caseFile?: CaseMock;
@@ -243,6 +274,29 @@ export async function mockApi(page: Page, options: MockOptions = {}): Promise<Ca
     if (p === "/v1/graphs/incident") {
       const r = options.topology?.() ?? { status: 200, json: TOPOLOGY };
       return reply(route, r.status, r.json);
+    }
+    if (p === "/v1/booth/codes" && method === "POST") {
+      const r = options.boothCode?.() ?? { status: 201, json: { code: "K7M2QX", expires_at: "2027-02-27T09:10:00+07:00", max_guests: 50, is_demo: true } };
+      return reply(route, r.status, r.json);
+    }
+    if (p === "/v1/booth/join" && method === "POST") {
+      const code = (body as Json).code as string;
+      const r = options.boothJoin?.(code) ?? (code === "K7M2QX"
+        ? { status: 200, json: { family_alias: "Gia đình Mẫu", expires_at: "2027-02-27T10:00:00+07:00", is_demo: true } }
+        : { status: 404, json: { detail: "join_code_invalid" } });
+      return reply(route, r.status, r.json);
+    }
+    if (p === "/v1/sim/reset" && method === "POST") {
+      const r = options.simReset?.() ?? { status: 200, json: { incidents: 2, devices: 2, seconds: 0.1, is_demo: true } };
+      return reply(route, r.status, r.json);
+    }
+    if (p === "/v1/guardian/drills") {
+      const mock = options.drills ?? new DrillMock();
+      if (method === "POST") {
+        if (mock.refuse) return reply(route, 422, { detail: mock.refuse });
+        return reply(route, 201, mock.create(body as Json));
+      }
+      return reply(route, 200, mock.view());
     }
     if (p === "/v1/eval/summary") {
       const r = options.evalSummary?.() ?? { status: 200, json: EVAL_SUMMARY };

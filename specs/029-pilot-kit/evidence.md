@@ -80,3 +80,8 @@ vì còn phần "Tiến/Minh tải lên kênh internal testing" và AAB chưa k�
 - **Không đo** trên AVD hay máy thật; Android vẫn ánh xạ mọi 403 thành `Unauthorized` tới khi làm T005.
 - Báo cáo mới tính bằng dữ liệu dựng sẵn, chưa có gia đình thí điểm thật. Doze có thể kéo độ phủ thật dưới 90% (plan D2).
 - CI trên PR, Windows: chưa chạy. Giai đoạn 2 (T011–T014): BLOCKED bởi 012, W0-3.
+
+## Lượt 8 — T014 phần backend/web (làn B, 24/10/2026) — phần [A] chờ làn A
+
+- **Phần B đạt**: pytest 2932 passed / 22 skipped; ruff sạch; `hoicon-eval --suite smoke --compare baseline` không lệch; gitleaks `backend/src`, `backend/tests`, `docs/schemas`, `scripts`, `specs/029-pilot-kit` sạch; `check-spec-trace` 0 lỗi.
+- **Chưa làm (làn A)**: Gradle (`:rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`), gitleaks `apps/android/app/src`, và điều kiện ROADMAP `P2-14` ☑ (cần `gate-m2` đạt mọi chỉ tiêu). **T014 CHƯA TICK.**

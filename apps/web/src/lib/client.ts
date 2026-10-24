@@ -8,12 +8,16 @@ export type GuardianIncidentSummary = components["schemas"]["GuardianIncidentSum
 export type GuardianIncidentDetail = components["schemas"]["GuardianIncidentDetail"];
 export type CaseFile = components["schemas"]["CaseFileOut"];
 export type CaseFileAction = "approve" | "discard" | "mark_sent";
+export type GuardianDrillList = components["schemas"]["GuardianDrillListOut"];
+export type GuardianDrill = components["schemas"]["GuardianDrillOut"];
 export type Decision = "safe" | "false_alarm" | "emergency_pause";
 
 export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /** Mã ổn định của 422 `{detail: "<mã>"}` (ví dụ mã DrillRefused); không có ở lỗi khác. */
+    readonly code?: string,
   ) {
     super(message);
   }
@@ -35,6 +39,10 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     throw new ApiError(0, OFFLINE);
   }
   if (res.status === 204) return undefined as T;
+  if (res.status === 422) {
+    const detail = (await res.json().catch(() => null))?.detail;
+    throw new ApiError(422, "Chưa thực hiện được. Anh/chị kiểm tra lại thông tin rồi bấm lại.", typeof detail === "string" ? detail : undefined);
+  }
   if (!res.ok) throw new ApiError(res.status, res.status >= 500 ? SERVER_BUSY : "Chưa thực hiện được. Anh/chị tải lại trang, hoặc nhắn số 4 cho HỏiCon trên Zalo để lấy liên kết đăng nhập mới.");
   return (await res.json()) as T;
 }

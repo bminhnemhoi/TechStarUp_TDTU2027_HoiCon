@@ -20,7 +20,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 
 from hoicon.config import get_settings
-from hoicon.db.models import Device, Member, RevokedSession
+from hoicon.db.models import BoothJoinCode, Device, Member, RevokedSession
 from hoicon.db.session import get_sessionmaker
 
 logger = logging.getLogger(__name__)
@@ -152,11 +152,19 @@ class GuardianClaims:
     family_id: UUID
     role: str = GUARDIAN_ROLE
     expires_at: datetime | None = None
+    booth_code: UUID | None = None  # mã tham gia đã cấp phiên khách (đặt lại gian thu hồi mã ⇒ phiên chết ngay)
+    guest: bool = False  # phiên khách gian trưng bày (spec 050 FR-007): chỉ xem + quyết định, không cấu hình/đặt lịch
     jti: str | None = None  # mã phiên (token cũ phát trước 037 T018 không có ⇒ không thu hồi riêng được)
 
 
 def issue_guardian_access_token(
-    member_id: UUID, family_id: UUID, *, now: datetime | None = None, ttl: timedelta = ACCESS_TTL
+    member_id: UUID,
+    family_id: UUID,
+    *,
+    now: datetime | None = None,
+    ttl: timedelta = ACCESS_TTL,
+    guest: bool = False,
+    booth_code: UUID | None = None,
 ) -> str:
     issued = now or datetime.now(UTC)
     payload = {
@@ -168,6 +176,7 @@ def issue_guardian_access_token(
         "iat": issued,
         "exp": issued + ttl,
         "jti": uuid4().hex,
+        **({"guest": True, "bc": str(booth_code)} if guest and booth_code else {"guest": True} if guest else {}),
     }
     return jwt.encode(payload, _key(), algorithm=ALGORITHM)
 
@@ -189,6 +198,8 @@ def decode_guardian_access_token(token: str) -> GuardianClaims:
             UUID(raw["sub"]),
             UUID(raw["family_id"]),
             expires_at=datetime.fromtimestamp(raw["exp"], UTC),
+            booth_code=UUID(raw["bc"]) if isinstance(raw.get("bc"), str) else None,
+            guest=raw.get("guest") is True,
             jti=raw["jti"] if isinstance(raw.get("jti"), str) else None,
         )
     except (jwt.PyJWTError, KeyError, ValueError, TypeError) as exc:
@@ -241,6 +252,11 @@ async def get_current_guardian(
     async with get_sessionmaker()() as session:
         member = await session.get(Member, claims.member_id)
         revoked = claims.jti is not None and await session.get(RevokedSession, claims.jti) is not None
+        if (
+            claims.guest
+        ):  # phiên khách gian: chỉ sống khi cổng mô phỏng bật VÀ mã đã cấp phiên chưa bị thu hồi (đặt lại)
+            code = await session.get(BoothJoinCode, claims.booth_code) if claims.booth_code else None
+            revoked = revoked or not get_settings().sim_enabled or code is None or code.revoked_at is not None
     # `deleted_at`: thành viên đã bị ẩn danh sau yêu cầu xóa dữ liệu (spec 034) ⇒ token cũ hết hiệu lực ngay.
     if (
         member is None
@@ -250,4 +266,13 @@ async def get_current_guardian(
         or revoked  # đã đăng xuất (037 T018): bản sao token/cookie bị lấy cắp cũng hết tác dụng
     ):
         raise _unauthorized_guardian()
+    return claims
+
+
+async def get_current_full_guardian(
+    claims: Annotated[GuardianClaims, Depends(get_current_guardian)],
+) -> GuardianClaims:
+    """Như `get_current_guardian` nhưng từ chối phiên KHÁCH gian trưng bày (403): khách chỉ xem + quyết định."""
+    if claims.guest:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Phiên khách không dùng được chức năng này")
     return claims

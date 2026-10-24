@@ -119,3 +119,8 @@ phần cuộn của màn đồng ý (thẻ 2–3); màn lỗi/hết lượt.
 
 `LookupChecker.kt:37` và `PiiMasker.kt:14`: hai chú thích có ví dụ dạng số điện thoại ⇒ mô tả bằng lời, không đổi hành vi. Verify: lệnh `grep -rnE` của task không còn kết quả (trước khi sửa: 2 dòng);
 `gradlew :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` xanh. Tick T032.
+
+## Lượt 8 — T031 phần backend/web (làn B, 24/10/2026) — phần [A] chờ làn A
+
+- **Phần B đạt**: pytest 2932 passed / 22 skipped; ruff check + format sạch; eval smoke so baseline không lệch (20 ca, recall 100%, báo nhầm 0%, vi phạm 0); gitleaks `backend/src`, `backend/tests`, `docs/schemas` (1 dương tính giả đã biết: sha256 chuỗi rỗng trong fixture "invalid"), `docs/adr`, `specs/026-verification-threat` sạch; `check-spec-trace` 0 lỗi.
+- **Chưa làm (làn A)**: `$GRADLE :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`; gitleaks `apps/android/app/src`, `apps/android/rules/src`. **T031 CHƯA TICK.**

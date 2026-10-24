@@ -617,6 +617,29 @@ class RevokedSession(Base):
     expires_at: Mapped[datetime]
 
 
+class BoothJoinCode(Base):
+    """Mã tham gia gian trưng bày (spec 050 FR-007): chỉ lưu HMAC của mã; ≤ 10 phút, ≤ 50 khách, thu hồi khi đặt lại."""
+
+    __tablename__ = "booth_join_codes"
+    __table_args__ = (
+        CheckConstraint("code_hash ~ '^[0-9a-f]{64}$'", name="ck_booth_join_codes_hash_hex"),
+        CheckConstraint("max_guests BETWEEN 1 AND 50", name="ck_booth_join_codes_max_guests"),
+        CheckConstraint("guests >= 0 AND guests <= max_guests", name="ck_booth_join_codes_guests"),
+        UniqueConstraint("code_hash", name="uq_booth_join_codes_hash"),
+        Index("ix_booth_join_codes_expires", "expires_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"))
+    created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("members.id", ondelete="CASCADE"))
+    code_hash: Mapped[str] = mapped_column(CHAR(64))
+    expires_at: Mapped[datetime]
+    max_guests: Mapped[int] = mapped_column(SmallInteger, server_default=text("50"))
+    guests: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"))
+    revoked_at: Mapped[datetime | None]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
 class CaseFile(Base):
     """Hồ sơ vụ việc cho người giám hộ (spec 031): bản nháp dựng TẤT ĐỊNH từ dữ kiện máy chủ đã có khi sự cố thật kết
     cục `case_open`. `content` = đúng `case_file.v1#/$defs/content` (không PII). Không `is_drill`: diễn tập không có hồ

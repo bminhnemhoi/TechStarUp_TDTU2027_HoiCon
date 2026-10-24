@@ -129,7 +129,7 @@
 - [x] T020 [AB] [FR-012] Review độc lập bằng `security-privacy-reviewer` (FR-003, đồng ý, nội dung hư cấu, quyền
   Android). Sửa hết Critical/High.
   · Verify: báo cáo không còn Critical/High chưa xử lý
-- [ ] T021 [AB] [FR-011] (P2, chỉ khi 027 đã merge) Thêm `POST /v1/guardian/drills` + trang `/drills` trên web người giám
+- [x] T021 [AB] [FR-011] (P2, chỉ khi 027 đã merge) Thêm `POST /v1/guardian/drills` + trang `/drills` trên web người giám
   hộ (đặt lịch, lịch sử, nhãn `[DIỄN TẬP]`), dùng chung `DrillService.schedule`, có test Playwright. Nếu 027 chưa merge
   thì đánh BLOCKED và ghi vào evidence.
   Hợp đồng **có từ 24/10/2026**: `guardian_drill_request.v1.json`, `guardian_drill_list.v1.json` (+ fixture; lỗi 422 `{detail: <mã DrillRefused>}`).

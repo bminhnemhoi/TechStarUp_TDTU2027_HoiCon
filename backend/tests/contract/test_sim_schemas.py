@@ -9,7 +9,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 
 SCHEMAS = Path(__file__).resolve().parents[3] / "docs" / "schemas"
-NAMES = ["sim_run_request", "sim_run", "sim_scenarios", "graph_topology"]
+NAMES = ["sim_run_request", "sim_run", "sim_scenarios", "graph_topology", "sim_reset", "booth_join"]
 
 
 def _load(path: Path) -> Any:
