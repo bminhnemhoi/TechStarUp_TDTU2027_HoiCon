@@ -152,11 +152,17 @@ class GuardianClaims:
     family_id: UUID
     role: str = GUARDIAN_ROLE
     expires_at: datetime | None = None
+    guest: bool = False  # phiên khách gian trưng bày (spec 050 FR-007): chỉ xem + quyết định, không cấu hình/đặt lịch
     jti: str | None = None  # mã phiên (token cũ phát trước 037 T018 không có ⇒ không thu hồi riêng được)
 
 
 def issue_guardian_access_token(
-    member_id: UUID, family_id: UUID, *, now: datetime | None = None, ttl: timedelta = ACCESS_TTL
+    member_id: UUID,
+    family_id: UUID,
+    *,
+    now: datetime | None = None,
+    ttl: timedelta = ACCESS_TTL,
+    guest: bool = False,
 ) -> str:
     issued = now or datetime.now(UTC)
     payload = {
@@ -168,6 +174,7 @@ def issue_guardian_access_token(
         "iat": issued,
         "exp": issued + ttl,
         "jti": uuid4().hex,
+        **({"guest": True} if guest else {}),
     }
     return jwt.encode(payload, _key(), algorithm=ALGORITHM)
 
@@ -189,6 +196,7 @@ def decode_guardian_access_token(token: str) -> GuardianClaims:
             UUID(raw["sub"]),
             UUID(raw["family_id"]),
             expires_at=datetime.fromtimestamp(raw["exp"], UTC),
+            guest=raw.get("guest") is True,
             jti=raw["jti"] if isinstance(raw.get("jti"), str) else None,
         )
     except (jwt.PyJWTError, KeyError, ValueError, TypeError) as exc:
@@ -250,4 +258,13 @@ async def get_current_guardian(
         or revoked  # đã đăng xuất (037 T018): bản sao token/cookie bị lấy cắp cũng hết tác dụng
     ):
         raise _unauthorized_guardian()
+    return claims
+
+
+async def get_current_full_guardian(
+    claims: Annotated[GuardianClaims, Depends(get_current_guardian)],
+) -> GuardianClaims:
+    """Như `get_current_guardian` nhưng từ chối phiên KHÁCH gian trưng bày (403): khách chỉ xem + quyết định."""
+    if claims.guest:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Phiên khách không dùng được chức năng này")
     return claims

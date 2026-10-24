@@ -57,6 +57,9 @@ async def reset_sim(sessions: async_sessionmaker, database_url: str | None = Non
             )
             await session.execute(delete(AgentRun).where(AgentRun.thread_id.in_(batch)))
             await session.execute(delete(Incident).where(Incident.id.in_(batch)))
+        from hoicon.api.routers.booth import revoke_all_codes
+
+        await revoke_all_codes(session)  # mã tham gia vô hiệu khi đặt lại (spec 050 FR-007)
         in_use = select(Incident.device_id).where(Incident.device_id.is_not(None))
         devices = (await session.execute(delete(Device).where(demo_sim_device, Device.id.not_in(in_use)))).rowcount or 0
     if incidents:

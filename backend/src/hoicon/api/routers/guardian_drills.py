@@ -15,7 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hoicon.agents.runtime import safe_alias
-from hoicon.api.auth import GuardianClaims, get_current_guardian
+from hoicon.api.auth import GuardianClaims, get_current_full_guardian
 from hoicon.db.models import Drill, Member
 from hoicon.db.session import get_sessionmaker
 from hoicon.domain import drill as dr
@@ -23,7 +23,7 @@ from hoicon.services.drill_service import DrillRefused, DrillService
 
 router = APIRouter(prefix="/v1/guardian/drills", tags=["guardian"])
 NO_STORE = {"Cache-Control": "no-store"}
-Guardian = Annotated[GuardianClaims, Depends(get_current_guardian)]
+Guardian = Annotated[GuardianClaims, Depends(get_current_full_guardian)]  # phiên khách gian: 403
 
 
 class GuardianDrillRequestIn(BaseModel):

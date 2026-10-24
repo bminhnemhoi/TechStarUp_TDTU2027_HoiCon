@@ -48,6 +48,7 @@ DATA_MAP: dict[str, tuple[str, str, str]] = {
     "agent_runs": ("trace lượt chạy tác tử", "theo sự cố (CASCADE)", "không có PII"),
     "agent_steps": ("trace từng bước (đã che)", "agent_steps_content", "nội dung đã che PII; số đo giữ lại"),
     "case_files": ("hồ sơ vụ việc cho người giám hộ", "theo sự cố (CASCADE)", "tóm tắt đã che, 3 số cuối, bí danh"),
+    "booth_join_codes": ("mã tham gia gian trưng bày (demo)", "10 phút + dọn sau 1 giờ", "chỉ HMAC của mã, không PII"),
     "consents": ("sổ đồng ý chỉ ghi thêm", "không xóa (bằng chứng, Nghị định 356/2025)", "không có PII"),
     "data_requests": ("vết yêu cầu xóa dữ liệu", "giữ (vết pháp lý)", "không có văn bản tự do"),
     "device_heartbeats": ("đo độ phủ bảo vệ", "device_heartbeats", "không có PII"),

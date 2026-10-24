@@ -12,7 +12,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 
-from hoicon.api.auth import GuardianClaims, get_current_guardian, require_same_origin
+from hoicon.api.auth import GuardianClaims, get_current_full_guardian, get_current_guardian, require_same_origin
 from hoicon.api.routers.elder import ElderAnswerIn, resume_value
 from hoicon.config import get_settings
 from hoicon.db.models import Family
@@ -37,8 +37,16 @@ async def demo_guardian(claims: Annotated[GuardianClaims, Depends(get_current_gu
     return claims
 
 
+async def demo_full_guardian(
+    claims: Annotated[GuardianClaims, Depends(get_current_full_guardian)],
+) -> GuardianClaims:
+    """Như `demo_guardian` nhưng từ chối phiên KHÁCH gian (chỉ xem + quyết định): dùng cho route ghi/cấu hình."""
+    return await demo_guardian(claims)
+
+
 router = APIRouter(prefix="/v1/sim", tags=["sim"], dependencies=[Depends(require_sim_enabled)])
 Guardian = Annotated[GuardianClaims, Depends(demo_guardian)]
+FullGuardian = Annotated[GuardianClaims, Depends(demo_full_guardian)]
 
 
 class SimScenarioOut(BaseModel):
@@ -103,7 +111,7 @@ async def get_scenarios(_: Guardian) -> dict[str, Any]:
 
 
 @router.post("/runs", response_model=SimRunOut, dependencies=[Depends(require_same_origin)])
-async def post_run(body: SimRunIn, claims: Guardian) -> dict[str, Any]:
+async def post_run(body: SimRunIn, claims: FullGuardian) -> dict[str, Any]:
     try:
         return await sim_service.start_run(claims.member_id, claims.family_id, body.scenario_id, body.llm)
     except SimError as exc:
@@ -120,7 +128,7 @@ class SimResetOut(BaseModel):
 
 
 @router.post("/reset", response_model=SimResetOut, dependencies=[Depends(require_same_origin)])
-async def post_reset(_: Guardian, response: Response) -> dict[str, Any]:
+async def post_reset(_: FullGuardian, response: Response) -> dict[str, Any]:
     """Nút Đặt lại của `/demo/console` (spec 050 FR-005c): cùng `ops.booth.reset_sim` — xóa mọi lượt mô phỏng của
     gia đình demo (sự cố, chạy, job, checkpoint, thiết bị `sim:`); không đụng gì khác."""
     response.headers["Cache-Control"] = "no-store"
@@ -138,7 +146,7 @@ async def get_run(incident_id: UUID, claims: Guardian) -> dict[str, Any]:
 
 
 @router.post("/runs/{incident_id}/answer", response_model=SimRunOut, dependencies=[Depends(require_same_origin)])
-async def post_answer(incident_id: UUID, body: ElderAnswerIn, claims: Guardian) -> dict[str, Any]:
+async def post_answer(incident_id: UUID, body: ElderAnswerIn, claims: FullGuardian) -> dict[str, Any]:
     try:
         return await sim_service.answer(incident_id, claims.family_id, resume_value(body), body.question_id)
     except SimError as exc:

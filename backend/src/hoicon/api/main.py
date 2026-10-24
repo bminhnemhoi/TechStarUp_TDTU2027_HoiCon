@@ -20,6 +20,7 @@ from hoicon.api.auth import MIN_KEY_LEN
 from hoicon.api.body_limit import BodyLimitMiddleware
 from hoicon.api.routers import (
     actions,
+    booth,
     consents,
     devices,
     drills,
@@ -86,6 +87,7 @@ app.include_router(runs.router)
 app.include_router(guardian.router)
 app.include_router(lookups.router)
 app.include_router(drills.router)
+app.include_router(booth.router)
 app.include_router(guardian_drills.router)
 app.include_router(actions.router)
 app.include_router(elder.router)

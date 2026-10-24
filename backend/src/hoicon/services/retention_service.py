@@ -23,6 +23,7 @@ from hoicon.db.models import (
     ActionToken,
     AgentRun,
     AgentStep,
+    BoothJoinCode,
     Device,
     DeviceHeartbeat,
     Drill,
@@ -235,6 +236,17 @@ async def purge_revoked_sessions(sessions: async_sessionmaker, *, now: datetime,
     return await _run_batches(sessions, build, dry)
 
 
+async def purge_booth_codes(sessions: async_sessionmaker, *, now: datetime, dry_run: bool = False) -> int:
+    """Mã tham gia gian (spec 050) quá hạn hơn 1 giờ. Ngoài RETENTION (bảng §6 là dữ liệu thật)."""
+    where = BoothJoinCode.expires_at < now - timedelta(hours=1)
+
+    def build(n: int) -> Delete:
+        return delete(BoothJoinCode).where(BoothJoinCode.id.in_(select(BoothJoinCode.id).where(where).limit(n)))
+
+    dry = select(func.count()).select_from(BoothJoinCode).where(where) if dry_run else None
+    return await _run_batches(sessions, build, dry)
+
+
 async def run_retention(
     sessions: async_sessionmaker,
     delete_thread: DeleteThread | None,
@@ -259,6 +271,7 @@ async def run_retention(
     report["action_tokens"] = await purge_action_tokens(sessions, now=moment, dry_run=dry_run)
     report["device_heartbeats"] = await purge_device_heartbeats(sessions, now=moment, dry_run=dry_run)
     report["revoked_sessions"] = await purge_revoked_sessions(sessions, now=moment, dry_run=dry_run)
+    report["booth_codes"] = await purge_booth_codes(sessions, now=moment, dry_run=dry_run)
     report["sim_devices"] = await purge_sim_devices(sessions, now=moment, dry_run=dry_run)
     async with sessions() as session:
         has_verifications = await _table_exists(session, "verifications")
