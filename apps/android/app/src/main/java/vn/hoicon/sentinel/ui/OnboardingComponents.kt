@@ -177,7 +177,7 @@ internal fun NoticePanel(text: String, modifier: Modifier = Modifier) {
 
 /** One numbered-free "card" of a list (E3 commitments, E4 summary): title + words on the muted surface. */
 @Composable
-internal fun InfoCard(title: String, body: String, modifier: Modifier = Modifier) {
+internal fun InfoCard(title: String, body: String, modifier: Modifier = Modifier, bodyBold: Boolean = false) {
     Column(
         verticalArrangement = Arrangement.spacedBy(HoiConTokens.Size.SpaceSmDp.dp),
         modifier = modifier
@@ -188,7 +188,7 @@ internal fun InfoCard(title: String, body: String, modifier: Modifier = Modifier
             .semantics(mergeDescendants = true) {},
     ) {
         Text(text = title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-        Text(text = body, style = MaterialTheme.typography.bodyMedium)
+        Text(text = body, style = MaterialTheme.typography.bodyMedium, fontWeight = if (bodyBold) FontWeight.Bold else null)
     }
 }
 

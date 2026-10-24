@@ -106,10 +106,17 @@ def ring(number: str) -> bool:
     if not ensure_idle():
         print("  cảnh báo: máy ảo vẫn còn cuộc gọi treo")
     clear_logcat()
-    adb("emu", "gsm", "call", number)
+    reply = adb("emu", "gsm", "call", number, check=False).replace("\r", " ").replace("\n", " ").strip()
     rang = wait_for(lambda: call_state() == 1, 15, step_s=0.3)
     if not rang:
-        print("  cuộc gọi giả KHÔNG đổ chuông (lỗi môi trường) — bỏ qua lần này")
+        # Chẩn đoán (không in số gọi): trả lời của console modem, danh sách cuộc gọi của modem giả, trạng thái modem/vai trò.
+        listing = adb("emu", "gsm", "list", check=False).replace("\r", " ").replace("\n", " ").strip()
+        reply, listing = (re.sub(r"\d{5,}", "<số>", t) for t in (reply, listing))  # không in số gọi
+        print(
+            "  cuộc gọi giả KHÔNG đổ chuông (lỗi môi trường) — bỏ qua lần này"
+            f" · console: {reply[:60]!r} · gsm list: {listing[:60]!r} · call_state={call_state()}"
+            f" · modem IN_SERVICE={radio_ready()} · vai trò do Lính gác giữ={role_held()}"
+        )
     return rang
 
 

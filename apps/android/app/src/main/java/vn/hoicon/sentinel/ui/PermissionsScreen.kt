@@ -1,5 +1,6 @@
 package vn.hoicon.sentinel.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import vn.hoicon.sentinel.R
 import vn.hoicon.sentinel.data.consent.ConsentLedger
 import vn.hoicon.sentinel.sensing.SensorPermission
+import vn.hoicon.sentinel.ui.theme.BrandNavy
 import vn.hoicon.sentinel.ui.theme.HoiConTheme
 
 /** First paragraph and the remaining ones (still joined by a blank line); the rest is "" for a one-paragraph text. */
@@ -124,6 +126,7 @@ private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () ->
             OutlinedButton(
                 onClick = onOpen,
                 shape = RoundedCornerShape(32.dp),
+                border = BorderStroke(2.dp, BrandNavy), // same navy edge as the other secondary buttons (reviewer: pale edge read as disabled)
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 64.dp)
@@ -177,6 +180,7 @@ fun PermissionStepScreen(
                 InfoCard(
                     title = row.title,
                     body = stringResource(if (permission in granted) R.string.perm_status_on else R.string.perm_status_off),
+                    bodyBold = true, // status = symbol + words, bold (rule 15)
                 )
             }
             if (consentPending) NoticePanel(text = stringResource(R.string.perm_consent_pending))
