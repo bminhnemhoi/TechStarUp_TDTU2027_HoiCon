@@ -57,9 +57,12 @@ async def family(require_db: None) -> Iterator[dict]:
                     channel="app",
                 )
             )
+        fam_id = fam.id
+    # Rút đồng ý ở giao dịch SAU: cùng giao dịch ⇒ cùng `recorded_at`, dòng "mới nhất" không xác định (test chập chờn).
+    async with get_sessionmaker().begin() as session:
         session.add(
             Consent(
-                family_id=fam.id,
+                family_id=fam_id,
                 member_id=ids[3],
                 purpose="guardian_alerts",
                 granted=False,
@@ -68,7 +71,6 @@ async def family(require_db: None) -> Iterator[dict]:
                 channel="app",
             )
         )
-        fam_id = fam.id
     yield {"family": fam_id, "members": ids}
     consent_gate.reset_cache()
     await purge_family(fam_id)

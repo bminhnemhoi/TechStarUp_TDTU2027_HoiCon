@@ -370,11 +370,13 @@ def guardian_protection_permission_off(alias: str) -> str:
     )
 
 
-def guardian_data_delete_notice(alias: str) -> str:
-    """Tin cho người giám hộ hạng 1 khi người được bảo vệ tự yêu cầu xóa dữ liệu từ app (spec 038 FR-004)."""
+def guardian_data_delete_notice(alias: str, when_label: str) -> str:
+    """Tin cho người giám hộ hạng 1 khi người được bảo vệ tự yêu cầu xóa dữ liệu từ app (spec 038 FR-004/FR-006).
+    `when_label`: giờ Việt Nam đã định dạng ("07:30 ngày 26 tháng 10"); tới lúc đó HỏiCon vẫn bảo vệ bình thường."""
     return _message(
-        f"{alias} vừa yêu cầu xóa dữ liệu của gia đình khỏi HỏiCon. Dữ liệu sẽ được xóa trong vòng 72 giờ, "
-        f"sau đó HỏiCon sẽ không còn nhắn tin cho anh/chị về {alias}. "
+        f"{alias} vừa yêu cầu xóa dữ liệu của gia đình khỏi HỏiCon. Dữ liệu sẽ được xóa lúc {when_label}. "
+        f"Sau đó HỏiCon sẽ không còn nhắn tin cho anh/chị về {alias}, còn tới lúc đó HỏiCon vẫn bảo vệ như thường. "
+        f"Nếu {alias} không muốn xóa, anh/chị nhắc {alias} bấm Hủy yêu cầu xóa trong ứng dụng HỏiCon. "
         f"Anh/chị có thể gọi hỏi thăm {alias} nếu cần.",
         False,
     )
