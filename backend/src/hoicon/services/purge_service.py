@@ -22,7 +22,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select, text, update
+from sqlalchemy import delete, func, or_, select, text, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from hoicon.db.ids import new_id
@@ -119,7 +119,8 @@ async def cancel_delete(sessions: async_sessionmaker, family_id: UUID, request_i
             return None
         if request.status == "cancelled":
             return request
-        if request.status != "pending" or request.execute_after <= datetime.now(UTC):
+        db_now = await session.scalar(select(func.now()))  # cùng đồng hồ với `run_at` của job purge
+        if request.status != "pending" or request.execute_after <= db_now:
             raise CancelRefusedError
         request.status = "cancelled"
         await session.execute(
@@ -139,11 +140,19 @@ async def purge_family(
 ) -> dict[str, int]:
     """Thi hành xóa; ⇒ số dòng theo loại. Lỗi ⇒ đánh yêu cầu `failed` (mã lỗi ngắn) rồi ném lại để job thử lại."""
     moment = now or datetime.now(UTC)
-    if request_id is not None:  # kiểm lại lúc chạy: yêu cầu đã hủy ⇒ không xóa gì
-        async with sessions() as session:
-            if await session.scalar(select(DataRequest.status).where(DataRequest.id == request_id)) == "cancelled":
+    if request_id is not None:  # kiểm lại lúc chạy VÀ chốt yêu cầu dưới cùng khóa với `cancel_delete`
+        async with sessions.begin() as session:
+            await session.execute(text("select pg_advisory_xact_lock(hashtext(:k))"), {"k": f"purge:{family_id}"})
+            current = await session.get(DataRequest, request_id, populate_existing=True)
+            if current is not None and current.status == "cancelled":
                 logger.info("purge: yêu cầu %s đã hủy, bỏ qua", request_id)
                 return {"cancelled": 1}
+            if current is not None:  # chốt: từ đây hủy bị từ chối (kể cả khi job được nhận sớm hơn `execute_after`)
+                await session.execute(
+                    update(DataRequest)
+                    .where(DataRequest.id == request_id, DataRequest.execute_after > func.now())
+                    .values(execute_after=func.now())
+                )
     try:
         report = await _purge(sessions, delete_thread, family_id, moment)
     except Exception as exc:
@@ -151,7 +160,7 @@ async def purge_family(
             async with sessions.begin() as session:
                 await session.execute(
                     update(DataRequest)
-                    .where(DataRequest.id == request_id, DataRequest.status != "done")
+                    .where(DataRequest.id == request_id, DataRequest.status.not_in(("done", "cancelled")))
                     .values(status="failed", error_code=type(exc).__name__[:32], completed_at=None)
                 )
         raise
@@ -159,7 +168,7 @@ async def purge_family(
         async with sessions.begin() as session:
             await session.execute(
                 update(DataRequest)
-                .where(DataRequest.id == request_id)
+                .where(DataRequest.id == request_id, DataRequest.status != "cancelled")
                 .values(status="done", error_code=None, completed_at=moment)
             )
     logger.info("purge: xong, %s", ", ".join(f"{k}={v}" for k, v in report.items()))

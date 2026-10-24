@@ -109,7 +109,7 @@ async def request_deletion(
             "protected_member_id": str(claims.member_id),
             "job_key": None,  # đặt theo id yêu cầu ở `purge_service`
             "text": texts.guardian_data_delete_notice(alias, _when_label(due)),
-            "urgent": True,
+            "urgent": False,  # không ăn hạn mức dành cho cảnh báo lừa đảo thật
             "is_demo": is_demo,
             "is_drill": False,
         }

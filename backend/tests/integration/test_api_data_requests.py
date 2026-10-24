@@ -161,7 +161,7 @@ async def test_the_guardian_is_told_before_the_purge_while_guardian_alerts_is_on
     assert p["protected_member_id"] == str(world.member_id)  # đồng ý được kiểm lại LÚC GỬI (037 FR-002)
     assert p["job_key"] and p["template"] == "data_delete_notice" and p["is_demo"] is True
     assert notice.run_at < purge.run_at  # tin đi ngay lúc yêu cầu, purge sau khoảng chờ
-    assert "72 giờ" in p["text"] and "hoảng" not in p["text"].lower()
+    assert "hoảng" not in p["text"].lower()
     assert "Hủy" in p["text"] and " ngày " in p["text"]  # ghi giờ xóa và cách hủy (FR-006)
 
 
@@ -309,3 +309,43 @@ async def test_the_purge_runs_once_the_waiting_period_is_over(world: World) -> N
     )
     assert report["devices_revoked"] >= 1
     assert (await requests_of(world))[0].status == "done"
+
+
+async def test_a_purge_that_has_started_can_no_longer_be_cancelled_even_if_it_started_early(world: World) -> None:
+    """Rà soát lượt 11 Medium #1: job nhận sớm hơn `execute_after` (lệch đồng hồ) không để hủy chen vào lúc purge chạy —
+    purge "chốt" yêu cầu (execute_after ≤ bây giờ) trước khi làm gì, nên hủy sau đó bị từ chối."""
+    import asyncio
+
+    created = (await post(world)).json()
+    request_id = UUID(created["request_id"])
+    started, release = asyncio.Event(), asyncio.Event()
+    original = purge_service._purge
+
+    async def slow_purge(*args: Any, **kwargs: Any) -> dict[str, int]:
+        started.set()
+        await release.wait()
+        return await original(*args, **kwargs)
+
+    async def no_thread(_: str) -> None:
+        return None
+
+    purge_service._purge = slow_purge  # type: ignore[assignment]
+    try:
+        task = asyncio.create_task(
+            purge_service.purge_family(get_sessionmaker(), no_thread, world.family_id, request_id=request_id)
+        )
+        await asyncio.wait_for(started.wait(), 5)
+        with pytest.raises(purge_service.CancelRefusedError):
+            await purge_service.cancel_delete(get_sessionmaker(), world.family_id, request_id)
+        release.set()
+        await task
+    finally:
+        purge_service._purge = original  # type: ignore[assignment]
+    assert (await requests_of(world))[0].status == "done"  # không bị ghi đè thành cancelled hay ngược lại
+
+
+async def test_the_notice_is_not_urgent_and_does_not_promise_a_second_deadline(world: World) -> None:
+    """Rà soát lượt 11 Low #3/#4: tin không ăn hạn mức dành cho cảnh báo lừa đảo thật; chỉ nêu giờ xóa cụ thể."""
+    await post(world)
+    (notice,) = await jobs_of("notify_guardian", world)
+    assert notice.payload["urgent"] is False and "72 giờ" not in notice.payload["text"]
