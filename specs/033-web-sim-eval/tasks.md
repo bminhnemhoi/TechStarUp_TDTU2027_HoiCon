@@ -107,13 +107,13 @@
 
 ## Rà soát & nghiệm thu
 
-- [ ] T017 [AB] [FR-013] `ux-elder-reviewer` trên ảnh + câu chữ cột "điện thoại của bác" và nhãn "MÔ PHỎNG";
+- [x] T017 [AB] [FR-013] `ux-elder-reviewer` trên ảnh + câu chữ cột "điện thoại của bác" và nhãn "MÔ PHỎNG";
   `security-privacy-reviewer` trên `routers/sim.py`, `sim_service.py`, cờ `sim` ở kênh Zalo, cổng. Sửa mọi Chặn/Critical/High.
   · Verify: báo cáo hai reviewer trong `evidence.md`, không còn mục chặn chưa xử lý
 - [ ] T018 [AB] [FR-014] `docs/setup/SIM.md` (bật cổng trên máy dev, seed gia đình demo, sinh liên kết đăng nhập, chọn replay),
   `specs/033-web-sim-eval/quickstart.md` (kịch bản quay video 1280×720), `docs/DESIGN-SYSTEM.md` (3 trang web).
   · Verify: làm theo `docs/setup/SIM.md` từ DB trống tới `/sim` chạy được (ghi lệnh + kết quả vào evidence)
-- [ ] T019 [AB] [FR-001..FR-014] Bộ kiểm cuối: `$PYTEST`; `ruff check` + `ruff format --check`; `$WEB typecheck lint build e2e`;
+- [x] T019 [AB] [FR-001..FR-014] Bộ kiểm cuối: `$PYTEST`; `ruff check` + `ruff format --check`; `$WEB typecheck lint build e2e`;
   `hoicon-eval --suite smoke --compare baseline` (đường events đã tách hàm); gitleaks **từng thư mục** `backend/src`,
   `backend/tests`, `apps/web/src`, `apps/web/e2e`, `docs/schemas`, `specs/033-web-sim-eval`; `python3 scripts/check-spec-trace.py`.
   Điền `evidence.md`; ROADMAP `P2-19` ◐ (☑ khi SC-007 có video hoặc `/eval` được ✂ có ghi chú).
@@ -145,6 +145,6 @@ Hợp đồng đã có (trường tùy chọn): `sim_scenarios.v1.title_vi`, `ru
 - [x] T023 [B-api] [D9] Dọn thiết bị demo `sim:` của lượt đã kết thúc > 24 giờ (trong job `retention` có sẵn của 034; không xóa sự cố
   — hạn lưu sự cố giữ nguyên). Test đồng hồ giả: 23 giờ ⇒ giữ, 25 giờ ⇒ xóa, thiết bị không nhãn `sim:` ⇒ không đụng.
   · Verify: `$PYTEST tests/integration/test_sim_cleanup.py -q`
-- [ ] T024 [AB] [FR-015] Cập nhật bảng SC của `evidence.md` (SC-001…SC-006 đang ghi "CHƯA ĐO" dù T013/T014 đã đạt — điền số từ các
+- [x] T024 [AB] [FR-015] Cập nhật bảng SC của `evidence.md` (SC-001…SC-006 đang ghi "CHƯA ĐO" dù T013/T014 đã đạt — điền số từ các
   lượt pytest/Playwright đã chạy, ghi rõ e2e dùng fixture) + SC-008; `ux-elder-reviewer` đọc lại ảnh mới. Làm trong T019.
   · Verify: `python3 scripts/check-spec-trace.py`

@@ -101,7 +101,7 @@
 - [x] T015 [AB] [FR-014] `security-privacy-reviewer` (lược đồ, content, ô tự điền, tin Zalo, hạn lưu) và `ux-elder-reviewer` (câu
   chữ trang + tin + văn bản đồng ý). Sửa mọi Chặn/Critical/High.
   · Verify: báo cáo trong `evidence.md`, không còn mục chặn chưa xử lý
-- [ ] T016 [AB] [FR-001..FR-014] Bộ kiểm cuối: `$PYTEST`; `ruff`; `$WEB typecheck lint build e2e`; eval smoke so baseline; gitleaks
+- [x] T016 [AB] [FR-001..FR-014] Bộ kiểm cuối: `$PYTEST`; `ruff`; `$WEB typecheck lint build e2e`; eval smoke so baseline; gitleaks
   **từng thư mục** `backend/src`, `backend/tests`, `apps/web/src`, `docs/schemas`, `docs/legal`, `data/case_file`,
   `specs/031-case-file`; `check-spec-trace`. Điền `evidence.md`; ROADMAP `P2-16` ◐ (☑ khi SC-007 có người thật hoặc Minh chấp nhận).
   · Verify: mọi lệnh xanh; check-spec-trace 0 lỗi

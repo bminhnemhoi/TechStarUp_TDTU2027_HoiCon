@@ -60,7 +60,7 @@
 
 ## Hoàn tất
 
-- [ ] T015 [B] Bộ kiểm đầy đủ (`$PYTEST`, ruff, eval smoke/full, spec-trace, gitleaks từng thư mục, `alembic heads` = 1, `$WEB typecheck` + e2e) và điền `evidence.md` (SC-001…SC-006; SC nào chưa đo ghi rõ lý do).
+- [x] T015 [B] Bộ kiểm đầy đủ (`$PYTEST`, ruff, eval smoke/full, spec-trace, gitleaks từng thư mục, `alembic heads` = 1, `$WEB typecheck` + e2e) và điền `evidence.md` (SC-001…SC-006; SC nào chưa đo ghi rõ lý do).
   · Verify: lệnh thoát 0; `python3 scripts/check-spec-trace.py`
 
 ## Đối soát kiến trúc sư 24/10/2026

@@ -210,7 +210,8 @@ async def test_repeatable_replies_are_not_urgent_so_a_guardian_cannot_burn_the_i
     from hoicon.channels.updates import QUIET_TEMPLATES, _reply
 
     world = zalo_world
-    assert {"detail_pending", "detail_resend", "incident_closed", "pairing_already"} <= QUIET_TEMPLATES
+    quiet = {"detail_pending", "detail_resend", "incident_closed", "pairing_already", "ack_digest_on", "ack_digest_off"}
+    assert quiet <= QUIET_TEMPLATES
     member = await world.add_guardian(1)
     async with get_sessionmaker().begin() as session:
         for index in range(19):  # 95% của hạn mức test (20)

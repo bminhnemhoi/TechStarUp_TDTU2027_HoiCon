@@ -55,6 +55,21 @@ test("lượt mô phỏng có băng MÔ PHỎNG, lượt thật không có (FR-0
   await page.goto(`/trace/${RUN_ID}`);
   await expect(page.getByTestId("sim-banner")).toContainText("MÔ PHỎNG");
   await expect(page.getByTestId("sim-banner")).toHaveClass(/border-sim-accent/);
+  mkdirSync(EVIDENCE_DIR, { recursive: true });
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, "trace-sim-banner-1440.png"), fullPage: true });
+});
+
+test("390 px: sơ đồ không bị cắt mép trái, cuộn ngang được (rà soát UX 033)", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockApi(page);
+  await page.goto(`/trace/${RUN_ID}`);
+  await expect(page.locator(".react-flow__node:visible").first()).toBeVisible({ timeout: XYFLOW_LOAD_MS });
+  const clipped = await page.evaluate(() => {
+    const box = document.querySelector("[data-testid='trace-canvas']")!.getBoundingClientRect();
+    const left = Math.min(...[...document.querySelectorAll(".react-flow__node")].map((n) => n.getBoundingClientRect().left));
+    return left < box.left - 1;
+  });
+  expect(clipped).toBe(false);
 });
 
 test("lượt của gia đình khác: 'Không tìm thấy'", async ({ page }) => {

@@ -230,7 +230,6 @@ export default function SimPage() {
             {scenarios.map((s) => (
               <option key={s.id} value={s.id} title={s.id}>
                 {s.title_vi}
-                {s.draft ? " (kịch bản nháp)" : ""}
               </option>
             ))}
           </select>
@@ -249,11 +248,11 @@ export default function SimPage() {
           <fieldset className="flex flex-wrap gap-4">
             <legend className="text-body font-bold">Cách chạy trợ lý AI</legend>
             <label className="flex min-h-11 items-center gap-2 text-body">
-              <input type="radio" name="llm" checked={llm === "replay"} onChange={() => setLlm("replay")} className="size-6" />
+              <input type="radio" name="llm" checked={llm === "replay"} onChange={() => setLlm("replay")} className="size-6 shrink-0" />
               Phát lại bản đã ghi (luôn cho kết quả giống nhau)
             </label>
             <label className="flex min-h-11 items-center gap-2 text-body">
-              <input type="radio" name="llm" checked={llm === "live"} onChange={() => setLlm("live")} className="size-6" />
+              <input type="radio" name="llm" checked={llm === "live"} onChange={() => setLlm("live")} className="size-6 shrink-0" />
               Chạy thật với trợ lý AI (chưa cài chìa khóa kết nối thì dùng câu soạn sẵn)
             </label>
           </fieldset>
@@ -297,7 +296,7 @@ export default function SimPage() {
                   tabIndex={tab === t.id ? 0 : -1}
                   onKeyDown={(e) => onTabKey(e, t.id)}
                   onClick={() => setTab(t.id)}
-                  className={`min-h-11 min-w-0 flex-1 basis-40 break-words rounded-button border-2 border-brand-navy px-2 text-body font-bold ${tab === t.id ? "bg-brand-navy text-text-on-primary" : "bg-background text-foreground"}`}
+                  className={`min-h-16 min-w-0 flex-1 basis-40 break-words rounded-button border-2 border-brand-navy px-2 text-body font-bold ${tab === t.id ? "bg-brand-navy text-text-on-primary" : "bg-background text-foreground"}`}
                 >
                   {t.label}
                 </button>

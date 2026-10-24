@@ -55,6 +55,8 @@ QUIET_TEMPLATES = frozenset(
         "detail_pending",
         "detail_resend",
         "incident_closed",
+        "ack_digest_on",  # bật/tắt bản tin lặp lại được: không khẩn, im lặng sau QUIET_AFTER (rà soát 032 T012 #2)
+        "ack_digest_off",
     }
 )
 # Phần định danh/mã trong job `zalo_update` chỉ cần tới lúc xử lý xong; xóa khỏi payload sau khi thành công (FR-010).
@@ -177,7 +179,7 @@ async def _reply(
         template_id=template,
         text=text,
         chat_enc=payload["chat_enc"],
-        urgent=template.startswith("ack_")
+        urgent=(template.startswith("ack_") and not template.startswith("ack_digest"))
         or template == "login_link",  # liên kết đăng nhập không bị giữ khi gần hết hạn mức
         family_id=family_id,
         member_id=member.id if member else None,

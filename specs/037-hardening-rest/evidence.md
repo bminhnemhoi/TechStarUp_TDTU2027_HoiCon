@@ -61,3 +61,8 @@
   Low: **#10 ĐÃ SỬA** (`next.config.ts` thêm `privateHeaders` cho `/a/:path*`). Chưa sửa: #5 (thân `POST .../decision` sau rút — chờ Minh, §8 mục 14), #6 (`/v1/lookups` guardian chưa kiểm `web_readable`), #7 (`elder.py` chưa khóa theo `member_id`), #8 (`get_action_view_data` chưa kiểm scope), #9 (JWT người giám hộ 7 ngày, `DELETE /session` không thu hồi phía máy chủ) — chủ **Tiến**, hạn đề xuất 08/11/2026 (G1), ghi vào ROADMAP "Ghi chú".
   Ghi nhận thêm của reviewer: (a) `ops restore` chưa kiểm `REQUIRED_TRIGGERS` ở chế độ ALWAYS như `restore-check` (sửa nhỏ, chủ Tiến); (b) bản sao lưu cũ làm sống lại dữ liệu đã xóa nếu không phát lại `purge_family` sau khôi phục (nghi vấn quy trình; cần ghi vào `docs/setup/BACKUP.md`, chủ Opus/Tiến). Android (`apps/android`) ngoài phạm vi lượt này.
 - **Không còn Critical/High chưa xử lý.**
+
+## Wave 6 — T010/T016 bộ kiểm đầy đủ (làn B, 24/10/2026)
+
+- **ĐẠT**: pytest **2881 passed, 22 skipped, 1 xfailed** (API 18010 tắt); `ruff check` + `format --check` sạch; `hoicon-eval` smoke `--compare baseline` / full `--compare baseline-full` / injection: recall 100%, báo nhầm 0%, vi phạm 0, không lệch (Postgres tạm cổng 15434); `check-spec-trace` 25 spec 0 lỗi; `alembic heads` = `0012` (1 head); gitleaks từng thư mục sạch (`docs`, `docs/schemas`: 1 dương tính giả đã biết).
+- SC-001: `test_consent_manifest_enforcement.py` xanh · SC-002: test đếm lời gọi Zalo giả xanh, thêm đường "3" (T009 #1) · SC-003: ma trận IDOR xanh · SC-004: `test_privacy_report.py` xanh (có đột biến) · SC-005: 0 Critical/0 High, Medium có chủ+ngày (T009) · SC-006: BLOCKED (Firebase) — chưa đo.

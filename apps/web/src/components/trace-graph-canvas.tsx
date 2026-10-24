@@ -75,7 +75,9 @@ export default function TraceGraphCanvas({
     focusable: false,
   }));
   return (
-    <div className="w-full overflow-hidden rounded-card border-2 border-surface-muted" data-testid="trace-canvas" style={{ height: (maxDepth(topology) + 1) * ROW_HEIGHT + 40 }}>
+    // Màn hẹp: sơ đồ rộng ~500 px (hai cột nút 224 px) nên cuộn ngang thay vì bị cắt mép trái (rà soát UX 033 T017). Canvas aria-hidden: bản chữ bên dưới là đường cho bàn phím/đọc màn hình.
+    <div className="w-full overflow-x-auto rounded-card border-2 border-surface-muted">
+    <div className="min-w-[500px]" data-testid="trace-canvas" style={{ height: (maxDepth(topology) + 1) * ROW_HEIGHT + 40 }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -98,6 +100,7 @@ export default function TraceGraphCanvas({
       >
         <Background />
       </ReactFlow>
+    </div>
     </div>
   );
 }

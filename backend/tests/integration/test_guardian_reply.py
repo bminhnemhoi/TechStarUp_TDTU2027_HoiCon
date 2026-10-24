@@ -238,7 +238,7 @@ async def test_digest_off_and_on_update_only_that_guardian_and_reply_with_an_ack
     assert status == "sent"
     assert await digest_flag(first.id) is False and await digest_flag(second.id) is True
     ack = zalo_world.client.sent[-1].text
-    assert ack.startswith(texts.AI_DISCLOSURE) and "vẫn nhận cảnh báo khi có chuyện" in ack
+    assert ack.startswith(texts.AI_DISCLOSURE) and "HỏiCon vẫn nhắn cho anh/chị ngay" in ack
     assert await handle_update(zalo_world.deps, None, zalo_world.update_payload(user1, kind="digest_on")) == "sent"
     assert await digest_flag(first.id) is True
     assert "Đã bật lại bản tin tuần" in zalo_world.client.sent[-1].text

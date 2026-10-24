@@ -41,7 +41,7 @@ test("ô chọn kịch bản hiện tên tiếng Việt, mã kịch bản chỉ 
   await mockApi(page, { sim: new SimMock() });
   await page.goto("/sim");
   const select = page.getByRole("combobox", { name: "Kịch bản" });
-  await expect(select.locator("option")).toHaveText(["Giả danh công an · ca 2 (kịch bản nháp)", "Cuộc gọi thật: cơ quan · ca 5"]);
+  await expect(select.locator("option")).toHaveText(["Giả danh công an · ca 2", "Cuộc gọi thật: cơ quan · ca 5"]);
   await expect(page.getByTestId("scenario-id")).toHaveText(`Mã kịch bản: ${SCAM_ID}`);
   await expect(page.getByTestId("sim-banner")).toHaveClass(/border-sim-accent/); // màu mô phỏng riêng, không dùng màu diễn tập
 });

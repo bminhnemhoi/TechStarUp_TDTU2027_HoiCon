@@ -40,3 +40,7 @@
   Axe bắt thêm lỗi thật ở console 390 px (`scrollable-region-focusable`) ⇒ vùng cuộn ngang của bảng và khối lệnh nay có `tabIndex=0` (+ `role=region`, nhãn).
 - **`ux-elder-reviewer` đọc lại**: 3 mục T016 hết; 0 Chặn, 0 Cao. Đã sửa thêm: nút "Tải bản ghi" hiện tên kịch bản (không mã thô), `summary` mục kỹ thuật `min-h-16`; ảnh bổ sung `console-390/768/1440.png`, `booth-recording-1440.png` (hai băng rôn cạnh nhau) ở `~/hoicon-evidence/050-booth-mode/`.
   **Còn lại (Trung bình/Thấp, chưa sửa)**: cột 2 "Mẹ chưa trả lời" vs cột 1 "Bác trả lời" (xưng hô — mẫu/`describeStep`, cùng nhóm đã ghi cần Opus); "Kết thúc: đã đóng sự cố" gây sợ/nội bộ (`lib/steps` dùng chung nhiều trang — đổi cần rà e2e các trang khác); nút khóa mờ `opacity-50` tương phản < 7:1 và câu lý do nằm cuối nhóm; `(ms)` viết tắt; ký hiệu ✓ ⏸ ⏹ ● ▶ ✕ chưa `aria-hidden`; "mức nguy cơ" vs "mức rủi ro" chưa thống nhất. Chủ: Tiến (xem ảnh thật tại gian), hạn đề xuất trước buổi chạy thử gian.
+
+## Wave 6 — T015 bộ kiểm cuối (làn B, 24/10/2026)
+
+- **T015 ĐẠT (trừ phần [A])**: pytest 2881 passed / 22 skipped / 1 xfailed; ruff sạch; `alembic heads` = 1 (0012); web typecheck + e2e 118 passed (3 test live/record bị bỏ qua, cần `HOICON_E2E_LIVE=1`; SC-001/002 ở bảng trên là số đo máy dev lượt trước, không đo lại); eval smoke 20 / full 110 không lệch baseline; gitleaks `apps/web`, `backend`, `specs/050-booth-mode` sạch; `check-spec-trace` 0 lỗi. SC nào chưa đo ở hội trường vẫn ghi "máy dev".
