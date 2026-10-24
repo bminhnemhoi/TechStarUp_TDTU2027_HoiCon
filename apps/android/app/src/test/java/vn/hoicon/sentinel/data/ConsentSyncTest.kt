@@ -28,7 +28,7 @@ class ConsentSyncTest {
     }
     private val storage = TokenStorage(FakePrefs()).also {
         it.save(DeviceSession("d", "f", "m", "Nhà", "access", "refresh"))
-        it.acceptedDisclosureVersion = ConsentLedger.VERSION
+        it.acceptedDisclosureVersion = ConsentLedger.DISCLOSURE_VERSION
     }
     private val sync = ConsentSync(storage, PairingApiClient("http://127.0.0.1:${server.address.port}", timeoutMs = 2_000))
     private val texts = mapOf(

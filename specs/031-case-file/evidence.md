@@ -38,3 +38,19 @@
 - **Reviewer (T015):** `security-privacy-reviewer` 0 Critical/0 High, 4 Medium đều SỬA (đồng ý `guardian_alerts` ở đồ thị + route; bộ lọc LLM yếu — NFC, mọi chữ số, tiền bằng chữ, cụm khẳng định; `run_autoclose` không còn dừng cả vòng vì một sự cố; lỗi nút `case_file` không treo thread), Low chưa sửa: `await_case_approval` mặc định `discard` khi giá trị lạ, duyệt đến trước interrupt thì resume bị bỏ, DB không ép máy trạng thái hồ sơ, `source` chưa qua `mask_text`, GET 500 nếu đổi enum `content`, chưa có giới hạn tần suất riêng cho POST. `ux-elder-reviewer` 2 Chặn + 4 Cao + Trung bình đều SỬA (bản in giữ câu "không tự gửi" + chân trang có ngày duyệt + mã hồ sơ, 3 bước ngay đầu, nút xác nhận mang tên hành động, "Bỏ hồ sơ" tách xa + nói không hoàn lại được, trạng thái đã nộp/đã bỏ có lối ra, nhãn AI gộp một khung, ô tự điền có cảnh báo mất khi đóng + `inputMode`, tiêu đề con "{alias} trả lời", câu mẫu tóm tắt sửa ngữ pháp, ngôi thứ ba trong dòng thời gian). Chưa sửa: nút nghe đọc to cho phần tóm tắt, `aria-busy` cho nút đang gửi.
 - **Hạ tầng:** migration `0011` đã áp lên DB dev (head = 0011; 032 sẽ là 0012). Chưa chạy lại `infra/postgres/roles.sql` trên DB dev: `hoicon_app` cần quyền `case_files` (SELECT/INSERT/UPDATE/DELETE) khi áp ở prod — **việc cho Tiến**: `roles.sql` cấp theo vòng lặp mọi bảng hiện có (dòng 41) nên chỉ cần chạy lại sau migration, như ghi chú trong tệp.
 - **Lượt chạy cuối:** pytest cuối: **2627 passed, 21 skipped**; trước đó 1 lần `test_guardian_incidents::test_list_matches_the_contract_and_carries_alias_and_run_flag` đỏ trong lượt toàn bộ nhưng xanh khi chạy riêng và ở các lượt sau (nghi chạy chung DB dev, chưa tái hiện); web e2e 95 passed + 1 skipped.
+
+## Wave 4 làn A (23/10/2026) — T014: đồng bộ chuỗi `guardian_alerts` `2026.10-v4` trên Android
+
+- `consent_texts.xml` mảng `consent_guardian_alerts` = đúng 8 dòng `BEGIN-TEXT` của `docs/legal/consent/guardian_alerts.vi.md`; `sha256` khớp `manifest.json` (`afd24915…`).
+- **Phiên bản theo từng mục đích.** Manifest giờ lẫn `2026.10-v4` (chỉ `guardian_alerts`) và `2026.10-v3` (chín mục còn lại), nên một hằng `ConsentLedger.VERSION` không còn đúng cho mọi dòng.
+  `ConsentLedger.versionOf(purpose)` trả v4 cho `guardian_alerts` và `VERSION` (v3) cho các mục khác; `DISCLOSURE_VERSION` (= v4) là phiên bản E3 lưu khi bấm "Đồng ý" và là cửa
+  `mayShareWithFamily`. Hệ quả: người đã đồng ý E3 bản v3 sẽ thấy E3 lại và chưa gửi gì cho gia đình tới khi đồng ý bản v4 (luật 7); `lookups` và `drills` **không** hỏi lại (chữ không đổi).
+  Dòng sổ gửi máy chủ mang `versionOf(purpose)`.
+- `ConsentManifestPinTest`: so version theo `versionOf`, ghim sha mới của `guardian_alerts`; test mới `guardianAlertsCarriesItsOwnNewerVersionSoE3IsAskedAgain`. Đột biến (đổi một dấu `.` thành `!` trong XML) ⇒ đỏ, đã khôi phục.
+  Trước sửa: `ConsentManifestPinTest` đỏ (version v3 ≠ manifest v4). Sau sửa: `:rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` xanh.
+- Chạy thật hc-api36 (backend 18001, DB `hoicon_android`): sổ máy chủ có dòng `guardian_alerts` `2026.10-v4` granted sau khi bấm "Đồng ý, tiếp tục" ở E3.
+- Ảnh E3 (thẻ guardian nằm trên E3, không phải trang quyền E4): `~/hoicon-evidence/031-case-file/w4/e3-{100,200}-*.png`.
+- **`ux-elder-reviewer`:** 0 Chặn, 0 Cao (đọc 7 trong 14 ảnh; không đọc hết các ảnh giữa 200%). Trung bình (chữ nằm trong `docs/legal`, **cần Opus/Minh**): thẻ dài (≈ 160 từ, ≈ 9 màn ở 200%) nên thêm dòng tóm tắt đầu thẻ;
+  khoảng cách tiêu đề–thân thẻ; câu "Muốn ngừng báo, bác nhờ người cài HỏiCon" khiến phụ thuộc; câu "Họ được báo nếu HỏiCon bị tắt" ngắn gây lo. Thấp: "Nghe lại" nằm trước thẻ guardian (chưa kiểm bản đọc to có đọc cả thẻ),
+  "Ở bước sau…" cứng, "Khi nghi bác bị lừa" nên dịu hơn.
+- Chưa làm: sửa bản đọc to `disclosure_speech` (câu về báo con qua Zalo vẫn đúng, không thêm ý mới). Tick T014.

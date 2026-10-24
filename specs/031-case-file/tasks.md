@@ -90,7 +90,7 @@
 
 ## Nhóm [A]
 
-- [ ] T014 [A] [FR-012] Sau T011: đồng bộ chuỗi `guardian_alerts` trên Android theo văn bản gộp 031 + 032 (một lần cho cả hai
+- [x] T014 [A] [FR-012] Sau T011: đồng bộ chuỗi `guardian_alerts` trên Android theo văn bản gộp 031 + 032 (một lần cho cả hai
   spec — 032 T010 không lặp lại trừ khi chữ đổi), `res/values/consent_texts.xml` + `ConsentLedger.VERSION` theo `manifest.json`
   (cùng cách của 011 T018, Wave 2); chụp E4 ở 100% + 200% trên `hc-api36`, `ux-elder-reviewer` (160 từ ở 200%).
   · Verify: `$GRADLE :app:testDebugUnitTest --tests '*ConsentManifestPinTest*' :app:testDebugUnitTest :app:lintDebug`

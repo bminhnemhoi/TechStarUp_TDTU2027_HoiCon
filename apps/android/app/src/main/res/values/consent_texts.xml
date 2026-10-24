@@ -40,12 +40,13 @@
     </string-array>
     <string-array name="consent_guardian_alerts">
         <item>Đây là trợ lý AI HỏiCon.</item>
-        <item>Báo cho con bác biết khi bác cần giúp</item>
-        <item>Khi thấy dấu hiệu đáng ngờ, HỏiCon gửi tin qua Zalo cho con bác hoặc người thân bác đã chọn, để họ gọi hỏi thăm bác.</item>
-        <item>Họ biết có cuộc gọi lạ, gọi tới hay gọi đi, lúc nào và bao lâu. Họ biết bác vừa mở loại ứng dụng nào và chọn gì trên màn nhắc. Số điện thoại chỉ hiện 3 số cuối.</item>
-        <item>Họ cũng xem lại được các lần nhắc này trên trang web của HỏiCon.</item>
-        <item>HỏiCon giữ thông tin về từng cuộc gọi lạ tối đa 90 ngày, ghi chép các lần nhắc dừng lại tối đa 12 tháng. HỏiCon không bán thông tin của bác.</item>
-        <item>Muốn ngừng báo cho con bác, bác nhờ người đã hướng dẫn bác cài HỏiCon. HỏiCon vẫn nhắc bác dừng lại, chỉ là không báo con bác nữa. Bác chưa đồng ý cũng không sao.</item>
+        <item>Báo cho con bác biết khi bác cần giúp.</item>
+        <item>Khi thấy dấu hiệu lạ, HỏiCon nhắn Zalo cho con hoặc người thân bác đã chọn, để họ gọi hỏi thăm.</item>
+        <item>Họ biết có cuộc gọi lạ (lúc nào, bao lâu), bác mở loại ứng dụng nào, chọn gì trên màn nhắc. Số điện thoại chỉ hiện 3 số cuối.</item>
+        <item>Họ xem lại các lần nhắc trên web, và nhận tóm tắt mỗi tuần. Họ được báo nếu HỏiCon bị tắt.</item>
+        <item>Khi nghi bác bị lừa, HỏiCon soạn sẵn tờ ghi sự việc để bác trình báo. HỏiCon không tự gửi cho cơ quan nào.</item>
+        <item>Cuộc gọi lạ giữ tối đa 90 ngày, các lần nhắc tối đa 12 tháng. HỏiCon không bán thông tin của bác.</item>
+        <item>Muốn ngừng báo, bác nhờ người cài HỏiCon cho bác. HỏiCon vẫn nhắc bác dừng lại, chỉ không báo con nữa. Bác chưa đồng ý cũng không sao.</item>
     </string-array>
     <string-array name="consent_llm_processing">
         <item>Đây là trợ lý AI HỏiCon.</item>

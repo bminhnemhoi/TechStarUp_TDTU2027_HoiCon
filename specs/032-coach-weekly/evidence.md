@@ -32,3 +32,26 @@ của task không nêu gì khác. Chưa đo, không tick T011; việc cho một 
   6. Hướng dẫn mẹo `tips.vi.yaml` có tệp (`approved: false`) và test hai chế độ; T015 (Minh duyệt) BLOCKED.
 - **Chưa làm / ngoài quyền:** `ux-elder-reviewer` cho 5 mẫu tin và `security-privacy-reviewer` cho 032 (T012 không nằm trong phạm vi lượt này); dòng ROADMAP "Ghi chú" về trace của lượt `coach` (cấm sửa ROADMAP) — **việc cho Tiến/Opus**; chưa có route web cho người giám hộ xem trace lượt `coach`.
 - **Rủi ro đã biết:** tin mất bảo vệ phụ thuộc heartbeat 15 phút; cho tới khi T011 (đo Doze/Standby trên AVD) có số, ngưỡng 24 giờ chưa được kiểm chứng.
+
+## Wave 4 làn A (23/10/2026) — T011: bộ đo heartbeat ĐANG CHẠY NỀN (chưa có số đo, KHÔNG tick)
+
+**Bắt đầu 23/10/2026 00:42 (+07)** = 22/10 17:42 UTC, trên `hc-api36` (headless) + backend dev cổng 18001, DB `hoicon_android`, thiết bị đã ghép đôi và đã đồng ý E3 bản `2026.10-v4`
+(`guardian_alerts` v4 trong sổ), quyền lõi đã cấp (`protected`). Máy ảo ≠ máy thật.
+
+Trình điều khiển `heartbeat-gap/driver.py` (**ngoài repo**: `~/hoicon-evidence/032-coach-weekly/heartbeat-gap/`), chạy tiếp được nếu bị ngắt (`state.json`), tự bật lại API 18001 nếu tắt. Năm điều kiện nối tiếp, tổng 10 giờ dự kiến (**dự kiến xong ≈ 10:45 +07 cùng ngày, 03:42 UTC**):
+
+| # | Điều kiện | Cách áp dụng | Đo |
+|---|---|---|---|
+| a | bình thường | không can thiệp | 2 giờ |
+| b | Doze | `dumpsys deviceidle force-idle` (đặt lại mỗi 15 phút; `unforce` khi hết) | 2 giờ |
+| c | standby bucket `rare` | `am set-standby-bucket vn.hoicon.sentinel rare` (đặt lại mỗi 15 phút; trả `active` khi hết) | 4 giờ |
+| d | khởi động lại máy | `adb reboot` | 1 giờ sau đó |
+| e | tiến trình bị kill | `am kill vn.hoicon.sentinel` | 1 giờ sau đó |
+
+d và e đo 1 giờ vì task không nêu thời lượng. Khoảng trống dài nhất = lớn nhất trong {đầu cửa sổ → khung đầu, giữa các khung liên tiếp, khung cuối → cuối cửa sổ}; bình thường ≈ 15 phút (WorkManager chu kỳ 15 phút).
+Chỉ đọc cột `device_id`, `slot` của `device_heartbeats` (không định danh, không nội dung).
+
+**Thu kết quả:** `cat ~/hoicon-evidence/032-coach-weekly/heartbeat-gap/results.json` (mỗi điều kiện: `so_khung_co_heartbeat`, `so_khung_ky_vong`, `khoang_trong_dai_nhat_phut`, cờ `emulator_lost` nếu máy ảo mất kết nối)
+và `log.txt` (sự kiện: API/emulator tắt). Tiến độ: `cat state.json`. Điều kiện Verify: khoảng trống dài nhất mọi điều kiện < 24 giờ (1 440 phút); nếu không ⇒ đề xuất ngưỡng mới trong spec. **Không tick T011 tới khi results.json đủ 5 điều kiện.**
+Nếu phiên làm việc đóng: driver là tiến trình `setsid` độc lập, không phụ thuộc phiên; nếu máy chủ bị khởi động lại, chạy lại lệnh `driver.py <device_id>` (không mất `state.json`).
+Giới hạn đã biết: máy ảo không sạc/dùng pin thật nên Doze/standby không phản ánh Samsung/Xiaomi/Oppo; chỉ là trần trên của hành vi AOSP.

@@ -42,7 +42,7 @@ class ConsentLedgerTest {
     fun newlyGrantedPurposesAreAppendedOnce() {
         val first = ConsentLedger.changes(emptySet(), setOf("core_protection", "call_screening"), texts)
         assertEquals(listOf("call_screening", "core_protection"), first.map { it.purpose })
-        assertTrue(first.all { it.granted && it.channel == "app" && it.consentVersion == ConsentLedger.VERSION })
+        assertTrue(first.all { it.granted && it.channel == "app" && it.consentVersion == ConsentLedger.versionOf(it.purpose) })
         assertEquals(ConsentLedger.sha256Hex("call"), first.first().textSha256)
         // Nothing changed since the server last heard from us: nothing to send.
         val recorded = keys("core_protection", "call_screening")
@@ -56,9 +56,9 @@ class ConsentLedgerTest {
             .mapTo(mutableSetOf()) { ConsentLedger.key(it.purpose, all.getValue(it.purpose)) }
         val rows = ConsentLedger.changes(recorded, setOf("core_protection", "guardian_alerts", "lookups"), all)
         assertEquals(listOf("lookups"), rows.map { it.purpose })
-        assertEquals(ConsentLedger.VERSION, rows.single().consentVersion)
+        assertEquals(ConsentLedger.versionOf(rows.single().purpose), rows.single().consentVersion)
         // The new purpose never touches the gate that lets events leave the phone for the family.
-        assertTrue(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, recorded, all))
+        assertTrue(ConsentLedger.mayShareWithFamily(ConsentLedger.DISCLOSURE_VERSION, recorded, all))
     }
 
     @Test
@@ -85,14 +85,28 @@ class ConsentLedgerTest {
     fun nothingIsSharedUntilTheCurrentDisclosureIsAcceptedAndItsGrantIsOnTheLedger() {
         val words = mapOf("guardian_alerts" to "guardian words")
         val recorded = setOf(ConsentLedger.key("guardian_alerts", "guardian words"))
-        assertTrue(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, recorded, words))
+        assertTrue(ConsentLedger.mayShareWithFamily(ConsentLedger.DISCLOSURE_VERSION, recorded, words))
         // accepted but the server has not confirmed yet (offline / 5xx): still closed
-        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, emptySet(), words))
+        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.DISCLOSURE_VERSION, emptySet(), words))
         // an older version accepted (device upgraded, "Chưa đồng ý" on the new E3): closed
         assertFalse(ConsentLedger.mayShareWithFamily("2026.10-v1", recorded, words))
         assertFalse(ConsentLedger.mayShareWithFamily(null, recorded, words))
         // the words changed since the grant was recorded: closed until it is agreed again
-        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, recorded, mapOf("guardian_alerts" to "new words")))
-        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, recorded, emptyMap()))
+        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.DISCLOSURE_VERSION, recorded, mapOf("guardian_alerts" to "new words")))
+        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.DISCLOSURE_VERSION, recorded, emptyMap()))
+    }
+
+    @Test
+    fun guardianAlertsCarriesItsOwnNewerVersionSoE3IsAskedAgain() {
+        // Spec 031 + 032 reworded guardian_alerts (2026.10-v4); the other texts stay on v3 and nobody agrees to them twice.
+        assertEquals("2026.10-v4", ConsentLedger.versionOf("guardian_alerts"))
+        assertEquals(ConsentLedger.VERSION, ConsentLedger.versionOf("lookups"))
+        val words = mapOf("guardian_alerts" to "guardian")
+        val recorded = setOf(ConsentLedger.key("guardian_alerts", "guardian"))
+        assertTrue(ConsentLedger.mayShareWithFamily(ConsentLedger.DISCLOSURE_VERSION, recorded, words))
+        // Someone who accepted E3 under the v3 words must see E3 again before anything leaves the phone.
+        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.VERSION, recorded, words))
+        // A v3 row recorded earlier does not count for the v4 words.
+        assertFalse(ConsentLedger.mayShareWithFamily(ConsentLedger.DISCLOSURE_VERSION, setOf("guardian_alerts|2026.10-v3|" + ConsentLedger.sha256Hex("guardian")), words))
     }
 }
