@@ -90,3 +90,7 @@
 
 - **T019 ĐẠT**: `ops.backup restore` kiểm `REQUIRED_TRIGGERS` ở chế độ ALWAYS trên DB đích (hàm dùng chung `trigger_problems` với `restore-check`); thiếu ⇒ `BackupError` nêu tên trigger. Sau khôi phục, báo cáo có `deletions_since_backup` = id gia đình có `data_requests` `done` hoàn tất SAU `manifest.created_at` (đọc DB đang chạy; id không phải PII) và CLI in cảnh báo kèm lệnh `request-delete --family <id> --now`; không có ⇒ in dòng "không có yêu cầu xóa nào". Lệnh CLI chỉ in, không tự xóa (quyết định của con người).
   Test đỏ trước (3 đỏ) → `test_backup_restore.py` **39 passed** (Docker): `trigger_problems` (thiếu/không ALWAYS), `run_restore` trả `triggers_always` đủ + danh sách xóa, `deletions_since` tìm đúng theo thời điểm hoàn tất. Ruff sạch.
+
+## Lượt 7 — T020 (làn B, 24/10/2026)
+
+- **T020 ĐẠT**: `infra/compose.prod.yml` chuyển `HOICON_CONSENT_STRICT: ${HOICON_CONSENT_STRICT:-true}` vào backend (không đặt biến ⇒ `true`, đúng hành vi cũ vì ngoài dev mã đã bật mặc định); đặt `false` trong tệp biến prod ⇒ container nhận `false` (chú thích trong `env.prod.example` cập nhật cho đúng sự thật). Test đỏ trước (2 test mới ở `scripts/tests/test_deploy_vps.py::ComposeInvariants`) → `unittest test_deploy_vps` 33 OK; `pytest -k "compose or prod_config or production_compose"` 3 passed. Chưa có văn bản `approved` (011 T010) nên ở prod mọi lần CẤP đồng ý vẫn bị 422 cho tới khi Minh duyệt hoặc đặt `false` có chủ đích.

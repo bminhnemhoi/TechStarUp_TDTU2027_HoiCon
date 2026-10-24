@@ -84,7 +84,7 @@ Quyền làn B mở thêm cho lượt này: `docs/setup/**`, `docs/PRIVACY-DPIA.
   có sẵn; migration mới nếu cần — làn B sở hữu migration). Test: token đã đăng xuất ⇒ 401. · Verify: `$PYTEST tests/integration -q -k "guardian_session"`
 - [x] T019 [B] [FR-005] `ops restore` kiểm `REQUIRED_TRIGGERS` như `restore-check`; sau khôi phục thật in nhắc chạy lại `purge_family`
   cho các yêu cầu xóa sau thời điểm sao lưu (đọc bảng xóa có sẵn nếu có; không có thì chỉ in cảnh báo). · Verify: `$PYTEST tests/integration/test_backup_restore.py -q`
-- [ ] T020 [B] Medium #3: `infra/compose.prod.yml` chuyển `HOICON_CONSENT_STRICT` vào container (mặc định `true`, không đổi hành vi).
+- [x] T020 [B] Medium #3: `infra/compose.prod.yml` chuyển `HOICON_CONSENT_STRICT` vào container (mặc định `true`, không đổi hành vi).
   · Verify: `$PYTEST tests -q -k "compose or prod_config"`
 - [ ] T021 [B] [FR-009] Tài liệu: 037 T012 (`docs/PRIVACY-DPIA.md`: bảng `privacy_report`, độ trễ đệm đồng ý ≤ 60 s, chính sách link cũ D2),
   `docs/setup/BACKUP.md` (khóa con, `ops restore`, phát lại `purge_family`), 037 T015 (`docs/setup/STABILITY.md`), 033 T018 (`docs/setup/SIM.md`).

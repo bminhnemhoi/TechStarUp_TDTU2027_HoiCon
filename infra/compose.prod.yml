@@ -71,6 +71,9 @@ services:
       HOICON_ZALO_BOT_TOKEN: ${HOICON_ZALO_BOT_TOKEN:?Thiếu HOICON_ZALO_BOT_TOKEN}
       HOICON_ZALO_WEBHOOK_SECRET: ${HOICON_ZALO_WEBHOOK_SECRET:?Thiếu HOICON_ZALO_WEBHOOK_SECRET}
       HOICON_ZALO_BOT_ID: ${HOICON_ZALO_BOT_ID:-hoicon-dev}
+      # Ép văn bản đồng ý theo manifest (spec 037 FR-001): mặc định BẬT như khi không đặt biến. Chỉ đặt `false` trong
+      # tệp biến của prod khi Minh chưa duyệt văn bản (011 T010); xem chú thích trong tệp mẫu.
+      HOICON_CONSENT_STRICT: ${HOICON_CONSENT_STRICT:-true}
       # Tùy chọn: không đặt ⇒ chuỗi rỗng, mà mã coi là "không có" (LlmRouter.from_settings, candidate_hmacs dùng
       # phép thử đúng/sai; không có khóa Anthropic ⇒ rơi về mẫu soạn sẵn).
       HOICON_PHONE_PEPPER_2: ${HOICON_PHONE_PEPPER_2:-}

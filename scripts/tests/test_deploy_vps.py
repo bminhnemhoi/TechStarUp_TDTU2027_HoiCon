@@ -160,6 +160,23 @@ class ComposeInvariants(unittest.TestCase):
         api = {name for name, svc in self.services.items() if "api" in svc["networks"]}
         self.assertEqual(api, {"backend", "caddy"})
 
+    def test_consent_strict_reaches_the_container_and_defaults_on(self) -> None:
+        """Rà soát 037 T009 Medium #3: cờ trong env.prod.example phải thật sự có tác dụng; mặc định `true`."""
+        self.assertEqual(self.services["backend"]["environment"].get("HOICON_CONSENT_STRICT"), "true")
+
+    def test_consent_strict_can_be_switched_off_from_the_env_file(self) -> None:
+        cfg = {**good_config(), "HOICON_CONSENT_STRICT": "false"}
+        with tempfile.NamedTemporaryFile("w", suffix=".cfg") as tmp:
+            tmp.write("".join(f"{k}={v}\n" for k, v in cfg.items()))
+            tmp.flush()
+            out = subprocess.run(  # noqa: S603
+                ["docker", "compose", "-f", str(COMPOSE), "--env-file", tmp.name, "config", "--format", "json"],  # noqa: S607
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        self.assertEqual(json.loads(out.stdout)["services"]["backend"]["environment"]["HOICON_CONSENT_STRICT"], "false")
+
     def test_provider_keys_the_runtime_does_not_use_stay_out_of_the_container(self) -> None:
         env = self.services["backend"]["environment"]
         self.assertFalse([k for k in env if "GEMINI" in k])  # review 012 L-3: router thật chưa dùng
