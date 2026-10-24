@@ -140,7 +140,8 @@ async def stream_run(
 
     try:
         slot = trace_service.acquire_slot(
-            *trace_service.slot_keys(claims.member_id, claims.family_id, jti=claims.jti, guest=claims.guest)
+            *trace_service.slot_keys(claims.member_id, claims.family_id, jti=claims.jti, guest=claims.guest),
+            family_limit=trace_service.MAX_GUEST_STREAMS if claims.guest else trace_service.MAX_STREAMS_PER_FAMILY,
         )
     except StreamLimitError as exc:
         detail = {

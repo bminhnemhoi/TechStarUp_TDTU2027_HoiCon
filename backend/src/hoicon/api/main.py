@@ -127,7 +127,13 @@ def missing_keys() -> list[str]:
         missing.append("device_jwt_secret")
     if settings.sim_enabled and not settings.is_dev_env:  # mã gian trưng bày cần khóa riêng (spec 050 T017)
         booth_key = settings.booth_code_key
-        if booth_key is None or len(booth_key.get_secret_value()) < MIN_KEY_LEN:
+        if (
+            booth_key is None
+            or len(booth_key.get_secret_value()) < MIN_KEY_LEN
+            or (
+                signing is not None and booth_key.get_secret_value() == signing.get_secret_value()
+            )  # phải khác khóa JWT
+        ):
             missing.append("booth_code_key")
     return missing
 

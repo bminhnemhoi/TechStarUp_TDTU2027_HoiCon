@@ -39,6 +39,7 @@ PAGE = 100  # số bước tối đa mỗi nhịp
 RETRY_MS = 3000
 MAX_STREAMS = 20
 MAX_STREAMS_PER_MEMBER = 3
+MAX_GUEST_STREAMS = 8  # bể chung của mọi phiên khách gian (một gia đình demo)
 MAX_STREAMS_PER_FAMILY = 4  # tối đa 2 người giám hộ/nhà ⇒ không để vài gia đình hợp lại chiếm hết 20 chỗ
 BUSY_RETRY_AFTER_S = 5
 TERMINAL = ("done", "failed")
@@ -164,18 +165,21 @@ class StreamSlot:
 
 def slot_keys(member_id: UUID, family_id: UUID | None, *, jti: str | None, guest: bool) -> tuple[UUID, UUID | None]:
     """Khóa đếm luồng. Mọi khách gian dùng chung `member_id` của người giám hộ demo => mỗi PHIÊN khách (`jti`) có chỗ
-    riêng, không để một khách chiếm hết hạn mức của người trình bày hay của khách khác (spec 050 T017 #5)."""
+    riêng (không chiếm hạn mức của người trình bày hay của khách khác), nhưng MỌI khách chung một bể nhỏ
+    `MAX_GUEST_STREAMS` để không ai xin nhiều phiên rồi chiếm hết `MAX_STREAMS` của máy chủ (spec 050 T017 #5)."""
     if not guest or jti is None:
         return member_id, family_id
-    return uuid5(member_id, jti), (uuid5(family_id, jti) if family_id is not None else None)
+    return uuid5(member_id, jti), (uuid5(family_id, "booth-guests") if family_id is not None else None)
 
 
-def acquire_slot(member_id: UUID, family_id: UUID | None = None) -> StreamSlot:
+def acquire_slot(
+    member_id: UUID, family_id: UUID | None = None, *, family_limit: int = MAX_STREAMS_PER_FAMILY
+) -> StreamSlot:
     """Giữ một chỗ cho luồng mới (đồng bộ, không `await` ⇒ không đua giữa các coroutine)."""
     global _open_total
     if _open_by_member.get(member_id, 0) >= MAX_STREAMS_PER_MEMBER:
         raise StreamLimitError(429, BUSY_RETRY_AFTER_S, "member")
-    if family_id is not None and _open_by_family.get(family_id, 0) >= MAX_STREAMS_PER_FAMILY:
+    if family_id is not None and _open_by_family.get(family_id, 0) >= family_limit:
         raise StreamLimitError(429, BUSY_RETRY_AFTER_S, "family")
     if _open_total >= MAX_STREAMS:
         raise StreamLimitError(503, BUSY_RETRY_AFTER_S)

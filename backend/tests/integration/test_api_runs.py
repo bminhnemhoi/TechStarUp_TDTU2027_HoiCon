@@ -317,3 +317,22 @@ async def test_each_guest_session_has_its_own_stream_slots(
         async with get_sessionmaker().begin() as session:
             await session.execute(delete(BoothJoinCode).where(BoothJoinCode.id == code_id))
         get_settings.cache_clear()
+
+
+def test_guest_sessions_share_one_small_pool_so_they_cannot_exhaust_the_global_cap() -> None:
+    """Rà soát T017 High: nhiều phiên khách (jti khác nhau) không được chiếm hết MAX_STREAMS của cả máy chủ."""
+    member, family = new_id(), new_id()
+    held = []
+    try:
+        for _ in range(trace_service.MAX_GUEST_STREAMS):
+            keys = trace_service.slot_keys(member, family, jti=new_id().hex, guest=True)
+            held.append(trace_service.acquire_slot(*keys, family_limit=trace_service.MAX_GUEST_STREAMS))
+        extra = trace_service.slot_keys(member, family, jti=new_id().hex, guest=True)
+        with pytest.raises(trace_service.StreamLimitError):
+            trace_service.acquire_slot(*extra, family_limit=trace_service.MAX_GUEST_STREAMS)
+        assert trace_service.MAX_GUEST_STREAMS < trace_service.MAX_STREAMS
+        presenter = trace_service.acquire_slot(member, family)  # người trình bày không bị ảnh hưởng
+        held.append(presenter)
+    finally:
+        for slot in held:
+            slot.release()
