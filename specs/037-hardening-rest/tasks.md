@@ -82,7 +82,7 @@ Quyền làn B mở thêm cho lượt này: `docs/setup/**`, `docs/PRIVACY-DPIA.
   · Verify: `$PYTEST tests/integration/test_idor_matrix.py tests/integration/test_api_lookups.py -q` + test mới
 - [x] T018 [B] [FR-007] Low #9: `DELETE /v1/guardian/session` thu hồi phía máy chủ (danh sách `jti` thu hồi tới khi hết hạn, bảng hoặc cột
   có sẵn; migration mới nếu cần — làn B sở hữu migration). Test: token đã đăng xuất ⇒ 401. · Verify: `$PYTEST tests/integration -q -k "guardian_session"`
-- [ ] T019 [B] [FR-005] `ops restore` kiểm `REQUIRED_TRIGGERS` như `restore-check`; sau khôi phục thật in nhắc chạy lại `purge_family`
+- [x] T019 [B] [FR-005] `ops restore` kiểm `REQUIRED_TRIGGERS` như `restore-check`; sau khôi phục thật in nhắc chạy lại `purge_family`
   cho các yêu cầu xóa sau thời điểm sao lưu (đọc bảng xóa có sẵn nếu có; không có thì chỉ in cảnh báo). · Verify: `$PYTEST tests/integration/test_backup_restore.py -q`
 - [ ] T020 [B] Medium #3: `infra/compose.prod.yml` chuyển `HOICON_CONSENT_STRICT` vào container (mặc định `true`, không đổi hành vi).
   · Verify: `$PYTEST tests -q -k "compose or prod_config"`
