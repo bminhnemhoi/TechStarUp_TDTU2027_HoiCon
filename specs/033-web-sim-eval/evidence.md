@@ -51,3 +51,10 @@
 
 - **T021 ĐẠT**: `SCENARIO_TITLE_VI` (18 nhóm, đúng chữ FR-015) + `title_vi(case_id, category)` ở `sim_service`; `GET /v1/sim/scenarios` luôn gửi `title_vi`; `GET /v1/runs/{id}/steps` luôn gửi `is_sim` (join thiết bị của sự cố, nhãn `sim:`).
   Test đỏ trước (8 đỏ: thiếu `SCENARIO_TITLE_VI`, thiếu `title_vi`, thiếu `is_sim`) → xanh: `test_sim_titles.py` (mọi enum `category` của `scenario.v1.json` có nhãn; `fake_police_safe_account_002` ⇒ "Giả danh công an · ca 2"; nhóm lạ ⇒ KeyError), `test_api_sim.py`, `test_api_runs.py` (`is_sim` false/true), `tests/contract`: 340 passed. Client TS sinh lại, `pnpm typecheck` sạch, ruff sạch.
+
+## Wave 6 — T022 (làn B, 24/10/2026)
+
+- **T022 ĐẠT**: ô chọn kịch bản hiện `title_vi` (mã chỉ ở `title` của `<option>` và dòng "Mã kịch bản: …"); `SimBanner` dùng chung cho `/sim` và `/trace` (`/trace` hiện băng khi `is_sim`, `useRunStream` trả `isSim`); token `sim.*` (`#0A4A78`/`#EEF6FC`/`#1F76B5`, xanh dương, chữ trên trắng 9,28:1, trên nền sim 8,49:1, viền 4,86:1; cách màu hue của diễn tập và mọi mức rủi ro ≥ 30°, có test `SimHueTest`).
+  3 mục Thấp: chữ hoa đầu chi tiết `describeStep`, tab `/sim` đủ ←/→/Home/End (vòng tròn, `tabIndex` chỉ ở tab chọn), giờ tin Zalo mô phỏng lấy theo giờ bước tạo tin (`fast_alert`→`fast_alert`, `detail`→`intervention`; không khớp thì giữ `at` của tin).
+  Đỏ trước: 5 e2e đỏ trên bản build cũ (ô chọn, giờ tin, phím tab, chữ hoa, băng /trace) → sau `pnpm build`: `e2e sim trace a11y` **52 passed**; `gen-design-tokens.py --check` OK; `unittest discover scripts/tests` 114 OK (7 skipped); typecheck + lint sạch. Ảnh 390/768/1440 ở `~/hoicon-evidence/033-sim-trace/`.
+- **Lưu ý cho người tích hợp**: `gen-design-tokens.py` sinh lại `Tokens.kt` (thêm `Sim*`) của Android — kiểm Gradle khi gộp. Màu "Kịch bản nháp" đổi từ màu diễn tập sang `sim.*` (màu diễn tập chỉ cho diễn tập).

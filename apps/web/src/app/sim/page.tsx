@@ -10,6 +10,7 @@ import {
   GuardianShell,
   Icon,
   LINK_TOUCH,
+  SimBanner,
   useLoginRedirect,
 } from "@/components/guardian-ui";
 import { TraceView } from "@/components/trace-graph";
@@ -42,6 +43,11 @@ function speak(text: string) {
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 }
+
+// Tin Zalo mô phỏng ghi giờ theo đồng hồ DB, bước ghi giờ theo đồng hồ ứng dụng ⇒ hiện giờ của bước tạo ra tin để hai cột khớp nhau.
+const STEP_OF_TEMPLATE: Record<string, string> = { fast_alert: "fast_alert", detail: "intervention" };
+const messageTime = (m: { at: string; template: string }, steps: { node: string; at: string }[]) =>
+  steps.find((s) => s.node === STEP_OF_TEMPLATE[m.template])?.at ?? m.at;
 
 const timeOf = (iso: string) => new Date(iso).toLocaleTimeString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 
@@ -113,6 +119,21 @@ export default function SimPage() {
   }, [incidentId, redirectIfUnauthorized]);
 
   const { steps, status } = useRunStream(run?.run_id ?? null);
+
+  // Mẫu tab của WAI-ARIA: mũi tên (vòng tròn), Home, End; tab đang chọn là điểm dừng duy nhất của phím Tab.
+  function onTabKey(e: React.KeyboardEvent, current: Tab) {
+    const index = TABS.findIndex((t) => t.id === current);
+    const target =
+      e.key === "ArrowRight" ? (index + 1) % TABS.length
+      : e.key === "ArrowLeft" ? (index + TABS.length - 1) % TABS.length
+      : e.key === "Home" ? 0
+      : e.key === "End" ? TABS.length - 1
+      : -1;
+    if (target === -1) return;
+    e.preventDefault();
+    setTab(TABS[target].id);
+    document.getElementById(`tab-${TABS[target].id}`)?.focus();
+  }
 
   async function start() {
     setBusy(true);
@@ -207,17 +228,22 @@ export default function SimPage() {
             className="min-h-16 rounded-button border-2 border-brand-navy bg-background px-3 text-body"
           >
             {scenarios.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.id}
+              <option key={s.id} value={s.id} title={s.id}>
+                {s.title_vi}
                 {s.draft ? " (kịch bản nháp)" : ""}
               </option>
             ))}
           </select>
           {chosen && (
             <p className="text-body" data-testid="script">
-              {chosen.draft && <span className="mr-2 rounded-2xl border-2 border-drill-accent bg-drill-bg px-2 font-bold text-drill-fg">Kịch bản nháp</span>}
+              {chosen.draft && <span className="mr-2 rounded-2xl border-2 border-sim-accent bg-sim-bg px-2 font-bold text-sim-fg">Kịch bản nháp</span>}
               {chosen.is_benign && <span className="mr-2 font-bold">Cuộc gọi hợp lệ.</span>}
               {chosen.script_vi}
+            </p>
+          )}
+          {chosen && (
+            <p className="break-all text-body text-brand-navy" data-testid="scenario-id">
+              Mã kịch bản: {chosen.id}
             </p>
           )}
           <fieldset className="flex flex-wrap gap-4">
@@ -268,6 +294,8 @@ export default function SimPage() {
                   role="tab"
                   aria-selected={tab === t.id}
                   aria-controls={`panel-${t.id}`}
+                  tabIndex={tab === t.id ? 0 : -1}
+                  onKeyDown={(e) => onTabKey(e, t.id)}
                   onClick={() => setTab(t.id)}
                   className={`min-h-11 min-w-0 flex-1 basis-40 break-words rounded-button border-2 border-brand-navy px-2 text-body font-bold ${tab === t.id ? "bg-brand-navy text-text-on-primary" : "bg-background text-foreground"}`}
                 >
@@ -329,7 +357,7 @@ export default function SimPage() {
                   {run.guardian_messages.map((m, index) => (
                     <li key={`${m.at}-${index}`} className="rounded-card bg-surface-muted p-3 text-body">
                       <p>{m.text}</p>
-                      <p className="text-brand-navy">{timeOf(m.at)}</p>
+                      <p className="text-brand-navy">{timeOf(messageTime(m, steps))}</p>
                     </li>
                   ))}
                 </ol>
@@ -377,9 +405,7 @@ export default function SimPage() {
     <GuardianShell wide>
       <main className="flex flex-col gap-5">
         <h1 className="text-headline">Mô phỏng một tình huống</h1>
-        <p role="note" className="sticky top-0 z-10 rounded-card border-2 border-drill-accent bg-drill-bg p-4 text-body font-bold text-drill-fg" data-testid="sim-banner">
-          <Icon>ⓘ</Icon>MÔ PHỎNG — dữ liệu hư cấu, không có cuộc gọi hay tin Zalo thật
-        </p>
+        <SimBanner />
         {body}
         <Link href="/incidents" className={`${LINK_TOUCH} self-start`}>
           ← Về danh sách sự cố

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { use, useEffect } from "react";
-import { BUTTON_SECONDARY, ErrorBox, GuardianShell, Icon, LINK_TOUCH, useLoginRedirect } from "@/components/guardian-ui";
+import { BUTTON_SECONDARY, ErrorBox, GuardianShell, Icon, LINK_TOUCH, SimBanner, useLoginRedirect } from "@/components/guardian-ui";
 import { TraceView } from "@/components/trace-graph";
 import { ApiError } from "@/lib/client";
 import { useRunStream, type StreamStatus } from "@/lib/stream";
@@ -31,7 +31,7 @@ const STATUS_TEXT: Record<StreamStatus, string> = {
 
 export default function TracePage({ params }: { params: Promise<{ runId: string }> }) {
   const { runId } = use(params);
-  const { steps, status, retry } = useRunStream(runId);
+  const { steps, status, isSim, retry } = useRunStream(runId);
   const redirectIfUnauthorized = useLoginRedirect();
   useEffect(() => {
     if (status === "unauthorized") redirectIfUnauthorized(new ApiError(401, ""));
@@ -44,6 +44,7 @@ export default function TracePage({ params }: { params: Promise<{ runId: string 
           ← Về danh sách sự cố
         </Link>
         <h1 className="text-headline">Các bước của trợ lý AI</h1>
+        {isSim && <SimBanner />}
         <p className="rounded-card bg-surface-muted p-4 text-body">
           Đây là trợ lý AI HỏiCon. Các bước do máy tự ghi lại, không kèm số điện thoại hay nội dung cuộc gọi.
         </p>

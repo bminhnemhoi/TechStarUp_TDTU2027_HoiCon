@@ -134,7 +134,7 @@ Hợp đồng đã có (trường tùy chọn): `sim_scenarios.v1.title_vi`, `ru
   bị của sự cố có nhãn `sim:`). Test: mọi giá trị enum `category` của `scenario.v1.json` có nhãn; `fake_police_safe_account_002` ⇒
   "Giả danh công an · ca 2"; lượt sim ⇒ `is_sim: true`, lượt thường ⇒ `false`; phản hồi hợp lệ hợp đồng. Sinh lại client TS.
   · Verify: `$PYTEST tests/integration/test_api_sim.py tests/integration/test_api_runs.py tests/contract -q && bash scripts/gen-api-client.sh && $WEB typecheck`
-- [ ] T022 [B-web] [FR-015] Ô chọn kịch bản hiện `title_vi` (id chỉ còn ở `title`/chú thích nhỏ); `/trace` có băng "MÔ PHỎNG" khi
+- [x] T022 [B-web] [FR-015] Ô chọn kịch bản hiện `title_vi` (id chỉ còn ở `title`/chú thích nhỏ); `/trace` có băng "MÔ PHỎNG" khi
   `is_sim`; thêm token `sim.bg`/`sim.fg`/`sim.accent` vào `design-system/hoicon/tokens.json` (tệp chung của 010 — sinh cả
   `Tokens.kt`/`colors.xml` của Android: chạy `gen-design-tokens.py` sinh đủ mọi đích, không sửa tay tệp Android; nêu trong commit để
   người tích hợp kiểm Gradle khi gộp) (khác `drill.*`, cặp tương phản ≥ 7:1 có

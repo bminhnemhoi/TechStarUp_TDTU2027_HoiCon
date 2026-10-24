@@ -40,6 +40,19 @@ export function Icon({ children }: { children: string }) {
   return <span aria-hidden="true">{children} </span>; // biểu tượng không để trình đọc màn hình đọc tên emoji
 }
 
+/** Băng "MÔ PHỎNG" dính đầu trang của /sim và /trace của lượt mô phỏng (màu `sim.*`, khác màu diễn tập — luật 15). */
+export function SimBanner() {
+  return (
+    <p
+      role="note"
+      className="sticky top-0 z-10 rounded-card border-2 border-sim-accent bg-sim-bg p-4 text-body font-bold text-sim-fg"
+      data-testid="sim-banner"
+    >
+      <Icon>ⓘ</Icon>MÔ PHỎNG — dữ liệu hư cấu, không có cuộc gọi hay tin Zalo thật
+    </p>
+  );
+}
+
 export function RiskBadge({ level, isDrill, closed = false }: { level: string; isDrill: boolean; closed?: boolean }) {
   const known = levelOf(level) ?? "high";
   return (

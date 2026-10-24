@@ -126,6 +126,9 @@ class ContrastTest(unittest.TestCase):
             ("drill.fg", "surface.base", "text"),
             ("drill.fg", "drill.bg", "text"),
             ("drill.accent", "surface.base", "non_text"),
+            ("sim.fg", "surface.base", "text"),
+            ("sim.fg", "sim.bg", "text"),
+            ("sim.accent", "surface.base", "non_text"),
         }
         self.assertEqual(sorted(required - declared), [])
 
@@ -142,6 +145,20 @@ class DrillHueTest(unittest.TestCase):
         for level in ("low", "medium", "high", "critical"):
             gap = hue_gap(drill, resolve(data, f"risk.{level}.fg"))
             self.assertGreaterEqual(gap, HUE_GAP_MIN, f"drill gần màu rủi ro {level}: {gap:.0f}°")
+
+
+class SimHueTest(unittest.TestCase):
+    """Spec 033 FR-015: băng MÔ PHỎNG có màu riêng, tách khỏi diễn tập (luật 15) và khỏi các mức rủi ro."""
+
+    def test_sim_hue_differs_from_drill_and_every_risk_level(self) -> None:
+        data = load()
+        for part in ("fg", "accent"):
+            sim = resolve(data, f"sim.{part}")
+            gap = hue_gap(sim, resolve(data, f"drill.{part}"))
+            self.assertGreaterEqual(gap, HUE_GAP_MIN, f"sim.{part} gần màu diễn tập: {gap:.0f}°")
+            for level in ("low", "medium", "high", "critical"):
+                gap = hue_gap(sim, resolve(data, f"risk.{level}.{part}"))
+                self.assertGreaterEqual(gap, HUE_GAP_MIN, f"sim.{part} gần risk.{level}.{part}: {gap:.0f}°")
 
 
 class Rule15Test(unittest.TestCase):

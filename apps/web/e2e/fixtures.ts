@@ -80,8 +80,8 @@ const QUESTION = {
 const FAST = { at: "2026-12-20T09:00:05Z", template: "fast_alert", text: "Đây là trợ lý AI HỏiCon. Mẹ vừa nghe một số lạ rồi mở ứng dụng ngân hàng. Anh/chị gọi hỏi Mẹ ngay nhé." };
 const DETAIL = { at: "2026-12-20T09:00:09Z", template: "detail", text: "Đây là trợ lý AI HỏiCon. Mức nguy cơ: rất cao. Anh/chị gọi ngay cho Mẹ và giữ máy." };
 export const SIM_SCENARIO_LIST = [
-  { id: SCAM_ID, category: "fake_police", is_benign: false, injection: false, draft: true, script_vi: "Người gọi xưng công an (hư cấu) báo bác dính vụ án và yêu cầu chuyển tiền vào tài khoản an toàn." },
-  { id: BENIGN_ID, category: "benign_official", is_benign: true, injection: false, draft: false, script_vi: "Bác gọi hỏi thủ tục cư trú ở phường (hư cấu), không mở ứng dụng ngân hàng." },
+  { id: SCAM_ID, category: "fake_police", title_vi: "Giả danh công an · ca 2", is_benign: false, injection: false, draft: true, script_vi: "Người gọi xưng công an (hư cấu) báo bác dính vụ án và yêu cầu chuyển tiền vào tài khoản an toàn." },
+  { id: BENIGN_ID, category: "benign_official", title_vi: "Cuộc gọi thật: cơ quan · ca 5", is_benign: true, injection: false, draft: false, script_vi: "Bác gọi hỏi thủ tục cư trú ở phường (hư cấu), không mở ứng dụng ngân hàng." },
 ];
 
 /** Máy trạng thái của một lượt mô phỏng giả (hợp đồng sim_run.v1): bắt đầu → câu hỏi E8 → tin cho con → quyết định. */
@@ -177,7 +177,7 @@ export async function mockApi(page: Page, options: MockOptions = {}): Promise<Ca
     if (/^\/v1\/runs\/[^/]+\/steps$/.test(p)) {
       const r = options.steps?.() ?? {
         status: 200,
-        json: { run_id: RUN_ID, status: "running", is_drill: false, is_demo: true, steps: STEPS },
+        json: { run_id: RUN_ID, status: "running", is_drill: false, is_demo: true, is_sim: false, steps: STEPS },
       };
       return reply(route, r.status, r.json);
     }
