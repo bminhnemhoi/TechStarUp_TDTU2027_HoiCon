@@ -185,6 +185,24 @@ else
   note "Cổng BuildConfig.DEBUG phải bị R8 loại bỏ ở bản phát hành"
 fi
 
+# 4b. Hồ sơ khởi động viết tay còn khớp lớp thật (spec 012 T021, plan D13). AAB: mapping.txt của R8; APK: tên lớp chưa rút gọn.
+PROFILE_TXT="$ROOT/apps/android/app/src/main/baseline-prof.txt"
+PROFILE_SRC=()
+if [ "$KIND" = aab ] && [ -n "$PROGUARD_MAP" ]; then
+  unzip -p "$FILE" BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map >"$TMP/mapping.txt"
+  PROFILE_SRC=(--mapping "$TMP/mapping.txt")
+elif [ "$R8_OK" -eq 0 ]; then
+  PROFILE_SRC=(--classes "$TMP/classes.tsv")
+fi
+if [ "${#PROFILE_SRC[@]}" -eq 0 ]; then
+  manual "Hồ sơ khởi động: APK đã rút gọn, không có mapping.txt để đối chiếu — dùng AAB (có proguard.map)"
+elif PROFILE_OUT="$(python3 "$ROOT/scripts/check-baseline-profile.py" "$PROFILE_TXT" "${PROFILE_SRC[@]}" 2>&1)"; then
+  pass "Hồ sơ khởi động: $(printf '%s' "$PROFILE_OUT" | sed 's/^\[ĐẠT\] //')"
+else
+  fail "Hồ sơ khởi động: có mẫu trong baseline-prof.txt không khớp lớp nào (hồ sơ đã chết lặng lẽ)"
+  printf '%s\n' "$PROFILE_OUT" | while IFS= read -r line; do note "$line"; done
+fi
+
 # 5. Không cho phép cleartext (http://): cờ usesCleartextTraffic hoặc network-security-config cho phép.
 CLEARTEXT_WHY=()
 if grep -aq 'usesCleartextTraffic.*=true' "$MANIFEST"; then CLEARTEXT_WHY+=("android:usesCleartextTraffic=true"); fi
