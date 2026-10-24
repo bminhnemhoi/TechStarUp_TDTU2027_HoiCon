@@ -27,7 +27,7 @@ import vn.hoicon.sentinel.ui.theme.HoiConTheme
  * one main action + "Nghe lại".
  */
 @Composable
-fun WelcomeScreen(onStart: () -> Unit, onListen: () -> Unit, modifier: Modifier = Modifier) {
+fun WelcomeScreen(onStart: () -> Unit, onListen: () -> Unit, modifier: Modifier = Modifier, notice: String? = null) {
     OnboardingScaffold(
         modifier = modifier,
         actions = {
@@ -47,6 +47,7 @@ fun WelcomeScreen(onStart: () -> Unit, onListen: () -> Unit, modifier: Modifier 
                 modifier = Modifier.size(96.dp),
             )
         }
+        notice?.let { NoticePanel(text = it) }
         Text(
             text = stringResource(R.string.hello_ai_disclosure),
             style = MaterialTheme.typography.bodyLarge,

@@ -39,6 +39,9 @@ ACLI = str(SDK / "cmdline-tools" / "latest" / "bin" / f"android{EXE}")
 SENTINEL = os.environ.get("HC_SENTINEL_PACKAGE", "vn.hoicon.sentinel")  # đổi sang vn.hoicon.sentinel.demo để đo bản release/demo
 DEMOBANK = os.environ.get("HC_DEMOBANK_PACKAGE", "vn.hoicon.demobank")  # đổi để thử R5 bằng bản demobank mang tên gói điều khiển từ xa
 PAUSE_WAIT_S = 30
+# `call_state()==1` (đổ chuông ở telephony.registry) tới trước khi Telecom dựng xong cuộc gọi đến (~0,1–0,3 s). Nhấc máy ngay lúc đó thì
+# Telecom báo "Found no ringing call" và ghi cuộc gọi là MISSED, không qua bước sàng lọc ⇒ "Telecom không thấy cuộc gọi" (hc-api34 0/10, 25/10/2026).
+CALL_SETTLE_S = 1.5
 PHONES = json.loads((ROOT / "data" / "fixtures" / "phones.json").read_text(encoding="utf-8"))
 
 
@@ -300,6 +303,7 @@ def fake_police_once(prep: str, caller: str = "flagged_caller") -> dict[str, int
     prepare(prep)
     if not ring(number):
         return None
+    time.sleep(CALL_SETTLE_S)
     adb("emu", "gsm", "accept", number)
     wait_for(lambda: call_state() == 2, 15)
     time.sleep(2)
@@ -371,6 +375,7 @@ def call_state_once() -> dict[str, int]:
 
     wait_for(lambda: complete(1), 15, step_s=0.3)
     time.sleep(3)
+    time.sleep(CALL_SETTLE_S)
     adb("emu", "gsm", "accept", number)
     wait_for(lambda: complete(2), 15, step_s=0.3)
     time.sleep(3)
@@ -408,6 +413,7 @@ def bank_first_once() -> int | None:
     if not ring(number):
         return None
     time.sleep(2)
+    time.sleep(CALL_SETTLE_S)
     adb("emu", "gsm", "accept", number)
     wait_for(lambda: has_mark("pause_shown"), PAUSE_WAIT_S, step_s=0.3)
     time.sleep(0.5)
@@ -551,6 +557,7 @@ def benign_once(caller: str) -> bool | None:
     if not ring(number):
         clear_contacts()
         return None
+    time.sleep(CALL_SETTLE_S)
     adb("emu", "gsm", "accept", number)
     wait_for(lambda: call_state() == 2, 15)
     time.sleep(2)
@@ -612,6 +619,7 @@ def pause_release_once(prep: str) -> int | None:
     prepare(prep)
     if not ring(number):
         return None
+    time.sleep(CALL_SETTLE_S)
     adb("emu", "gsm", "accept", number)
     wait_for(lambda: call_state() == 2, 15)
     time.sleep(2)

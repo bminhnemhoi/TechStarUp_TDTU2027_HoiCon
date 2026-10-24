@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import vn.hoicon.sentinel.pause.Speaker
 import vn.hoicon.sentinel.sensing.SensorPermission
 import vn.hoicon.sentinel.sensing.SensorPermissions
@@ -42,7 +43,11 @@ class OnboardingActivity : ComponentActivity() {
                 when (model.step) {
                     OnboardingStep.WELCOME -> {
                         ReadAloud(OnboardingStep.WELCOME, R.array.welcome_speech)
-                        WelcomeScreen(onStart = model::start, onListen = { speak(R.array.welcome_speech) })
+                        WelcomeScreen(
+                            onStart = model::start,
+                            onListen = { speak(R.array.welcome_speech) },
+                            notice = if (intent.getBooleanExtra(EXTRA_PURGED, false)) stringResource(R.string.delete_done_welcome) else null,
+                        )
                     }
                     OnboardingStep.PAIRING -> {
                         BackHandler(onBack = model::backToWelcome)
@@ -108,5 +113,10 @@ class OnboardingActivity : ComponentActivity() {
     private fun finishOnboarding() {
         startActivity(Intent(this, MainActivity::class.java))
         finish()
+    }
+
+    companion object {
+        /** Set when the server purged the family's data after an E12 delete request: E1 says so. */
+        const val EXTRA_PURGED = "purged"
     }
 }

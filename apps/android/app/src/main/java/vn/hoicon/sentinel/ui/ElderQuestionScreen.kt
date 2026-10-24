@@ -22,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,16 +40,26 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import vn.hoicon.sentinel.data.remote.ElderQuestion
 import vn.hoicon.sentinel.ui.theme.HoiConTokens
 
+/** The answers E8 draws: [main] are the two solid buttons (at most two main actions per screen, CLAUDE.md rule 15), [quiet] the text button. */
+class ElderAnswerLayout(val main: List<String>, val quiet: String?)
+
+/** "yes" and "no" are the main buttons, "unsure" the quiet one; only what the screen knows how to draw is shown, in that fixed order whatever order the server sent. */
+fun elderAnswerLayout(answers: List<String>): ElderAnswerLayout = ElderAnswerLayout(
+    main = listOf("yes", "no").filter { it in answers },
+    quiet = "unsure".takeIf { it in answers },
+)
+
 /**
  * Màn hình E8: Câu hỏi nhanh cho người cao tuổi (spec 024, US-05, ADR-009).
  * - Chữ ≥ 20sp, tương phản ≥ 7:1 (chữ trắng chỉ trên BrandOrangeText/BrandNavy — trắng trên BrandOrange chỉ ~4,5:1).
- * - 3 nút trả lời + nút nghe lại, mọi vùng chạm ≥ 64dp ("Có", "Không", "Không rõ").
+ * - Hai nút đặc ("Có", "Không") và một nút chữ phụ ("Không rõ"), mọi vùng chạm ≥ 64dp; "Nghe lại" nằm trong nội dung.
  * - Câu công khai AI nằm ở đầu chính câu hỏi (máy chủ thêm, có test hợp đồng) nên TTS cũng đọc nó; nhãn diễn tập riêng.
  * - Đếm ngược 60 giây rồi tự đóng; nghe lại bằng TTS offline.
  */
@@ -61,6 +72,7 @@ fun ElderQuestionScreen(
     modifier: Modifier = Modifier,
     initialRemainingSeconds: Int = 60,
 ) {
+    val layout = remember(question.answers) { elderAnswerLayout(question.answers) }
     var remainingSeconds by remember { mutableIntStateOf(initialRemainingSeconds) }
 
     LaunchedEffect(key1 = question.incidentId) {
@@ -154,22 +166,22 @@ fun ElderQuestionScreen(
                 )
             }
 
-            // 3 nút bấm kích thước lớn (Có, Không, Không rõ)
+            // Hai nút đặc lớn (Có, Không) + nút chữ phụ (Không rõ)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp), // trembling hands: a neighbour is not 12 dp away
             ) {
                 // Nút CÓ
-                Button(
+                if ("yes" in layout.main) Button(
                     onClick = { onAnswerSelected("yes") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 68.dp)
                         .semantics {
                             role = Role.Button
-                            contentDescription = "Có, đồng ý với câu hỏi"
+                            contentDescription = "Trả lời Có"
                         },
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -185,14 +197,14 @@ fun ElderQuestionScreen(
                 }
 
                 // Nút KHÔNG
-                Button(
+                if ("no" in layout.main) Button(
                     onClick = { onAnswerSelected("no") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 68.dp)
                         .semantics {
                             role = Role.Button
-                            contentDescription = "Không, không đồng ý với câu hỏi"
+                            contentDescription = "Trả lời Không"
                         },
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -207,27 +219,26 @@ fun ElderQuestionScreen(
                     )
                 }
 
-                // Nút KHÔNG RÕ
-                OutlinedButton(
-                    onClick = { onAnswerSelected("unsure") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 64.dp)
-                        .semantics {
-                            role = Role.Button
-                            contentDescription = "Không rõ, không chắc chắn câu trả lời"
-                        },
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(2.dp, HoiConTokens.Colors.BrandNavy),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = HoiConTokens.Colors.BrandNavy,
-                    ),
-                ) {
-                    Text(
-                        text = "KHÔNG RÕ",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
+                // Nút KHÔNG RÕ: nút chữ phụ (không viền đặc, không nền) — luật 15: tối đa 2 hành động chính mỗi màn.
+                if (layout.quiet != null) {
+                    TextButton(
+                        onClick = { onAnswerSelected("unsure") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 64.dp)
+                            .semantics {
+                                role = Role.Button
+                                contentDescription = "Trả lời Không rõ"
+                            },
+                        colors = ButtonDefaults.textButtonColors(contentColor = HoiConTokens.Colors.BrandNavy),
+                    ) {
+                        Text(
+                            text = "Không rõ",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            textDecoration = TextDecoration.Underline,
+                        )
+                    }
                 }
             }
         }

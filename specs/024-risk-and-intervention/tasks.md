@@ -97,7 +97,7 @@ nguyên enum; thứ tự enum chính là thứ tự ghép). **Dừng** khi một
   `--suite injection --shared-db-ok` đều exit 0; reviewer 0 Chặn/Cao ghi vào `evidence.md` (SC-009).
 
 ## Lượt 10 (nhà điều phối 25/10/2026) — lỗi từ GAP-REPORT làn A (có chứng cứ trong evidence 024)
-- [ ] T022 [A] [FR-005] E8 đúng luật 15 (≤ 2 hành động chính): hai câu trả lời chính là nút đặc ≥ 64dp; lựa chọn thứ ba ("Không rõ"/tương đương theo
+- [x] T022 [A] [FR-005] E8 đúng luật 15 (≤ 2 hành động chính): hai câu trả lời chính là nút đặc ≥ 64dp; lựa chọn thứ ba ("Không rõ"/tương đương theo
   `elder_question.v1`) là nút chữ phụ; không đổi mã trả lời gửi máy chủ. Khi thiếu quyền "hiển thị trên ứng dụng khác" ⇒ thông báo ưu tiên cao (kênh có sẵn,
   không xin quyền mới — luật 3) mở E8 khi chạm. Test Compose + đơn vị đỏ trước; ảnh 100/200%; `ux-elder-reviewer` 0 Chặn/Cao.
   · Verify: `apps/android/gradlew -p apps/android :app:testDebugUnitTest :app:lintDebug`

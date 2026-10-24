@@ -44,3 +44,14 @@ class RoleHolderTest(unittest.TestCase):
         self.assertFalse(emu.holds_role("vn.hoicon.sentinel\n", "vn.hoicon.sentinel.demo"))
         self.assertTrue(emu.holds_role("com.x\nvn.hoicon.sentinel\n", "vn.hoicon.sentinel"))
         self.assertFalse(emu.holds_role("", "vn.hoicon.sentinel"))
+
+
+class AnswerAfterTelecomSettlesTest(unittest.TestCase):
+    def test_every_answer_waits_for_telecom_to_build_the_incoming_call(self) -> None:
+        # Nhấc máy ngay khi telephony.registry báo đổ chuông ⇒ Telecom ghi MISSED "Found no ringing call" (hc-api34, 25/10/2026).
+        self.assertGreaterEqual(emu.CALL_SETTLE_S, 1.0)
+        lines = (_ROOT / "scripts" / "emu-scenario.py").read_text(encoding="utf-8").splitlines()
+        answers = [i for i, line in enumerate(lines) if 'adb("emu", "gsm", "accept"' in line]
+        self.assertGreaterEqual(len(answers), 4)
+        for i in answers:
+            self.assertIn("CALL_SETTLE_S", lines[i - 1] + lines[i - 2], f"dòng {i + 1}: nhấc máy không chờ Telecom")

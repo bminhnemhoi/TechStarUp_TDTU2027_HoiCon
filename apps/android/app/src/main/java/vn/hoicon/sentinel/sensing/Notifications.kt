@@ -25,6 +25,7 @@ import vn.hoicon.sentinel.ui.theme.HoiConTokens
 object Notifications {
     const val ID_PROTECTING = 1
     private const val ID_PAUSE_FALLBACK = 2
+    private const val ID_ELDER_QUESTION = 4
     private const val ID_DRILL = 3
 
     // Channel importance can't be raised after creation: the LOW channel of the first spike build is replaced.
@@ -136,6 +137,26 @@ object Notifications {
             manager(context).notify(ID_PAUSE_FALLBACK, notification)
         } catch (e: SecurityException) {
             HcSpikeLog.w("fallback notification refused (POST_NOTIFICATIONS?)", e)
+        }
+    }
+
+    /** The AI's question for the person when E8 could not open by itself (no "display over other apps"): heads-up on the safe-pause channel; touching it opens E8. */
+    fun showElderQuestion(context: Context, open: Intent) {
+        ensureChannels(context)
+        val tap = PendingIntent.getActivity(context, 3, open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val notification = Notification.Builder(context, CHANNEL_PAUSE)
+            .setSmallIcon(R.drawable.ic_stat_shield)
+            .setContentTitle(context.getString(R.string.elder_question_title))
+            .setContentText(context.getString(R.string.elder_question_text))
+            .setSubText(context.getString(R.string.notif_ai_subtext))
+            .setCategory(Notification.CATEGORY_REMINDER)
+            .setContentIntent(tap)
+            .setAutoCancel(true)
+            .build()
+        try {
+            manager(context).notify(ID_ELDER_QUESTION, notification)
+        } catch (e: SecurityException) {
+            HcSpikeLog.w("question notification refused (POST_NOTIFICATIONS?)", e)
         }
     }
 
