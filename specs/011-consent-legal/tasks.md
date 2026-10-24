@@ -106,7 +106,7 @@ MASTER-PLAN §8 mục 12; không tăng phiên bản văn bản trước khi Minh
   (chuỗi đồng ý không đổi ⇒ sha vẫn khớp); ảnh + báo cáo reviewer trong `evidence.md` mục "Wave 4"
 
 ## Lượt 9 (nhà điều phối 24/10/2026)
-- [ ] T023 [A] [FR-011] Bố cục/nhãn (không đổi văn bản đồng ý): mục đã bật có nút phụ **"Mở cài đặt để tắt"** (quyền rút đồng ý, ≥ 64dp);
+- [x] T023 [A] [FR-011] Bố cục/nhãn (không đổi văn bản đồng ý): mục đã bật có nút phụ **"Mở cài đặt để tắt"** (quyền rút đồng ý, ≥ 64dp);
   nhãn trạng thái "✗ Chưa bật" ⇒ **"○ Chưa bật"** + `stateDescription`; ô tích "từ 18 tuổi" ở E10 nhận chạm cả hàng (đo ≥ 64dp). Test Compose đỏ trước;
   ảnh 100/200% + `ux-elder-reviewer`. · Verify: `apps/android/gradlew -p apps/android :app:testDebugUnitTest :app:lintDebug`
 - [ ] T024 [B] Low/Medium còn lại của rà soát T021 (evidence 011): #7 thống nhất `incident.is_demo` (thay `row.is_demo`) ở hồ sơ, #8 N+1 danh sách web,

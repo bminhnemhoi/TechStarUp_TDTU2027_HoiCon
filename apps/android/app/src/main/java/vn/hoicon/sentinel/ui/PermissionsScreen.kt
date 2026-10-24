@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -75,6 +76,7 @@ fun PermissionsScreen(
     onOpen: (SensorPermission) -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
+    onSwitchOff: (SensorPermission) -> Unit = {},
 ) {
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -93,7 +95,7 @@ fun PermissionsScreen(
             Text(text = stringResource(R.string.perm_screen_intro), style = MaterialTheme.typography.bodyMedium)
             for ((permission, row) in permissionRows()) {
                 HorizontalDivider()
-                PermissionItem(row = row, isGranted = permission in granted, onOpen = { onOpen(permission) })
+                PermissionItem(row = row, isGranted = permission in granted, onOpen = { onOpen(permission) }, onSwitchOff = { onSwitchOff(permission) })
             }
             if (onBack != null) {
                 HorizontalDivider()
@@ -104,7 +106,7 @@ fun PermissionsScreen(
 }
 
 @Composable
-private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () -> Unit) {
+private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () -> Unit, onSwitchOff: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = row.title,
@@ -114,10 +116,13 @@ private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () ->
         val (lead, rest) = splitLead(row.why)
         Text(text = lead, style = MaterialTheme.typography.bodyMedium)
         // Status is words with a symbol, same navy colour (brand green is only ~5:1 on white, below 7:1).
+        val stateWords = stringResource(if (isGranted) R.string.perm_state_on else R.string.perm_state_off)
         Text(
             text = stringResource(if (isGranted) R.string.perm_status_on else R.string.perm_status_off),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
+            // The mark is a character: TalkBack gets the state in words (stateDescription), not "dấu kiểm"/"hình tròn".
+            modifier = Modifier.semantics { stateDescription = stateWords },
         )
         // UX-9: an item already on needs no action — only its status remains. The button comes right after the first
         // paragraph so a reader at 200% reaches it before the three explanatory ones (reviewer, 22/10).
@@ -133,6 +138,21 @@ private fun PermissionItem(row: PermissionRow, isGranted: Boolean, onOpen: () ->
                     .semantics { contentDescription = a11yLabel },
             ) {
                 Text(text = stringResource(R.string.perm_open_settings), style = MaterialTheme.typography.labelLarge)
+            }
+        }
+        if (isGranted) {
+            // Withdrawing consent is as easy as giving it: a quiet secondary button to the page that switches the item off.
+            val offLabel = stringResource(R.string.perm_switch_off_for, row.title)
+            OutlinedButton(
+                onClick = onSwitchOff,
+                shape = RoundedCornerShape(32.dp),
+                border = BorderStroke(2.dp, BrandNavy),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 64.dp)
+                    .semantics { contentDescription = offLabel },
+            ) {
+                Text(text = stringResource(R.string.perm_switch_off), style = MaterialTheme.typography.labelLarge)
             }
         }
         if (rest.isNotEmpty()) Text(text = rest, style = MaterialTheme.typography.bodyMedium)

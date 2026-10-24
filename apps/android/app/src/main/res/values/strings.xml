@@ -14,7 +14,11 @@
     <!-- Màn quyền dành cho nhà phát triển (spike P1-S1), chưa phải màn E3 cho người cao tuổi. -->
     <string name="perm_screen_intro">Các mục dưới đây giúp HỏiCon nhận ra lúc có số lạ gọi rồi mở ứng dụng ngân hàng. Mục nào chưa bật, bác bấm để bật.</string>
     <string name="perm_status_on">✓ Đã bật</string>
-    <string name="perm_status_off">✗ Chưa bật</string>
+    <string name="perm_status_off">○ Chưa bật</string>
+    <string name="perm_state_on">Đã bật</string>
+    <string name="perm_state_off">Chưa bật</string>
+    <string name="perm_switch_off">Mở cài đặt để tắt</string>
+    <string name="perm_switch_off_for">Mở cài đặt để tắt mục %1$s</string>
     <string name="perm_open_settings">Mở cài đặt</string>
     <string name="perm_open_settings_for">Mở cài đặt cho mục %1$s</string>
     <string name="perm_notif_title">Thông báo</string>
