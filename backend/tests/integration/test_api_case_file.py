@@ -1,6 +1,7 @@
 """Spec 031 FR-007 (SC-002, SC-004): `GET/POST /v1/guardian/incidents/{id}/case-file`."""
 
 import json
+import re
 from collections.abc import AsyncIterator
 from pathlib import Path
 from types import SimpleNamespace
@@ -78,6 +79,38 @@ async def test_get_returns_the_draft_in_the_contract_and_without_raw_values(worl
     assert res.json()["status"] == "draft" and res.headers["cache-control"] == "no-store"
     for raw in RAW_VALUES:
         assert raw not in res.text, raw
+
+
+async def test_guidance_is_always_sent_and_has_no_steps_while_unapproved(world: SimpleNamespace) -> None:
+    res = await call("GET", url(world.mine), token=world.mine.token)
+    body = res.json()
+    CASE_FILE.validate(body)
+    assert body["guidance"]["approved"] is False and body["guidance"]["steps"] == []
+    assert len(body["guidance"]["fallback_vi"]) >= 10
+    assert not re.search(r"\d{4,}", json.dumps(body["guidance"], ensure_ascii=False))  # không số đường dây chưa kiểm
+
+
+async def test_an_approved_guidance_file_shows_every_step_in_order_and_validates(
+    world: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    file = tmp_path / "guidance.yaml"
+    file.write_text(
+        "approved: true\nfallback_vi: Anh/chị liên hệ công an nơi cư trú.\nsteps:\n"
+        "  - {id: contact_bank, text_vi: Gọi tổng đài ghi sau thẻ của ngân hàng., source_ref: null}\n"
+        "  - {id: contact_police, text_vi: Mang hồ sơ tới công an phường hoặc xã., source_ref: Nguồn thử}\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(case_file_service, "GUIDANCE_FILE", file)
+    case_file_service.load_guidance.cache_clear()
+    try:
+        body = (await call("GET", url(world.mine), token=world.mine.token)).json()
+        CASE_FILE.validate(body)
+        assert body["guidance"]["approved"] is True
+        assert [s["id"] for s in body["guidance"]["steps"]] == ["contact_bank", "contact_police"]
+        posted = await act(world.mine, "approve")  # POST cũng trả `guidance`
+        assert posted.status_code == 200 and posted.json()["guidance"]["approved"] is True
+    finally:
+        case_file_service.load_guidance.cache_clear()
 
 
 async def test_another_family_and_unknown_ids_are_404(world: SimpleNamespace) -> None:

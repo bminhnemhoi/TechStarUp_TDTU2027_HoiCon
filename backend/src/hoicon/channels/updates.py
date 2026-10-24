@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from hoicon.agents import texts
 from hoicon.channels.guardian import TERMINAL, ChannelDeps, Outgoing, deliver
 from hoicon.db.models import ActionToken, AgentRun, Incident, Job, Member, MessageOut, PairingCode
+from hoicon.services import consent_gate
 from hoicon.services.action_token_service import ActionTokenService
 from hoicon.services.incident_service import (
     GUARDIAN_DECIDABLE,
@@ -54,6 +55,8 @@ QUIET_TEMPLATES = frozenset(
         "detail_pending",
         "detail_resend",
         "incident_closed",
+        "ack_digest_on",  # bật/tắt bản tin lặp lại được: không khẩn, im lặng sau QUIET_AFTER (rà soát 032 T012 #2)
+        "ack_digest_off",
     }
 )
 # Phần định danh/mã trong job `zalo_update` chỉ cần tới lúc xử lý xong; xóa khỏi payload sau khi thành công (FR-010).
@@ -176,7 +179,7 @@ async def _reply(
         template_id=template,
         text=text,
         chat_enc=payload["chat_enc"],
-        urgent=template.startswith("ack_")
+        urgent=(template.startswith("ack_") and not template.startswith("ack_digest"))
         or template == "login_link",  # liên kết đăng nhập không bị giữ khi gần hết hạn mức
         family_id=family_id,
         member_id=member.id if member else None,
@@ -318,6 +321,17 @@ async def _answer(
     choice = payload["choice"]
 
     if choice == "3":
+        # Spec 037 FR-002: gửi lại chi tiết cũng là một lần GỬI dữ liệu sự cố ⇒ cần đồng ý `guardian_alerts` của
+        # người cao tuổi ngay lúc này (sự cố demo hư cấu được miễn). Đã rút ⇒ chỉ báo chung, không lộ mức nguy cơ.
+        async with deps.sessions() as session:
+            inc = await session.get(Incident, incident_id)
+            allowed = inc is not None and (
+                inc.is_demo or (await consent_gate.state_for(session, inc.member_id)).guardian_alerts
+            )
+        if not allowed:
+            return await _reply(
+                deps, payload, "incident_closed", texts.reply_incident_closed(is_drill), attempt, **reply
+            )
         detail = await _job_payload(deps, f"{incident}:msg:detail")
         if detail is None:  # chi tiết chỉ có sau khi hỏi xong người cao tuổi
             return await _reply(deps, payload, "detail_pending", texts.detail_pending(is_drill), attempt, **reply)

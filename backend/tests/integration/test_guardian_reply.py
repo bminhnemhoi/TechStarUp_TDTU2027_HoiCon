@@ -238,7 +238,7 @@ async def test_digest_off_and_on_update_only_that_guardian_and_reply_with_an_ack
     assert status == "sent"
     assert await digest_flag(first.id) is False and await digest_flag(second.id) is True
     ack = zalo_world.client.sent[-1].text
-    assert ack.startswith(texts.AI_DISCLOSURE) and "vẫn nhận cảnh báo khi có chuyện" in ack
+    assert ack.startswith(texts.AI_DISCLOSURE) and "HỏiCon vẫn nhắn cho anh/chị ngay" in ack
     assert await handle_update(zalo_world.deps, None, zalo_world.update_payload(user1, kind="digest_on")) == "sent"
     assert await digest_flag(first.id) is True
     assert "Đã bật lại bản tin tuần" in zalo_world.client.sent[-1].text
@@ -258,3 +258,39 @@ async def test_digest_commands_are_idempotent(zalo_world: Any) -> None:
     for _ in range(2):
         await handle_update(zalo_world.deps, None, zalo_world.update_payload(user, kind="digest_off"))
     assert await digest_flag(guardian.id) is False
+
+
+# --- Spec 037 FR-002 (rà soát T009 #1): "3" gửi lại chi tiết cũng phải qua điều kiện đồng ý lúc gửi ---------------
+
+
+class _Consent:
+    def __init__(self, guardian_alerts: bool) -> None:
+        self.guardian_alerts = guardian_alerts
+
+
+@pytest.mark.parametrize("allowed", [False, True])
+async def test_3_on_a_real_incident_needs_guardian_alerts_consent_at_reply_time(
+    zalo_world: Any, runtime: Any, threads: list[str], monkeypatch: pytest.MonkeyPatch, allowed: bool
+) -> None:
+    from sqlalchemy import update
+
+    from hoicon.db.models import Incident
+
+    world = zalo_world
+    await pair(world, USER_1, 1)
+    incident = await open_incident(world, runtime, threads)
+    detail_text = next(m.text for m in world.client.sent if "Mức nguy cơ" in m.text)
+    async with get_sessionmaker().begin() as session:  # sự cố THẬT (không demo): điều kiện đồng ý áp dụng
+        await session.execute(update(Incident).where(Incident.id == incident).values(is_demo=False))
+
+    async def state_for(_session: Any, _member_id: Any) -> _Consent:
+        return _Consent(allowed)
+
+    monkeypatch.setattr("hoicon.channels.updates.consent_gate.state_for", state_for)
+    await reply(world, USER_1, "3", runtime)
+    sent = world.sent_to(USER_1)[-1]
+    if allowed:
+        assert sent == detail_text
+    else:  # đã rút đồng ý: không gửi lại mức nguy cơ/tóm tắt, chỉ báo chung
+        assert sent == texts.reply_incident_closed(False) and "Mức nguy cơ" not in sent
+    await finish(runtime, incident)

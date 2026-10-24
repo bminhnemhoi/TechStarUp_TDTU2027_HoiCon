@@ -33,6 +33,9 @@ object HoiConTokens {
         val DrillFg = Color(0xFF4C2A85)
         val DrillBg = Color(0xFFF5F0FC)
         val DrillAccent = Color(0xFF7C4DBA)
+        val SimFg = Color(0xFF0A4A78)
+        val SimBg = Color(0xFFEEF6FC)
+        val SimAccent = Color(0xFF1F76B5)
         val FocusRing = Color(0xFF005FCC)
     }
 

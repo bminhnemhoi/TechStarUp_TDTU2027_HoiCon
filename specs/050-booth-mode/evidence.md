@@ -32,3 +32,15 @@
 
 - **Đừng chạy API dev (cổng 18010) trong lúc chạy `pytest` toàn bộ:** worker của API nhặt job `notify_guardian`/`graph_resume` của test trên DB dùng chung ⇒ 3 test đỏ (`test_guardian_reply` ×2, `test_incident_graph::test_guardian_silence…`); tắt API thì xanh (2763 passed). Đã gặp và xác nhận ngày 23/10.
 - **Test e2e từng chập chờn ~1/6** (khung 390/768/1440 px): nguyên nhân gốc là câu hỏi của bác bị gỡ khỏi màn ngay khi bác trả lời, test đo cỡ chữ đúng lúc phần tử biến mất (`NaN`). Đã sửa ở mã (câu hỏi giữ trên màn cùng đáp án), không nới test; sau đó toàn bộ e2e web 107 passed × 6 lần liên tiếp (3 test live bị bỏ qua có chủ đích).
+
+## Wave 6 — T016 (làn B, 24/10/2026)
+
+- **T016 ĐẠT**: console hết thuật ngữ nội bộ ở chữ người thấy ("Gate G4" chỉ còn trong chú thích mã — cũng đổi; "chạy phát lại" ⇒ "chạy bằng bản ghi sẵn"); băng rôn MÔ PHỎNG / KHÔNG PHẢI TRỰC TIẾP ở `/booth` và console dùng token `sim.*` (033 T022) thay vì màu diễn tập — chỉnh so với chữ task ("màu diễn tập riêng") vì FR-015(c) của 033 chốt `sim.*` và màu diễn tập dành cho diễn tập thật; `?fast=1` chỉ có tác dụng khi `NODE_ENV !== "production"`: e2e (chạy trên bản build) rút nhịp bằng móc `window.__HOICON_BOOTH_FAST__` (`fastPace` trong `booth.spec.ts`), `data-pace` trên `booth-stage` để kiểm.
+  Kiểm: `pnpm typecheck && lint && build && e2e booth a11y` **46 passed** (2 skipped: `booth-live`/`booth-record` cần `HOICON_E2E_LIVE=1`). Test mới: `?fast=1` bị bỏ qua ở prod, móc test bật nhịp nhanh; console không còn "Gate/G4/replay/phát lại"; cả hai băng rôn có `border-sim-accent` và không có lớp `drill`. Không chạy đỏ riêng trước khi sửa (viết cùng lúc với thay đổi).
+  Axe bắt thêm lỗi thật ở console 390 px (`scrollable-region-focusable`) ⇒ vùng cuộn ngang của bảng và khối lệnh nay có `tabIndex=0` (+ `role=region`, nhãn).
+- **`ux-elder-reviewer` đọc lại**: 3 mục T016 hết; 0 Chặn, 0 Cao. Đã sửa thêm: nút "Tải bản ghi" hiện tên kịch bản (không mã thô), `summary` mục kỹ thuật `min-h-16`; ảnh bổ sung `console-390/768/1440.png`, `booth-recording-1440.png` (hai băng rôn cạnh nhau) ở `~/hoicon-evidence/050-booth-mode/`.
+  **Còn lại (Trung bình/Thấp, chưa sửa)**: cột 2 "Mẹ chưa trả lời" vs cột 1 "Bác trả lời" (xưng hô — mẫu/`describeStep`, cùng nhóm đã ghi cần Opus); "Kết thúc: đã đóng sự cố" gây sợ/nội bộ (`lib/steps` dùng chung nhiều trang — đổi cần rà e2e các trang khác); nút khóa mờ `opacity-50` tương phản < 7:1 và câu lý do nằm cuối nhóm; `(ms)` viết tắt; ký hiệu ✓ ⏸ ⏹ ● ▶ ✕ chưa `aria-hidden`; "mức nguy cơ" vs "mức rủi ro" chưa thống nhất. Chủ: Tiến (xem ảnh thật tại gian), hạn đề xuất trước buổi chạy thử gian.
+
+## Wave 6 — T015 bộ kiểm cuối (làn B, 24/10/2026)
+
+- **T015 ĐẠT (trừ phần [A])**: pytest 2881 passed / 22 skipped / 1 xfailed; ruff sạch; `alembic heads` = 1 (0012); web typecheck + e2e 118 passed (3 test live/record bị bỏ qua, cần `HOICON_E2E_LIVE=1`; SC-001/002 ở bảng trên là số đo máy dev lượt trước, không đo lại); eval smoke 20 / full 110 không lệch baseline; gitleaks `apps/web`, `backend`, `specs/050-booth-mode` sạch; `check-spec-trace` 0 lỗi. SC nào chưa đo ở hội trường vẫn ghi "máy dev".

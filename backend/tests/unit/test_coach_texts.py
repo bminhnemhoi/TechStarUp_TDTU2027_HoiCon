@@ -65,7 +65,7 @@ def test_a_quiet_week_never_says_safe_and_always_gives_the_coverage() -> None:
 
 
 def test_missing_coverage_says_there_is_not_enough_data() -> None:
-    assert "chưa đủ dữ liệu" in texts.weekly_digest(ALIAS, 0, 0, None, 0, None)
+    assert "chưa có số liệu để tóm tắt" in texts.weekly_digest(ALIAS, 0, 0, None, 0, None)
     assert "khoảng" not in texts.weekly_digest(ALIAS, 0, 0, None, 0, None)
 
 
@@ -79,7 +79,7 @@ def test_the_digest_ends_with_the_opt_out_and_includes_the_tip_only_when_given()
 
 
 def test_the_opt_out_ack_says_alerts_keep_coming() -> None:
-    assert "vẫn nhận cảnh báo khi có chuyện" in texts.digest_off_ack()
+    assert "HỏiCon vẫn nhắn cho anh/chị ngay" in texts.digest_off_ack()
     assert "BẬT TIN TUẦN" in texts.digest_off_ack() and "TẮT TIN TUẦN" in texts.digest_on_ack()
 
 
@@ -88,3 +88,9 @@ def test_protection_messages_state_the_known_fact_a_possible_cause_and_one_actio
     assert "chưa báo về HỏiCon từ 07:30 ngày 20 tháng 10" in silent and "Có thể" in silent and "gọi hỏi thăm" in silent
     off = texts.guardian_protection_permission_off(ALIAS)
     assert "quyền" in off and "đang bị tắt" in off and "gọi hỏi thăm" in off
+
+
+def test_digest_gives_a_next_step_when_there_were_incidents_or_low_coverage() -> None:
+    assert "hỏi thăm" in texts.weekly_digest(ALIAS, 2, 1, 1.0, 0, None)
+    assert "mở lại ứng dụng" in texts.weekly_digest(ALIAS, 0, 0, 0.5, 0, None)
+    assert "mở lại ứng dụng" not in texts.weekly_digest(ALIAS, 0, 0, 0.9, 0, None)

@@ -19,9 +19,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import StreamingResponse
 
 from hoicon.api.auth import GuardianClaims, get_current_guardian
-from hoicon.db.models import AgentRun, Incident
+from hoicon.db.models import AgentRun, Device, Incident
 from hoicon.db.session import get_sessionmaker
 from hoicon.services import consent_gate, trace_service
+from hoicon.services.sim_service import SIM_LABEL_PREFIX
 from hoicon.services.trace_service import StreamLimitError, TraceStreamResponse
 
 router = APIRouter(prefix="/v1", tags=["trace"])
@@ -52,6 +53,17 @@ def _uuid_or_none(raw: str) -> UUID | None:
         return UUID(raw)
     except ValueError:
         return None
+
+
+async def _is_sim_run(session: AsyncSession, run: AgentRun) -> bool:
+    """Sự cố của lượt chạy gắn thiết bị mô phỏng (nhãn `sim:`, plan D9 của 033)."""
+    incident_id = _uuid_or_none(run.thread_id)
+    if incident_id is None:
+        return False
+    label = await session.scalar(
+        select(Device.label).join(Incident, Incident.device_id == Device.id).where(Incident.id == incident_id)
+    )
+    return bool(label and label.startswith(SIM_LABEL_PREFIX))
 
 
 async def _visible_run(session: AsyncSession, run_id: UUID, claims: GuardianClaims) -> AgentRun:
@@ -86,6 +98,7 @@ async def get_run_steps(
             "status": run.status,
             "is_drill": run.is_drill,
             "is_demo": run.is_demo,
+            "is_sim": await _is_sim_run(session, run),
             "steps": [trace_service.step_view(row) for row in rows],
         }
 

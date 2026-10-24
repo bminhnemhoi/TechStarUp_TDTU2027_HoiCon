@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { BENIGN_ID, SimMock, mockApi } from "./fixtures";
+import { BENIGN_ID, SCAM_ID, SimMock, mockApi, step } from "./fixtures";
 
 // Spec 033, FR-010/FR-013: `/sim` đi hết một kịch bản bằng fixture hợp đồng (mạng bị chặn, tất định).
 const EVIDENCE_DIR = path.join(os.homedir(), "hoicon-evidence", "033-sim-trace");
@@ -35,6 +35,59 @@ test("kịch bản lừa đảo: Bắt đầu → trả lời → quyết địn
   expect(calls.find((c) => c.path.endsWith("/decision"))?.body).toEqual({ decision: "emergency_pause" });
   const answer = calls.find((c) => c.path.endsWith("/answer"));
   expect(answer?.body).toEqual({ question_id: "q_caller_authority", answer: "yes" }); // không có `note` tự do
+});
+
+test("ô chọn kịch bản hiện tên tiếng Việt, mã kịch bản chỉ còn ở chú thích nhỏ (FR-015)", async ({ page }) => {
+  await mockApi(page, { sim: new SimMock() });
+  await page.goto("/sim");
+  const select = page.getByRole("combobox", { name: "Kịch bản" });
+  await expect(select.locator("option")).toHaveText(["Giả danh công an · ca 2", "Cuộc gọi thật: cơ quan · ca 5"]);
+  await expect(page.getByTestId("scenario-id")).toHaveText(`Mã kịch bản: ${SCAM_ID}`);
+  await expect(page.getByTestId("sim-banner")).toHaveClass(/border-sim-accent/); // màu mô phỏng riêng, không dùng màu diễn tập
+});
+
+test("giờ tin Zalo mô phỏng khớp giờ bước tạo ra tin (FR-015)", async ({ page }) => {
+  const sim = new SimMock();
+  await mockApi(page, {
+    sim,
+    steps: () => ({
+      status: 200,
+      json: {
+        run_id: "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90", status: "done", is_drill: false, is_demo: true, is_sim: true,
+        steps: [
+          step("01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e91", "fast_alert", { template: "fast_alert" }, "2026-12-20T09:00:06Z"),
+          step("01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e92", "intervention", {}, "2026-12-20T09:00:10Z"),
+        ],
+      },
+    }),
+  });
+  await page.goto("/sim");
+  await playScam(page);
+  const items = page.getByTestId("messages").getByRole("listitem");
+  await expect(items.nth(0)).toContainText("16:00:06"); // 09:00:06Z = 16:00:06 giờ Việt Nam (tin có `at` 09:00:05Z)
+  await expect(items.nth(1)).toContainText("16:00:10");
+});
+
+test("ba tab đủ phím mũi tên, Home và End (mẫu tab của WAI-ARIA)", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockApi(page, { sim: new SimMock() });
+  await page.goto("/sim");
+  await page.getByRole("button", { name: "Bắt đầu" }).click();
+  const tabs = page.getByRole("tablist").getByRole("tab");
+  await tabs.nth(0).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
+  await expect(tabs.nth(1)).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(tabs.nth(2)).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("ArrowRight"); // vòng về tab đầu
+  await expect(tabs.nth(0)).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("ArrowLeft");
+  await expect(tabs.nth(2)).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Home");
+  await expect(tabs.nth(0)).toHaveAttribute("aria-selected", "true");
+  await expect(tabs.nth(0)).toHaveAttribute("tabindex", "0");
+  await expect(tabs.nth(1)).toHaveAttribute("tabindex", "-1");
 });
 
 test("kịch bản hợp lệ không bật luật: hiện lời giải thích, không có sự cố", async ({ page }) => {

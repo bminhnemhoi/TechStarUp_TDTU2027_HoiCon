@@ -16,6 +16,8 @@ test("bản chữ có đủ các bước của lượt chạy và sơ đồ vẽ
   await page.goto(`/trace/${RUN_ID}`);
   await expect(page.getByTestId("stream-status")).toContainText("Trợ lý AI đã làm xong các bước");
   await expect(page.getByTestId("steps").getByRole("listitem")).toHaveCount(STEPS.length);
+  await expect(page.getByTestId("steps")).toContainText("Mức ban đầu"); // chi tiết bước viết hoa chữ đầu
+  await expect(page.getByTestId("steps")).not.toContainText(/(^|\n)mức ban đầu/);
   await expect(page.getByTestId("trace-canvas")).toBeVisible();
   await expect(page.locator(".react-flow__node")).toHaveCount(10, { timeout: XYFLOW_LOAD_MS }); // 8 nút + bắt đầu + kết thúc
 });
@@ -40,6 +42,34 @@ test("bước mới qua SSE hiện trong 1 giây", async ({ page }) => {
   const started = Date.now();
   await expect(page.getByTestId("steps").getByRole("listitem")).toHaveCount(2, { timeout: 1000 });
   expect(Date.now() - started).toBeLessThan(1000);
+});
+
+test("lượt mô phỏng có băng MÔ PHỎNG, lượt thật không có (FR-015)", async ({ page }) => {
+  await mockApi(page);
+  await page.goto(`/trace/${RUN_ID}`);
+  await expect(page.getByTestId("stream-status")).toContainText("Trợ lý AI đã làm xong các bước");
+  await expect(page.getByTestId("sim-banner")).toHaveCount(0);
+  await mockApi(page, {
+    steps: () => ({ status: 200, json: { run_id: RUN_ID, status: "done", is_drill: false, is_demo: true, is_sim: true, steps: STEPS } }),
+  });
+  await page.goto(`/trace/${RUN_ID}`);
+  await expect(page.getByTestId("sim-banner")).toContainText("MÔ PHỎNG");
+  await expect(page.getByTestId("sim-banner")).toHaveClass(/border-sim-accent/);
+  mkdirSync(EVIDENCE_DIR, { recursive: true });
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, "trace-sim-banner-1440.png"), fullPage: true });
+});
+
+test("390 px: sơ đồ không bị cắt mép trái, cuộn ngang được (rà soát UX 033)", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockApi(page);
+  await page.goto(`/trace/${RUN_ID}`);
+  await expect(page.locator(".react-flow__node:visible").first()).toBeVisible({ timeout: XYFLOW_LOAD_MS });
+  const clipped = await page.evaluate(() => {
+    const box = document.querySelector("[data-testid='trace-canvas']")!.getBoundingClientRect();
+    const left = Math.min(...[...document.querySelectorAll(".react-flow__node")].map((n) => n.getBoundingClientRect().left));
+    return left < box.left - 1;
+  });
+  expect(clipped).toBe(false);
 });
 
 test("lượt của gia đình khác: 'Không tìm thấy'", async ({ page }) => {

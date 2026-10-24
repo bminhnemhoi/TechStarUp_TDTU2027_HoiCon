@@ -211,3 +211,15 @@ def test_a_table_added_later_is_covered_when_the_script_is_rerun(role: dict[str,
                 app.execute("delete from zz_034_new")
         finally:
             owner.execute("drop table zz_034_new")
+
+
+def test_a_table_added_by_a_later_migration_is_usable_without_rerunning_the_script(role: dict[str, Any]) -> None:
+    """Spec 012 T020 / Medium #8 của 034: `ALTER DEFAULT PRIVILEGES` cấp quyền cho bảng tạo sau."""
+    with psycopg.connect(owner_conninfo(), autocommit=True) as owner:
+        owner.execute("create table zz_012_later (id int primary key)")
+        try:
+            with psycopg.connect(app_conninfo(role["password"]), autocommit=True) as app:
+                app.execute("insert into zz_012_later values (1)")
+                app.execute("delete from zz_012_later")
+        finally:
+            owner.execute("drop table zz_012_later")

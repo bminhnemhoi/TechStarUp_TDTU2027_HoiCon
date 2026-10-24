@@ -39,6 +39,7 @@ from hoicon.config import get_settings
 from hoicon.db.session import get_engine
 from hoicon.mcp_servers import threat
 from hoicon.mcp_servers.auth import McpGuard
+from hoicon.services.case_file_service import load_guidance
 from hoicon.services.runtime_service import background_worker
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     # MCP gắn bằng mount ⇒ app chủ phải chạy session manager của từng server (MCP SDK v2). Worker job (đồ thị tác
     # tử, bộ hẹn giờ, gửi tin) là task nền cùng tiến trình (ADR-002, spec 024).
     settings = get_settings()
+    load_guidance()  # tệp hướng dẫn trình báo sai cấu trúc ⇒ dừng ngay lúc khởi động (spec 031 FR-015)
     if settings.is_dev_env and settings.web_base_url.lower().startswith("https://"):
         # Cookie phiên web chỉ có cờ Secure khi HOICON_ENV ∉ {dev, test, ci}: quên đặt HOICON_ENV ở prod là fail-open.
         logger.warning(

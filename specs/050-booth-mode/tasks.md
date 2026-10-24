@@ -60,12 +60,12 @@
 
 ## Hoàn tất
 
-- [ ] T015 [B] Bộ kiểm đầy đủ (`$PYTEST`, ruff, eval smoke/full, spec-trace, gitleaks từng thư mục, `alembic heads` = 1, `$WEB typecheck` + e2e) và điền `evidence.md` (SC-001…SC-006; SC nào chưa đo ghi rõ lý do).
+- [x] T015 [B] Bộ kiểm đầy đủ (`$PYTEST`, ruff, eval smoke/full, spec-trace, gitleaks từng thư mục, `alembic heads` = 1, `$WEB typecheck` + e2e) và điền `evidence.md` (SC-001…SC-006; SC nào chưa đo ghi rõ lý do).
   · Verify: lệnh thoát 0; `python3 scripts/check-spec-trace.py`
 
 ## Đối soát kiến trúc sư 24/10/2026
 
 - T001 (hợp đồng `sim_reset.v1`, `booth_join.v1`) do kiến trúc sư làm ở checkout chính, **sau 09/01/2027** (giai đoạn 2 phục vụ chung kết, không cần cho Vòng 1/2).
-- [ ] T016 [B-web] [FR-002, FR-004] Sửa các mục Medium còn lại của `ux-elder-reviewer` (evidence 050): bỏ thuật ngữ nội bộ ở console ("Gate G4", "replay" ⇒
+- [x] T016 [B-web] [FR-002, FR-004] Sửa các mục Medium còn lại của `ux-elder-reviewer` (evidence 050): bỏ thuật ngữ nội bộ ở console ("Gate G4", "replay" ⇒
   "Bản ghi"), băng rôn diễn tập dùng màu diễn tập riêng (DESIGN-SYSTEM, luật 15). `?fast=1` chỉ có hiệu lực khi `NODE_ENV !== "production"`.
   · Verify: `pnpm --dir apps/web typecheck && pnpm --dir apps/web e2e booth` + ảnh 390/1440 reviewer đọc lại ⇒ 0 Medium

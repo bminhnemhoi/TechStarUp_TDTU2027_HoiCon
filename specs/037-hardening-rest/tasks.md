@@ -43,10 +43,10 @@
   quét số điện thoại thô (mẫu của hook `guard-privacy`) trong `backend/src`, `backend/tests`, `data`; chạy `consent_texts check`; đếm dòng nghi PII trong `jobs.payload`/`agent_steps` (chỉ đếm).
   Đột biến: thêm bảng giả vào metadata không ánh xạ ⇒ thoát khác 0.
   · Verify: `$PYTEST tests/unit/test_privacy_report.py && uv run --directory backend python -m hoicon.ops.privacy_report`
-- [ ] T009 [B] [FR-007, SC-005] Rà soát bảo mật cuối: gọi `security-privacy-reviewer` đọc diff từ `main` (toàn codebase) + mục 1 của spec; sửa hết Critical/High; Medium ghi chủ + ngày.
+- [x] T009 [B] [FR-007, SC-005] Rà soát bảo mật cuối: gọi `security-privacy-reviewer` đọc diff từ `main` (toàn codebase) + mục 1 của spec; sửa hết Critical/High; Medium ghi chủ + ngày.
   Quét phụ thuộc bằng `osv-scanner` hoặc `uv pip audit` nếu có (không có ⇒ `UNAVAILABLE`, ghi rõ).
   · Verify: báo cáo trong `evidence.md` không còn Critical/High chưa xử lý
-- [ ] T010 [B] Chạy bộ kiểm đầy đủ: `$PYTEST`, `ruff check` + `format --check`, `hoicon-eval --suite smoke --compare baseline --shared-db-ok` và `--suite full --compare baseline-full`,
+- [x] T010 [B] Chạy bộ kiểm đầy đủ: `$PYTEST`, `ruff check` + `format --check`, `hoicon-eval --suite smoke --compare baseline --shared-db-ok` và `--suite full --compare baseline-full`,
   `check-spec-trace`, gitleaks từng thư mục, `alembic heads` = 1; điền `evidence.md` (SC-001…SC-006).
   · Verify: lệnh thoát 0; `python3 scripts/check-spec-trace.py`
 
@@ -68,8 +68,8 @@ nào cần, karpathy: không làm trước). Quyết định cho các câu làn 
 - [ ] T013 [B] [FR-001] Test hợp đồng `backend/tests/contract/test_error_schema.py` cho `docs/schemas/error.v1.json` (đã có, kiến trúc sư 23/10):
   chạy fixture valid/invalid; enum `purpose` == mục đích trong `backend/src/hoicon/consent_texts/manifest.json`; thân 403 `consent_withdrawn`
   của `routers/events.py` và `routers/devices.py` khớp lược đồ. · Verify: `$PYTEST tests/contract/test_error_schema.py -q`
-- [ ] T014 [B] [FR-005] `ops restore`: một khối lỗi (`BackupError`) ⇒ bỏ **cả lượt**, DB đích không đổi (một giao dịch). Test đỏ trước: tệp sửa 1 byte ở khối giữa
+- [x] T014 [B] [FR-005] `ops restore`: một khối lỗi (`BackupError`) ⇒ bỏ **cả lượt**, DB đích không đổi (một giao dịch). Test đỏ trước: tệp sửa 1 byte ở khối giữa
   ⇒ số dòng mọi bảng trước = sau. · Verify: `$PYTEST tests/integration/test_backup_restore.py -q -k atomic`
 - [ ] T015 [AB] [FR-008] `docs/setup/STABILITY.md`: đọc độ ổn định ở Android vitals (Play Console), ngưỡng hành vi xấu của Play, cách ghi vào báo cáo thí điểm.
   SC-006 BLOCKED tới Play Console (W0-3). Người có quyền `docs/setup` làm. · Verify: review
-- [ ] T016 [B] Chạy lại T010 sau T013–T014. · Verify: như T010
+- [x] T016 [B] Chạy lại T010 sau T013–T014. · Verify: như T010

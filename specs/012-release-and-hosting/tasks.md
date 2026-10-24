@@ -72,7 +72,7 @@ Biến: `UT = python3 -m unittest discover -s scripts/tests -p test_deploy_vps.p
 
 ## Wave 4 (23/10/2026) — gỡ T017, ghim baseline profile (plan D12, D13)
 
-- [ ] T020 [B] [FR-001] Cách mới cho T017 (plan D12), không đụng role `hoicon_app` của DB dev:
+- [x] T020 [B] [FR-001] Cách mới cho T017 (plan D12), không đụng role `hoicon_app` của DB dev:
   1. `docker run -d --rm --name hoicon-roles-try -p 127.0.0.1:15433:5432 -e POSTGRES_USER=hoicon -e POSTGRES_DB=hoicon
      -e POSTGRES_PASSWORD=<chuỗi ngẫu nhiên sinh trong phiên, không ghi vào tệp> pgvector/pgvector:pg17`;
   2. với `HOICON_DATABASE_URL` trỏ tới DB tạm (role chủ `hoicon`): `alembic upgrade head`, một lần `AsyncPostgresSaver.setup()`

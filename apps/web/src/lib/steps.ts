@@ -91,6 +91,8 @@ function count(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
 }
 
+const capitalize = (value: string) => value.charAt(0).toLocaleUpperCase("vi-VN") + value.slice(1);
+
 export function describeStep(step: Pick<AgentStep, "node" | "output" | "error" | "fallback_used">, alias: string): StepText {
   const out = step.output ?? {};
   const name = aliasName(alias);
@@ -156,7 +158,7 @@ export function describeStep(step: Pick<AgentStep, "node" | "output" | "error" |
   } else if (step.fallback_used) {
     text = { ...text, detail: [text.detail, "HỏiCon dùng cách xử lý có sẵn"].filter(Boolean).join(". ") };
   }
-  return text;
+  return text.detail ? { ...text, detail: capitalize(text.detail) } : text;
 }
 
 /** Thời điểm tương đối bằng tiếng Việt ("2 phút trước"; luôn đặt sau chữ "mở" để "vừa xong" không bị hiểu là "đã xử lý xong"). */

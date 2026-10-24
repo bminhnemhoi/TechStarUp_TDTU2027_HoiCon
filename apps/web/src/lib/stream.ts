@@ -13,11 +13,12 @@ export type StreamStatus = "loading" | "live" | "reconnecting" | "done" | "faile
 interface State {
   steps: AgentStep[];
   status: StreamStatus;
+  isSim: boolean; // lượt của sự cố mô phỏng (`is_sim` của run_steps.v1): trang /trace gắn băng MÔ PHỎNG
   attempt: number; // tăng để mở lại luồng (sau lỗi / sau khi tab ẩn lâu)
 }
 
 type Action =
-  | { type: "history"; steps: AgentStep[] }
+  | { type: "history"; steps: AgentStep[]; isSim: boolean }
   | { type: "step"; step: AgentStep }
   | { type: "status"; status: StreamStatus }
   | { type: "retry" };
@@ -39,7 +40,7 @@ function merge(steps: AgentStep[], incoming: AgentStep[]): AgentStep[] {
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "history":
-      return { ...state, steps: merge(state.steps, action.steps) };
+      return { ...state, steps: merge(state.steps, action.steps), isSim: action.isSim };
     case "step":
       return { ...state, steps: merge(state.steps, [action.step]) };
     case "status":
@@ -61,7 +62,7 @@ function parse<T>(data: string): T | null {
 }
 
 export function useRunStream(runId: string | null) {
-  const [state, dispatch] = useReducer(reducer, { steps: [], status: "loading", attempt: 0 });
+  const [state, dispatch] = useReducer(reducer, { steps: [], status: "loading", isSim: false, attempt: 0 });
   const hiddenSince = useRef<number | null>(null);
 
   useEffect(() => {
@@ -110,9 +111,9 @@ export function useRunStream(runId: string | null) {
         if (res.status === 401) return dispatch({ type: "status", status: "unauthorized" });
         if (res.status === 404) return dispatch({ type: "status", status: "notfound" }); // lượt của nhà khác cũng 404
         if (!res.ok) return dispatch({ type: "status", status: "error" });
-        const history = (await res.json()) as { steps: AgentStep[]; status: string };
+        const history = (await res.json()) as { steps: AgentStep[]; status: string; is_sim?: boolean };
         if (closed) return;
-        dispatch({ type: "history", steps: history.steps });
+        dispatch({ type: "history", steps: history.steps, isSim: history.is_sim === true });
         if (history.status === "done" || history.status === "failed") {
           return dispatch({ type: "status", status: history.status });
         }
@@ -147,5 +148,5 @@ export function useRunStream(runId: string | null) {
   }, [runId, state.attempt]);
 
   const retry = useCallback(() => dispatch({ type: "retry" }), []);
-  return { steps: state.steps, status: state.status, retry };
+  return { steps: state.steps, status: state.status, isSim: state.isSim, retry };
 }

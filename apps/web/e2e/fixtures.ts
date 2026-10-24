@@ -80,8 +80,8 @@ const QUESTION = {
 const FAST = { at: "2026-12-20T09:00:05Z", template: "fast_alert", text: "Đây là trợ lý AI HỏiCon. Mẹ vừa nghe một số lạ rồi mở ứng dụng ngân hàng. Anh/chị gọi hỏi Mẹ ngay nhé." };
 const DETAIL = { at: "2026-12-20T09:00:09Z", template: "detail", text: "Đây là trợ lý AI HỏiCon. Mức nguy cơ: rất cao. Anh/chị gọi ngay cho Mẹ và giữ máy." };
 export const SIM_SCENARIO_LIST = [
-  { id: SCAM_ID, category: "fake_police", is_benign: false, injection: false, draft: true, script_vi: "Người gọi xưng công an (hư cấu) báo bác dính vụ án và yêu cầu chuyển tiền vào tài khoản an toàn." },
-  { id: BENIGN_ID, category: "benign_official", is_benign: true, injection: false, draft: false, script_vi: "Bác gọi hỏi thủ tục cư trú ở phường (hư cấu), không mở ứng dụng ngân hàng." },
+  { id: SCAM_ID, category: "fake_police", title_vi: "Giả danh công an · ca 2", is_benign: false, injection: false, draft: true, script_vi: "Người gọi xưng công an (hư cấu) báo bác dính vụ án và yêu cầu chuyển tiền vào tài khoản an toàn." },
+  { id: BENIGN_ID, category: "benign_official", title_vi: "Cuộc gọi thật: cơ quan · ca 5", is_benign: true, injection: false, draft: false, script_vi: "Bác gọi hỏi thủ tục cư trú ở phường (hư cấu), không mở ứng dụng ngân hàng." },
 ];
 
 /** Máy trạng thái của một lượt mô phỏng giả (hợp đồng sim_run.v1): bắt đầu → câu hỏi E8 → tin cho con → quyết định. */
@@ -103,10 +103,22 @@ export const CASE_ACTIONS: Record<string, Record<string, string>> = {
   approved: { mark_sent: "sent", discard: "discarded" },
 };
 
+// Hướng dẫn trình báo (case_file.v1.guidance): chưa duyệt ⇒ không có bước, chỉ câu chung; đã duyệt ⇒ có bước (chữ thử, không phải nội dung Minh duyệt).
+export const GUIDANCE_UNAPPROVED: Json = { approved: false, steps: [], fallback_vi: "Anh/chị liên hệ công an nơi cư trú và ngân hàng của người thân." };
+export const GUIDANCE_APPROVED: Json = {
+  approved: true,
+  fallback_vi: "Anh/chị liên hệ công an nơi cư trú và ngân hàng của người thân.",
+  steps: [
+    { id: "contact_bank", text_vi: "Gọi tổng đài ghi sau thẻ của ngân hàng người thân để nhờ kiểm tra giao dịch.", source_ref: null },
+    { id: "contact_police", text_vi: "Mang bản hồ sơ này tới công an phường hoặc xã nơi người thân cư trú.", source_ref: "Nguồn thử nghiệm" },
+  ],
+};
+
 export class CaseMock {
   status = "draft";
+  guidance: Json = GUIDANCE_UNAPPROVED;
   view(): Json {
-    return { ...CASE_DOC, status: this.status, approved_at: this.status === "draft" ? null : "2026-12-20T09:03:00Z" };
+    return { ...CASE_DOC, guidance: this.guidance, status: this.status, approved_at: this.status === "draft" ? null : "2026-12-20T09:03:00Z" };
   }
 }
 
@@ -177,7 +189,7 @@ export async function mockApi(page: Page, options: MockOptions = {}): Promise<Ca
     if (/^\/v1\/runs\/[^/]+\/steps$/.test(p)) {
       const r = options.steps?.() ?? {
         status: 200,
-        json: { run_id: RUN_ID, status: "running", is_drill: false, is_demo: true, steps: STEPS },
+        json: { run_id: RUN_ID, status: "running", is_drill: false, is_demo: true, is_sim: false, steps: STEPS },
       };
       return reply(route, r.status, r.json);
     }

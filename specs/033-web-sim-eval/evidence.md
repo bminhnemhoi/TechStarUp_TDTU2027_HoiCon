@@ -7,13 +7,14 @@
 
 | Tiêu chí | Ngưỡng | Cách đo | Kết quả | Trạng thái |
 |---|---|---|---|---|
-| SC-001 toàn luồng trên web | ≤ 5 thao tác, bước hiện ≤ 1 s | Playwright | chưa chạy | CHƯA ĐO |
-| SC-002 tất định | hai lượt replay giống nhau | Playwright | chưa chạy | CHƯA ĐO |
-| SC-003 cô lập | cổng, chỉ demo, Zalo mock ép, hạn mức | pytest | chưa chạy | CHƯA ĐO |
-| SC-004 tiếp cận | axe 0 lỗi; bản chữ trace đủ bước | Playwright + axe | chưa chạy | CHƯA ĐO |
-| SC-005 đúng đồ thị | topology = đồ thị biên dịch | pytest | chưa chạy | CHƯA ĐO |
-| SC-006 không PII | 0 số/h1/tên gói trong API + DOM | pytest + Playwright | chưa chạy | CHƯA ĐO |
+| SC-001 toàn luồng trên web | ≤ 5 thao tác, bước hiện ≤ 1 s | Playwright | Playwright `sim.spec.ts` (fixture hợp đồng): Bắt đầu → trả lời → quyết định = 4 thao tác; bước hiện từ SSE ≤ 1 s (`trace.spec.ts`) | ĐẠT (e2e dùng fixture, chưa đo với API thật) |
+| SC-002 tất định | hai lượt replay giống nhau | Playwright | `sim.spec.ts` "chạy hai lần": hai lượt cùng dãy bước và cùng chữ tin (bỏ giờ) | ĐẠT |
+| SC-003 cô lập | cổng, chỉ demo, Zalo mock ép, hạn mức | pytest | `test_api_sim.py` (cổng 404 khi tắt, gia đình thật 404, Zalo mock ép, hạn mức) + rà soát bảo mật T009 (cổng không bao giờ bật ở prod) | ĐẠT |
+| SC-004 tiếp cận | axe 0 lỗi; bản chữ trace đủ bước | Playwright + axe | axe 0 lỗi nghiêm trọng ở 390/768/1440 (`sim`, `trace`), `a11y.spec.ts` 360/768/1280 + chữ 200%; bản chữ đủ bước | ĐẠT |
+| SC-005 đúng đồ thị | topology = đồ thị biên dịch | pytest | `test_api_graphs`/topology khớp đồ thị biên dịch (pytest toàn bộ xanh 2881) | ĐẠT |
+| SC-006 không PII | 0 số/h1/tên gói trong API + DOM | pytest + Playwright | `sim.spec.ts` "DOM không có số điện thoại…" + `test_api_sim.py` không PII | ĐẠT |
 | SC-007 video | một lượt quay dùng được | đội quay | — | BLOCKED (P2-21) |
+| SC-008 nhận ra được | 100% kịch bản có `title_vi` đúng bảng; `/trace` sim có băng, thật không; `sim.*` ≥ 7:1 | pytest + Playwright + `gen-design-tokens.py --check` | `test_sim_titles.py` (18 nhóm), `trace.spec.ts` (băng có/không), `sim.fg` 9,28:1 trên trắng, 8,49:1 trên nền sim | ĐẠT |
 
 ## Lệnh đã chạy
 
@@ -46,3 +47,30 @@
 
 - **T010 ĐẠT:** `routers/eval_summary.py` sau cổng FR-002 và phiên demo (như `/v1/sim/*`); chỉ đọc `backend/eval/baseline*.json` (không `reports/`, không `cassettes/`); `gate.verdict = provisional` + lý do khi cassette `synthetic` hoặc còn kịch bản `draft` (đúng với baseline hiện tại: số rào tất định, **chưa phải số M3**). `tests/integration/test_api_eval_summary.py` (4): cổng tắt ⇒ 404, gia đình thật ⇒ 404, chỉ số đúng baseline, tệp `reports/` chứa `RUN-CANARY` không bao giờ xuất hiện. Hạ tầng: `.dockerignore` thêm ngoại lệ `!backend/eval/baseline*.json` (cassettes/reports vẫn loại), `backend/Dockerfile` `COPY backend/eval/baseline*.json`, test `test_deploy_vps.py`. Client TS sinh lại; `docs/API.md` cập nhật.
 - **Không làm:** T016 (trang web `/eval`, nằm trong danh sách cắt).
+
+## Wave 6 — T021 (làn B, 24/10/2026)
+
+- **T021 ĐẠT**: `SCENARIO_TITLE_VI` (18 nhóm, đúng chữ FR-015) + `title_vi(case_id, category)` ở `sim_service`; `GET /v1/sim/scenarios` luôn gửi `title_vi`; `GET /v1/runs/{id}/steps` luôn gửi `is_sim` (join thiết bị của sự cố, nhãn `sim:`).
+  Test đỏ trước (8 đỏ: thiếu `SCENARIO_TITLE_VI`, thiếu `title_vi`, thiếu `is_sim`) → xanh: `test_sim_titles.py` (mọi enum `category` của `scenario.v1.json` có nhãn; `fake_police_safe_account_002` ⇒ "Giả danh công an · ca 2"; nhóm lạ ⇒ KeyError), `test_api_sim.py`, `test_api_runs.py` (`is_sim` false/true), `tests/contract`: 340 passed. Client TS sinh lại, `pnpm typecheck` sạch, ruff sạch.
+
+## Wave 6 — T022 (làn B, 24/10/2026)
+
+- **T022 ĐẠT**: ô chọn kịch bản hiện `title_vi` (mã chỉ ở `title` của `<option>` và dòng "Mã kịch bản: …"); `SimBanner` dùng chung cho `/sim` và `/trace` (`/trace` hiện băng khi `is_sim`, `useRunStream` trả `isSim`); token `sim.*` (`#0A4A78`/`#EEF6FC`/`#1F76B5`, xanh dương, chữ trên trắng 9,28:1, trên nền sim 8,49:1, viền 4,86:1; cách màu hue của diễn tập và mọi mức rủi ro ≥ 30°, có test `SimHueTest`).
+  3 mục Thấp: chữ hoa đầu chi tiết `describeStep`, tab `/sim` đủ ←/→/Home/End (vòng tròn, `tabIndex` chỉ ở tab chọn), giờ tin Zalo mô phỏng lấy theo giờ bước tạo tin (`fast_alert`→`fast_alert`, `detail`→`intervention`; không khớp thì giữ `at` của tin).
+  Đỏ trước: 5 e2e đỏ trên bản build cũ (ô chọn, giờ tin, phím tab, chữ hoa, băng /trace) → sau `pnpm build`: `e2e sim trace a11y` **52 passed**; `gen-design-tokens.py --check` OK; `unittest discover scripts/tests` 114 OK (7 skipped); typecheck + lint sạch. Ảnh 390/768/1440 ở `~/hoicon-evidence/033-sim-trace/`.
+- **Lưu ý cho người tích hợp**: `gen-design-tokens.py` sinh lại `Tokens.kt` (thêm `Sim*`) của Android — kiểm Gradle khi gộp. Màu "Kịch bản nháp" đổi từ màu diễn tập sang `sim.*` (màu diễn tập chỉ cho diễn tập).
+
+## Wave 6 — T023 (làn B, 24/10/2026)
+
+- **T023 ĐẠT**: `retention_service.purge_sim_devices` (và khóa `sim_devices` trong báo cáo `run_retention`): xóa thiết bị nhãn `sim:` tạo > 24 giờ mà mọi sự cố của nó đã đóng > 24 giờ (không có sự cố ⇒ theo tuổi thiết bị; sự cố còn mở ⇒ giữ). Sự cố không bị xóa (`device_id` SET NULL). Hằng `SIM_DEVICE_TTL` đứng ngoài `RETENTION` vì bảng §6 của DATA-MODEL là dữ liệu thật (test `RETENTION` so khớp tập khóa).
+  Đỏ trước (5 đỏ, thiếu hàm) → `test_sim_cleanup.py` 6 passed (23 giờ giữ, 25 giờ xóa, không nhãn/`xsim:`/nhãn khác không đụng, sự cố còn mở giữ, dry-run, tiền tố khớp `sim_service`) + `test_retention.py` vẫn xanh (26 passed cùng lượt).
+- **Hệ quả cần biết**: sau khi dọn, `/trace` của lượt sim cũ > 24 giờ không còn băng MÔ PHỎNG (`is_sim` suy từ nhãn thiết bị — plan D9) và `/v1/sim/runs/{id}` trả 404. Gia đình vẫn `is_demo`. Muốn giữ cờ bền ⇒ cần cột/migration (quyết định phạm vi, không làm ở đây).
+- Chưa cập nhật `docs/DATA-MODEL.md` §6 / `PRIVACY-DPIA.md` (cấm `docs/**` ở Wave 6): thiết bị demo `sim:` 24 giờ — việc của người có quyền sửa docs.
+
+## Wave 6 — T017, T019, T024 (làn B, 24/10/2026)
+
+- **T017 ĐẠT (phần UX + bảo mật; phần [A] không có)**: `ux-elder-reviewer` trên ảnh `~/hoicon-evidence/033-sim-trace/` + mã: 0 Chặn, 3 Cao, 6 Trung bình, 4 Thấp. **Cao đã xử lý**: (1) sơ đồ `/trace` 390 px bị cắt mép trái ⇒ sơ đồ nay trong khung cuộn ngang `min-w-[500px]` (test `390 px: sơ đồ không bị cắt mép trái`); (2) thiếu ảnh `/trace` có băng ⇒ thêm `trace-sim-banner-1440.png` (e2e); (3) "giờ tin Zalo khớp giờ bước" lệch trong ảnh vì fixture hợp đồng `run_steps.v1.valid.json` KHÔNG có bước `fast_alert` ⇒ mã rơi về giờ `at` của tin (đồng hồ DB); với dữ liệu thật đồ thị luôn ghi bước này — để nguyên, ghi nhận.
+  Đã sửa thêm: nút radio `shrink-0`, tab `min-h-16`, bỏ hậu tố "(kịch bản nháp)" trong `<option>` (chip bên dưới đã báo). **Chưa sửa** (chủ Tiến): băng `sticky` chiếm nhiều chỗ ở 390 px/chữ 200%; câu hỏi E8 dài ~30 từ và chưa tự đọc to (luật 15; câu nằm ở mẫu 024); chưa có ảnh 390/768 tab "Điện thoại của bác"; `opacity-60` nút khi đang gửi; xưng hô "bác"/"Mẹ" (đã biết, cần Opus); tiêu đề bước "người thân chưa trả lời" viết thường khi alias trống.
+  Bảo mật `routers/sim.py`, `sim_service.py`, cờ `sim` Zalo, cổng: nằm trong rà soát T009 của 037 (0 Critical/High; cổng 404 trước xác thực, `HOICON_SIM_ENABLED` không có ở prod, nhãn `sim:` do client bị đổi thành `sim-`, tin sim không tới Zalo) — xem evidence 037.
+- **T019 ĐẠT (trừ ROADMAP)**: pytest toàn bộ **2881 passed, 22 skipped, 1 xfailed** (xfail = lệch hợp đồng error.v1, 037 T013); ruff check + format sạch; web `typecheck lint build e2e` **118 passed, 3 skipped** (3 test live cần `HOICON_E2E_LIVE=1`); `hoicon-eval` smoke 20 / full 110 / injection 17: recall 100%, báo nhầm 0%, vi phạm 0, công khai AI 100%, không lệch baseline (chạy trên Postgres tạm `hoicon-db-eval-w6` cổng 15434 vì không được đọc mật khẩu DB dev; số vẫn là số rào tất định trên cassette synthetic, chưa phải số M3); gitleaks từng thư mục sạch (riêng `docs`/`docs/schemas` luôn 1 dương tính giả đã biết: sha256 chuỗi rỗng trong fixture "invalid"); `check-spec-trace` 25 spec 0 lỗi; `alembic heads` = 0012 (1 head). **Không làm**: ROADMAP `P2-19` (cấm sửa ROADMAP ở Wave 6) — người có quyền cập nhật.
+- **T024 ĐẠT**: bảng SC ở đầu tệp đã điền (SC-001…SC-006 từ pytest/Playwright; e2e dùng fixture hợp đồng, ghi rõ) + SC-008.

@@ -43,6 +43,7 @@ Guardian = Annotated[GuardianClaims, Depends(demo_guardian)]
 class SimScenarioOut(BaseModel):
     id: str
     category: str
+    title_vi: str
     is_benign: bool
     injection: bool
     draft: bool

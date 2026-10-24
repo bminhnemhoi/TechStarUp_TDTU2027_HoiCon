@@ -6,24 +6,24 @@ import { LEVEL_ICON, LEVEL_VI, aliasName, describeStep, type Level } from "@/lib
 import type { BoothView } from "@/lib/use-booth-runner";
 
 // Ba cột của gian (spec 050, FR-002): điện thoại của bác · trợ lý AI · Zalo của con. Chữ chính ≥ 28 px (`BIG`), câu đang diễn ra 36 px (`XL`);
-// mức rủi ro luôn kèm biểu tượng + chữ (luật 15). Băng rôn MÔ PHỎNG và BẢN GHI dùng màu diễn tập riêng (không dùng màu rủi ro).
+// mức rủi ro luôn kèm biểu tượng + chữ (luật 15). Băng rôn MÔ PHỎNG và BẢN GHI dùng màu mô phỏng `sim.*` (không dùng màu rủi ro lẫn màu diễn tập).
 const BIG = "text-[1.75rem] leading-[2.5rem]";
 const XL = "text-[2.25rem] leading-[3rem]";
 const ANSWER_VI: Record<Answer, string> = { yes: "Có", no: "Không", unsure: "Chưa chắc" };
 const ALIAS = aliasName("Mẹ");
 const CARD = "flex flex-col gap-3 rounded-card border-2 border-brand-navy p-5";
-const BANNER = "rounded-card border-drill-accent bg-drill-bg font-bold text-drill-fg p-3";
+const BANNER = "rounded-card border-sim-accent bg-sim-bg font-bold text-sim-fg p-3";
 const timeOf = (iso: string) => new Date(iso).toLocaleTimeString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 const REMINDS: Level[] = ["medium", "high", "critical"];
 
-export function BoothStage({ view, recorded }: { view: BoothView; recorded: boolean }) {
+export function BoothStage({ view, recorded, pace }: { view: BoothView; recorded: boolean; pace: "fast" | "normal" }) {
   const run = view.run;
   const level = (run?.level ?? "none") as Level;
   const messages = run?.guardian_messages ?? [];
   const calm = view.decided === "safe";
   const levelNote = calm ? " — cuộc gọi bình thường" : REMINDS.includes(level) ? " — HỏiCon nhắc bác tạm dừng" : "";
   return (
-    <div className="flex flex-col gap-4" data-testid="booth-stage">
+    <div className="flex flex-col gap-4" data-testid="booth-stage" data-pace={pace}>
       <p data-testid="sim-banner" className={`border-4 ${BANNER} ${BIG}`}>
         <span aria-hidden="true">ⓘ </span>MÔ PHỎNG — dữ liệu hư cấu, không có cuộc gọi hay tin Zalo thật. Không có ai bị lừa thật.
       </p>

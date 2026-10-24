@@ -53,3 +53,7 @@ REVOKE DELETE, TRUNCATE ON public.data_requests FROM hoicon_app;
 GRANT SELECT, INSERT ON public.consents, public.incident_transitions TO hoicon_app;
 REVOKE UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON public.consents, public.incident_transitions FROM hoicon_app;
 REVOKE ALL ON public.alembic_version FROM hoicon_app;
+
+-- Bảng do migration/`setup()` tạo SAU này (bằng role chủ đang chạy script) tự có quyền thường cho app, khỏi nhớ chạy lại
+-- script (Medium #8 của 034, thử ở 012 T020). Sổ chỉ-ghi-thêm MỚI vẫn phải thu hồi UPDATE/DELETE tay (thêm vào hai dòng REVOKE trên).
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO hoicon_app;

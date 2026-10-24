@@ -24,6 +24,9 @@
   --color-drill-fg: #4c2a85;
   --color-drill-bg: #f5f0fc;
   --color-drill-accent: #7c4dba;
+  --color-sim-fg: #0a4a78;
+  --color-sim-bg: #eef6fc;
+  --color-sim-accent: #1f76b5;
   --color-focus-ring: #005fcc;
   --font-sans: var(--font-be-vietnam-pro), Arial, sans-serif;
   --text-display: 2.25rem;

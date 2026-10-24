@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { SimMock, mockApi } from "./fixtures";
 
-// Spec 050 (FR-010, SC-001/003/006): `/booth` + `/demo/console` bằng fixture hợp đồng (mạng bị chặn, tất định). `?fast=1` rút nhịp dừng.
+// Spec 050 (FR-010, SC-001/003/006): `/booth` + `/demo/console` bằng fixture hợp đồng (mạng bị chặn, tất định). Nhịp nhanh chỉ bật bằng móc của test (`fastPace`): `?fast=1` bị bỏ qua ở bản build prod.
 // Số đo trực tiếp (t_alert_ms với API thật) nằm ở booth-live.spec.ts.
 const EVIDENCE_DIR = path.join(os.homedir(), "hoicon-evidence", "050-booth-mode");
 const PHONE = /(?:\+?84|0)[\s.-]?[35789](?:[\s.-]?\d){8}/;
@@ -15,6 +15,13 @@ const VIEWPORTS = [
   { name: "1440", width: 1440, height: 900 },
 ];
 
+/** Móc của test để rút nhịp dừng trên bản build prod (URL `?fast=1` chỉ có tác dụng ở dev). */
+async function fastPace(page: Page) {
+  await page.addInitScript(() => {
+    (window as unknown as { __HOICON_BOOTH_FAST__: boolean }).__HOICON_BOOTH_FAST__ = true;
+  });
+}
+
 async function firstQuestion(page: Page) {
   await expect(page.getByTestId("question")).toContainText("Đây là trợ lý AI HỏiCon");
 }
@@ -22,6 +29,7 @@ async function firstQuestion(page: Page) {
 test("một lượt hoàn chỉnh: câu hỏi của bác → tin cho con → quyết định, nhãn MÔ PHỎNG luôn hiện", async ({ page }) => {
   const sim = new SimMock();
   const calls = await mockApi(page, { sim });
+  await fastPace(page);
   await page.goto("/booth?fast=1");
   await expect(page.getByTestId("sim-banner")).toContainText("MÔ PHỎNG — dữ liệu hư cấu, không có cuộc gọi hay tin Zalo thật");
   await firstQuestion(page);
@@ -41,6 +49,7 @@ test("một lượt hoàn chỉnh: câu hỏi của bác → tin cho con → quy
 
 test("mất mạng giữa lượt: băng rôn BẢN GHI hiện ≤ 6 giây, đủ 3 cột; có mạng ⇒ lượt kế quay về trực tiếp (SC-003)", async ({ page, context }) => {
   await mockApi(page, { sim: new SimMock() });
+  await fastPace(page);
   await page.goto("/booth?fast=1");
   await firstQuestion(page);
   const t0 = Date.now();
@@ -53,12 +62,15 @@ test("mất mạng giữa lượt: băng rôn BẢN GHI hiện ≤ 6 giây, đ�
   await expect(page.getByTestId("col-ai")).toBeVisible();
   await expect(page.getByTestId("col-guardian")).toBeVisible();
   await expect(page.getByTestId("messages").getByRole("listitem")).toHaveCount(2); // bản ghi chạy đủ tới tin cho con
+  mkdirSync(EVIDENCE_DIR, { recursive: true });
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, "booth-recording-1440.png"), fullPage: true }); // hai băng rôn cạnh nhau
   await context.setOffline(false);
   await expect(banner).toHaveCount(0, { timeout: 20_000 }); // có mạng: lượt kế chạy trực tiếp
 });
 
 test("bảng điều khiển: chạy một kịch bản, dừng, đặt lại màn hình; chế độ Bản ghi không gọi máy chủ", async ({ page, context }) => {
   const calls = await mockApi(page, { sim: new SimMock() });
+  await fastPace(page);
   await page.goto("/booth?fast=1&autoplay=0");
   await expect(page.getByTestId("booth-title")).toHaveText("Sẵn sàng trình diễn");
   const panel = await context.newPage();
@@ -87,10 +99,12 @@ test("bảng điều khiển khi chưa có màn hình gian: nút chạy bị kh�
 
 test("cổng mô phỏng tắt (API 404) ⇒ 'Trang này chưa mở'; hết phiên (401) ⇒ về trang đăng nhập", async ({ page }) => {
   await mockApi(page, { simStart: () => ({ status: 404 }) });
+  await fastPace(page);
   await page.goto("/booth?fast=1");
   await expect(page.locator('main [role="alert"]')).toContainText("Trang này chưa mở");
   const other = await page.context().newPage();
   await mockApi(other, { simStart: () => ({ status: 401 }) });
+  await fastPace(other);
   await other.goto("/booth?fast=1");
   await other.waitForURL("**/login**");
 });
@@ -99,6 +113,7 @@ for (const vp of VIEWPORTS) {
   test(`giao diện ${vp.name}px: axe 0 lỗi, không cuộn ngang, chữ chính ≥ 28px, ảnh chụp`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await mockApi(page, { sim: new SimMock() });
+    await fastPace(page);
     await page.goto("/booth?fast=1");
     await firstQuestion(page);
     await expect(page.getByTestId("messages").getByRole("listitem")).toHaveCount(2);
@@ -112,11 +127,38 @@ for (const vp of VIEWPORTS) {
   });
 }
 
-test("bảng điều khiển: axe 0 lỗi và ảnh chụp", async ({ page }) => {
-  await page.setViewportSize({ width: 768, height: 1024 });
+for (const vp of VIEWPORTS) {
+  test(`bảng điều khiển ${vp.name}px: axe 0 lỗi, không cuộn ngang và ảnh chụp`, async ({ page }) => {
+    await page.setViewportSize({ width: vp.width, height: vp.height });
+    await page.goto("/demo/console");
+    const axe = await new AxeBuilder({ page }).analyze();
+    expect(axe.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    mkdirSync(EVIDENCE_DIR, { recursive: true });
+    await page.screenshot({ path: path.join(EVIDENCE_DIR, `console-${vp.name}.png`), fullPage: true });
+  });
+}
+
+
+test("?fast=1 trên URL không rút nhịp ở bản build prod; chỉ móc của test mới rút (T016)", async ({ page }) => {
+  await mockApi(page, { sim: new SimMock() });
+  await page.goto("/booth?fast=1&autoplay=0");
+  await expect(page.getByTestId("booth-stage")).toHaveAttribute("data-pace", "normal");
+  const hooked = await page.context().newPage();
+  await mockApi(hooked, { sim: new SimMock() });
+  await fastPace(hooked);
+  await hooked.goto("/booth?autoplay=0");
+  await expect(hooked.getByTestId("booth-stage")).toHaveAttribute("data-pace", "fast");
+});
+
+test("console: không còn chữ kỹ thuật nội bộ; băng rôn mô phỏng dùng màu sim, không dùng màu diễn tập (T016)", async ({ page }) => {
+  await mockApi(page, { sim: new SimMock() });
   await page.goto("/demo/console");
-  const axe = await new AxeBuilder({ page }).analyze();
-  expect(axe.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
-  mkdirSync(EVIDENCE_DIR, { recursive: true });
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, "console-768.png"), fullPage: true });
+  const text = await page.locator("main").innerText();
+  for (const jargon of ["Gate", "G4", "replay", "phát lại"]) expect(text, jargon).not.toContain(jargon);
+  await expect(page.locator("main > p").first()).toHaveClass(/border-sim-accent/);
+  await expect(page.locator("main > p").first()).not.toHaveClass(/drill/);
+  await page.goto("/booth?autoplay=0");
+  await expect(page.getByTestId("sim-banner")).toHaveClass(/border-sim-accent/);
+  await expect(page.getByTestId("sim-banner")).not.toHaveClass(/drill/);
 });

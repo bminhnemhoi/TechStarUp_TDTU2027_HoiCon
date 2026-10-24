@@ -23,6 +23,7 @@ from hoicon.db.models import (
     ActionToken,
     AgentRun,
     AgentStep,
+    Device,
     DeviceHeartbeat,
     Drill,
     Incident,
@@ -49,6 +50,10 @@ RETENTION: dict[str, timedelta] = {
     "drills": timedelta(days=365),  # "12 tháng" từ `created_at`
     "device_heartbeats": timedelta(days=90),  # từ `slot` (spec 029)
 }
+
+# Thiết bị demo của /sim (spec 033 D9) sống ngắn hơn dữ liệu thật: không nằm trong RETENTION (bảng §6).
+SIM_DEVICE_TTL = timedelta(hours=24)
+SIM_LABEL_PREFIX = "sim:"  # trùng `sim_service.SIM_LABEL_PREFIX` (có test); không import vì sim_service kéo cả router
 
 DeleteThread = Callable[[str], Awaitable[None]]
 
@@ -199,6 +204,25 @@ async def purge_device_heartbeats(sessions: async_sessionmaker, *, now: datetime
     return await _run_batches(sessions, build, dry)
 
 
+async def purge_sim_devices(sessions: async_sessionmaker, *, now: datetime, dry_run: bool = False) -> int:
+    """Thiết bị `sim:` quá 24 giờ mà mọi sự cố của nó đã đóng quá 24 giờ (không sự cố ⇒ theo tuổi thiết bị).
+    Sự cố KHÔNG bị xóa (`incidents.device_id` SET NULL, hạn lưu sự cố giữ nguyên) nên lượt cũ không còn là sim."""
+    cutoff = now - SIM_DEVICE_TTL
+    still_live = (
+        select(Incident.id)
+        .where(Incident.device_id == Device.id)
+        .where(or_(Incident.closed_at.is_(None), Incident.closed_at >= cutoff))
+        .exists()
+    )
+    where = Device.label.startswith(SIM_LABEL_PREFIX, autoescape=True) & (Device.created_at < cutoff) & ~still_live
+
+    def build(n: int) -> Delete:
+        return delete(Device).where(Device.id.in_(select(Device.id).where(where).limit(n)))
+
+    dry = select(func.count()).select_from(Device).where(where) if dry_run else None
+    return await _run_batches(sessions, build, dry)
+
+
 async def run_retention(
     sessions: async_sessionmaker,
     delete_thread: DeleteThread | None,
@@ -222,6 +246,7 @@ async def run_retention(
     report["jobs"] = await purge_jobs(sessions, now=moment, dry_run=dry_run)
     report["action_tokens"] = await purge_action_tokens(sessions, now=moment, dry_run=dry_run)
     report["device_heartbeats"] = await purge_device_heartbeats(sessions, now=moment, dry_run=dry_run)
+    report["sim_devices"] = await purge_sim_devices(sessions, now=moment, dry_run=dry_run)
     async with sessions() as session:
         has_verifications = await _table_exists(session, "verifications")
         has_drills = await _table_exists(session, "drills")

@@ -379,17 +379,19 @@ def weekly_digest(
     if incidents > 0:
         lines.append(
             f"Tuần qua HỏiCon đã nhắc {alias} dừng lại {incidents} lần, "
-            f"trong đó {resolved} lần đã có người nhà xử lý xong."
+            f"trong đó {resolved} lần đã có người nhà xử lý xong. "
+            f"Anh/chị nên hỏi thăm {alias} xem các cuộc gọi đó thế nào."
         )
     elif coverage is None:
         lines.append(
-            f"Tuần này HỏiCon chưa đủ dữ liệu về điện thoại của {alias} (máy chưa báo về đủ lâu), nên chưa thể nói gì."
+            f"Tuần này điện thoại của {alias} chưa báo về HỏiCon đủ lâu nên HỏiCon chưa có số liệu để tóm tắt."
         )
     else:
         lines.append(f"Tuần này HỏiCon không thấy dấu hiệu đáng ngờ nào trên điện thoại của {alias}.")
     if coverage is not None:
         lines.append(
             f"HỏiCon chạy trên điện thoại của {alias} khoảng {round_coverage(coverage)}% thời gian trong tuần."
+            + (f" Anh/chị thử nhờ {alias} mở lại ứng dụng HỏiCon." if coverage < 0.7 else "")
         )
     elif incidents > 0:
         lines.append(f"HỏiCon chưa đủ dữ liệu để nói máy của {alias} được bảo vệ bao nhiêu phần tuần này.")
@@ -406,7 +408,7 @@ def weekly_digest(
 
 def digest_off_ack() -> str:
     return _message(
-        "Đã tắt bản tin tuần cho anh/chị. HỏiCon vẫn nhận cảnh báo khi có chuyện và nhắn cho anh/chị ngay. "
+        "Đã tắt bản tin tuần cho anh/chị. Khi có chuyện cần báo, HỏiCon vẫn nhắn cho anh/chị ngay. "
         f"Muốn nhận lại bản tin, nhắn {DIGEST_ON_COMMAND}.",
         False,
     )

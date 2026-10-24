@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
       { source: "/trace/:path*", headers: privateHeaders },
       { source: "/sim/:path*", headers: privateHeaders },
       { source: "/sim", headers: privateHeaders },
+      { source: "/a/:path*", headers: privateHeaders }, // trang hành động có token trong URL (rà soát 037 T009 #10)
     ];
   },
   async rewrites() {
