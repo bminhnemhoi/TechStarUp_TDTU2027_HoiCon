@@ -187,6 +187,8 @@ export interface MockOptions {
   evalSummary?: () => { status: number; json?: Json };
   drills?: DrillMock;
   simReset?: () => { status: number; json?: Json };
+  boothJoin?: (code: string) => { status: number; json?: Json };
+  boothCode?: () => { status: number; json?: Json };
   simStart?: (body: Json) => { status: number; json?: Json; headers?: Record<string, string> };
   topology?: () => { status: number; json?: Json };
   caseFile?: CaseMock;
@@ -271,6 +273,17 @@ export async function mockApi(page: Page, options: MockOptions = {}): Promise<Ca
     }
     if (p === "/v1/graphs/incident") {
       const r = options.topology?.() ?? { status: 200, json: TOPOLOGY };
+      return reply(route, r.status, r.json);
+    }
+    if (p === "/v1/booth/codes" && method === "POST") {
+      const r = options.boothCode?.() ?? { status: 201, json: { code: "K7M2QX", expires_at: "2027-02-27T09:10:00+07:00", max_guests: 50, is_demo: true } };
+      return reply(route, r.status, r.json);
+    }
+    if (p === "/v1/booth/join" && method === "POST") {
+      const code = (body as Json).code as string;
+      const r = options.boothJoin?.(code) ?? (code === "K7M2QX"
+        ? { status: 200, json: { family_alias: "Gia đình Mẫu", expires_at: "2027-02-27T10:00:00+07:00", is_demo: true } }
+        : { status: 404, json: { detail: "join_code_invalid" } });
       return reply(route, r.status, r.json);
     }
     if (p === "/v1/sim/reset" && method === "POST") {

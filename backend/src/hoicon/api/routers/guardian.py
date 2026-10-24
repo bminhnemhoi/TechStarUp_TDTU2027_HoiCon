@@ -32,6 +32,7 @@ from hoicon.api.auth import (
     _bearer,
     decode_guardian_access_token,
     ensure_configured,
+    get_current_full_guardian,
     get_current_guardian,
     issue_guardian_access_token,
     require_same_origin,
@@ -431,7 +432,7 @@ async def post_case_file(
     incident_id: UUID,
     body: CaseFileActionIn,
     response: Response,
-    claims: Annotated[GuardianClaims, Depends(get_current_guardian)],
+    claims: Annotated[GuardianClaims, Depends(get_current_full_guardian)],
 ) -> CaseFileOut:
     response.headers.update(NO_STORE)
     async with get_sessionmaker()() as session:

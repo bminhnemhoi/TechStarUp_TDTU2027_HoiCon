@@ -22,6 +22,7 @@ const nextConfig: NextConfig = {
       { source: "/sim", headers: privateHeaders },
       { source: "/eval", headers: privateHeaders },
       { source: "/drills", headers: privateHeaders },
+      { source: "/join/:path*", headers: privateHeaders },
       { source: "/a/:path*", headers: privateHeaders }, // trang hành động có token trong URL (rà soát 037 T009 #10)
     ];
   },

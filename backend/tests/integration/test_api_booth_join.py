@@ -223,3 +223,87 @@ async def test_retention_drops_codes_long_after_they_expired(world: SimpleNamesp
         assert (
             await session.scalars(select(BoothJoinCode.id).where(BoothJoinCode.family_id == world.demo.family))
         ).all() == []
+
+
+# --- Sửa theo rà soát bảo mật T012/T013 (High #1, #2; Medium #3, #6) ---------------------------------------------
+
+
+async def sim_incident(w: SimpleNamespace, *, sim: bool) -> Any:
+    """Sự cố đang chờ người giám hộ của gia đình demo; `sim=True` ⇒ gắn thiết bị nhãn `sim:`."""
+    from hoicon.db.models import Device, Incident
+
+    async with get_sessionmaker().begin() as session:
+        member = await session.scalar(
+            select(Member.id).where(Member.family_id == w.demo.family, Member.role == "protected")
+        )
+        device = Device(
+            family_id=w.demo.family, member_id=member, platform="web", label="sim:fake_police_001" if sim else None,
+            app_version="sim-1", rules_version="sim-1", device_secret_hash=secrets.token_hex(32),
+        )  # fmt: skip
+        session.add(device)
+        await session.flush()
+        incident = Incident(
+            family_id=w.demo.family, member_id=member, device_id=device.id, state="awaiting_guardian",
+            level="high", rule_floor="high", is_demo=True,
+        )  # fmt: skip
+        session.add(incident)
+        await session.flush()
+        return incident.id
+
+
+async def test_a_guest_cannot_write_the_case_file(world: SimpleNamespace) -> None:
+    cookie = guest_cookie(await join((await new_code(world))["code"]))
+    incident = await sim_incident(world, sim=True)
+    res = await call(
+        "POST",
+        f"/v1/guardian/incidents/{incident}/case-file",
+        json={"action": "discard"},
+        cookies=cookie,
+        headers=ORIGIN,
+    )
+    assert res.status_code == 403
+
+
+async def test_a_guest_decides_only_on_simulated_incidents(world: SimpleNamespace) -> None:
+    cookie = guest_cookie(await join((await new_code(world))["code"]))
+    real_demo = await sim_incident(world, sim=False)  # sự cố demo thường: khách KHÔNG được đụng
+    res = await call(
+        "POST", f"/v1/incidents/{real_demo}/decision", json={"decision": "safe"}, cookies=cookie, headers=ORIGIN
+    )
+    assert res.status_code == 403
+    simulated = await sim_incident(world, sim=True)
+    res = await call(
+        "POST", f"/v1/incidents/{simulated}/decision", json={"decision": "safe"}, cookies=cookie, headers=ORIGIN
+    )
+    assert res.status_code == 200, res.text
+
+
+async def test_a_guest_session_dies_with_the_gate_and_with_a_reset(
+    world: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cookie = guest_cookie(await join((await new_code(world))["code"]))
+    assert (await call("GET", "/v1/guardian/me", cookies=cookie)).status_code == 200
+    monkeypatch.setenv("HOICON_SIM_ENABLED", "false")
+    get_settings.cache_clear()
+    assert (await call("GET", "/v1/guardian/me", cookies=cookie)).status_code == 401  # cổng tắt ⇒ phiên khách vô hiệu
+    monkeypatch.setenv("HOICON_SIM_ENABLED", "true")
+    get_settings.cache_clear()
+    assert (await call("GET", "/v1/guardian/me", cookies=cookie)).status_code == 200
+    assert (await call("POST", "/v1/sim/reset", token=world.demo.token, headers=ORIGIN)).status_code == 200
+    assert (
+        await call("GET", "/v1/guardian/me", cookies=cookie)
+    ).status_code == 401  # đặt lại ⇒ phiên khách của mã đó chết ngay
+    assert (
+        await call("GET", "/v1/guardian/me", token=world.demo.token)
+    ).status_code == 200  # người trình bày không bị ảnh hưởng
+
+
+async def test_scanning_a_revoked_or_expired_code_is_not_counted_as_a_guess(world: SimpleNamespace) -> None:
+    code = (await new_code(world))["code"]
+    assert (
+        await call("POST", "/v1/sim/reset", token=world.demo.token, headers=ORIGIN)
+    ).status_code == 200  # thu hồi mã
+    statuses = {(await join(code)).status_code for _ in range(booth.MAX_FAILURES_PER_CLIENT + 5)}
+    assert statuses == {404}  # QR cũ dán sẵn không khóa cả Wi-Fi gian
+    fresh = (await new_code(world))["code"]
+    assert (await join(fresh)).status_code == 200  # khách có mã mới vẫn vào được

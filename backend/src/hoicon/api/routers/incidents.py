@@ -16,13 +16,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from hoicon.api.auth import DeviceClaims, GuardianClaims, get_current_device, get_current_guardian
 from hoicon.api.routers.actions import ALREADY_HANDLED, IncidentDecisionIn, IncidentDecisionResult
-from hoicon.db.models import Incident, IncidentTransition
+from hoicon.db.models import Device, Incident, IncidentTransition
 from hoicon.db.session import get_sessionmaker
 from hoicon.services.incident_service import (
     ConcurrencyConflictError,
     InvalidTransitionError,
     apply_guardian_decision,
 )
+from hoicon.services.retention_service import SIM_LABEL_PREFIX
 
 router = APIRouter(prefix="/v1", tags=["incidents"])
 
@@ -128,6 +129,12 @@ async def post_incident_decision(
         incident = await load_incident(session, incident_id, claims.family_id)
         if incident is None:
             raise _not_found()
+        if claims.guest:  # khách gian chỉ quyết định trên sự cố MÔ PHỎNG (thiết bị nhãn `sim:`) của gia đình demo
+            label = await session.scalar(
+                select(Device.label).join(Incident, Incident.device_id == Device.id).where(Incident.id == incident.id)
+            )
+            if not (incident.is_demo and label and label.startswith(SIM_LABEL_PREFIX)):
+                raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Phiên khách chỉ quyết định trên sự cố mô phỏng")
 
         try:
             incident = await apply_guardian_decision(session, incident, body.decision, "guardian_jwt")

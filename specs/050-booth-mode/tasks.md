@@ -52,7 +52,7 @@
 
 - [x] T011 [B-api] [FR-005c] `POST /v1/sim/reset` (cùng `ops.booth.reset`), gắn nút Đặt lại của console. **BLOCKED**: cần `sim_reset.v1`.
 - [x] T012 [B-api] [FR-007] Mã tham gia (≤ 10 phút, ≤ 50 khách/mã, vô hiệu khi đặt lại) + `POST /v1/booth/join` đổi mã lấy phiên demo. **BLOCKED**: cần `booth_join.v1`.
-- [ ] T013 [B-web] [FR-007] Trang `/join/[code]` (chữ lớn, "bản trình diễn — dữ liệu hư cấu", xem + quyết định) và nút tạo mã/QR ở console. **BLOCKED**: sau T012.
+- [x] T013 [B-web] [FR-007] Trang `/join/[code]` (chữ lớn, "bản trình diễn — dữ liệu hư cấu", xem + quyết định) và nút tạo mã/QR ở console. **BLOCKED**: sau T012.
 
 ## Nhóm [A]
 

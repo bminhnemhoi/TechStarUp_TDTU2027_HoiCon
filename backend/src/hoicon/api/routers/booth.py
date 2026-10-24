@@ -18,7 +18,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 
@@ -41,7 +41,7 @@ GUEST_TTL = timedelta(hours=1)
 JOIN_INVALID = "join_code_invalid"
 TOO_MANY = "Bạn đã thử quá nhiều lần. Vui lòng đợi ít phút rồi thử lại."
 WINDOW_S = 600
-MAX_FAILURES_PER_CLIENT = 10
+MAX_FAILURES_PER_CLIENT = 30  # nhiều khách cùng một Wi-Fi gian (NAT) dùng chung một IP
 MAX_FAILURES_GLOBAL = 100
 MAX_TRACKED_CLIENTS = 4096
 
@@ -174,24 +174,32 @@ async def join(body: JoinIn, request: Request, response: Response) -> SessionOut
     stamp = datetime.now(UTC)
     async with get_sessionmaker().begin() as session:
         # Một câu lệnh nguyên tử: kiểm hạn/hủy/số khách và tăng bộ đếm (không vượt 50 dù nhiều khách vào cùng lúc).
+        digest = code_hash(body.code)
         row = (
             await session.execute(
                 update(BoothJoinCode)
                 .where(
-                    BoothJoinCode.code_hash == code_hash(body.code),
+                    BoothJoinCode.code_hash == digest,
                     BoothJoinCode.revoked_at.is_(None),
                     BoothJoinCode.expires_at > stamp,
                     BoothJoinCode.guests < BoothJoinCode.max_guests,
                 )
                 .values(guests=BoothJoinCode.guests + 1)
-                .returning(BoothJoinCode.family_id, BoothJoinCode.created_by)
+                .returning(BoothJoinCode.id, BoothJoinCode.family_id, BoothJoinCode.created_by)
             )
         ).one_or_none()
         family = await session.get(Family, row.family_id) if row is not None else None
+        # Mã từng tồn tại nhưng đã hết hạn/hủy/đầy (QR cũ dán sẵn) KHÔNG tính là đoán mò: không khóa cả Wi-Fi gian.
+        known = row is not None or await session.scalar(
+            select(BoothJoinCode.id).where(BoothJoinCode.code_hash == digest)
+        )
     if row is None or family is None or not family.is_demo:
-        _record_failure(client, now)
+        if not known:
+            _record_failure(client, now)
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=JOIN_INVALID)
-    token = auth.issue_guardian_access_token(row.created_by, row.family_id, now=stamp, ttl=GUEST_TTL, guest=True)
+    token = auth.issue_guardian_access_token(
+        row.created_by, row.family_id, now=stamp, ttl=GUEST_TTL, guest=True, booth_code=row.id
+    )
     max_age = int(GUEST_TTL.total_seconds())
     response.set_cookie(auth.GUARDIAN_COOKIE, token, max_age=max_age, **_cookie_flags())  # type: ignore[arg-type]
     logger.info("booth join: khách vào gian (đã cấp phiên xem)")

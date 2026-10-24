@@ -75,10 +75,26 @@ export default function ConsolePage() {
     streak += 1;
   }
   const disabled = !connected;
+  const [invite, setInvite] = useState<{ code: string; expires_at: string; max_guests: number } | null>(null);
+  const [inviting, setInviting] = useState(false);
+  const [inviteProblem, setInviteProblem] = useState<string | null>(null);
+
+  async function makeCode() {
+    setInviting(true);
+    setInviteProblem(null);
+    try {
+      setInvite(await api("/v1/booth/codes", { method: "POST" }));
+    } catch {
+      setInviteProblem("Chưa tạo được mã (cần phiên của gia đình demo và máy chủ đang bật chế độ mô phỏng).");
+    } finally {
+      setInviting(false);
+    }
+  }
 
   // Màn hình gian đặt lại ngay (không cần mạng); rồi xóa dữ liệu mô phỏng trên máy chủ (`POST /v1/sim/reset`, spec 050 FR-005c).
   async function resetAll() {
     send({ type: "cmd", cmd: "reset" });
+    setInvite(null); // mã cũ bị vô hiệu khi đặt lại
     const screen = "Đã dừng và xóa màn hình gian. Bảng kết quả bên dưới vẫn được giữ.";
     setNotice(`${screen} Đang xóa dữ liệu mô phỏng trên máy chủ…`);
     try {
@@ -99,6 +115,33 @@ export default function ConsolePage() {
       <p role="status" data-testid="booth-state" className="rounded-card border-2 border-brand-navy p-3 text-title font-bold">
         {!connected ? "● Chưa có màn hình gian" : status?.busy ? "▶ Đang chạy" : "● Sẵn sàng"}
       </p>
+
+      <section aria-label="Mời khách" className="flex flex-col gap-3 rounded-card border-2 border-brand-navy p-4">
+        <h2 className="text-title">Mời khách xem trên điện thoại của họ</h2>
+        <button type="button" disabled={inviting} onClick={() => void makeCode()} className={BUTTON_SECONDARY}>
+          {inviting ? "Đang tạo mã…" : "Tạo mã cho khách"}
+        </button>
+        {invite && (
+          <div className="flex flex-col gap-2" role="status">
+            <p data-testid="join-code" className="text-[3.5rem] font-bold leading-tight tracking-[0.3em]">
+              {invite.code}
+            </p>
+            <p className="text-body" data-testid="join-link">
+              Khách mở: {window.location.origin}/join/{invite.code} · hết hạn lúc{" "}
+              {new Date(invite.expires_at).toLocaleTimeString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit" })}{" "}
+              · tối đa {invite.max_guests} khách
+            </p>
+            <p className="text-body" data-testid="join-code-note">
+              Mã sống 10 phút. Bấm &quot;Đặt lại cho khách mới&quot; sẽ vô hiệu mã này. Chưa có mã QR (sẽ thêm khi quyết định dùng thư viện).
+            </p>
+          </div>
+        )}
+        {inviteProblem && (
+          <p role="alert" className="text-body font-bold">
+            {inviteProblem}
+          </p>
+        )}
+      </section>
 
       <section aria-label="Kết nối" className="flex flex-col gap-3 rounded-card border-2 border-brand-navy p-4">
         <p role="status" data-testid="booth-link" className="text-body font-bold">
