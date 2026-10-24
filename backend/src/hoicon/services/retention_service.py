@@ -28,6 +28,7 @@ from hoicon.db.models import (
     Drill,
     Incident,
     Job,
+    RevokedSession,
     RiskEventRecord,
     Verification,
 )
@@ -223,6 +224,17 @@ async def purge_sim_devices(sessions: async_sessionmaker, *, now: datetime, dry_
     return await _run_batches(sessions, build, dry)
 
 
+async def purge_revoked_sessions(sessions: async_sessionmaker, *, now: datetime, dry_run: bool = False) -> int:
+    """`jti` thu hồi mà token đã hết hạn thì không còn cần (token hết hạn tự bị từ chối). Ngoài RETENTION (bảng §6)."""
+    where = RevokedSession.expires_at < now
+
+    def build(n: int) -> Delete:
+        return delete(RevokedSession).where(RevokedSession.jti.in_(select(RevokedSession.jti).where(where).limit(n)))
+
+    dry = select(func.count()).select_from(RevokedSession).where(where) if dry_run else None
+    return await _run_batches(sessions, build, dry)
+
+
 async def run_retention(
     sessions: async_sessionmaker,
     delete_thread: DeleteThread | None,
@@ -246,6 +258,7 @@ async def run_retention(
     report["jobs"] = await purge_jobs(sessions, now=moment, dry_run=dry_run)
     report["action_tokens"] = await purge_action_tokens(sessions, now=moment, dry_run=dry_run)
     report["device_heartbeats"] = await purge_device_heartbeats(sessions, now=moment, dry_run=dry_run)
+    report["revoked_sessions"] = await purge_revoked_sessions(sessions, now=moment, dry_run=dry_run)
     report["sim_devices"] = await purge_sim_devices(sessions, now=moment, dry_run=dry_run)
     async with sessions() as session:
         has_verifications = await _table_exists(session, "verifications")

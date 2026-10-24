@@ -15,9 +15,11 @@ from datetime import UTC, datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response, status
+from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 from sqlalchemy import String, and_, case, cast, or_, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from hoicon.api.auth import (
@@ -25,7 +27,10 @@ from hoicon.api.auth import (
     GUARDIAN_ROLE,
     GUARDIAN_WEB_TTL,
     DeviceAuthNotConfiguredError,
+    DeviceTokenError,
     GuardianClaims,
+    _bearer,
+    decode_guardian_access_token,
     ensure_configured,
     get_current_guardian,
     issue_guardian_access_token,
@@ -39,7 +44,7 @@ from hoicon.api.routers.incidents import (
     load_transitions,
 )
 from hoicon.config import get_settings
-from hoicon.db.models import AgentRun, CaseFile, Family, Incident, Member
+from hoicon.db.models import AgentRun, CaseFile, Family, Incident, Member, RevokedSession
 from hoicon.db.session import get_sessionmaker
 from hoicon.services import case_file_service, consent_gate
 from hoicon.services.action_token_service import ActionTokenError, ActionTokenService
@@ -147,7 +152,25 @@ async def get_me(
     dependencies=[Depends(require_same_origin)],
     summary="Đăng xuất: xóa cookie phiên",
 )
-async def delete_session() -> Response:
+async def delete_session(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+    cookie: Annotated[str | None, Cookie(alias=GUARDIAN_COOKIE)] = None,
+) -> Response:
+    """Xóa cookie VÀ thu hồi phía máy chủ `jti` của token (tới khi hết hạn): bản sao bị lấy cắp hết tác dụng. Không có
+    token hợp lệ (đã hết hạn, đã xóa cookie) vẫn 204: đăng xuất luôn thành công."""
+    token = cookie if credentials is None else credentials.credentials
+    if token:
+        try:
+            claims = decode_guardian_access_token(token)
+        except (DeviceTokenError, DeviceAuthNotConfiguredError):
+            claims = None
+        if claims is not None and claims.jti is not None and claims.expires_at is not None:
+            async with get_sessionmaker().begin() as session:
+                await session.execute(
+                    insert(RevokedSession)
+                    .values(jti=claims.jti, expires_at=claims.expires_at)
+                    .on_conflict_do_nothing(index_elements=["jti"])
+                )
     response = Response(status_code=status.HTTP_204_NO_CONTENT, headers=NO_STORE)
     response.delete_cookie(GUARDIAN_COOKIE, **_cookie_flags())  # type: ignore[arg-type]
     return response

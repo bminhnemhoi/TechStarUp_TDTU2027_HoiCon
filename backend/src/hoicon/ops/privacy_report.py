@@ -60,6 +60,11 @@ DATA_MAP: dict[str, tuple[str, str, str]] = {
     "members": ("thành viên gia đình", "đến khi xóa gia đình (ẩn danh)", "bí danh, HMAC Zalo, chat id mã hóa"),
     "messages_out": ("đếm hạn mức Zalo theo tháng", "giữ dòng, không có cột văn bản", "id kênh (không số điện thoại)"),
     "pairing_codes": ("mã ghép đôi dùng một lần", "15 phút / dùng một lần", "chỉ HMAC của mã"),
+    "revoked_sessions": (
+        "thu hồi phiên web người giám hộ đã đăng xuất",
+        "tới khi token hết hạn (≤ 7 ngày)",
+        "chỉ mã phiên ngẫu nhiên, không PII",
+    ),
     "risk_events": ("sự kiện rủi ro từ thiết bị", "risk_events", "HMAC + 3 số cuối của số gọi, không số thô"),
     "threat_indicators": ("danh sách số/đường dẫn lừa đảo", "theo phiên bản danh sách", "chỉ HMAC + 3 số cuối"),
     "trusted_contacts": ("liên hệ tin cậy (không cảnh báo)", "đến khi xóa gia đình (ẩn danh)", "chỉ HMAC + 3 số cuối"),

@@ -607,6 +607,16 @@ class DeviceHeartbeat(Base):
     protected: Mapped[bool]
 
 
+class RevokedSession(Base):
+    """Phiên web người giám hộ đã đăng xuất (spec 037 T018): `jti` của token tới khi nó hết hạn. Không PII."""
+
+    __tablename__ = "revoked_sessions"
+    __table_args__ = (Index("ix_revoked_sessions_expires", "expires_at"),)
+
+    jti: Mapped[str] = mapped_column(String(32), primary_key=True)
+    expires_at: Mapped[datetime]
+
+
 class CaseFile(Base):
     """Hồ sơ vụ việc cho người giám hộ (spec 031): bản nháp dựng TẤT ĐỊNH từ dữ kiện máy chủ đã có khi sự cố thật kết
     cục `case_open`. `content` = đúng `case_file.v1#/$defs/content` (không PII). Không `is_drill`: diễn tập không có hồ

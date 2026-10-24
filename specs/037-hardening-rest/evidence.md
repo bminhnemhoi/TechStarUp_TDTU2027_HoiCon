@@ -79,3 +79,9 @@
 ## Lượt 7 — T017 (làn B, 24/10/2026)
 
 - **T017 ĐẠT**: Low #6 `/v1/lookups` phía người giám hộ: sự cố của người cao tuổi chưa/đã rút `guardian_alerts` ⇒ cùng 404 (demo miễn; máy của chính người đó vẫn được); #7 `elder.py` `_own_incident` khóa thêm `member_id` (nhà nhiều người cao tuổi); #8 `get_action_view_data` chỉ nhận scope `incident_decision`. 3 test đỏ trước (`test_api_lookups`, `test_api_elder`, `test_action_token_service`) → xanh; `-k "action or elder or lookups or idor or token"` 162 passed; ruff sạch. (Ma trận IDOR không cần thêm ô: ba tuyến đã có, đổi là về quy tắc theo thành viên/đồng ý.)
+
+## Lượt 7 — T018 (làn B, 24/10/2026)
+
+- **T018 ĐẠT**: migration `0013` bảng `revoked_sessions(jti, expires_at)` (không PII); JWT người giám hộ nay mang `jti` (uuid4 hex); `DELETE /v1/guardian/session` (cookie hoặc Bearer) ghi `jti` thu hồi tới khi hết hạn rồi xóa cookie — không có token hợp lệ vẫn 204; `get_current_guardian` từ chối `jti` đã thu hồi (token phát trước thay đổi không có `jti` ⇒ không thu hồi riêng được, hết hạn tự nhiên ≤ 7 ngày). Job `retention` xóa dòng quá hạn (`purge_revoked_sessions`, ngoài `RETENTION` vì §6 là dữ liệu thật); `privacy_report` có dòng cho bảng mới.
+  Test (`test_guardian_session.py`, 40 passed): token đã đăng xuất ⇒ 401 dù giữ bản sao; đăng xuất phiên này không giết phiên kia của cùng người; đăng xuất không token vẫn 204; retention chỉ xóa dòng quá hạn. Đột biến: bỏ kiểm `revoked` ⇒ 2 test đỏ. Lần "đỏ trước" đầu vô nghĩa (gọi nhầm `GET /session` ⇒ 405) nên đã sửa sang `/v1/guardian/me` rồi kiểm lại bằng đột biến. `-k "guardian_session or retention or privacy or schema or purge or idor"` 282 passed. Client TS sinh lại, typecheck sạch.
+- Dev DB đã áp `0013` (cần áp ở prod trước khi triển khai; `roles.sql` có `ALTER DEFAULT PRIVILEGES` nên role app tự có quyền bảng mới). `docs/DATA-MODEL.md` §6 chưa có bảng này (ngoài quyền): thêm dòng "revoked_sessions — tới khi token hết hạn".

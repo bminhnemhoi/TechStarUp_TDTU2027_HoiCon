@@ -210,7 +210,11 @@ export interface paths {
         put?: never;
         /** Đổi token đăng nhập một lần (nhận qua Zalo) lấy cookie phiên */
         post: operations["post_session_v1_guardian_session_post"];
-        /** Đăng xuất: xóa cookie phiên */
+        /**
+         * Đăng xuất: xóa cookie phiên
+         * @description Xóa cookie VÀ thu hồi phía máy chủ `jti` của token (tới khi hết hạn): bản sao bị lấy cắp hết tác dụng. Không có
+         *     token hợp lệ (đã hết hạn, đã xóa cookie) vẫn 204: đăng xuất luôn thành công.
+         */
         delete: operations["delete_session_v1_guardian_session_delete"];
         options?: never;
         head?: never;
@@ -2209,7 +2213,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -2219,6 +2225,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

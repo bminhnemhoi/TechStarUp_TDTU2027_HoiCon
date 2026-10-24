@@ -12,7 +12,7 @@ import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import jwt
 from fastapi import Cookie, Depends, HTTPException, Request, status
@@ -20,7 +20,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 
 from hoicon.config import get_settings
-from hoicon.db.models import Device, Member
+from hoicon.db.models import Device, Member, RevokedSession
 from hoicon.db.session import get_sessionmaker
 
 logger = logging.getLogger(__name__)
@@ -152,6 +152,7 @@ class GuardianClaims:
     family_id: UUID
     role: str = GUARDIAN_ROLE
     expires_at: datetime | None = None
+    jti: str | None = None  # mã phiên (token cũ phát trước 037 T018 không có ⇒ không thu hồi riêng được)
 
 
 def issue_guardian_access_token(
@@ -166,6 +167,7 @@ def issue_guardian_access_token(
         "aud": GUARDIAN_AUDIENCE,
         "iat": issued,
         "exp": issued + ttl,
+        "jti": uuid4().hex,
     }
     return jwt.encode(payload, _key(), algorithm=ALGORITHM)
 
@@ -184,7 +186,10 @@ def decode_guardian_access_token(token: str) -> GuardianClaims:
         if raw.get("role") != GUARDIAN_ROLE:
             raise DeviceTokenError("role")
         return GuardianClaims(
-            UUID(raw["sub"]), UUID(raw["family_id"]), expires_at=datetime.fromtimestamp(raw["exp"], UTC)
+            UUID(raw["sub"]),
+            UUID(raw["family_id"]),
+            expires_at=datetime.fromtimestamp(raw["exp"], UTC),
+            jti=raw["jti"] if isinstance(raw.get("jti"), str) else None,
         )
     except (jwt.PyJWTError, KeyError, ValueError, TypeError) as exc:
         raise DeviceTokenError(type(exc).__name__) from None
@@ -235,12 +240,14 @@ async def get_current_guardian(
         raise _unauthorized_guardian() from None
     async with get_sessionmaker()() as session:
         member = await session.get(Member, claims.member_id)
+        revoked = claims.jti is not None and await session.get(RevokedSession, claims.jti) is not None
     # `deleted_at`: thành viên đã bị ẩn danh sau yêu cầu xóa dữ liệu (spec 034) ⇒ token cũ hết hiệu lực ngay.
     if (
         member is None
         or member.family_id != claims.family_id
         or member.role != GUARDIAN_ROLE
         or member.deleted_at is not None
+        or revoked  # đã đăng xuất (037 T018): bản sao token/cookie bị lấy cắp cũng hết tác dụng
     ):
         raise _unauthorized_guardian()
     return claims

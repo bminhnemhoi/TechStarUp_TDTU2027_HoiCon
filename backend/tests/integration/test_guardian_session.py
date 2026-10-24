@@ -349,3 +349,56 @@ async def test_a_guardian_view_token_tied_to_an_incident_is_not_a_login_link(wor
     async with get_sessionmaker()() as session:
         used = await session.scalar(select(ActionToken.used_at).where(ActionToken.member_id == world["guardian"]))
     assert used is None
+
+
+# --- Rà soát 037 T009 #9: đăng xuất thu hồi phía máy chủ ---------------------------------------------------------
+
+
+async def test_a_logged_out_token_is_refused_even_if_someone_kept_a_copy(world: dict[str, Any]) -> None:
+    res = await exchange(await login_token(world))
+    jwt_value = cookie_of(res)
+    assert (await call("GET", "/v1/guardian/me", token=jwt_value)).status_code == 200
+    out = await call("DELETE", "/v1/guardian/session", token=jwt_value, headers=ORIGIN)
+    assert out.status_code == 204
+    again = await call("GET", "/v1/guardian/me", token=jwt_value)
+    assert again.status_code == 401  # bản sao cookie bị đánh cắp không còn dùng được
+
+
+async def test_logging_out_one_session_leaves_another_session_of_the_same_guardian_alive(
+    world: dict[str, Any],
+) -> None:
+    first = cookie_of(await exchange(await login_token(world)))
+    second = cookie_of(await exchange(await login_token(world)))
+    assert first != second
+    await call("DELETE", "/v1/guardian/session", token=first, headers=ORIGIN)
+    assert (await call("GET", "/v1/guardian/me", token=first)).status_code == 401
+    assert (await call("GET", "/v1/guardian/me", token=second)).status_code == 200
+
+
+async def test_logout_without_a_valid_token_still_succeeds_and_clears_the_cookie(world: dict[str, Any]) -> None:
+    out = await call("DELETE", "/v1/guardian/session", headers=ORIGIN)
+    assert out.status_code == 204
+
+
+async def test_retention_drops_only_revoked_sessions_whose_token_has_expired(world: dict[str, Any]) -> None:
+    from datetime import UTC, datetime
+
+    from hoicon.db.models import RevokedSession
+    from hoicon.services import retention_service as rs
+
+    now = datetime(2027, 3, 1, 12, 0, tzinfo=UTC)
+    async with get_sessionmaker().begin() as session:
+        session.add_all(
+            [
+                RevokedSession(jti="t018old" + "0" * 25, expires_at=now - timedelta(seconds=1)),
+                RevokedSession(jti="t018new" + "0" * 25, expires_at=now + timedelta(seconds=1)),
+            ]
+        )
+    try:
+        assert await rs.purge_revoked_sessions(get_sessionmaker(), now=now) >= 1
+        async with get_sessionmaker()() as session:
+            assert await session.get(RevokedSession, "t018old" + "0" * 25) is None
+            assert await session.get(RevokedSession, "t018new" + "0" * 25) is not None
+    finally:
+        async with get_sessionmaker().begin() as session:
+            await session.execute(delete(RevokedSession).where(RevokedSession.jti.like("t018%")))
