@@ -636,14 +636,14 @@
     "summary": "Đổi token đăng nhập một lần (nhận qua Zalo) lấy cookie phiên",
     "operationId": "post_session_v1_guardian_session_post",
     "requestBody": {
+     "required": true,
      "content": {
       "application/json": {
        "schema": {
         "$ref": "#/components/schemas/SessionIn"
        }
       }
-     },
-     "required": true
+     }
     },
     "responses": {
      "200": {
@@ -679,10 +679,44 @@
      "guardian"
     ],
     "summary": "Đăng xuất: xóa cookie phiên",
+    "description": "Xóa cookie VÀ thu hồi phía máy chủ `jti` của token (tới khi hết hạn): bản sao bị lấy cắp hết tác dụng. Không có\ntoken hợp lệ (đã hết hạn, đã xóa cookie) vẫn 204: đăng xuất luôn thành công.",
     "operationId": "delete_session_v1_guardian_session_delete",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "hc_guardian",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hc Guardian"
+      }
+     }
+    ],
     "responses": {
      "204": {
       "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
      }
     }
    }

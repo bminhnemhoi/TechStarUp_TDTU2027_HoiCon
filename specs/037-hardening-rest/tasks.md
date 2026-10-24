@@ -54,7 +54,7 @@
 
 - [ ] T011 [A] [FR-008, SC-006] ★ **Chờ Minh** (MASTER-PLAN §8 mục 13; đề xuất: chưa dùng Crashlytics, đo bằng Android vitals — T015). Crashlytics: SDK + mục đích đồng ý mới (`consent-copy`, luật 7) + `play-policy`. **BLOCKED**: chưa có Firebase (W0-3/P0-08). Tiêu chí gỡ chặn:
   project Firebase + `google-services.json` ngoài git. Không tạo tệp giả; SC-006 ghi "chưa đo".
-- [ ] T012 [Docs] [FR-009] **Người có quyền sửa `docs/`**: `PRIVACY-DPIA.md` thêm (a) bảng dữ liệu của `privacy_report` (T008), (b) độ trễ đệm đồng ý ≤ 60 giây khi đồng ý đổi từ kênh khác,
+- [x] T012 [Docs] [FR-009] **Người có quyền sửa `docs/`**: `PRIVACY-DPIA.md` thêm (a) bảng dữ liệu của `privacy_report` (T008), (b) độ trễ đệm đồng ý ≤ 60 giây khi đồng ý đổi từ kênh khác,
   (c) chính sách link cũ (T003); `docs/setup/BACKUP.md` thêm định dạng khóa con (T007). **BLOCKED**: ngoài quyền làn B.
 
 ## Đối soát kiến trúc sư 24/10/2026 (bổ sung từ bản của kiến trúc sư)
@@ -70,21 +70,21 @@ nào cần, karpathy: không làm trước). Quyết định cho các câu làn 
   của `routers/events.py` và `routers/devices.py` khớp lược đồ. · Verify: `$PYTEST tests/contract/test_error_schema.py -q`
 - [x] T014 [B] [FR-005] `ops restore`: một khối lỗi (`BackupError`) ⇒ bỏ **cả lượt**, DB đích không đổi (một giao dịch). Test đỏ trước: tệp sửa 1 byte ở khối giữa
   ⇒ số dòng mọi bảng trước = sau. · Verify: `$PYTEST tests/integration/test_backup_restore.py -q -k atomic`
-- [ ] T015 [AB] [FR-008] `docs/setup/STABILITY.md`: đọc độ ổn định ở Android vitals (Play Console), ngưỡng hành vi xấu của Play, cách ghi vào báo cáo thí điểm.
+- [x] T015 [AB] [FR-008] `docs/setup/STABILITY.md`: đọc độ ổn định ở Android vitals (Play Console), ngưỡng hành vi xấu của Play, cách ghi vào báo cáo thí điểm.
   SC-006 BLOCKED tới Play Console (W0-3). Người có quyền `docs/setup` làm. · Verify: review
 - [x] T016 [B] Chạy lại T010 sau T013–T014. · Verify: như T010
 
 ## Lượt 7 (nhà điều phối 24/10/2026) — mục reviewer T009 còn mở, tài liệu
 
 Quyền làn B mở thêm cho lượt này: `docs/setup/**`, `docs/PRIVACY-DPIA.md`, `infra/compose.prod.yml` (chỉ chuyển biến).
-- [ ] T017 [B] [FR-007] Low #6/#7/#8 của T009: `/v1/lookups` phía người giám hộ kiểm `web_readable`; `elder.py` khóa theo `member_id`;
+- [x] T017 [B] [FR-007] Low #6/#7/#8 của T009: `/v1/lookups` phía người giám hộ kiểm `web_readable`; `elder.py` khóa theo `member_id`;
   `get_action_view_data` kiểm scope token. Mỗi mục test đỏ trước (thêm ô vào `test_idor_matrix.py` nếu hợp).
   · Verify: `$PYTEST tests/integration/test_idor_matrix.py tests/integration/test_api_lookups.py -q` + test mới
-- [ ] T018 [B] [FR-007] Low #9: `DELETE /v1/guardian/session` thu hồi phía máy chủ (danh sách `jti` thu hồi tới khi hết hạn, bảng hoặc cột
+- [x] T018 [B] [FR-007] Low #9: `DELETE /v1/guardian/session` thu hồi phía máy chủ (danh sách `jti` thu hồi tới khi hết hạn, bảng hoặc cột
   có sẵn; migration mới nếu cần — làn B sở hữu migration). Test: token đã đăng xuất ⇒ 401. · Verify: `$PYTEST tests/integration -q -k "guardian_session"`
-- [ ] T019 [B] [FR-005] `ops restore` kiểm `REQUIRED_TRIGGERS` như `restore-check`; sau khôi phục thật in nhắc chạy lại `purge_family`
+- [x] T019 [B] [FR-005] `ops restore` kiểm `REQUIRED_TRIGGERS` như `restore-check`; sau khôi phục thật in nhắc chạy lại `purge_family`
   cho các yêu cầu xóa sau thời điểm sao lưu (đọc bảng xóa có sẵn nếu có; không có thì chỉ in cảnh báo). · Verify: `$PYTEST tests/integration/test_backup_restore.py -q`
-- [ ] T020 [B] Medium #3: `infra/compose.prod.yml` chuyển `HOICON_CONSENT_STRICT` vào container (mặc định `true`, không đổi hành vi).
+- [x] T020 [B] Medium #3: `infra/compose.prod.yml` chuyển `HOICON_CONSENT_STRICT` vào container (mặc định `true`, không đổi hành vi).
   · Verify: `$PYTEST tests -q -k "compose or prod_config"`
 - [ ] T021 [B] [FR-009] Tài liệu: 037 T012 (`docs/PRIVACY-DPIA.md`: bảng `privacy_report`, độ trễ đệm đồng ý ≤ 60 s, chính sách link cũ D2),
   `docs/setup/BACKUP.md` (khóa con, `ops restore`, phát lại `purge_family`), 037 T015 (`docs/setup/STABILITY.md`), 033 T018 (`docs/setup/SIM.md`).

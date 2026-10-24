@@ -424,10 +424,12 @@ def run_restore(path: Path, target_db: str, settings: Settings | None = None) ->
     started = time.perf_counter()
     _pg_restore(path, target_db, settings, single_transaction=True)
     with psycopg.connect(_conninfo(settings, target_db)) as conn, conn.cursor() as cur:
-        restored, version = _table_counts(cur), _alembic_version(cur)
+        restored, version, triggers = _table_counts(cur), _alembic_version(cur), _read_triggers(cur)
     wrong = sorted(t for t, n in manifest["tables"].items() if restored.get(t) != n)
-    if version != manifest["alembic_version"] or wrong:
-        raise BackupError("đã khôi phục nhưng không khớp manifest" + (": " + ", ".join(wrong) if wrong else ""))
+    missing = trigger_problems(triggers)
+    if version != manifest["alembic_version"] or wrong or missing:
+        detail = [*(["số dòng khác manifest ở: " + ", ".join(wrong)] if wrong else []), *missing]
+        raise BackupError("đã khôi phục nhưng không khớp manifest; " + "; ".join(detail or ["alembic_version khác"]))
     return {
         "file": path.name,
         "ok": True,
@@ -435,8 +437,38 @@ def run_restore(path: Path, target_db: str, settings: Settings | None = None) ->
         "alembic_version": version,
         "tables": len(restored),
         "rows": sum(restored.values()),
+        "triggers_always": sorted(REQUIRED_TRIGGERS),
+        "deletions_since_backup": deletions_since(settings, datetime.fromisoformat(manifest["created_at"])),
         "total_seconds": round(time.perf_counter() - started, 2),
     }
+
+
+def trigger_problems(triggers: dict[str, tuple[str, str]]) -> list[str]:
+    """Trigger bất biến thiếu hoặc không ở chế độ ALWAYS (`tgenabled = 'A'`) ⇒ danh sách lỗi (dùng chung 2 lệnh)."""
+    return [
+        f"trigger {name} thiếu hoặc không ở chế độ ALWAYS"
+        for name, table in REQUIRED_TRIGGERS.items()
+        if triggers.get(name) != (table, "A")
+    ]
+
+
+def _read_triggers(cur: psycopg.Cursor) -> dict[str, tuple[str, str]]:
+    cur.execute(
+        "select t.tgname, c.relname, t.tgenabled from pg_trigger t join pg_class c on c.oid = t.tgrelid "
+        "where not t.tgisinternal"
+    )
+    return {name: (table, mode) for name, table, mode in cur.fetchall()}
+
+
+def deletions_since(settings: Settings, moment: datetime) -> list[str]:
+    """Id gia đình có yêu cầu xóa hoàn tất SAU `moment` (đọc `data_requests` của DB ĐANG CHẠY — bản sao lưu không có
+    chúng). Khôi phục bản cũ làm sống lại dữ liệu của họ: phải chạy lại `purge_family`. Id không phải PII."""
+    with psycopg.connect(_conninfo(settings)) as conn, conn.cursor() as cur:
+        cur.execute(
+            "select distinct family_id::text from data_requests where status = 'done' and completed_at > %s order by 1",
+            (moment,),
+        )
+        return [row[0] for row in cur.fetchall()]
 
 
 def run_restore_check(path: Path, settings: Settings | None = None) -> dict[str, Any]:
@@ -457,11 +489,7 @@ def run_restore_check(path: Path, settings: Settings | None = None) -> dict[str,
         with psycopg.connect(_conninfo(settings, TEMP_DB)) as conn, conn.cursor() as cur:
             restored = _table_counts(cur)
             version = _alembic_version(cur)
-            cur.execute(
-                "select t.tgname, c.relname, t.tgenabled from pg_trigger t join pg_class c on c.oid = t.tgrelid "
-                "where not t.tgisinternal"
-            )
-            triggers = {name: (table, mode) for name, table, mode in cur.fetchall()}
+            triggers = _read_triggers(cur)
     finally:
         _psql(settings, "postgres", f"DROP DATABASE IF EXISTS {TEMP_DB} WITH (FORCE)")
     problems = []
@@ -473,9 +501,7 @@ def run_restore_check(path: Path, settings: Settings | None = None) -> dict[str,
     wrong = sorted(t for t, n in manifest["tables"].items() if restored.get(t) != n)
     if wrong:
         problems.append("số dòng không khớp manifest ở: " + ", ".join(wrong))
-    for name, table in REQUIRED_TRIGGERS.items():
-        if triggers.get(name) != (table, "A"):
-            problems.append(f"trigger {name} thiếu hoặc không ở chế độ ALWAYS")
+    problems += trigger_problems(triggers)
     report = {
         "file": path.name,
         "ok": not problems,
@@ -584,6 +610,17 @@ def main(argv: list[str] | None = None) -> int:
                 f"Khôi phục ĐẠT vào {report['target']}: {report['file']} · alembic {report['alembic_version']} · "
                 f"{report['tables']} bảng, {report['rows']} dòng khớp manifest · {report['total_seconds']} s"
             )
+            late = report["deletions_since_backup"]
+            if late:
+                print(
+                    f"CẢNH BÁO: {len(late)} gia đình yêu cầu xóa dữ liệu SAU thời điểm sao lưu; bản khôi phục làm sống "
+                    "lại dữ liệu của họ. Chạy lại `python -m hoicon.ops.data request-delete --family <id> --now` cho: "
+                    + ", ".join(late)
+                )
+            else:
+                print(
+                    "Không có yêu cầu xóa dữ liệu nào sau thời điểm sao lưu (theo bảng data_requests của DB đang chạy)."
+                )
         else:
             keep, remove = run_rotate(backup_dir(settings, args.dir), dry_run=args.dry_run)
             print(f"Giữ {len(keep)} bản; {'sẽ xóa' if args.dry_run else 'đã xóa'} {len(remove)} bản")

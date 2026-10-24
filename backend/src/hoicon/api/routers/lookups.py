@@ -37,7 +37,7 @@ from hoicon.config import get_settings
 from hoicon.db.models import Consent, Device, Incident, Verification
 from hoicon.db.session import get_sessionmaker
 from hoicon.jobs.queue import enqueue
-from hoicon.services import threat_list_service
+from hoicon.services import consent_gate, threat_list_service
 from hoicon.services import verification_service as vs
 from hoicon.services.incident_service import GUARDIAN_DECIDABLE, IncidentService
 
@@ -195,7 +195,11 @@ async def _owned_incident(session: AsyncSession, actor: Actor, incident_id: UUID
     if actor.kind == "device":  # người được bảo vệ chỉ gắn vào sự cố CỦA MÌNH (nhà có thể có nhiều người cao tuổi)
         query = query.where(Incident.member_id == actor.member_id)
     incident = await session.scalar(query)
-    if incident is None:  # của nhà khác và id lạ cùng một 404 (không lộ sự cố có tồn tại hay không)
+    # Của nhà khác, id lạ, hoặc (người giám hộ) người cao tuổi đã rút/chưa có `guardian_alerts`: cùng một 404.
+    if incident is None or (
+        actor.kind != "device"
+        and not await consent_gate.web_readable(session, incident.member_id, is_demo=incident.is_demo)
+    ):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Không tìm thấy sự cố")
     return incident
 

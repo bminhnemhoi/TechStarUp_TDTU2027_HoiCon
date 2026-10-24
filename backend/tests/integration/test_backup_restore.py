@@ -439,3 +439,47 @@ def test_restore_atomic_refuses_the_live_database_and_a_non_empty_target(
     bk.run_restore(made["result"].path, empty_target, made["settings"])
     with pytest.raises(bk.BackupError):  # đã có bảng ⇒ không ghi đè
         bk.run_restore(made["result"].path, empty_target, made["settings"])
+
+
+def test_trigger_problems_name_every_missing_or_not_always_trigger() -> None:
+    """Spec 037 T019: dùng chung cho `restore-check` và `restore`."""
+    ok = {name: (table, "A") for name, table in bk.REQUIRED_TRIGGERS.items()}
+    assert bk.trigger_problems(ok) == []
+    missing = dict(ok)
+    missing.pop("trg_consents_immutable")
+    weak = dict(ok)
+    weak["trg_incidents_terminal"] = ("incidents", "O")
+    assert len(bk.trigger_problems(missing)) == 1 and "trg_consents_immutable" in bk.trigger_problems(missing)[0]
+    assert len(bk.trigger_problems(weak)) == 1 and "trg_incidents_terminal" in bk.trigger_problems(weak)[0]
+
+
+def test_restore_atomic_checks_triggers_and_lists_deletions_made_after_the_backup(
+    made: dict[str, Any], empty_target: str
+) -> None:
+    report = bk.run_restore(made["result"].path, empty_target, made["settings"])
+    assert set(report["triggers_always"]) == set(bk.REQUIRED_TRIGGERS)
+    assert isinstance(report["deletions_since_backup"], list)  # danh sách id gia đình (không PII)
+
+
+def test_deletions_after_the_backup_are_found_by_completion_time(made: dict[str, Any]) -> None:
+    settings = made["settings"]
+    family = new_id()
+    request = new_id()
+    with psycopg.connect(bk._conninfo(settings), autocommit=True) as conn:
+        conn.execute(
+            "insert into families (id, display_name, region, is_demo) values (%s, 'test-037-t019', 'nam', true)",
+            (family,),
+        )
+        conn.execute(
+            "insert into data_requests (id, family_id, requested_via, status, completed_at) "
+            "values (%s, %s, 'ops', 'done', now())",
+            (request, family),
+        )
+    try:
+        long_ago = datetime(2020, 1, 1, tzinfo=UTC)
+        assert str(family) in bk.deletions_since(settings, long_ago)
+        assert str(family) not in bk.deletions_since(settings, datetime.now(UTC) + timedelta(hours=1))
+    finally:
+        with psycopg.connect(bk._conninfo(settings), autocommit=True) as conn:
+            conn.execute("delete from data_requests where id = %s", (request,))
+            conn.execute("delete from families where id = %s", (family,))

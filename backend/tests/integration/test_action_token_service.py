@@ -158,3 +158,18 @@ async def test_action_view_data_format(sample_incident: tuple[UUID, UUID, UUID])
         assert view["incident"]["level"] == "high"
         assert "cuộc gọi lạ" in view["incident"]["summary_text"].lower()
         assert view["incident"]["protected_member_label"] == "Mẹ"
+
+
+async def test_a_guardian_view_token_bound_to_an_incident_does_not_open_the_action_page(
+    sample_incident: tuple[UUID, UUID, UUID],
+) -> None:
+    """Rà soát 037 T009 #8: trang hành động chỉ nhận token `incident_decision`."""
+    _family_id, member_id, incident_id = sample_incident
+    async with get_sessionmaker().begin() as session:
+        _, view_token = await ActionTokenService.create_token(
+            session, incident_id=incident_id, member_id=member_id, scope="guardian_view"
+        )
+        _, decision_token = await ActionTokenService.create_token(session, incident_id=incident_id, member_id=member_id)
+    async with get_sessionmaker()() as session:
+        assert await ActionTokenService.get_action_view_data(session, view_token) is None
+        assert await ActionTokenService.get_action_view_data(session, decision_token) is not None

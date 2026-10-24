@@ -75,3 +75,33 @@
 - `tests/contract/test_error_schema.py`: bỏ test enum `purpose`; mã của `events`/`devices` ∈ `$defs.code`; câu `consents.UNKNOWN_TEXT` hợp lệ.
   `tests/integration/test_error_body_contract.py`: gỡ `xfail` ⇒ **PASSED** (403 thật của `POST /v1/events` khớp lược đồ).
 - Verify: `uv run --directory backend pytest tests/contract tests/integration/test_error_body_contract.py -q` ⇒ 307 passed; ruff sạch.
+
+## Lượt 7 — T017 (làn B, 24/10/2026)
+
+- **T017 ĐẠT**: Low #6 `/v1/lookups` phía người giám hộ: sự cố của người cao tuổi chưa/đã rút `guardian_alerts` ⇒ cùng 404 (demo miễn; máy của chính người đó vẫn được); #7 `elder.py` `_own_incident` khóa thêm `member_id` (nhà nhiều người cao tuổi); #8 `get_action_view_data` chỉ nhận scope `incident_decision`. 3 test đỏ trước (`test_api_lookups`, `test_api_elder`, `test_action_token_service`) → xanh; `-k "action or elder or lookups or idor or token"` 162 passed; ruff sạch. (Ma trận IDOR không cần thêm ô: ba tuyến đã có, đổi là về quy tắc theo thành viên/đồng ý.)
+
+## Lượt 7 — T018 (làn B, 24/10/2026)
+
+- **T018 ĐẠT**: migration `0013` bảng `revoked_sessions(jti, expires_at)` (không PII); JWT người giám hộ nay mang `jti` (uuid4 hex); `DELETE /v1/guardian/session` (cookie hoặc Bearer) ghi `jti` thu hồi tới khi hết hạn rồi xóa cookie — không có token hợp lệ vẫn 204; `get_current_guardian` từ chối `jti` đã thu hồi (token phát trước thay đổi không có `jti` ⇒ không thu hồi riêng được, hết hạn tự nhiên ≤ 7 ngày). Job `retention` xóa dòng quá hạn (`purge_revoked_sessions`, ngoài `RETENTION` vì §6 là dữ liệu thật); `privacy_report` có dòng cho bảng mới.
+  Test (`test_guardian_session.py`, 40 passed): token đã đăng xuất ⇒ 401 dù giữ bản sao; đăng xuất phiên này không giết phiên kia của cùng người; đăng xuất không token vẫn 204; retention chỉ xóa dòng quá hạn. Đột biến: bỏ kiểm `revoked` ⇒ 2 test đỏ. Lần "đỏ trước" đầu vô nghĩa (gọi nhầm `GET /session` ⇒ 405) nên đã sửa sang `/v1/guardian/me` rồi kiểm lại bằng đột biến. `-k "guardian_session or retention or privacy or schema or purge or idor"` 282 passed. Client TS sinh lại, typecheck sạch.
+- Dev DB đã áp `0013` (cần áp ở prod trước khi triển khai; `roles.sql` có `ALTER DEFAULT PRIVILEGES` nên role app tự có quyền bảng mới). `docs/DATA-MODEL.md` §6 chưa có bảng này (ngoài quyền): thêm dòng "revoked_sessions — tới khi token hết hạn".
+
+## Lượt 7 — T019 (làn B, 24/10/2026)
+
+- **T019 ĐẠT**: `ops.backup restore` kiểm `REQUIRED_TRIGGERS` ở chế độ ALWAYS trên DB đích (hàm dùng chung `trigger_problems` với `restore-check`); thiếu ⇒ `BackupError` nêu tên trigger. Sau khôi phục, báo cáo có `deletions_since_backup` = id gia đình có `data_requests` `done` hoàn tất SAU `manifest.created_at` (đọc DB đang chạy; id không phải PII) và CLI in cảnh báo kèm lệnh `request-delete --family <id> --now`; không có ⇒ in dòng "không có yêu cầu xóa nào". Lệnh CLI chỉ in, không tự xóa (quyết định của con người).
+  Test đỏ trước (3 đỏ) → `test_backup_restore.py` **39 passed** (Docker): `trigger_problems` (thiếu/không ALWAYS), `run_restore` trả `triggers_always` đủ + danh sách xóa, `deletions_since` tìm đúng theo thời điểm hoàn tất. Ruff sạch.
+
+## Lượt 7 — T020 (làn B, 24/10/2026)
+
+- **T020 ĐẠT**: `infra/compose.prod.yml` chuyển `HOICON_CONSENT_STRICT: ${HOICON_CONSENT_STRICT:-true}` vào backend (không đặt biến ⇒ `true`, đúng hành vi cũ vì ngoài dev mã đã bật mặc định); đặt `false` trong tệp biến prod ⇒ container nhận `false` (chú thích trong `env.prod.example` cập nhật cho đúng sự thật). Test đỏ trước (2 test mới ở `scripts/tests/test_deploy_vps.py::ComposeInvariants`) → `unittest test_deploy_vps` 33 OK; `pytest -k "compose or prod_config or production_compose"` 3 passed. Chưa có văn bản `approved` (011 T010) nên ở prod mọi lần CẤP đồng ý vẫn bị 422 cho tới khi Minh duyệt hoặc đặt `false` có chủ đích.
+
+## Lượt 7 — T021: tài liệu (037 T012, T015; 033 T018 một phần) (làn B, 24/10/2026)
+
+- **037 T012 ĐẠT**: `docs/PRIVACY-DPIA.md` thêm mục "Đồng ý lúc gửi, độ trễ đệm và liên kết cũ" (điều kiện lúc gửi kể cả trả lời "3" trên Zalo; đệm đồng ý ≤ 60 giây khi đổi ngoài `/v1/consents`; chính sách link cũ D2 theo hành vi THẬT: đọc ⇒ 404, quyết định vẫn ghi và vẫn trả `state`/`outcome`; đăng xuất thu hồi `jti`) và mục "Bảng dữ liệu ↔ mục đích ↔ hạn lưu" (bản chụp 21 bảng từ `privacy_report`, lệnh sinh lại; 0 bảng chưa ánh xạ). `docs/setup/BACKUP.md`: định dạng v2 (HKDF theo tệp, v1 vẫn đọc được), lệnh `restore`, quy trình khôi phục thật gồm phát lại yêu cầu xóa.
+- **037 T015 ĐẠT**: `docs/setup/STABILITY.md` — đọc Android vitals ở Play Console, ngưỡng hành vi xấu (tổng 1,09% sự cố / 0,47% ANR, 8% theo kiểu máy; **ghi rõ là số tại thời điểm viết, kiểm lại trước khi dùng**), điều kiện cỡ mẫu, mẫu dòng ghi vào báo cáo thí điểm. SC-006 vẫn BLOCKED (Play Console).
+- **033 T018 CHƯA TICK (làm 1/3)**: `docs/setup/SIM.md` đã cập nhật và **chạy thử từ DB trống** (Postgres tạm 15435): migration → head 0013; API với `HOICON_SIM_ENABLED=true`: `/healthz` 200, `/readyz` 200; `guardian_link --seed` in liên kết; đổi token lấy phiên 200; `/v1/sim/scenarios` 110 kịch bản có `title_vi`; `POST /v1/sim/runs` `llm: replay` ⇒ `replay`, có câu hỏi, `is_demo: true`. Chưa làm: `specs/033-web-sim-eval/quickstart.md` (ngoài danh sách tệp làn B được ghi) và `docs/DESIGN-SYSTEM.md` mục 3 trang web (ngoài quyền) — kịch bản quay video 1280×720 đã đặt tạm trong `SIM.md`; cần chuyển sang `quickstart.md` + DESIGN-SYSTEM.
+- Ghi nhận: `docs/DATA-MODEL.md` §6 vẫn chưa có dòng `revoked_sessions` và thiết bị `sim:` 24 giờ (ngoài quyền lượt này).
+
+## Lượt 7 — bộ kiểm cuối (làn B, 24/10/2026)
+
+- pytest **2892 passed, 22 skipped, 0 xfail** (xfail của T013 đã được điều phối gỡ); `ruff check` + `format --check` sạch; `check-spec-trace` 25 spec 0 lỗi; `unittest scripts/tests` 116 OK (7 skipped); web e2e **124 passed**; gitleaks `docs/setup` sạch. Migration mới `0013` (đã áp dev; áp prod cùng 012 T013).
