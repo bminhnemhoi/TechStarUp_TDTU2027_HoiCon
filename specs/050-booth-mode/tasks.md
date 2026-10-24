@@ -69,3 +69,9 @@
 - [x] T016 [B-web] [FR-002, FR-004] Sửa các mục Medium còn lại của `ux-elder-reviewer` (evidence 050): bỏ thuật ngữ nội bộ ở console ("Gate G4", "replay" ⇒
   "Bản ghi"), băng rôn diễn tập dùng màu diễn tập riêng (DESIGN-SYSTEM, luật 15). `?fast=1` chỉ có hiệu lực khi `NODE_ENV !== "production"`.
   · Verify: `pnpm --dir apps/web typecheck && pnpm --dir apps/web e2e booth` + ảnh 390/1440 reviewer đọc lại ⇒ 0 Medium
+
+## Lượt 9 (nhà điều phối 24/10/2026)
+- Quyết định QR (T013): **chưa thêm thư viện** (luật 14) — console hiện mã 6 ký tự cỡ lớn + địa chỉ ngắn để khách gõ; ghi ROADMAP "Ghi chú" nếu BGK cần quét.
+- [ ] T017 [B] [FR-007, FR-008] Medium bảo mật còn lại của T013 (evidence 050): #4 làm đầy độ dài mã/so sánh hằng thời gian, #5 hạn mức SSE
+  của phiên khách tách khỏi người giám hộ, #7 Caddyfile che `/join/<mã>` trong log, #8 khóa HMAC mã tham gia lấy từ khóa riêng (không dùng
+  pepper số điện thoại), #9 `/join` khi cổng tắt ⇒ "Trang này chưa mở". Mỗi mục test đỏ trước. · Verify: `$PYTEST tests/integration -q -k "booth or join"` + `$WEB e2e booth join`

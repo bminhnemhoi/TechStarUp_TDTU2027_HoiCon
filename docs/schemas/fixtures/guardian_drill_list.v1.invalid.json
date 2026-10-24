@@ -45,5 +45,17 @@
         "is_drill": true
       }
     ]
+  },
+  {
+    "_why": "elder có tên thật/số điện thoại (trường lạ)",
+    "drills": [],
+    "elders": [
+      {
+        "member_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+        "alias": "Bà Nội",
+        "drills_consent": true,
+        "phone": "x"
+      }
+    ]
   }
 ]

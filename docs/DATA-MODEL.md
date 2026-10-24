@@ -144,6 +144,9 @@ theo lô ≤ 1.000 dòng, mỗi lô một giao dịch, lũy đẳng; `python -m 
 | Nhật ký proxy/ứng dụng (Caddy, uvicorn; có IP khách, token đã che) | tối đa 5 × 10 MB mỗi dịch vụ | driver log Docker `json-file` (`max-size`/`max-file`) tự xóa bản cũ; hạn theo dung lượng, không theo ngày (spec 012 T019) |
 | `case_files` (hồ sơ vụ việc, spec 031) | theo sự cố: 12 tháng sau `closed_at` | `ON DELETE CASCADE` từ `incidents`/`families`; job `case_autoclose` đóng sự cố `case_open` im lặng 30 ngày (hồ sơ nháp ⇒ `discarded`) |
 | Tin Coach (jobs `coach_weekly`, `protection_watch`; tin là `notify_guardian` khóa `protection:*`/`weekly:*` + `messages_out`) | như `jobs` (30 ngày sau `done_at`) và `messages_out` (giữ dòng, không có cột văn bản) | khóa chống trùng theo đợt (`protection:{thiết bị}:{mốc}`) và theo tuần (`weekly:{người}:{năm}-W{tuần}`); `members.weekly_digest_enabled` mặc định bật, theo người giám hộ (spec 032) |
+| `revoked_sessions` (jti phiên web người giám hộ đã đăng xuất, spec 037 T018) | tới `expires_at` của phiên | job `retention` xóa dòng đã hết hạn; chỉ có `jti` + `expires_at`, không định danh người |
+| `booth_join_codes` (mã tham gia gian, spec 050 T012; chỉ lưu `code_hash`, không lưu mã thô) | 1 giờ sau `expires_at` (mã sống ≤ 10 phút) | job `retention`; `ops booth reset` đặt `revoked_at` ⇒ phiên khách chết |
+| Thiết bị mô phỏng (`devices` nhãn `sim:`, spec 033 T023) | 24 giờ sau lượt kết thúc | job `retention` (không xóa sự cố mô phỏng đang mở) |
 | `data_requests` | giữ | vết pháp lý của yêu cầu xóa dữ liệu (không có văn bản tự do) |
 
 ### Xóa dữ liệu gia đình theo yêu cầu (spec 034)
