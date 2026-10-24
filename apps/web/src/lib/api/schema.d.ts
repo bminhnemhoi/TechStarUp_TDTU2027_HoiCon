@@ -358,6 +358,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/guardian/drills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lịch và lịch sử diễn tập của gia đình (spec 028) */
+        get: operations["list_drills_v1_guardian_drills_get"];
+        put?: never;
+        /** Đặt lịch một bài diễn tập (spec 028) */
+        post: operations["schedule_drill_v1_guardian_drills_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/action/{token}": {
         parameters: {
             query?: never;
@@ -905,32 +923,34 @@ export interface components {
             /** Consents */
             consents: components["schemas"]["ConsentState"][];
         };
+        /** DrillListOut */
+        DrillListOut: {
+            /** Drills */
+            drills: components["schemas"]["hoicon__api__routers__guardian_drills__DrillOut"][];
+        };
         /** DrillOffer */
         DrillOffer: {
-            drill: components["schemas"]["DrillOut"] | null;
+            drill: components["schemas"]["hoicon__api__routers__drills__DrillOut"] | null;
         };
-        /** DrillOut */
-        DrillOut: {
+        /** DrillRequestIn */
+        DrillRequestIn: {
             /**
-             * Drill Id
+             * Member Id
              * Format: uuid
              */
-            drill_id: string;
+            member_id: string;
+            /** Script Id */
+            script_id: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
             /**
              * Window End
              * Format: date-time
              */
             window_end: string;
-            /**
-             * Is Drill
-             * @default true
-             * @constant
-             */
-            is_drill: true;
-            /** Script */
-            script: {
-                [key: string]: unknown;
-            };
         };
         /** DrillResultAck */
         DrillResultAck: {
@@ -1739,6 +1759,66 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** DrillOut */
+        hoicon__api__routers__drills__DrillOut: {
+            /**
+             * Drill Id
+             * Format: uuid
+             */
+            drill_id: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
+            /**
+             * Is Drill
+             * @default true
+             * @constant
+             */
+            is_drill: true;
+            /** Script */
+            script: {
+                [key: string]: unknown;
+            };
+        };
+        /** DrillOut */
+        hoicon__api__routers__guardian_drills__DrillOut: {
+            /**
+             * Drill Id
+             * Format: uuid
+             */
+            drill_id: string;
+            /** Member Alias */
+            member_alias: string;
+            /** Script Id */
+            script_id: string;
+            /** Script Title */
+            script_title: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "scheduled" | "offered" | "in_progress" | "passed" | "failed" | "aborted" | "declined" | "expired";
+            /** Score */
+            score: number | null;
+            /**
+             * Is Drill
+             * @default true
+             * @constant
+             */
+            is_drill: true;
         };
     };
     responses: never;
@@ -2631,6 +2711,70 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    list_drills_v1_guardian_drills_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DrillListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    schedule_drill_v1_guardian_drills_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DrillRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DrillListOut"];
+                };
+            };
+            /** @description Bị từ chối: `{detail: <mã DrillRefused>}` */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

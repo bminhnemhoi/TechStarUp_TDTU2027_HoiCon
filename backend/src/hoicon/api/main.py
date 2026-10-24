@@ -28,6 +28,7 @@ from hoicon.api.routers import (
     events,
     graphs,
     guardian,
+    guardian_drills,
     incidents,
     lookups,
     pairing,
@@ -85,6 +86,7 @@ app.include_router(runs.router)
 app.include_router(guardian.router)
 app.include_router(lookups.router)
 app.include_router(drills.router)
+app.include_router(guardian_drills.router)
 app.include_router(actions.router)
 app.include_router(elder.router)
 app.include_router(graphs.router)

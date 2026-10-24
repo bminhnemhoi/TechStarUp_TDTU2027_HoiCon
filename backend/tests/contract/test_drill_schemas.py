@@ -196,3 +196,33 @@ def test_debrief_names_at_least_one_red_flag_and_praises(drills: dict[str, dict]
     for stem, drill in drills.items():
         assert drill["debrief"]["red_flags_vi"], stem
         assert drill["debrief"]["praise_vi"], stem
+
+
+# --- Hợp đồng web người giám hộ (spec 028 FR-011, T021) ---------------------------------------------------------------
+
+GUARDIAN = ["guardian_drill_request", "guardian_drill_list"]
+GUARDIAN_VALIDATORS = {n: _validator(n) for n in GUARDIAN}
+
+
+@pytest.mark.parametrize("name", GUARDIAN)
+def test_guardian_valid_fixtures_pass(name: str) -> None:
+    docs = _fixtures(name, "valid")
+    assert docs
+    for doc in docs:
+        assert [e.message for e in GUARDIAN_VALIDATORS[name].iter_errors(_strip(doc))] == [], doc["_name"]
+
+
+@pytest.mark.parametrize("name", GUARDIAN)
+def test_guardian_invalid_fixtures_fail(name: str) -> None:
+    docs = _fixtures(name, "invalid")
+    assert docs
+    for doc in docs:
+        assert not GUARDIAN_VALIDATORS[name].is_valid(_strip(doc)), doc["_why"]
+
+
+def test_refusal_codes_in_the_contract_are_exactly_the_codes_the_service_can_raise() -> None:
+    """Mã 422 `{detail: <mã>}` của `POST /v1/guardian/drills` phải khớp `DrillRefused` trong `DrillService`."""
+    schema = _load(SCHEMAS / "guardian_drill_list.v1.json")
+    source = (ROOT / "backend" / "src" / "hoicon" / "services" / "drill_service.py").read_text(encoding="utf-8")
+    raised = set(re.findall(r'DrillRefused\("([a-z_]+)"\)', source))
+    assert set(schema["$defs"]["refusal_codes"]["enum"]) == raised
