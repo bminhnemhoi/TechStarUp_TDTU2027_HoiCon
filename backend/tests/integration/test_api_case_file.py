@@ -235,7 +235,7 @@ async def test_case_file_visibility_follows_the_incident_is_demo_flag_not_the_ro
     world: SimpleNamespace,
 ) -> None:
     """011 T024 #7: nguồn sự thật cho "demo được miễn" là `incident.is_demo` (như mọi route khác), không phải bản
-    sao ở dòng hồ sơ. Sự cố THẬT mà hồ sơ gắn nhãn demo nhầm không được lọt qua cổng đồng ý; sự cố demo luôn đọc được."""
+    sao ở dòng hồ sơ. Sự cố THẬT mà hồ sơ gắn nhãn demo nhầm không lọt qua cổng đồng ý; sự cố demo luôn đọc được."""
     from case_support import FAKE_HMAC as _  # noqa: F401
     from consent_support import purge_family
     from sqlalchemy import update
