@@ -34,3 +34,13 @@ class ResumedPauseTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RoleHolderTest(unittest.TestCase):
+    def test_a_package_that_only_shares_the_prefix_is_not_the_holder(self) -> None:
+        # `vn.hoicon.sentinel` là tiền tố của `vn.hoicon.sentinel.demo`: kiểm bằng "in" từng báo nhầm là đã giữ vai trò.
+        self.assertTrue(emu.holds_role("vn.hoicon.sentinel.demo\n", "vn.hoicon.sentinel.demo"))
+        self.assertFalse(emu.holds_role("vn.hoicon.sentinel.demo\n", "vn.hoicon.sentinel"))
+        self.assertFalse(emu.holds_role("vn.hoicon.sentinel\n", "vn.hoicon.sentinel.demo"))
+        self.assertTrue(emu.holds_role("com.x\nvn.hoicon.sentinel\n", "vn.hoicon.sentinel"))
+        self.assertFalse(emu.holds_role("", "vn.hoicon.sentinel"))

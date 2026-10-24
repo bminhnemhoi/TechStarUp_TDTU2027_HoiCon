@@ -117,6 +117,8 @@ def ring(number: str) -> bool:
             "  cuộc gọi giả KHÔNG đổ chuông (lỗi môi trường) — bỏ qua lần này"
             f" · console: {reply[:60]!r} · gsm list: {listing[:60]!r} · call_state={call_state()}"
             f" · modem IN_SERVICE={radio_ready()} · vai trò do Lính gác giữ={role_held()}"
+            f" · uptime máy ảo: {adb('shell', 'uptime', check=False).split(',')[0].strip()}"
+            f" · com.android.phone pid: {adb('shell', 'pidof', 'com.android.phone', check=False).strip() or 'KHÔNG CÓ'}"
         )
     return rang
 
@@ -205,8 +207,25 @@ def radio_ready() -> bool:
     return sim.startswith(("LOADED", "READY")) and "mVoiceRegState=0(IN_SERVICE)" in registry
 
 
+def holds_role(role_holders_output: str, package: str) -> bool:
+    """So từng dòng, không dùng `in` trên cả chuỗi: `vn.hoicon.sentinel` là tiền tố của `vn.hoicon.sentinel.demo`."""
+    return package in (line.strip() for line in role_holders_output.splitlines())
+
+
 def role_held() -> bool:
-    return SENTINEL in adb("shell", "cmd", "role", "get-role-holders", "--user", "0", "android.app.role.CALL_SCREENING")
+    # check=False: ngay sau khởi động nguội `cmd role` có thể báo "Can't find service" (system_server vừa khởi động lại).
+    return holds_role(adb("shell", "cmd", "role", "get-role-holders", "--user", "0", "android.app.role.CALL_SCREENING", check=False), SENTINEL)
+
+
+def modem_rings(probe_wait_s: float = 8) -> bool:
+    """Cuộc gọi thử (số hư cấu, không phải số của kịch bản) có đổ chuông không. Đo 24/10 (2 lần khởi động nguội hc-api36): trong ~1–2 phút
+    đầu `radio_ready()` đã True nhưng `gsm call` trả OK mà `call_state` vẫn 0 — cuộc gọi bị nuốt, không tới Telecom."""
+    number = PHONES["drill_fake_police"]
+    adb("emu", "gsm", "call", number, check=False)
+    rang = wait_for(lambda: call_state() == 1, probe_wait_s, step_s=0.3)
+    adb("emu", "gsm", "cancel", number, check=False)
+    wait_for(lambda: call_state() == 0, 10, step_s=0.3)
+    return rang
 
 
 def ensure_ready() -> None:
@@ -214,6 +233,8 @@ def ensure_ready() -> None:
     sàng lọc cuộc gọi (vai trò có thể không còn sau `pm clear`/cài lại). Chỉ in cảnh báo, không đổi kết quả đo."""
     if not wait_for(radio_ready, 120, step_s=3):
         print("  cảnh báo: modem giả chưa IN_SERVICE sau 120 s — cuộc gọi giả có thể không tới Telecom (môi trường, không phải app)")
+    if not wait_for(modem_rings, 180, step_s=2):
+        print("  cảnh báo: cuộc gọi thử không đổ chuông sau 180 s — modem giả chưa nhận cuộc gọi (môi trường, không phải app)")
     if installed(SENTINEL) and not role_held():
         print("  vai trò CALL_SCREENING không do Lính gác giữ ⇒ cấp lại bằng `cmd role add-role-holder`")
         adb("shell", "cmd", "role", "add-role-holder", "--user", "0", "android.app.role.CALL_SCREENING", SENTINEL)
