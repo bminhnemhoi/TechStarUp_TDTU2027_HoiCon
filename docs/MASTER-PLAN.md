@@ -418,3 +418,7 @@ Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi
     hết hạn" không kèm nội dung; `POST …/decision` vẫn ghi quyết định và đóng sự cố nhưng trả thân tối thiểu (đường an toàn: con bấm
     "đã gọi được bác" vẫn có tác dụng). Kiến trúc sư đề xuất giữ. Minh muốn chặn hẳn (403) ⇒ một task [B] đổi hằng số
     `WITHDRAWN_DECISION_POLICY` + test.
+15. ★ **Đồng ý của người giám hộ (037 T009 Medium #4, thêm 24/10/2026)**: người giám hộ ghép qua Zalo được lưu `zalo_user_hmac` +
+    `zalo_chat_enc` nhưng bảng `consents` chỉ có bản ghi của thiết bị người cao tuổi. Câu hỏi pháp lý: có cần bản ghi đồng ý riêng
+    (mục đích mới + văn bản, luật 7) khi người giám hộ nhắn bot lần đầu không? Đề xuất: có, một câu đồng ý ngắn trong tin chào của
+    bot + giá trị enum mới; làm trước thí điểm (G2). Minh quyết ⇒ kiến trúc sư viết spec nhỏ.
