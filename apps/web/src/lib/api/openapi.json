@@ -1328,7 +1328,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/DrillListOut"
+         "$ref": "#/components/schemas/GuardianDrillListOut"
         }
        }
       }
@@ -1379,7 +1379,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/DrillRequestIn"
+        "$ref": "#/components/schemas/GuardianDrillRequestIn"
        }
       }
      }
@@ -1390,7 +1390,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/DrillListOut"
+         "$ref": "#/components/schemas/GuardianDrillListOut"
         }
        }
       }
@@ -2804,28 +2804,12 @@
     ],
     "title": "DeviceMe"
    },
-   "DrillListOut": {
-    "properties": {
-     "drills": {
-      "items": {
-       "$ref": "#/components/schemas/hoicon__api__routers__guardian_drills__DrillOut"
-      },
-      "type": "array",
-      "title": "Drills"
-     }
-    },
-    "type": "object",
-    "required": [
-     "drills"
-    ],
-    "title": "DrillListOut"
-   },
    "DrillOffer": {
     "properties": {
      "drill": {
       "anyOf": [
        {
-        "$ref": "#/components/schemas/hoicon__api__routers__drills__DrillOut"
+        "$ref": "#/components/schemas/DrillOut"
        },
        {
         "type": "null"
@@ -2839,38 +2823,37 @@
     ],
     "title": "DrillOffer"
    },
-   "DrillRequestIn": {
+   "DrillOut": {
     "properties": {
-     "member_id": {
+     "drill_id": {
       "type": "string",
       "format": "uuid",
-      "title": "Member Id"
-     },
-     "script_id": {
-      "type": "string",
-      "pattern": "^drill_[a-z0-9_]{3,40}$",
-      "title": "Script Id"
-     },
-     "window_start": {
-      "type": "string",
-      "format": "date-time",
-      "title": "Window Start"
+      "title": "Drill Id"
      },
      "window_end": {
       "type": "string",
       "format": "date-time",
       "title": "Window End"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "const": true,
+      "title": "Is Drill",
+      "default": true
+     },
+     "script": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Script"
      }
     },
-    "additionalProperties": false,
     "type": "object",
     "required": [
-     "member_id",
-     "script_id",
-     "window_start",
-     "window_end"
+     "drill_id",
+     "window_end",
+     "script"
     ],
-    "title": "DrillRequestIn"
+    "title": "DrillOut"
    },
    "DrillResultAck": {
     "properties": {
@@ -3237,6 +3220,129 @@
     ],
     "title": "GraphTopologyOut",
     "description": "Khớp `docs/schemas/graph_topology.v1.json`."
+   },
+   "GuardianDrillListOut": {
+    "properties": {
+     "drills": {
+      "items": {
+       "$ref": "#/components/schemas/GuardianDrillOut"
+      },
+      "type": "array",
+      "title": "Drills"
+     }
+    },
+    "type": "object",
+    "required": [
+     "drills"
+    ],
+    "title": "GuardianDrillListOut"
+   },
+   "GuardianDrillOut": {
+    "properties": {
+     "drill_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Drill Id"
+     },
+     "member_alias": {
+      "type": "string",
+      "title": "Member Alias"
+     },
+     "script_id": {
+      "type": "string",
+      "title": "Script Id"
+     },
+     "script_title": {
+      "type": "string",
+      "title": "Script Title"
+     },
+     "window_start": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Window Start"
+     },
+     "window_end": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Window End"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "scheduled",
+       "offered",
+       "in_progress",
+       "passed",
+       "failed",
+       "aborted",
+       "declined",
+       "expired"
+      ],
+      "title": "Status"
+     },
+     "score": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Score"
+     },
+     "is_drill": {
+      "type": "boolean",
+      "const": true,
+      "title": "Is Drill",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "drill_id",
+     "member_alias",
+     "script_id",
+     "script_title",
+     "window_start",
+     "window_end",
+     "status",
+     "score"
+    ],
+    "title": "GuardianDrillOut"
+   },
+   "GuardianDrillRequestIn": {
+    "properties": {
+     "member_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Member Id"
+     },
+     "script_id": {
+      "type": "string",
+      "pattern": "^drill_[a-z0-9_]{3,40}$",
+      "title": "Script Id"
+     },
+     "window_start": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Window Start"
+     },
+     "window_end": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Window End"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "member_id",
+     "script_id",
+     "window_start",
+     "window_end"
+    ],
+    "title": "GuardianDrillRequestIn"
    },
    "GuardianIncidentDetail": {
     "properties": {
@@ -5057,112 +5163,6 @@
      "type"
     ],
     "title": "ValidationError"
-   },
-   "hoicon__api__routers__drills__DrillOut": {
-    "properties": {
-     "drill_id": {
-      "type": "string",
-      "format": "uuid",
-      "title": "Drill Id"
-     },
-     "window_end": {
-      "type": "string",
-      "format": "date-time",
-      "title": "Window End"
-     },
-     "is_drill": {
-      "type": "boolean",
-      "const": true,
-      "title": "Is Drill",
-      "default": true
-     },
-     "script": {
-      "additionalProperties": true,
-      "type": "object",
-      "title": "Script"
-     }
-    },
-    "type": "object",
-    "required": [
-     "drill_id",
-     "window_end",
-     "script"
-    ],
-    "title": "DrillOut"
-   },
-   "hoicon__api__routers__guardian_drills__DrillOut": {
-    "properties": {
-     "drill_id": {
-      "type": "string",
-      "format": "uuid",
-      "title": "Drill Id"
-     },
-     "member_alias": {
-      "type": "string",
-      "title": "Member Alias"
-     },
-     "script_id": {
-      "type": "string",
-      "title": "Script Id"
-     },
-     "script_title": {
-      "type": "string",
-      "title": "Script Title"
-     },
-     "window_start": {
-      "type": "string",
-      "format": "date-time",
-      "title": "Window Start"
-     },
-     "window_end": {
-      "type": "string",
-      "format": "date-time",
-      "title": "Window End"
-     },
-     "status": {
-      "type": "string",
-      "enum": [
-       "scheduled",
-       "offered",
-       "in_progress",
-       "passed",
-       "failed",
-       "aborted",
-       "declined",
-       "expired"
-      ],
-      "title": "Status"
-     },
-     "score": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Score"
-     },
-     "is_drill": {
-      "type": "boolean",
-      "const": true,
-      "title": "Is Drill",
-      "default": true
-     }
-    },
-    "type": "object",
-    "required": [
-     "drill_id",
-     "member_alias",
-     "script_id",
-     "script_title",
-     "window_start",
-     "window_end",
-     "status",
-     "score"
-    ],
-    "title": "DrillOut"
    }
   },
   "securitySchemes": {

@@ -923,34 +923,32 @@ export interface components {
             /** Consents */
             consents: components["schemas"]["ConsentState"][];
         };
-        /** DrillListOut */
-        DrillListOut: {
-            /** Drills */
-            drills: components["schemas"]["hoicon__api__routers__guardian_drills__DrillOut"][];
-        };
         /** DrillOffer */
         DrillOffer: {
-            drill: components["schemas"]["hoicon__api__routers__drills__DrillOut"] | null;
+            drill: components["schemas"]["DrillOut"] | null;
         };
-        /** DrillRequestIn */
-        DrillRequestIn: {
+        /** DrillOut */
+        DrillOut: {
             /**
-             * Member Id
+             * Drill Id
              * Format: uuid
              */
-            member_id: string;
-            /** Script Id */
-            script_id: string;
-            /**
-             * Window Start
-             * Format: date-time
-             */
-            window_start: string;
+            drill_id: string;
             /**
              * Window End
              * Format: date-time
              */
             window_end: string;
+            /**
+             * Is Drill
+             * @default true
+             * @constant
+             */
+            is_drill: true;
+            /** Script */
+            script: {
+                [key: string]: unknown;
+            };
         };
         /** DrillResultAck */
         DrillResultAck: {
@@ -1080,6 +1078,68 @@ export interface components {
             nodes: components["schemas"]["TopologyNode"][];
             /** Edges */
             edges: components["schemas"]["TopologyEdge"][];
+        };
+        /** GuardianDrillListOut */
+        GuardianDrillListOut: {
+            /** Drills */
+            drills: components["schemas"]["GuardianDrillOut"][];
+        };
+        /** GuardianDrillOut */
+        GuardianDrillOut: {
+            /**
+             * Drill Id
+             * Format: uuid
+             */
+            drill_id: string;
+            /** Member Alias */
+            member_alias: string;
+            /** Script Id */
+            script_id: string;
+            /** Script Title */
+            script_title: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "scheduled" | "offered" | "in_progress" | "passed" | "failed" | "aborted" | "declined" | "expired";
+            /** Score */
+            score: number | null;
+            /**
+             * Is Drill
+             * @default true
+             * @constant
+             */
+            is_drill: true;
+        };
+        /** GuardianDrillRequestIn */
+        GuardianDrillRequestIn: {
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Script Id */
+            script_id: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
         };
         /** GuardianIncidentDetail */
         GuardianIncidentDetail: {
@@ -1759,66 +1819,6 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
-        };
-        /** DrillOut */
-        hoicon__api__routers__drills__DrillOut: {
-            /**
-             * Drill Id
-             * Format: uuid
-             */
-            drill_id: string;
-            /**
-             * Window End
-             * Format: date-time
-             */
-            window_end: string;
-            /**
-             * Is Drill
-             * @default true
-             * @constant
-             */
-            is_drill: true;
-            /** Script */
-            script: {
-                [key: string]: unknown;
-            };
-        };
-        /** DrillOut */
-        hoicon__api__routers__guardian_drills__DrillOut: {
-            /**
-             * Drill Id
-             * Format: uuid
-             */
-            drill_id: string;
-            /** Member Alias */
-            member_alias: string;
-            /** Script Id */
-            script_id: string;
-            /** Script Title */
-            script_title: string;
-            /**
-             * Window Start
-             * Format: date-time
-             */
-            window_start: string;
-            /**
-             * Window End
-             * Format: date-time
-             */
-            window_end: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "scheduled" | "offered" | "in_progress" | "passed" | "failed" | "aborted" | "declined" | "expired";
-            /** Score */
-            score: number | null;
-            /**
-             * Is Drill
-             * @default true
-             * @constant
-             */
-            is_drill: true;
         };
     };
     responses: never;
@@ -2731,7 +2731,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DrillListOut"];
+                    "application/json": components["schemas"]["GuardianDrillListOut"];
                 };
             };
             /** @description Validation Error */
@@ -2756,7 +2756,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["DrillRequestIn"];
+                "application/json": components["schemas"]["GuardianDrillRequestIn"];
             };
         };
         responses: {
@@ -2766,7 +2766,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DrillListOut"];
+                    "application/json": components["schemas"]["GuardianDrillListOut"];
                 };
             };
             /** @description Bị từ chối: `{detail: <mã DrillRefused>}` */
