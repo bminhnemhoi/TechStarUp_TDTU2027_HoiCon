@@ -123,7 +123,7 @@ Hợp đồng đã có: `case_file.v1.guidance` (tùy chọn, `approved=false` �
   `approved: true` (monkeypatch đường dẫn) ⇒ đủ bước đúng thứ tự; phản hồi hợp lệ `case_file.v1`; không có dãy ≥ 4 chữ số trong
   `guidance`. Sửa `spec.md` FR-005 đã ghi `fast` — không đổi mã router. Sinh lại client TS.
   · Verify: `$PYTEST tests/integration/test_api_case_file.py tests/contract -q && bash scripts/gen-api-client.sh && $WEB typecheck`
-- [ ] T020 [B-web] [FR-015] Trang `src/app/incidents/[id]/case-file/page.tsx`: khối "Các bước nên làm" (danh sách có số thứ tự khi
+- [x] T020 [B-web] [FR-015] Trang `src/app/incidents/[id]/case-file/page.tsx`: khối "Các bước nên làm" (danh sách có số thứ tự khi
   `approved`, chỉ câu chung khi chưa duyệt), nằm ngoài vùng in dữ kiện vụ việc; in (`@media print`) vẫn gồm khối này ở cuối.
   Playwright `e2e/case-file.spec.ts` hai fixture (chưa duyệt / đã duyệt), axe 0 lỗi, ảnh 390/1440; `ux-elder-reviewer` đọc chữ.
   Phụ thuộc T019. · Verify: `$WEB typecheck && $WEB lint && $WEB e2e case-file a11y`

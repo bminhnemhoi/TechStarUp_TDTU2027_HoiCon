@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { CaseMock, mockApi } from "./fixtures";
+import { CaseMock, GUIDANCE_APPROVED, GUIDANCE_UNAPPROVED, mockApi } from "./fixtures";
 
 // Spec 031, FR-010/FR-014: trang hồ sơ vụ việc bằng fixture hợp đồng case_file.v1 (mạng bị chặn, tất định).
 const INCIDENT = "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e80";
@@ -24,7 +24,35 @@ test("hiện bản nháp, nhãn trợ lý AI và câu 'không tự gửi cho cơ
   await expect(page.getByTestId("status")).toContainText("Bản nháp");
   await expect(page.getByText("HỏiCon không tự gửi hồ sơ này cho cơ quan nào.").first()).toBeVisible();
   await expect(page.getByRole("button", { name: /In \/ lưu PDF/ })).toHaveCount(0); // chỉ hiện sau khi duyệt
-  await expect(page.getByTestId("steps-guide")).toContainText("Mang bản in tới công an");
+  await expect(page.getByTestId("steps-guide")).toContainText("Các bước nên làm"); // trỏ xuống khối hướng dẫn, không lặp bước
+});
+
+test("chưa duyệt hướng dẫn: 'Các bước nên làm' chỉ có câu chung, không danh sách đánh số (FR-015)", async ({ page }) => {
+  await open(page, Object.assign(new CaseMock(), { guidance: GUIDANCE_UNAPPROVED }));
+  const block = page.getByTestId("guidance");
+  await expect(block.getByRole("heading", { name: "Các bước nên làm" })).toBeVisible();
+  await expect(block).toContainText(GUIDANCE_UNAPPROVED.fallback_vi as string);
+  await expect(block.getByRole("listitem")).toHaveCount(0);
+  await expect(block).toContainText("chưa có hướng dẫn chi tiết đã được kiểm duyệt");
+  await expect(block).toContainText("Dành cho người nhà");
+});
+
+test("đã duyệt hướng dẫn: danh sách đánh số đúng thứ tự, có nguồn; vẫn có trong bản in (FR-015)", async ({ page }) => {
+  await open(page, Object.assign(new CaseMock(), { status: "approved", guidance: GUIDANCE_APPROVED }));
+  const items = page.getByTestId("guidance").getByRole("listitem");
+  await expect(items).toHaveCount(2);
+  await expect(items.nth(0)).toContainText("Gọi tổng đài ghi sau thẻ");
+  await expect(items.nth(1)).toContainText("Mang bản hồ sơ này tới công an");
+  await expect(items.nth(1)).toContainText("Nguồn: Nguồn thử nghiệm");
+  expect(await page.getByTestId("guidance").evaluate((el) => el.tagName === "SECTION" && !el.closest("[data-testid='facts']"))).toBe(true);
+  await page.emulateMedia({ media: "print" });
+  await expect(page.getByTestId("guidance")).toBeVisible(); // in vẫn gồm khối này
+  await expect(items.nth(0)).toBeVisible();
+  const last = await page.evaluate(() => {
+    const sections = [...document.querySelectorAll("main section:not([aria-label])")].filter((s) => getComputedStyle(s).display !== "none");
+    return sections.at(-1)?.getAttribute("data-testid");
+  });
+  expect(last).toBe("guidance"); // nằm cuối các khối nội dung của bản in
 });
 
 test("duyệt có xác nhận ⇒ hiện nút in", async ({ page }) => {

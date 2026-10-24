@@ -752,7 +752,7 @@ export interface components {
             /** Is Demo */
             is_demo: boolean;
             content: components["schemas"]["CaseFileContent"];
-            guidance?: components["schemas"]["CaseGuidance"];
+            readonly guidance: components["schemas"]["CaseGuidance"];
         };
         /**
          * CaseGuidance

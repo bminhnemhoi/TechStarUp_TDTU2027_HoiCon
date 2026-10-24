@@ -37,7 +37,6 @@ const INPUT_MODE: Record<string, "tel" | "numeric" | "text"> = { caller_phone: "
 
 /** "2026-12-19" ⇒ "19/12/2026" (cùng kiểu ngày với dòng thời gian). */
 const listDate = (version: string) => (/^\d{4}-\d{2}-\d{2}$/.test(version) ? version.split("-").reverse().join("/") : version);
-const GENERIC_GUIDANCE = "Anh/chị liên hệ công an nơi cư trú và ngân hàng của người thân.";
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString("vi-VN", {
@@ -185,7 +184,9 @@ export default function CaseFilePage({ params }: { params: Promise<{ id: string 
           <ol className="flex list-decimal flex-col gap-1 pl-7 text-body-large print:hidden" data-testid="steps-guide">
             <li className={file.status === "draft" ? "font-bold" : ""}>Đọc kỹ hồ sơ bên dưới rồi bấm Duyệt.</li>
             <li className={file.status === "approved" ? "font-bold" : ""}>In hoặc lưu PDF.</li>
-            <li>Mang bản in tới công an phường hoặc xã và ngân hàng. Nếu đã chuyển tiền, gọi ngân hàng ngay để nhờ kiểm tra giao dịch.</li>
+            <li>
+              Làm theo <a href="#guide-title" className="underline">“Các bước nên làm”</a> ở cuối hồ sơ. Nếu đã chuyển tiền, gọi ngân hàng ngay.
+            </li>
           </ol>
         )}
         {file.status === "sent" && (
@@ -307,11 +308,26 @@ export default function CaseFilePage({ params }: { params: Promise<{ id: string 
           ))}
         </section>
 
-        <section aria-labelledby="guide-title" className="flex flex-col gap-2 print:hidden">
+        <section aria-labelledby="guide-title" className="flex flex-col gap-2 print:break-inside-avoid" data-testid="guidance">
           <h2 id="guide-title" className="text-title">
-            Nên liên hệ ai
+            Các bước nên làm
           </h2>
-          <p className="text-body">{GENERIC_GUIDANCE}</p>
+          <p className="text-body">Dành cho người nhà đang giữ hồ sơ này.</p>
+          {file.guidance.approved && file.guidance.steps.length > 0 ? (
+            <ol className="flex list-decimal flex-col gap-2 pl-7 text-body-large">
+              {file.guidance.steps.map((step) => (
+                <li key={step.id}>
+                  {step.text_vi}
+                  {step.source_ref && <span className="block text-body">Nguồn: {step.source_ref}</span>}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <>
+              <p className="text-body-large">{file.guidance.fallback_vi}</p>
+              <p className="text-body">HỏiCon chưa có hướng dẫn chi tiết đã được kiểm duyệt nên chỉ nêu lời khuyên chung.</p>
+            </>
+          )}
         </section>
         <p className="hidden text-body print:block">
           Hồ sơ do trợ lý AI HỏiCon soạn từ dữ kiện đã ghi, người giám hộ đã đọc và duyệt

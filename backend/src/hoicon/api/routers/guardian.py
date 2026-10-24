@@ -16,7 +16,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 from sqlalchemy import String, and_, case, cast, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -350,9 +350,11 @@ class CaseFileOut(BaseModel):
     discarded_at: datetime | None
     is_demo: bool
     content: CaseFileContent
-    guidance: CaseGuidance = Field(  # không thuộc dòng DB: đọc từ YAML đã nạp (một lần)
-        default_factory=lambda: CaseGuidance.model_validate(case_file_service.load_guidance())
-    )
+
+    @computed_field  # không thuộc dòng DB: đọc từ YAML đã nạp (một lần); computed ⇒ luôn có trong lược đồ OpenAPI
+    @property
+    def guidance(self) -> CaseGuidance:
+        return CaseGuidance.model_validate(case_file_service.load_guidance())
 
 
 class CaseFileActionIn(BaseModel):

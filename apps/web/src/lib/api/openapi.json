@@ -2281,7 +2281,8 @@
       "$ref": "#/components/schemas/CaseFileContent"
      },
      "guidance": {
-      "$ref": "#/components/schemas/CaseGuidance"
+      "$ref": "#/components/schemas/CaseGuidance",
+      "readOnly": true
      }
     },
     "type": "object",
@@ -2295,7 +2296,8 @@
      "sent_at",
      "discarded_at",
      "is_demo",
-     "content"
+     "content",
+     "guidance"
     ],
     "title": "CaseFileOut",
     "description": "Khớp `docs/schemas/case_file.v1.json`."

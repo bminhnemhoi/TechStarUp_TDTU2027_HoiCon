@@ -103,10 +103,22 @@ export const CASE_ACTIONS: Record<string, Record<string, string>> = {
   approved: { mark_sent: "sent", discard: "discarded" },
 };
 
+// Hướng dẫn trình báo (case_file.v1.guidance): chưa duyệt ⇒ không có bước, chỉ câu chung; đã duyệt ⇒ có bước (chữ thử, không phải nội dung Minh duyệt).
+export const GUIDANCE_UNAPPROVED: Json = { approved: false, steps: [], fallback_vi: "Anh/chị liên hệ công an nơi cư trú và ngân hàng của người thân." };
+export const GUIDANCE_APPROVED: Json = {
+  approved: true,
+  fallback_vi: "Anh/chị liên hệ công an nơi cư trú và ngân hàng của người thân.",
+  steps: [
+    { id: "contact_bank", text_vi: "Gọi tổng đài ghi sau thẻ của ngân hàng người thân để nhờ kiểm tra giao dịch.", source_ref: null },
+    { id: "contact_police", text_vi: "Mang bản hồ sơ này tới công an phường hoặc xã nơi người thân cư trú.", source_ref: "Nguồn thử nghiệm" },
+  ],
+};
+
 export class CaseMock {
   status = "draft";
+  guidance: Json = GUIDANCE_UNAPPROVED;
   view(): Json {
-    return { ...CASE_DOC, status: this.status, approved_at: this.status === "draft" ? null : "2026-12-20T09:03:00Z" };
+    return { ...CASE_DOC, guidance: this.guidance, status: this.status, approved_at: this.status === "draft" ? null : "2026-12-20T09:03:00Z" };
   }
 }
 
