@@ -85,3 +85,7 @@ vì còn phần "Tiến/Minh tải lên kênh internal testing" và AAB chưa k�
 
 - **Phần B đạt**: pytest 2932 passed / 22 skipped; ruff sạch; `hoicon-eval --suite smoke --compare baseline` không lệch; gitleaks `backend/src`, `backend/tests`, `docs/schemas`, `scripts`, `specs/029-pilot-kit` sạch; `check-spec-trace` 0 lỗi.
 - **Chưa làm (làn A)**: Gradle (`:rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`), gitleaks `apps/android/app/src`, và điều kiện ROADMAP `P2-14` ☑ (cần `gate-m2` đạt mọi chỉ tiêu). **T014 CHƯA TICK.**
+
+## Lượt 9 — T014 phần [A] (làn A, 24/10/2026)
+
+- gradlew :rules:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug (nhánh feat/w9-android, 685ce92) xanh; gitleaks apps/android/app/src + apps/android/rules/src sạch; gitleaks `scripts` và `specs/029-pilot-kit` sạch; `check-spec-trace` 0 lỗi. Cùng phần B ở lượt 8 ⇒ **T014 (bộ kiểm) ĐẠT, tick.** **Chưa làm / cần Opus:** ROADMAP `P2-14` chỉ ☑ khi `gate-m2` đạt mọi chỉ tiêu — tôi không sửa ROADMAP; để ◐ cho tới khi `gate-m2` có số.
