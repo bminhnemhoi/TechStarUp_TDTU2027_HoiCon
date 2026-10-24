@@ -4,6 +4,7 @@
     python scripts/emu-scenario.py --scenario screen_only --runs 10 --prep kill  # H1: bắt cuộc gọi khi app bị kill
     python scripts/emu-scenario.py --scenario fake_police --runs 10 # cuộc gọi lạ → demobank → SafePause, đo độ trễ
     python scripts/emu-scenario.py --scenario bank_first --runs 5  # GAP: app ngân hàng mở sẵn trước cuộc gọi
+    HC_SENTINEL_PACKAGE=vn.hoicon.sentinel.demo python scripts/emu-scenario.py --scenario pause_release --runs 10  # E7 ≤ 3 s trên bản release/demo
     python scripts/emu-scenario.py --scenario booth --playlist all  # gian trưng bày: diễn từng mục danh sách phát của /booth
 
 Chỉ dùng thư viện chuẩn + adb. Máy ảo phải đang chạy (bash scripts/emu-start.sh hc-api36 --headless).
@@ -35,7 +36,7 @@ SDK = Path(
 EXE = ".exe" if os.name == "nt" else ""
 ADB = str(SDK / "platform-tools" / f"adb{EXE}")
 ACLI = str(SDK / "cmdline-tools" / "latest" / "bin" / f"android{EXE}")
-SENTINEL = "vn.hoicon.sentinel"
+SENTINEL = os.environ.get("HC_SENTINEL_PACKAGE", "vn.hoicon.sentinel")  # đổi sang vn.hoicon.sentinel.demo để đo bản release/demo
 DEMOBANK = os.environ.get("HC_DEMOBANK_PACKAGE", "vn.hoicon.demobank")  # đổi để thử R5 bằng bản demobank mang tên gói điều khiển từ xa
 PAUSE_WAIT_S = 30
 PHONES = json.loads((ROOT / "data" / "fixtures" / "phones.json").read_text(encoding="utf-8"))
@@ -564,6 +565,62 @@ def booth(name: str, runs: int) -> bool:
     return ok
 
 
+def resumed_is_pause(dumpsys_activities: str, package: str) -> bool:
+    """Activity đang ở trên cùng có phải SafePauseActivity của đúng gói `package` không (bản release không có mốc HC_TIMING)."""
+    return any(
+        "ResumedActivity" in line and f" {package}/" in line and "SafePauseActivity" in line
+        for line in dumpsys_activities.splitlines()
+    )
+
+
+def pause_release_summary(times_ms: list[int]) -> str:
+    """Lượt đầu (nguội) báo riêng, p95 gộp CÓ lượt đầu: ngưỡng luật 4 không bỏ lượt nguội."""
+    p95 = percentile(times_ms, 0.95)
+    verdict = "ĐẠT" if p95 <= 3000 else "TRƯỢT"
+    return (
+        f"pause_release: {len(times_ms)} lượt · lượt đầu {times_ms[0]} ms · các lượt sau p50={statistics.median(times_ms[1:]) if len(times_ms) > 1 else '—'}"
+        f" · p95 gộp {p95} ms · ngưỡng ≤ 3000 ms ⇒ {verdict}"
+    )
+
+
+def pause_release_once(prep: str) -> int | None:
+    """Bản release/demo: từ lúc mở app ngân hàng tới lúc SafePauseActivity ở trên cùng (đo bằng đồng hồ máy chủ, hạt ~0,2 s)."""
+    number = PHONES["flagged_caller"]
+    flush_modem()
+    adb("shell", "run-as", SENTINEL, "rm", "-f", "shared_prefs/risk_window.xml", check=False)  # bản release không cho run-as: bỏ qua lỗi
+    prepare(prep)
+    if not ring(number):
+        return None
+    adb("emu", "gsm", "accept", number)
+    wait_for(lambda: call_state() == 2, 15)
+    time.sleep(2)
+    t0 = time.monotonic()
+    adb("shell", "monkey", "-p", DEMOBANK, "-c", "android.intent.category.LAUNCHER", "1")
+    shown = wait_for(lambda: resumed_is_pause(adb("shell", "dumpsys", "activity", "activities", check=False), SENTINEL), PAUSE_WAIT_S, step_s=0.1)
+    elapsed = int((time.monotonic() - t0) * 1000)
+    adb("emu", "gsm", "cancel", number)
+    adb("shell", "input", "keyevent", "KEYCODE_HOME")
+    wait_for(lambda: call_state() == 0, 15)
+    time.sleep(2)
+    if not shown:
+        print("  lần chạy TRƯỢT: SafePause không hiện trong 30 s")
+        return None
+    print(f"  mở app ngân hàng → SafePause trên cùng: {elapsed} ms")
+    return elapsed
+
+
+def pause_release(runs: int, prep: str) -> bool:
+    if not installed(SENTINEL) or not installed(DEMOBANK):
+        print(f"pause_release: thiếu app {SENTINEL} hoặc {DEMOBANK}", file=sys.stderr)
+        return False
+    times = [t for _ in range(runs) if (t := pause_release_once(prep)) is not None]
+    if len(times) < runs:
+        print(f"pause_release: chỉ {len(times)}/{runs} lượt hiện SafePause ⇒ TRƯỢT")
+        return False
+    print(pause_release_summary(times))
+    return percentile(times, 0.95) <= 3000
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument(
@@ -576,6 +633,7 @@ def main() -> int:
             "launch_baseline",
             "call_state",
             "booth",
+            "pause_release",
         ],
         default="smoke_call",
     )
@@ -619,6 +677,8 @@ def main() -> int:
         ok = call_state_scenario(args.runs)
     elif args.scenario == "booth":
         ok = booth(args.playlist, args.runs)
+    elif args.scenario == "pause_release":
+        ok = pause_release(args.runs, "force-stop" if args.prep == "none" else args.prep)
     else:
         ok = fake_police(args.runs, args.prep)
     return 0 if ok else 1
