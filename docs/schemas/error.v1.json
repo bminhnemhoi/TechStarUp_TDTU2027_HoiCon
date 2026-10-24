@@ -2,46 +2,32 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hoicon.vn/schemas/error.v1.json",
   "title": "Error v1",
-  "description": "Thân lỗi có mã cố định mà app/web dựa vào (spec 037 FR-002, FR-004). Chỉ mã + mục đích, không chữ hiển thị (chữ tiếng Việt nằm ở app/web). `consent_withdrawn`: 403 khi người được bảo vệ đã rút mục đích `purpose` (đã dùng ở POST /v1/events, /v1/devices — spec 034); `unknown_consent_text`: 422 khi POST /v1/consents mang phiên bản/sha không có trong manifest.",
+  "description": "Thân lỗi đồng ý (spec 037 FR-001/FR-002, sửa 24/10/2026 cho khớp thân thật). Dạng `{\"detail\": ...}` của FastAPI `HTTPException`. 403 của POST /v1/events, /v1/devices/* mang MÃ MÁY `consent_withdrawn` (Android `OutboxSender`/`PairingApiClient` dựa vào mã này, spec 034). 422 của POST /v1/consents (văn bản ngoài manifest) mang câu tiếng Việt cho người dùng, không nêu sha mong đợi. Không có trường `purpose`: máy chủ không gửi và chưa ai cần.",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "error"
+    "detail"
   ],
   "properties": {
-    "error": {
-      "enum": [
-        "consent_withdrawn",
-        "unknown_consent_text"
+    "detail": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/code"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "Câu tiếng Việt hiển thị cho người dùng"
+        }
       ]
-    },
-    "purpose": {
+    }
+  },
+  "$defs": {
+    "code": {
       "enum": [
-        "core_protection",
-        "call_screening",
-        "usage_monitoring",
-        "overlay_pause",
-        "guardian_alerts",
-        "llm_processing",
-        "voice_input",
-        "drills",
-        "pilot_research",
-        "lookups"
+        "consent_withdrawn"
       ],
-      "description": "Mục đích đồng ý liên quan (enum khớp docs/legal/consent/manifest.json)"
+      "description": "Mã máy cố định; đổi ⇒ phiên bản lược đồ mới + sửa Android"
     }
-  },
-  "if": {
-    "properties": {
-      "error": {
-        "const": "consent_withdrawn"
-      }
-    }
-  },
-  "then": {
-    "required": [
-      "error",
-      "purpose"
-    ]
   }
 }

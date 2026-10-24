@@ -1,24 +1,28 @@
 [
   {
-    "_name": "rút mà thiếu purpose",
-    "_why": "consent_withdrawn bắt buộc purpose",
-    "error": "consent_withdrawn"
+    "_name": "rỗng",
+    "_why": "thiếu detail"
   },
   {
-    "_name": "mã lạ",
-    "_why": "error ngoài enum",
-    "error": "forbidden"
+    "_name": "detail rỗng",
+    "_why": "minLength 1",
+    "detail": ""
   },
   {
-    "_name": "mục đích lạ",
-    "_why": "purpose ngoài enum",
-    "error": "consent_withdrawn",
-    "purpose": "marketing"
-  },
-  {
-    "_name": "có chữ hiển thị",
+    "_name": "dạng cũ error/purpose",
     "_why": "additionalProperties false",
-    "error": "unknown_consent_text",
-    "message": "Văn bản không hợp lệ"
+    "error": "consent_withdrawn",
+    "purpose": "guardian_alerts"
+  },
+  {
+    "_name": "thêm purpose",
+    "_why": "additionalProperties false",
+    "detail": "consent_withdrawn",
+    "purpose": "guardian_alerts"
+  },
+  {
+    "_name": "detail không phải chuỗi",
+    "_why": "type",
+    "detail": 403
   }
 ]

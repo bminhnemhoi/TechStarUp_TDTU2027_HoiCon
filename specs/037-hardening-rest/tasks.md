@@ -65,7 +65,7 @@ nào cần, karpathy: không làm trước). Quyết định cho các câu làn 
 - **#6**: hạn mức `/v1/consents` tính theo tiến trình là đủ vì ADR-002 chạy một worker API; ghi một câu vào `plan.md` D-mục hạn mức, không thêm Redis.
 - **#8**: bản sao lưu v1 trùng nonce: rủi ro thấp (khóa 256 bit, ít tệp), không tái mã hóa; bản mới đã dùng khóa con (T007).
 
-- [ ] T013 [B] [FR-001] Test hợp đồng `backend/tests/contract/test_error_schema.py` cho `docs/schemas/error.v1.json` (đã có, kiến trúc sư 23/10):
+- [x] T013 [B] [FR-001] Test hợp đồng `backend/tests/contract/test_error_schema.py` cho `docs/schemas/error.v1.json` (đã có, kiến trúc sư 23/10):
   chạy fixture valid/invalid; enum `purpose` == mục đích trong `backend/src/hoicon/consent_texts/manifest.json`; thân 403 `consent_withdrawn`
   của `routers/events.py` và `routers/devices.py` khớp lược đồ. · Verify: `$PYTEST tests/contract/test_error_schema.py -q`
 - [x] T014 [B] [FR-005] `ops restore`: một khối lỗi (`BackupError`) ⇒ bỏ **cả lượt**, DB đích không đổi (một giao dịch). Test đỏ trước: tệp sửa 1 byte ở khối giữa

@@ -66,3 +66,12 @@
 
 - **ĐẠT**: pytest **2881 passed, 22 skipped, 1 xfailed** (API 18010 tắt); `ruff check` + `format --check` sạch; `hoicon-eval` smoke `--compare baseline` / full `--compare baseline-full` / injection: recall 100%, báo nhầm 0%, vi phạm 0, không lệch (Postgres tạm cổng 15434); `check-spec-trace` 25 spec 0 lỗi; `alembic heads` = `0012` (1 head); gitleaks từng thư mục sạch (`docs`, `docs/schemas`: 1 dương tính giả đã biết).
 - SC-001: `test_consent_manifest_enforcement.py` xanh · SC-002: test đếm lời gọi Zalo giả xanh, thêm đường "3" (T009 #1) · SC-003: ma trận IDOR xanh · SC-004: `test_privacy_report.py` xanh (có đột biến) · SC-005: 0 Critical/0 High, Medium có chủ+ngày (T009) · SC-006: BLOCKED (Firebase) — chưa đo.
+
+## T013 gỡ chặn (nhà điều phối, 24/10/2026)
+
+- Chọn phương án (a): **hợp đồng theo thân thật**. `error.v1.json` nay là `{"detail": <mã máy `consent_withdrawn` | câu tiếng Việt>}`,
+  bỏ `error`/`purpose` (lược đồ 23/10 do kiến trúc sư viết theo giả định, chưa đối chiếu mã; máy chủ và Android đã dùng `detail` từ spec 034).
+  Không đổi server, không đổi Android. Fixture: 2 valid, 5 invalid (gồm dạng cũ `error/purpose` ⇒ bị từ chối).
+- `tests/contract/test_error_schema.py`: bỏ test enum `purpose`; mã của `events`/`devices` ∈ `$defs.code`; câu `consents.UNKNOWN_TEXT` hợp lệ.
+  `tests/integration/test_error_body_contract.py`: gỡ `xfail` ⇒ **PASSED** (403 thật của `POST /v1/events` khớp lược đồ).
+- Verify: `uv run --directory backend pytest tests/contract tests/integration/test_error_body_contract.py -q` ⇒ 307 passed; ruff sạch.

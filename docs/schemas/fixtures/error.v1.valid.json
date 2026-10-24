@@ -1,16 +1,10 @@
 [
   {
-    "_name": "rút guardian_alerts",
-    "error": "consent_withdrawn",
-    "purpose": "guardian_alerts"
+    "_name": "403 rút đồng ý",
+    "detail": "consent_withdrawn"
   },
   {
-    "_name": "văn bản lạ",
-    "error": "unknown_consent_text"
-  },
-  {
-    "_name": "văn bản lạ kèm mục đích",
-    "error": "unknown_consent_text",
-    "purpose": "lookups"
+    "_name": "422 văn bản lạ",
+    "detail": "Văn bản đồng ý này không còn hiệu lực. Vui lòng cập nhật ứng dụng rồi thử lại."
   }
 ]

@@ -1,9 +1,7 @@
 """Hợp đồng spec 037 FR-001/FR-002: `error.v1.json` (mã lỗi cố định mà app/web dựa vào).
 
-Chạy được ở đây: fixture hợp lệ/không hợp lệ; enum `purpose` == mục đích trong manifest đồng ý; mã `consent_withdrawn`
-của `routers/events.py` và `routers/devices.py` thuộc enum `error`. KHÔNG kiểm được thân phản hồi thật khớp lược đồ:
-thân thật là `{"detail": "consent_withdrawn"}` (Android đọc dạng này), lược đồ mô tả `{"error": ..., "purpose": ...}`.
-Lệch hợp đồng: xem `tests/integration/test_error_body_contract.py` (xfail có chủ đích) và evidence 037 T013."""
+Fixture hợp lệ/không hợp lệ; mã `consent_withdrawn` của `routers/events.py`, `routers/devices.py` thuộc `$defs.code`;
+câu 422 của `routers/consents.py` hợp lệ. Thân phản hồi thật: `tests/integration/test_error_body_contract.py`."""
 
 import json
 from pathlib import Path
@@ -12,11 +10,10 @@ from typing import Any
 import pytest
 from jsonschema import Draft202012Validator, FormatChecker
 
-from hoicon.api.routers import devices, events
+from hoicon.api.routers import consents, devices, events
 
 DOCS = Path(__file__).resolve().parents[3] / "docs"
 SCHEMAS = DOCS / "schemas"
-MANIFEST = DOCS / "legal" / "consent" / "manifest.json"
 
 
 def _load(path: Path) -> Any:
@@ -46,11 +43,10 @@ def test_invalid_fixtures(validator: Draft202012Validator, doc: dict[str, Any]) 
     assert not validator.is_valid(_strip(doc)), doc["_why"]
 
 
-def test_purpose_enum_equals_the_purposes_of_the_consent_manifest() -> None:
-    manifest_purposes = [entry["purpose"] for entry in _load(MANIFEST)["purposes"]]
-    assert SCHEMA["properties"]["purpose"]["enum"] == manifest_purposes  # cùng giá trị, cùng thứ tự
-
-
 @pytest.mark.parametrize("code", [events.CONSENT_WITHDRAWN, devices.CONSENT_WITHDRAWN], ids=["events", "devices"])
 def test_the_code_sent_by_the_server_is_in_the_error_enum(code: str) -> None:
-    assert code in SCHEMA["properties"]["error"]["enum"]
+    assert code in SCHEMA["$defs"]["code"]["enum"]
+
+
+def test_the_422_sentence_of_consents_is_a_valid_body(validator: Draft202012Validator) -> None:
+    assert validator.is_valid({"detail": consents.UNKNOWN_TEXT})
