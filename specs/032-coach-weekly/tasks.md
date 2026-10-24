@@ -70,7 +70,7 @@
 - [x] T012 [AB] [FR-011] `ux-elder-reviewer` (5 mẫu tin) và `security-privacy-reviewer` (job, `agent_steps`, lệnh Zalo, đồng ý, hạn
   mức). Sửa mọi Chặn/Critical/High.
   · Verify: báo cáo trong `evidence.md`, không còn mục chặn chưa xử lý
-- [ ] T013 [AB] [FR-001..FR-011] Bộ kiểm cuối: `$PYTEST`; `ruff`; `hoicon-eval --suite smoke --compare baseline`; `$GRADLE
+- [x] T013 [AB] [FR-001..FR-011] Bộ kiểm cuối: `$PYTEST`; `ruff`; `hoicon-eval --suite smoke --compare baseline`; `$GRADLE
   :app:testDebugUnitTest`; gitleaks **từng thư mục** `backend/src`, `backend/tests`, `data/coach`, `docs/legal`,
   `specs/032-coach-weekly`; `check-spec-trace`. Điền `evidence.md`; ROADMAP `P2-17` ◐ (☑ khi SC-007 có số thí điểm hoặc Minh chấp nhận
   số máy ảo).

@@ -80,3 +80,5 @@ Giới hạn đã biết: máy ảo không sạc/dùng pin thật nên Doze/stan
 ## Wave 6 — T013 phần [A] (làn A, 24/10/2026)
 
 - `apps/android/gradlew -p apps/android :rules:test :app:testDebugUnitTest :app:lintDebug` **xanh** trên `feat/w6-android` (gồm `ConsentManifestPinTest`); `python3 -m unittest discover -s scripts/tests` 121 OK; `check-spec-trace.py` 25 spec, 0 lỗi; gitleaks `specs/032-coach-weekly` và `docs/legal` (kết quả ở dòng lệnh cuối phiên). Phần [B] (`$PYTEST`, ruff, eval smoke, gitleaks backend/data, ROADMAP P2-17) do làn B — T013 chưa tick ở đây.
+
+- **T013 tick (nhà điều phối 24/10/2026)**: phần B (lượt W6 làn B: pytest, ruff, eval smoke) + phần A (b2e75d3: Gradle xanh) đều đạt; ROADMAP P2-17 cập nhật cùng lượt.
