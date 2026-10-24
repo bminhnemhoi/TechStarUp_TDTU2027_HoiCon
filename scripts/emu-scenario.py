@@ -4,6 +4,7 @@
     python scripts/emu-scenario.py --scenario screen_only --runs 10 --prep kill  # H1: bắt cuộc gọi khi app bị kill
     python scripts/emu-scenario.py --scenario fake_police --runs 10 # cuộc gọi lạ → demobank → SafePause, đo độ trễ
     python scripts/emu-scenario.py --scenario bank_first --runs 5  # GAP: app ngân hàng mở sẵn trước cuộc gọi
+    python scripts/emu-scenario.py --scenario booth --playlist all  # gian trưng bày: diễn từng mục danh sách phát của /booth
 
 Chỉ dùng thư viện chuẩn + adb. Máy ảo phải đang chạy (bash scripts/emu-start.sh hc-api36 --headless).
 Số điện thoại lấy từ data/fixtures/phones.json (HƯ CẤU). Không in/lưu dump layout/logcat thô (có số gọi đến).
@@ -12,6 +13,7 @@ Số điện thoại lấy từ data/fixtures/phones.json (HƯ CẤU). Không in
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import math
 import os
@@ -263,8 +265,8 @@ def screen_only(runs: int, prep: str) -> bool:
     return caught == len(results) == runs
 
 
-def fake_police_once(prep: str) -> dict[str, int | bool] | None:
-    number = PHONES["flagged_caller"]
+def fake_police_once(prep: str, caller: str = "flagged_caller") -> dict[str, int | bool] | None:
+    number = PHONES[caller]
     flush_modem()
     prepare(prep)
     if not ring(number):
@@ -465,6 +467,72 @@ def fake_police(runs: int, prep: str) -> bool:
     return ok
 
 
+@dataclasses.dataclass(frozen=True)
+class BoothScene:
+    """Cảnh máy ảo của một mục danh sách phát `/booth` (apps/web/src/lib/booth.ts): ai gọi, và E7 có phải hiện không."""
+
+    caller: str  # khóa trong data/fixtures/phones.json (số HƯ CẤU)
+    expect_pause: bool
+
+
+# Khóa = `scenarioId` trong PLAYLIST của booth.ts (test_emu_scenario_booth.py giữ hai bên khớp nhau).
+BOOTH_SCENES = {
+    "fake_police_safe_account_002": BoothScene("flagged_caller", True),
+    "fake_bank_card_locked_002": BoothScene("flagged_caller", True),
+    "benign_family_son_rent_002": BoothScene("trusted_child", False),  # con gọi rồi mở app ngân hàng: HỏiCon không được báo nhầm
+}
+
+
+def booth_plan(name: str) -> list[str]:
+    """`all` = cả danh sách theo thứ tự diễn; hoặc đúng một scenarioId."""
+    if name == "all":
+        return list(BOOTH_SCENES)
+    if name not in BOOTH_SCENES:
+        raise ValueError(f"không có cảnh '{name}' (có: {', '.join(BOOTH_SCENES)}, all)")
+    return [name]
+
+
+def benign_once(caller: str) -> bool | None:
+    """Cuộc gọi hợp lệ + mở app ngân hàng: True = E7 KHÔNG hiện (đúng), False = báo nhầm, None = lỗi môi trường."""
+    number = PHONES[caller]
+    flush_modem()
+    prepare("none")
+    if not ring(number):
+        return None
+    adb("emu", "gsm", "accept", number)
+    wait_for(lambda: call_state() == 2, 15)
+    time.sleep(2)
+    adb("shell", "monkey", "-p", DEMOBANK, "-c", "android.intent.category.LAUNCHER", "1")
+    time.sleep(PAUSE_WAIT_S / 3)  # đủ lâu để một cảnh báo (nếu có) kịp hiện
+    shown = has_mark("pause_shown") or pause_visible()
+    adb("emu", "gsm", "cancel", number)
+    adb("shell", "input", "keyevent", "KEYCODE_HOME")
+    wait_for(lambda: call_state() == 0, 15)
+    time.sleep(2)
+    print(f"  cuộc gọi hợp lệ: E7 {'HIỆN (báo nhầm)' if shown else 'không hiện (đúng)'}")
+    return not shown
+
+
+def booth(name: str, runs: int) -> bool:
+    missing = [p for p in (SENTINEL, DEMOBANK) if not installed(p)]
+    if missing:
+        print(f"booth: thiếu app {', '.join(missing)}", file=sys.stderr)
+        return False
+    ok = True
+    for scenario_id in booth_plan(name):
+        scene = BOOTH_SCENES[scenario_id]
+        print(f"== {scenario_id} (gọi {scene.caller}, {'cần' if scene.expect_pause else 'không được'} hiện E7) ==")
+        if scene.expect_pause:
+            results = [r for _ in range(runs) if (r := fake_police_once("none", scene.caller)) is not None]
+            good = len(results) == runs and all(r["visible"] and int(r["pause"]) <= 3000 for r in results)
+        else:
+            results = [r for _ in range(runs) if (r := benign_once(scene.caller)) is not None]
+            good = len(results) == runs and all(results)
+        print(f"  {scenario_id}: {len(results)}/{runs} lần hợp lệ ⇒ {'ĐẠT' if good else 'TRƯỢT'}")
+        ok = ok and good
+    return ok
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument(
@@ -476,6 +544,7 @@ def main() -> int:
             "bank_first",
             "launch_baseline",
             "call_state",
+            "booth",
         ],
         default="smoke_call",
     )
@@ -486,8 +555,15 @@ def main() -> int:
         default="none",
         help="trạng thái app trước mỗi cuộc gọi (H1)",
     )
+    ap.add_argument("--playlist", default="all", help="scenario=booth: một scenarioId của danh sách phát /booth, hoặc 'all'")
     ap.add_argument("--avd", help="chỉ để ghi báo cáo; máy ảo phải đang chạy")
     args = ap.parse_args()
+    if args.scenario == "booth":
+        try:
+            booth_plan(args.playlist)
+        except ValueError as e:
+            print(e, file=sys.stderr)
+            return 2
 
     if "emulator-" not in adb("devices"):
         print(
@@ -510,6 +586,8 @@ def main() -> int:
         ok = launch_baseline(args.runs)
     elif args.scenario == "call_state":
         ok = call_state_scenario(args.runs)
+    elif args.scenario == "booth":
+        ok = booth(args.playlist, args.runs)
     else:
         ok = fake_police(args.runs, args.prep)
     return 0 if ok else 1
