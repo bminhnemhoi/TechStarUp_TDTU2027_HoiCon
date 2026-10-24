@@ -15,7 +15,6 @@ import time
 from collections import deque
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Literal
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
@@ -28,7 +27,7 @@ from hoicon.api.auth import GuardianClaims, get_current_full_guardian, require_s
 from hoicon.api.routers.guardian import NO_STORE, _cookie_flags
 from hoicon.api.routers.sim import NOT_FOUND, require_sim_enabled
 from hoicon.config import get_settings
-from hoicon.db.models import BoothJoinCode, Family
+from hoicon.db.models import BoothJoinCode, Family, RevokedSession
 from hoicon.db.session import get_sessionmaker
 
 logger = logging.getLogger(__name__)
@@ -200,10 +199,14 @@ async def join(body: JoinIn, request: Request, response: Response) -> SessionOut
         logger.error("booth join: chưa cấu hình HOICON_BOOTH_CODE_KEY")
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Dịch vụ chưa sẵn sàng") from None
     stamp = datetime.now(UTC)
-    # Khách còn phiên sống của CHÍNH mã này bấm vào lại: cấp phiên mới nhưng không tính thêm một khách.
-    own = _live_guest_code(request)
+    # Khách còn phiên sống của CHÍNH mã này bấm vào lại: nhận lại đúng phiên đó (không sinh phiên mới, không kéo dài
+    # hạn) và không tính thêm một khách. Phiên đã đăng xuất (jti bị thu hồi) thì không được miễn.
+    live = _live_guest(request)
     room = BoothJoinCode.guests < BoothJoinCode.max_guests
     async with get_sessionmaker().begin() as session:
+        if live is not None and live[1].jti is not None and await session.get(RevokedSession, live[1].jti):
+            live = None
+        own = live[1].booth_code if live is not None else None
         # Một câu lệnh nguyên tử: kiểm hạn/hủy/số khách và tăng bộ đếm (không vượt 50 dù nhiều khách vào cùng lúc).
         row = (
             await session.execute(
@@ -227,16 +230,20 @@ async def join(body: JoinIn, request: Request, response: Response) -> SessionOut
         if not known:
             _record_failure(client, now)
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=JOIN_INVALID)
-    token = auth.issue_guardian_access_token(
-        row.created_by, row.family_id, now=stamp, ttl=GUEST_TTL, guest=True, booth_code=row.id
-    )
-    max_age = int(GUEST_TTL.total_seconds())
+    if live is not None and own == row.id and live[1].expires_at is not None:
+        token, expires = live[0], live[1].expires_at  # vào lại: giữ nguyên phiên cũ
+        max_age = max(1, int((expires - stamp).total_seconds()))
+    else:
+        token = auth.issue_guardian_access_token(
+            row.created_by, row.family_id, now=stamp, ttl=GUEST_TTL, guest=True, booth_code=row.id
+        )
+        expires, max_age = (stamp + GUEST_TTL).replace(microsecond=0), int(GUEST_TTL.total_seconds())  # JWT: giây
     response.set_cookie(auth.GUARDIAN_COOKIE, token, max_age=max_age, **_cookie_flags())  # type: ignore[arg-type]
     logger.info("booth join: khách vào gian (đã cấp phiên xem)")
-    return SessionOut(family_alias=family.display_name[:40], expires_at=stamp + GUEST_TTL)
+    return SessionOut(family_alias=family.display_name[:40], expires_at=expires)
 
 
-def _live_guest_code(request: Request) -> UUID | None:
+def _live_guest(request: Request) -> tuple[str, GuardianClaims] | None:
     token = request.cookies.get(auth.GUARDIAN_COOKIE)
     if not token:
         return None
@@ -244,7 +251,7 @@ def _live_guest_code(request: Request) -> UUID | None:
         claims = auth.decode_guardian_access_token(token)
     except (auth.DeviceTokenError, auth.DeviceAuthNotConfiguredError):
         return None
-    return claims.booth_code if claims.guest else None
+    return (token, claims) if claims.guest and claims.booth_code is not None else None
 
 
 async def revoke_all_codes(session) -> None:

@@ -417,3 +417,32 @@ def test_the_booth_key_name_is_in_the_prod_example_and_the_caddy_log_hides_the_j
     pattern = re.search(r'regexp "([^"]+)"', redact).group(1)  # type: ignore[union-attr]
     assert re.sub(pattern, r"\1REDACTED", "/join/ABCDEF?x=1") == "/join/REDACTED?x=1"
     assert re.sub(pattern, r"\1REDACTED", "/login/tok") == "/login/REDACTED"
+
+
+# --- T018: Medium/Low còn lại của rà soát T017 --------------------------------------------------------
+
+
+async def test_a_rejoining_guest_keeps_the_same_session_not_a_fresh_one_each_time(world: SimpleNamespace) -> None:
+    """#2: vào lại bằng cookie còn sống ⇒ nhận lại CHÍNH phiên đó (cùng token, cùng hạn), không sinh phiên mới."""
+    code = (await new_code(world))["code"]
+    first = await join(code)
+    cookie = guest_cookie(first)
+    for _ in range(3):
+        again = await join(code, cookies=cookie)
+        assert again.status_code == 200
+        assert guest_cookie(again) == cookie  # cùng jti
+        assert again.json()["expires_at"] == first.json()["expires_at"]  # không kéo dài hạn
+    assert await guests_of() == 1
+
+
+async def test_a_logged_out_guest_session_does_not_skip_the_count(world: SimpleNamespace) -> None:
+    """#3: phiên khách đã đăng xuất (jti bị thu hồi) không còn là "khách vào lại": đếm như khách mới, nhận phiên mới."""
+    code = (await new_code(world))["code"]
+    first = await join(code)
+    cookie = guest_cookie(first)
+    assert (await call("DELETE", "/v1/guardian/session", cookies=cookie, headers=ORIGIN)).status_code == 204
+    again = await join(code, cookies=cookie)
+    assert again.status_code == 200 and guest_cookie(again) != cookie
+    assert await guests_of() == 2
+    assert (await call("GET", "/v1/guardian/me", cookies=guest_cookie(again))).status_code == 200
+    assert (await call("GET", "/v1/guardian/me", cookies=cookie)).status_code == 401  # phiên cũ vẫn chết

@@ -51,6 +51,15 @@ test("cổng gian đang tắt (404 không phải join_code_invalid) ⇒ \"Trang 
   await expect(alert).not.toContainText("Mã chưa đúng");
 });
 
+test("404 lạ (không phải cổng tắt, không phải mã sai) ⇒ câu chung, không nói \"Trang này chưa mở\"", async ({ page }) => {
+  await mockApi(page, { boothJoin: () => ({ status: 404, json: { detail: "Not Found" } }) });
+  await page.goto("/join/K7M2QX");
+  await page.getByRole("button", { name: "Vào xem bản trình diễn" }).click();
+  const alert = page.getByRole("main").getByRole("alert");
+  await expect(alert).toContainText("Mã chưa đúng hoặc đã hết hạn");
+  await expect(alert).not.toContainText("Trang này chưa mở");
+});
+
 test("console: tạo mã hiện chữ rất lớn + liên kết + hạn; có chỉ dẫn đặt lại sẽ vô hiệu mã", async ({ page }) => {
   await mockApi(page);
   await page.goto("/demo/console");

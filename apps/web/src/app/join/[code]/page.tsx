@@ -8,6 +8,8 @@ import { ApiError, api } from "@/lib/client";
 // Khách tại gian vào xem bản trình diễn bằng mã tham gia (spec 050, FR-007). Mở trang KHÔNG tự đổi mã (trình quét liên kết/xem
 // trước sẽ đốt lượt của khách thật): phải bấm nút. Phiên nhận được chỉ xem + quyết định trên sự cố mô phỏng (máy chủ ép).
 const CODE = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/;
+/** `detail` của 404 khi cổng mô phỏng tắt (`require_sim_enabled`); mọi 404 khác (kể cả proxy) dùng câu chung. */
+const GATE_OFF = "Không tìm thấy";
 
 interface Joined {
   family_alias: string;
@@ -33,7 +35,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
     } catch (error) {
       if (error instanceof ApiError && error.status === 429) {
         setProblem("Đã thử nhiều lần. Anh/chị đợi vài phút rồi thử lại, hoặc hỏi người trình bày.");
-      } else if (error instanceof ApiError && error.status === 404 && error.code !== "join_code_invalid") {
+      } else if (error instanceof ApiError && error.status === 404 && error.code === GATE_OFF) {
         setProblem("Trang này chưa mở. Gian trình diễn chưa bật phần cho khách xem, anh/chị hỏi người trình bày nhé.");
       } else if (error instanceof ApiError && error.status === 0) {
         setProblem(error.message);
