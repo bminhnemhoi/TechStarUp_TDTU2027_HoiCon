@@ -492,12 +492,35 @@ def booth_plan(name: str) -> list[str]:
     return [name]
 
 
+def add_contact(number: str) -> None:
+    """Lưu số (HƯ CẤU) vào danh bạ MÁY ẢO: Telecom không đưa cuộc gọi từ liên hệ đã lưu cho CallScreeningService (luật R0)."""
+    uri = "content://com.android.contacts"
+    adb("shell", "content", "insert", "--uri", f"{uri}/raw_contacts", "--bind", "account_type:n:", "--bind", "account_name:n:", check=False)
+    ids = [int(i) for i in re.findall(r"_id=(\d+)", adb("shell", "content", "query", "--uri", f"{uri}/raw_contacts", "--projection", "_id", check=False))]
+    if not ids:
+        print("  cảnh báo: không thêm được liên hệ vào danh bạ máy ảo")
+        return
+    rid = max(ids)
+    for mime, value in (("vnd.android.cursor.item/phone_v2", number), ("vnd.android.cursor.item/name", "Con (thử)")):
+        adb("shell", "content", "insert", "--uri", f"{uri}/data", "--bind", f"raw_contact_id:i:{rid}",
+            "--bind", f"mimetype:s:{mime}", "--bind", f"data1:s:{value}", check=False)
+
+
+def clear_contacts() -> None:
+    adb("shell", "content", "delete", "--uri", "content://com.android.contacts/raw_contacts", check=False)
+
+
 def benign_once(caller: str) -> bool | None:
     """Cuộc gọi hợp lệ + mở app ngân hàng: True = E7 KHÔNG hiện (đúng), False = báo nhầm, None = lỗi môi trường."""
     number = PHONES[caller]
     flush_modem()
+    # Cửa sổ rủi ro của lượt trước còn mở 10 phút sau cuộc gọi: giữ nguyên thì mở app ngân hàng sẽ báo vì lượt TRƯỚC, không phải vì cuộc gọi này.
+    adb("shell", "am", "force-stop", SENTINEL)
+    adb("shell", "run-as", SENTINEL, "rm", "-f", "shared_prefs/risk_window.xml", check=False)
     prepare("none")
+    add_contact(number)
     if not ring(number):
+        clear_contacts()
         return None
     adb("emu", "gsm", "accept", number)
     wait_for(lambda: call_state() == 2, 15)
@@ -508,6 +531,7 @@ def benign_once(caller: str) -> bool | None:
     adb("emu", "gsm", "cancel", number)
     adb("shell", "input", "keyevent", "KEYCODE_HOME")
     wait_for(lambda: call_state() == 0, 15)
+    clear_contacts()
     time.sleep(2)
     print(f"  cuộc gọi hợp lệ: E7 {'HIỆN (báo nhầm)' if shown else 'không hiện (đúng)'}")
     return not shown

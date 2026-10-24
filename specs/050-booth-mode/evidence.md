@@ -32,3 +32,18 @@
 
 - **Đừng chạy API dev (cổng 18010) trong lúc chạy `pytest` toàn bộ:** worker của API nhặt job `notify_guardian`/`graph_resume` của test trên DB dùng chung ⇒ 3 test đỏ (`test_guardian_reply` ×2, `test_incident_graph::test_guardian_silence…`); tắt API thì xanh (2763 passed). Đã gặp và xác nhận ngày 23/10.
 - **Test e2e từng chập chờn ~1/6** (khung 390/768/1440 px): nguyên nhân gốc là câu hỏi của bác bị gỡ khỏi màn ngay khi bác trả lời, test đo cỡ chữ đúng lúc phần tử biến mất (`NaN`). Đã sửa ở mã (câu hỏi giữ trên màn cùng đáp án), không nới test; sau đó toàn bộ e2e web 107 passed × 6 lần liên tiếp (3 test live bị bỏ qua có chủ đích).
+
+## Wave 6 — T014 kịch bản máy ảo tại gian (làn A, 24/10/2026)
+
+**Nguồn: máy ảo `hc-api36` (API 36), bản debug, máy ảo ≠ máy thật.** `python3 scripts/emu-scenario.py --avd hc-api36 --scenario booth --playlist all --runs 3` (hoặc `--playlist <scenarioId>`; id không có ⇒ thoát 2). Mỗi mục danh sách phát của `/booth` có một cảnh (`BOOTH_SCENES`, test `scripts/tests/test_emu_scenario_booth.py` giữ khớp với `PLAYLIST` trong `booth.ts`):
+
+| scenarioId | Cảnh trên máy ảo | Kết quả (3 lượt) |
+|---|---|---|
+| `fake_police_safe_account_002` | số lạ gọi → nghe máy → mở app ngân hàng mẫu | 3/3 hiện E7, SafePause 590–1997 ms (≤ 3000) |
+| `fake_bank_card_locked_002` | như trên | 3/3 hiện E7, SafePause 496–1404 ms |
+| `benign_family_son_rent_002` | số của con đã lưu trong danh bạ máy ảo → nghe máy → mở app ngân hàng | 3/3 E7 KHÔNG hiện (đúng, không báo nhầm) |
+
+- **Phát hiện khi viết cảnh hợp lệ:** gọi từ số *chưa lưu* rồi mở app ngân hàng thì E7 hiện (3/3) — đúng luật, vì HỏiCon không đọc danh bạ và coi mọi số chưa lưu là lạ. Cảnh "con gọi" chỉ đúng khi số đã nằm trong danh bạ máy ảo (Telecom không đưa cuộc gọi từ liên hệ cho CallScreeningService); script thêm liên hệ giả (số hư cấu) trước cuộc gọi và xóa sau. Tại gian: ĐIỆN THOẠI DEMO PHẢI LƯU SẴN số "con" trong danh bạ, nếu không cảnh hợp lệ sẽ báo.
+- Cửa sổ rủi ro của lượt trước (mở 10 phút) được xóa (`force-stop` + xóa `risk_window.xml`, bản debug) trước cảnh hợp lệ.
+
+**Đề xuất nội dung `docs/EMULATOR.md` (tôi không sửa docs/):** mục "Gian trưng bày": (1) `bash scripts/emu-start.sh hc-api36 --headless`; cài `app-debug.apk` và `demobank-debug.apk`; (2) `python3 scripts/emu-scenario.py --scenario booth --playlist all --runs 1` diễn ba cảnh theo thứ tự `/booth` (công an → thẻ bị khóa → cuộc gọi hợp lệ); tên cảnh = `scenarioId` trong `apps/web/src/lib/booth.ts`; (3) tay: bấm "Vẫn tiếp tục" giữ 3 giây hoặc "Hỏi con" tuỳ kịch bản, `/booth` và máy ảo chạy độc lập (không nối API); (4) cảnh hợp lệ cần số "con" đã lưu trong danh bạ máy ảo (script tự thêm/xóa); (5) số đo là máy ảo, không dùng làm số ở hội trường.
