@@ -49,6 +49,8 @@ và `convert.ps1` cần Microsoft Word trên Windows ⇒ **phần sửa + xuất
   0 LOI ⇒ ghi rõ giả định. Áp dụng D, E cho cả BMC và Bảng 21.
 - **J (dữ liệu sơ cấp — judge điểm yếu 4)**: chèn kết quả khảo sát thật trước 13/11; chưa đủ 300 ⇒ ghi đúng n và ngày chốt số.
 
+- **K (phát hành, Tiến chốt 25/10)**: giai đoạn thử phát **APK tải trực tiếp**, chưa lên Google Play ⇒ không viết "Play internal testing"/"có trên Google Play" trong thuyết minh và video; ghi "bản thử nghiệm Android cài trực tiếp; phát hành Google Play sau thí điểm". Câu "phù hợp chính sách Google Play" (thiết kế tuân thủ) vẫn giữ.
+
 Báo cáo chấm thử đầy đủ (điểm 11 tiêu chí, 10 câu phản biện + gợi ý trả lời có nguồn): `docs/proposal/JUDGE-PRECHECK-2026-10-25.md`.
 
 ## 3. Việc của người (chặn nộp 13/11)

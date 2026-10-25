@@ -33,7 +33,7 @@ và ghi tên vào thuyết minh. Thuyết minh hiện ghi **5 người** — ph�
 
 | # | Việc | Chi phí / chờ | Đặt khóa ở đâu | Gỡ chặn |
 |---|---|---|---|---|
-| 1 | **Google Play Console** (cá nhân) — đăng ký **hôm nay** | 25 USD, xác minh danh tính vài ngày | — | 012 T015, 029 T011/T012, P1-08, M2 |
+| 1 | ~~Google Play Console~~ — **hoãn** (Tiến chốt 25/10: giai đoạn thử chỉ phát **APK tải trực tiếp**, §6). Chỉ đăng ký khi cần link cửa hàng | 25 USD | — | (sau thí điểm) |
 | 2 | **Firebase** (Spark, miễn phí) + `gcloud` | 0 | `google-services.json` ngoài git (`apps/android/app/`, đã gitignore) | 001 T007–T010 (đo máy thật FTL), FCM cho E8 |
 | 3 | **Anthropic API** — đặt **trần chi tiêu** 10–20 USD | trả trước | `backend/.env` → `HOICON_ANTHROPIC_API_KEY` | 036 cassette `recorded` (số M3 thật), P1-S4 so mô hình, 011 T020 |
 | 4 | **Zalo Bot Platform** — bot `hoicon-dev` | 0 (3 bot × 50 người × 3.000 tin/tháng) | `backend/.env` → `HOICON_ZALO_BOT_TOKEN` (xóa tin chứa token trong Zalo sau khi chép) | 002 T024/T025 (đo giao tin thật), 012 T011 |
@@ -130,13 +130,17 @@ Xong ⇒ báo Claude để tick 012 T010–T014 và ghi evidence.
 
 ---
 
-## 6. Phát hành app lên Play internal testing (sau Play Console)
+## 6. Phát APK cho người thử (Tiến chốt 25/10 — chưa dùng Play)
 
-1. Tạo keystore phát hành **ngoài repo** (ví dụ `~/secrets/hoicon-release.jks`), sao lưu 2 nơi. Biến môi trường ký: xem `specs/012-release-and-hosting`.
-2. `apps/android/gradlew -p apps/android :app:bundleRelease` (bản đã có R8 + baseline profile; `scripts/release-gate.sh` phải ĐẠT).
-3. Play Console: tạo app, điền **Data safety** theo `docs/PLAY-POLICY.md`, khai báo quyền nhạy cảm (gọi điện sàng lọc, dữ liệu sử dụng, hiển thị trên
-   ứng dụng khác) kèm video ngắn giải thích; tạo Google Group tester; tải AAB lên **internal testing**.
-4. Báo Claude để tick 012 T015, 029 T011.
+Giai đoạn thử, chưa công khai ⇒ **APK tải trực tiếp** (0 đồng). Firebase App Distribution là phương án nâng cấp khi đông người thử (email mời,
+báo bản mới) — vẫn là APK, chỉ tiện quản lý.
+1. Tạo keystore phát hành **ngoài repo** (ví dụ `~/secrets/hoicon-release.jks`), sao lưu 2 nơi. **Mọi bản cập nhật phải ký cùng khóa** — mất khóa
+   ⇒ người dùng phải gỡ app và ghép đôi lại. Không phát bản debug. Biến môi trường ký: `specs/012-release-and-hosting`.
+2. `apps/android/gradlew -p apps/android :app:assembleRelease` (R8 + baseline profile); `scripts/release-gate.sh` phải ĐẠT.
+3. Tải APK lên **GitHub Releases** (bản pre-release) hoặc Google Drive; ghi số phiên bản + ngày.
+4. **Cài thử trên một máy Android thật** (13 trở lên): kiểm cảnh báo Play Protect, "cài đặt bị hạn chế" khi cấp quyền sàng lọc cuộc gọi / dữ liệu
+   sử dụng / hiển thị trên ứng dụng khác; ghi kết quả vào evidence 029 (nhờ Claude).
+5. **Độ ổn định**: không có Play ⇒ không có Android vitals ⇒ tiêu chí "crash-free ≥ 99%" của M2 cần nguồn khác — chốt ở MASTER-PLAN §8 mục 18.
 
 ---
 
@@ -145,7 +149,7 @@ Xong ⇒ báo Claude để tick 012 T010–T014 và ghi evidence.
 Quy định cứng: chỉ người **≥ 18 tuổi**, có đồng ý bằng văn bản trong app; dữ liệu thật không bao giờ đưa vào demo/eval.
 1. Hoàn thiện `docs/setup/PILOT-ONBOARDING.md`, `PILOT-SUPPORT.md` (điền ô `[CHỜ MINH ĐIỀN]`: số hỗ trợ, người phụ trách = Tiến, Google Group).
 2. Tuyển từ danh sách người khảo sát đồng ý tham gia; mục tiêu **≥ 5 gia đình trước M2**, ≥ 20 trước M3, ≥ 30 trước G3.
-3. Cài qua Play internal testing, ghép đôi tại chỗ, bật người giám hộ trên Zalo.
+3. **Cài APK tại chỗ** (bật "cài ứng dụng không rõ nguồn gốc" giúp bác, bỏ qua cảnh báo Play Protect, tắt lại sau khi cài), ghép đôi, bật người giám hộ trên Zalo.
 4. Ghi danh: `uv run --directory backend python -m hoicon.ops.pilot enroll --family <id> --confirm-adult` (029 T013). Sau 7 ngày: `ops pilot report`.
 5. Mỗi tuần: hỏi người giám hộ về tin "mất bảo vệ" có phải báo nhầm không (032 T014); một người giám hộ duyệt + in thử hồ sơ của một sự cố
    **demo** (031 T017); người cao tuổi đọc thử màn đồng ý và ghi chỗ khó hiểu (011 T011).
@@ -159,7 +163,7 @@ Quy định cứng: chỉ người **≥ 18 tuổi**, có đồng ý bằng văn
 |---|---|---|
 | 22/11 | VPS + bot Zalo thật chạy | Triển khai, đo giao tin p95 (002 T024) |
 | 06/12 (M1) | Một sự cố đầu–cuối trên máy thật: cuộc gọi lạ → app ngân hàng → dừng an toàn → Zalo tới điện thoại bạn | Kịch bản, đo, báo cáo gate |
-| 20/12 (M2) | ≥ 5 gia đình cài qua Play | `phase-gate M2`, báo cáo độ ổn định (Android vitals, `docs/setup/STABILITY.md`) |
+| 20/12 (M2) | ≥ 5 gia đình cài APK | `phase-gate M2`, báo cáo độ ổn định (Android vitals, `docs/setup/STABILITY.md`) |
 | 06/01 | Đóng băng code | Rà soát cuối, `pitch-sync` |
 | 09/01 (M3) | Nộp: tài liệu Vòng 1 hoàn thiện + **poster** (mẫu BTC) + MVP + **video 5 phút** | Số eval với mô hình thật (cần khóa API), kịch bản video 5' (`demo-video-director`), nội dung poster |
 | 18/01–21/02 | Slide pitching 10 phút; tập trả lời 10 câu phản biện (`JUDGE-PRECHECK`) | Slide, `judge` chấm thử, chế độ gian `/booth` cho buổi trưng bày |
@@ -169,7 +173,7 @@ Quy định cứng: chỉ người **≥ 18 tuổi**, có đồng ý bằng văn
 ## 9. Bảng đánh dấu nhanh (in ra dán bàn)
 
 - [ ] Email BTC hỏi đội 1 người
-- [ ] Play Console đăng ký (25 USD)
+- [ ] Tạo keystore release, cất 2 nơi
 - [ ] Firebase + `gcloud`
 - [ ] Khóa Anthropic có trần chi tiêu
 - [ ] Bot Zalo `hoicon-dev`
@@ -183,7 +187,7 @@ Quy định cứng: chỉ người **≥ 18 tuổi**, có đồng ý bằng văn
 - [ ] Push + PR + squash merge vào `main`
 - [ ] Triển khai VPS, webhook Zalo, sao lưu, giám sát
 - [ ] Máy Android thật / FTL
-- [ ] AAB lên Play internal testing
+- [ ] APK release ký đúng khóa lên GitHub Releases/Drive; cài thử trên máy thật (kiểm "cài đặt bị hạn chế")
 - [ ] Tuyển ≥ 5 → 20 → 30 gia đình thí điểm
 - [ ] Poster + video 5' + nộp Vòng 2 (09/01)
 - [ ] Slide chung kết

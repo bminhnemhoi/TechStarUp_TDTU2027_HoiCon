@@ -36,7 +36,7 @@
 | B4 | Thuyết minh cam kết 50–100 gia đình thí điểm; gate chỉ ≥ 20 (M3) / ≥ 30 (G3) | thuyết minh tr.4; ROADMAP gate | Hạ cam kết trong P1-01 (khuyên, trung thực) hoặc nâng gate | Minh |
 | B5 | Thuyết minh có nhóm "sinh viên"; PRD chỉ người cao tuổi; P1-01 ghi "đội 1 người" | thuyết minh tr.4; PRD; ROADMAP P1-01 | Ghi đội 2 người; sinh viên = mở rộng sau MVP | Minh |
 | B6 | Hồ sơ `judge` cần nhà cung cấp khác bên sinh — chưa có provider Gemini | `docs/AGENTS.md` | Eval chấm tất định là chính; LLM-judge Gemini khi có khóa | Minh |
-| B7 | M2 cần ≥ 5 gia đình cài qua Play nhưng Play Console chưa đăng ký | HANDOFF §5.1 | Đăng ký ngay — đường găng M2 | Minh |
+| B7 | M2 cần ≥ 5 gia đình cài qua Play nhưng Play Console chưa đăng ký | HANDOFF §5.1 | **Tiến chốt 25/10: thử bằng APK tải trực tiếp, hoãn Play** — M2 = ≥ 5 gia đình cài APK | Tiến |
 | B8 | Gate G1 đòi 5 báo cáo spike; S3, S5 chưa bắt đầu, S6 nhiều khả năng cắt | ROADMAP gate G1 | Cắt P1-S6 ngay ⇒ G1 = 4 spike + ADR-007…010 | Minh |
 
 ## 2. Spec Kit cho dự án brownfield
@@ -153,7 +153,7 @@ Làn: **A** = Android · **B** = backend/AI/web · **H** = hồ sơ, vận hành
 | **027-guardian-web** | P2-12: danh sách/chi tiết sự cố cho người giám hộ | B | 023 | Playwright + ảnh chụp |
 | **028-drills** | P2-13: diễn tập v1 (E11, bảng `drills`, nhãn `[DIỄN TẬP]`, màu riêng, debrief) | A+B | 022, 024 | US-08; `is_drill` ở mọi nơi (test) |
 | **034-hardening-core** | Phần P2-20 cần **trước** người thật: `privacy-audit`, review bảo mật, job retention, backup | B | 012 | 0 lỗi bảo mật High |
-| **029-pilot-kit** | P2-14: bộ thí điểm + Play internal v0.3 | A+B+H | 012, 020, 022, 034 | Gate M2: ≥ 5 gia đình, ≥ 1 máy thật, heartbeat ≥ 90%, crash-free ≥ 99% |
+| **029-pilot-kit** | P2-14: bộ thí điểm + APK v0.3 (cài tại chỗ; Play hoãn 25/10) | A+B+H | 012, 020, 022, 034 | Gate M2: ≥ 5 gia đình, ≥ 1 máy thật, heartbeat ≥ 90%, crash-free ≥ 99% |
 
 ### Đợt 5 — Hoàn thiện Vòng 2 (21/12–09/01, đóng băng 06/01)
 | Spec | Nội dung | Làn | Phụ thuộc | AC chính |
@@ -433,3 +433,9 @@ Việc **lite**: bỏ bước 3–4 của Spec Kit, vẫn chạy test, vẫn ghi
 17. ★ **Phạm vi xóa khi nhà có ≥ 2 người được bảo vệ (038, thêm 25/10/2026)**: hiện `purge_family` xóa cả gia đình. Đề xuất (reviewer): nhà có
     ≥ 2 `protected` thì yêu cầu từ app chỉ xóa phần của người yêu cầu (cần `purge_member` mới). Thí điểm hiện 1 người/nhà nên chưa gấp.
     Khoảng chờ 24 giờ có thể hủy đã quyết và giao (038 FR-006, T007).
+18. **Tiến — đo độ ổn định khi không có Play (thêm 25/10/2026)**: Tiến chốt phát APK trực tiếp ⇒ không có Android vitals (037 FR-008 dựa vào Play
+    Console) ⇒ tiêu chí M2 "crash-free ≥ 99%" mất nguồn đo. Phương án: (a) app đếm số lần app bị dừng bất thường (`ApplicationExitInfo`, chỉ số đếm,
+    không nội dung) và gửi kèm heartbeat — là dữ liệu chẩn đoán mới ⇒ cần xét mục đích đồng ý (`core_protection` có bao gồm không) + DPIA; (b) đo
+    tay qua phỏng vấn tuần thí điểm (yếu); (c) bỏ tiêu chí crash-free khỏi M2, chỉ giữ heartbeat ≥ 90%. Đề xuất: **(a)** nếu `core_protection` đã
+    nói tới "kiểm tra HỏiCon còn chạy", nếu không thì (c). Chốt xong ⇒ kiến trúc sư viết task (029/037).
+
