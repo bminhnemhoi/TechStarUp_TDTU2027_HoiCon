@@ -12,7 +12,7 @@ import vn.hoicon.sentinel.data.consent.ConsentLedger
 
 /**
  * E12 (Spec 038): the confirmation after "Tắt" ("Tắt …? HỏiCon sẽ không … nữa."), and the words again before `guardian_alerts` is
- * switched back on. Two buttons, "Quay lại" never records anything. The other purposes switch back on through their own screens.
+ * switched back on. Two buttons, "Quay lại" never records anything (and is the solid one when turning off). The other purposes switch back on through their own screens.
  */
 @Composable
 fun ConsentSwitchScreen(purpose: String, turningOff: Boolean, onConfirm: () -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -21,11 +21,14 @@ fun ConsentSwitchScreen(purpose: String, turningOff: Boolean, onConfirm: () -> U
         modifier = modifier,
         scrollHint = true,
         actions = {
-            PrimaryButton(
-                text = stringResource(if (turningOff) R.string.switch_off_confirm else R.string.switch_on_confirm),
-                onClick = onConfirm,
-            )
-            SecondaryButton(text = stringResource(R.string.switch_off_back), onClick = onBack)
+            // Turning protection off: the safe answer ("Quay lại") is the solid button; turning something on: the confirmation is.
+            if (turningOff) {
+                PrimaryButton(text = stringResource(R.string.switch_off_back), onClick = onBack)
+                SecondaryButton(text = stringResource(R.string.switch_off_confirm), onClick = onConfirm)
+            } else {
+                PrimaryButton(text = stringResource(R.string.switch_on_confirm), onClick = onConfirm)
+                SecondaryButton(text = stringResource(R.string.switch_off_back), onClick = onBack)
+            }
         },
     ) {
         if (turningOff) {

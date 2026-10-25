@@ -97,12 +97,17 @@ fun PermissionsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                text = stringResource(R.string.hello_title),
+                text = stringResource(R.string.settings_title),
                 style = MaterialTheme.typography.displaySmall,
                 modifier = Modifier.semantics { heading() },
             )
             Text(text = stringResource(R.string.hello_ai_disclosure), style = MaterialTheme.typography.bodyLarge)
             notice?.let { NoticePanel(text = it) }
+            // A request waiting to be carried out is the first thing on this screen, with its way out right beside it.
+            if (onDelete != null && deletePendingAt != null) {
+                NoticePanel(text = stringResource(R.string.delete_pending_panel, deletePendingAt))
+                SecondaryButton(text = stringResource(R.string.delete_cancel), onClick = onCancelDelete)
+            }
             Text(text = stringResource(R.string.perm_screen_intro), style = MaterialTheme.typography.bodyMedium)
             for ((permission, row) in permissionRows()) {
                 HorizontalDivider()
@@ -119,20 +124,15 @@ fun PermissionsScreen(
                     SwitchCard(purpose = purpose, isOn = isOn, onTurnOff = { onTurnOff(purpose) }, onTurnOn = { onTurnOn(purpose) })
                 }
             }
-            if (onDelete != null) {
+            if (onDelete != null && deletePendingAt == null) {
                 HorizontalDivider()
                 Text(
                     text = stringResource(R.string.delete_section_title),
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.semantics { heading() },
                 )
-                if (deletePendingAt != null) {
-                    NoticePanel(text = stringResource(R.string.delete_pending_panel, deletePendingAt))
-                    SecondaryButton(text = stringResource(R.string.delete_cancel), onClick = onCancelDelete)
-                } else {
-                    // Neutral navy outline, not the risk colours: this is a calm choice, not an alarm.
-                    SecondaryButton(text = stringResource(R.string.delete_button), onClick = onDelete)
-                }
+                // Neutral navy outline, not the risk colours: this is a calm choice, not an alarm.
+                SecondaryButton(text = stringResource(R.string.delete_button), onClick = onDelete)
             }
             if (onBack != null) {
                 HorizontalDivider()
@@ -156,7 +156,7 @@ private fun SwitchCard(purpose: String, isOn: Boolean, onTurnOff: () -> Unit, on
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clearAndSetSemantics { stateDescription = stateWords }, // the words, not the mark
         )
-        val label = stringResource(if (isOn) R.string.switch_turn_off_for else R.string.switch_turn_on_for, parts.title)
+        val label = stringResource(if (isOn) R.string.switch_turn_off_for else R.string.switch_turn_on_for, stringResource(switchNoun(purpose)))
         OutlinedButton(
             onClick = if (isOn) onTurnOff else onTurnOn,
             shape = RoundedCornerShape(32.dp),

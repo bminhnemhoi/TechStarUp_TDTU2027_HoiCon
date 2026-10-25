@@ -6,7 +6,7 @@
 -->
 <resources>
     <string name="app_name">HỏiCon</string>
-    <string name="hello_title">Xin chào!</string>
+    <string name="settings_title">Cài đặt và quyền riêng tư</string>
     <string name="hello_ai_disclosure">Đây là trợ lý AI HỏiCon — như một người gác cổng giúp cả nhà tránh bị lừa qua điện thoại.</string>
     <!-- Phụ đề (subText) của MỌI thông báo. -->
     <string name="notif_ai_subtext">Trợ lý AI HỏiCon</string>
@@ -18,9 +18,9 @@
     <string name="switch_status_on">✓ Đã bật</string>
     <string name="switch_status_off">○ Chưa bật</string>
     <string name="switch_turn_off">Tắt</string>
-    <string name="switch_turn_off_for">Tắt mục %1$s</string>
+    <string name="switch_turn_off_for">Tắt %1$s</string>
     <string name="switch_turn_on">Bật</string>
-    <string name="switch_turn_on_for">Bật mục %1$s</string>
+    <string name="switch_turn_on_for">Bật %1$s</string>
     <string name="switch_noun_guardian_alerts">việc báo cho con cháu</string>
     <string name="switch_noun_lookups">việc kiểm tra giúp bác</string>
     <string name="switch_noun_drills">việc tập nhận biết lừa đảo</string>
@@ -41,7 +41,7 @@
     <string name="delete_title">Xóa dữ liệu của gia đình?</string>
     <string name="delete_what">HỏiCon sẽ xóa các sự việc, tin nhắn và liên kết với gia đình bác trên hệ thống của HỏiCon.</string>
     <string name="delete_keep">HỏiCon giữ lại sổ ghi những điều bác đã đồng ý, vì luật yêu cầu như vậy.</string>
-    <string name="delete_wait">HỏiCon bắt đầu xóa sau 24 giờ. Trong lúc chờ, HỏiCon vẫn bảo vệ bác. Bác đổi ý lúc nào cũng được: vào lại mục Xóa dữ liệu rồi bấm “Hủy yêu cầu xóa”.</string>
+    <string name="delete_wait">HỏiCon bắt đầu xóa sau 24 giờ. Trong lúc chờ, HỏiCon vẫn bảo vệ bác. Trong 24 giờ chờ, nếu bác đổi ý, bác mở lại màn Cài đặt và bấm “Hủy yêu cầu xóa” ở đầu màn.</string>
     <string name="delete_deadline">Việc xóa xong chậm nhất sau 72 giờ. Sau đó bác cần kết nối lại với con để dùng tiếp.</string>
     <string name="delete_too_short">Chưa gửi gì cả. Bác giữ đủ 3 giây nếu muốn gửi nhé.</string>
     <string name="delete_holding">Đang giữ… bác giữ tiếp nhé</string>
@@ -56,7 +56,7 @@
     <string name="delete_failed">Chưa gửi được. Bác thử lại sau một lúc nhé.</string>
     <string name="delete_pending_panel">Sẽ xóa lúc %1$s. Trong lúc chờ, HỏiCon vẫn bảo vệ bác.</string>
     <string name="delete_cancel">Hủy yêu cầu xóa</string>
-    <string name="delete_cancelled">Đã hủy yêu cầu xóa.</string>
+    <string name="delete_cancelled">Đã hủy yêu cầu xóa. HỏiCon vẫn bảo vệ bác.</string>
     <string name="delete_cancel_too_late">Đã quá giờ hủy, việc xóa đã bắt đầu.</string>
     <string name="delete_cancel_unavailable">Chưa hủy được lúc này. Bác thử lại sau nhé.</string>
     <string name="delete_done_welcome">Dữ liệu của gia đình bác đã được xóa. Muốn dùng lại, bác kết nối với con nhé.</string>
