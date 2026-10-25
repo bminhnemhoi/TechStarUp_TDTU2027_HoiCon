@@ -36,7 +36,22 @@ và `convert.ps1` cần Microsoft Word trên Windows ⇒ **phần sửa + xuất
 - **F (số đo, #7, #9)**: chỉ dùng số có nguồn: "khoảng dừng an toàn hiện trong ≈ 1,2 giây (p95, bản phát hành, máy ảo Android 14 và 16)";
   không nêu recall/báo nhầm cho tới khi có số mô hình thật.
 
+- **G (Bảng 9, agentic — judge 25/10, điểm yếu 2)** — thay câu "Chấm rủi ro tự quyết định hỏi thêm câu nào, tra cứu gì… không phải luồng
+  kịch bản cố định": "**Tác tử có ràng buộc**: đồ thị có trạng thái với các điểm dừng chờ người (`ask_elder`, `await_guardian`,
+  `await_case_approval`) và chạy tiếp sau sự cố; mô hình ngôn ngữ chỉ quyết định trong phạm vi đã duyệt (chọn câu hỏi từ ngân hàng câu hỏi,
+  chọn điểm tóm tắt từ danh sách đóng, chỉ được nâng mức rủi ro); công cụ qua MCP; con người duyệt mọi bước có hệ quả." (AGENTS.md, ADR-012)
+- **H (tính năng lệch — judge điểm yếu 3)**: (1) nút "Hỏi con": thuyết minh "một chạm gửi cảnh báo qua Zalo" ⇒ thực tế mở bàn phím gọi trống
+  + gửi sự kiện; cảnh báo Zalo do máy chủ gửi khi chấm rủi ro (sửa câu hoặc thêm task — Minh); (2) hỏi/nhận dạng bằng giọng nói (Bảng 8) ⇒ E8
+  dùng nút bấm, app đọc to (TTS); trả lời bằng giọng nói nằm trong danh sách cắt; (3) Langfuse (Bảng 17) ⇒ bỏ (danh sách cắt; trace tự xây
+  `/trace`); (4) tác tử Xác minh "gọi lại người thân" ⇒ bỏ (không có); (5) MCP: chỉ có `threat` (chưa có `zalo`).
+- **I (tài chính — judge điểm yếu 5)**: thống nhất chi phí biến đổi 6.000 (§3.7) và 6.900 đồng/gia đình/tháng (Bảng 26) ⇒ dùng một số từ
+  `src/model.py`; ghi chi phí LLM là "ước tính (chưa đo)"; "tỷ lệ phát hiện ≥ 90%" ⇒ "mục tiêu ≥ 90% (đo ở Vòng 2)"; doanh thu B2B2C 2027 khi
+  0 LOI ⇒ ghi rõ giả định. Áp dụng D, E cho cả BMC và Bảng 21.
+- **J (dữ liệu sơ cấp — judge điểm yếu 4)**: chèn kết quả khảo sát thật trước 13/11; chưa đủ 300 ⇒ ghi đúng n và ngày chốt số.
+
+Báo cáo chấm thử đầy đủ (điểm 11 tiêu chí, 10 câu phản biện + gợi ý trả lời có nguồn): `docs/proposal/JUDGE-PRECHECK-2026-10-25.md`.
+
 ## 3. Việc của người (chặn nộp 13/11)
-1. Minh quyết B4, B5 (MASTER-PLAN §8 mục 3) ⇒ chọn đề xuất A/B hoặc câu khác.
+1. Minh quyết B4, B5 (MASTER-PLAN §8 mục 3) ⇒ chọn đề xuất A/B hoặc câu khác; duyệt G–J.
 2. Minh sửa trong Word (bản đã sửa tay), xuất PDF bằng `convert.ps1` trên Windows, điền tên đội/thành viên.
 3. P1-02 khảo sát ≥ 300 phản hồi; P1-03 quay video theo `docs/proposal/VIDEO-V1-SCRIPT.md`; P1-04 gọi `judge` chấm thử 10/11.
