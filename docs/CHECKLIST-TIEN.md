@@ -27,7 +27,7 @@ Quy tắc chung (đọc một lần):
 2. **Billing** → nạp trước 10–20 USD.
 3. **Organization settings → Billing → Spend limits** → đặt 20 USD/tháng.
 4. Tạo **Workspace** `hoicon-dev` → tab *Spend limits* đặt 15 USD.
-5. Trong `hoicon-dev` → **API keys → Create key** tên `hoicon-dev-local` → mở `backend/.env`, thêm dòng `HOICON_ANTHROPIC_API_KEY=<khóa>`.
+5. Trong `hoicon-dev` → **API keys → Create key** tên `hoicon-dev-local` → mở `backend/.env`, thêm dòng `HOICON_ANTHROPIC_API_KEY=...`.
 6. Kiểm: `uv run --directory backend python -m hoicon.ops.check_keys` → dòng Anthropic **Đạt**.
 - **Gỡ chặn:** số eval với mô hình thật (Gate M3, 036), so mô hình (P1-S4), câu hỏi E8/tóm tắt do LLM thật.
 - **Báo Claude:** `H-02 xong: đã có khóa Anthropic trong backend/.env, check_keys Đạt.`
@@ -36,7 +36,7 @@ Quy tắc chung (đọc một lần):
 ### - [ ] H-03 · Bot Zalo dev (15 phút, miễn phí)
 1. Mở **Zalo** → tìm OA **"Zalo Bot Manager"** → menu **Tạo bot** → *Zalo Bot Creator*.
 2. Tên bot **phải bắt đầu bằng "Bot"**: `Bot HỏiCon Dev`. Ảnh đại diện tạm.
-3. Zalo gửi **Bot Token** qua tin nhắn → mở `backend/.env`, thêm `HOICON_ZALO_BOT_TOKEN=<token>` → **xóa tin nhắn chứa token** trong Zalo.
+3. Zalo gửi **Bot Token** qua tin nhắn → mở `backend/.env`, thêm `HOICON_ZALO_BOT_TOKEN=...` → **xóa tin nhắn chứa token** trong Zalo.
 4. Nếu `backend/.env` chưa có `HOICON_DATA_KEY_1`: chạy **một lần** `uv run --directory backend python -m hoicon.ops.init_env --new-data-key`.
 5. Kiểm: `check_keys` → Zalo **Đạt**.
 - **Gỡ chặn:** 002 T024/T025 (đo giao tin Zalo thật p95 ≤ 5 s), cảnh Zalo thật trong video.
