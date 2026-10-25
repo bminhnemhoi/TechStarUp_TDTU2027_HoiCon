@@ -12,7 +12,7 @@
 - [x] T004 [A] [FR-003, FR-006] `PrivacyDeleteScreen.kt` (giữ 3 giây, offline ⇒ không gửi) + client `POST /v1/data-requests`; sau khi gửi **không xóa cục bộ ngay**:
   E12 hiện "Sẽ xóa lúc …" + "Hủy yêu cầu xóa" (`DELETE /v1/data-requests/{id}`); chỉ xóa cục bộ + về E1 khi máy chủ từ chối token (401) sau `execute_after`.
   · Verify: `$GRADLE :app:testDebugUnitTest` (test client với MockWebServer: 200/202, offline, 429)
-- [ ] T005 [A] [FR-005, SC-002, SC-003, SC-004] Máy ảo hc-api36 + backend dev: đi hết E12 ⇒ xóa ⇒ `data_requests.done`; tắt `overlay_pause` rồi `fake_police --runs 3`;
+- [x] T005 [A] [FR-005, SC-002, SC-003, SC-004] Máy ảo hc-api36 + backend dev: đi hết E12 ⇒ xóa ⇒ `data_requests.done`; tắt `overlay_pause` rồi `fake_police --runs 3`;
   ảnh 100/200% + `ux-elder-reviewer` 0 Chặn/Cao. · Verify: evidence.md (lệnh + kết quả)
 - [ ] T006 [AB] Bộ kiểm cuối ($PYTEST, ruff, Gradle, check-spec-trace) + evidence SC-001…SC-004. · Verify: lệnh thoát 0
 - [x] T007 [B] [FR-006] Khoảng chờ 24 giờ: migration (`data_requests.execute_after`, trạng thái `cancelled`), `POST` trả `execute_after`, `purge_family` xếp với
