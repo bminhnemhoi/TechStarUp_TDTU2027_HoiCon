@@ -327,6 +327,12 @@ dòng `W6-A/W6-B XONG` + chạy lại Verify khi gộp). Trần 2 phiên ghi đ�
 **Wave 6 (sau nộp Vòng 2 09/01/2027, xong trước 07/02):** spec 050 **giai đoạn 2** (giai đoạn 1 làn B đã làm 23/10). Kiến trúc sư làm 050 **T001** (hợp đồng) ở checkout chính trước.
 Làn B: **T002 → T003 → T004 → T005 → T006 → T008**; làn A: **T007** (`booth-record.py`) song song với T005; chung: **T009 → T010**.
 
+**Trạng thái 25/10/2026 (nhà điều phối, đối chiếu tasks.md):** các hàng Wave 4/5/6 ở trên **đã xong phần máy làm được**, trừ:
+038 **T005–T006** (E12 trên máy ảo + bộ kiểm cuối; phiên làn A mất khi Orca khởi động lại, chưa chạy). Wave 6 (050) giai đoạn 1 + 2 đã làm sớm
+(23–24/10). Spec mới ngoài kế hoạch: **038-settings-privacy** (E12). Mọi task còn mở khác cần người/máy thật/tài khoản (liệt kê dưới đây và §8).
+Việc AI làm được nhưng **chưa có task Sonnet**: soạn thuyết minh Vòng 1 (P1-01, skill `pitch-sync`, từ 26/10) và kịch bản video 3' (P1-03,
+skill `demo-video-director`) — người quay và nộp.
+
 **Việc chờ người (không xếp cho Sonnet):** 002 T024/T025 (token bot Zalo), 012 T010–T015 (VPS, Play Console), 029 T013 (ghi danh gia
 đình thí điểm), 031 T017/T018, 032 T014/T015, 011 T010/T011, 036 kịch bản + cassette `recorded` (P0-08).
 
