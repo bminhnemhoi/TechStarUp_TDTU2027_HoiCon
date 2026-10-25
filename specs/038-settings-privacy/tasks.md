@@ -19,3 +19,8 @@
   `run_at = execute_after` và kiểm lại trạng thái lúc chạy, `DELETE /v1/data-requests/{id}` (chỉ thiết bị protected của gia đình đó; đã `done` ⇒ 409),
   tin báo người giám hộ ghi giờ xóa. Test đỏ trước (hủy trong khoảng chờ ⇒ 0 dòng bị xóa; quá giờ ⇒ purge chạy). · Verify:
   `$PYTEST tests/contract tests/integration/test_api_data_requests.py tests/integration/test_purge_family.py -q`
+- [ ] T008 [A] [FR-005] Mục Trung bình của `ux-elder-reviewer` (evidence T005): băng "Sẽ xóa lúc …" lên **đầu** E12; sau Hủy hiện "Đã hủy yêu cầu
+  xóa. HỏiCon vẫn bảo vệ bác."; câu "đổi ý lúc nào cũng được" ⇒ "đổi ý trong 24 giờ chờ"; màn xác nhận tắt: **"Quay lại" là nút chính**, "Đúng, tắt"
+  nút phụ (an toàn mặc định); nhãn TalkBack phân biệt từng thẻ ("Tắt báo cho con cháu", …); tiêu đề E12 "Cài đặt và quyền riêng tư"; nút viền ≥ 64dp
+  (đo bằng `uiautomator dump`, không đo ảnh); ảnh 200% màn xác nhận tắt + trạng thái đang giữ. Test Compose đỏ trước; reviewer 0 Chặn/Cao.
+  · Verify: `apps/android/gradlew -p apps/android :app:testDebugUnitTest :app:lintDebug` + ảnh `~/hoicon-evidence/038-settings-privacy/t008/`

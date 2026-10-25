@@ -1,5 +1,14 @@
 # Evidence 038 — Cài đặt & quyền riêng tư (E12)
 
+
+## Bảng tiêu chí (tổng hợp 25/10/2026 từ các mục dưới; nguồn: máy ảo hc-api36 + DB dev `hoicon_android` — máy ảo ≠ máy thật)
+
+| Tiêu chí | Ngưỡng | Cách đo | Kết quả | Trạng thái |
+|---|---|---|---|---|
+| SC-001 tắt mục không gắn quyền | 1 bản ghi `granted=false` tới máy chủ | Máy ảo: E12 "Báo cho con…" ⇒ Tắt ⇒ "Đúng, tắt", đọc bảng `consents` (T003, T005 a) | đúng 1 dòng `guardian_alerts · granted=false · channel=app`; dòng `granted=true` cũ nguyên (2 lần đo) | ĐẠT |
+| SC-002 xóa từ E12 tới `done` | `data_requests.done`, app về E1, token bị từ chối | Máy ảo + worker: gửi, hủy (`cancelled`), gửi lại, `execute_after` về quá khứ chỉ trên DB dev (T005 b–c) | hủy ⇒ `cancelled`; purge `devices_revoked=1`, yêu cầu `done`, app nhận 401 ⇒ xóa cục bộ ⇒ E1 | ĐẠT |
+| SC-003 dừng an toàn không hồi quy | tắt `overlay_pause` vẫn theo hành vi hiện tại | `appops … SYSTEM_ALERT_WINDOW deny` + `emu-scenario --scenario fake_police --runs 3` (T005 d) | 3/3 `risk_detected → pause_fallback → tts_started` (thông báo + giọng đọc) | ĐẠT |
+| SC-004 chữ + tiếp cận | `ux-elder-reviewer` 0 Chặn/Cao; ảnh 100/200% | Reviewer vòng cuối trên ảnh `~/hoicon-evidence/038-settings-privacy/` (T003–T005) | 0 Chặn / 0 Cao (sau sửa); Trung bình/Thấp ghi ở mục T005 | ĐẠT |
 ## Lượt 10 — T002 `POST /v1/data-requests` (làn B, 25/10/2026)
 - Router mới `api/routers/data_requests.py` + `purge_service.request_delete_detailed` (trả thêm cờ `created`; `request_delete` cũ giữ nguyên hành vi) + mẫu tin `texts.guardian_data_delete_notice` (mở đầu "Đây là trợ lý AI HỏiCon").
 - Test (đỏ ở bước thu thập vì chưa có router, rồi xanh): `tests/contract/test_data_request_schema.py` (fixture valid/invalid) và `tests/integration/test_api_data_requests.py` 13 ca: chỉ thiết bị `protected`, 202 mới / 200 lũy đẳng, 3/ngày rồi 429 kèm `Retry-After`, 401 không token/token lạ, thân sai ⇒ 422 và không ghi gì (gồm trường tự do), ghi `requested_via='app'`, tin báo xếp TRƯỚC purge (purge hoãn 120 giây) và CHỈ khi còn `guardian_alerts` (đã rút ⇒ 0 tin, vẫn 202), rút `core_protection` vẫn xóa được, sau purge token cũ 401.
