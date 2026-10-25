@@ -8,6 +8,8 @@ Mốc cứng: **nộp Vòng 1 13/11/2026** (hạn 15/11) · Vòng 2 23/11–10/0
 
 ---
 
+> **Làm từng bước + đánh dấu:** `docs/CHECKLIST-TIEN.md` (mã H-01…H-24, mỗi mục có câu "Báo Claude" để Claude tick).
+
 ## 0. Cách đọc và cách nhờ Claude
 
 - Làm theo thứ tự §1 → §8. Mỗi bước có: **làm gì · ở đâu · xong thì gỡ chặn task nào · kiểm bằng gì**.
