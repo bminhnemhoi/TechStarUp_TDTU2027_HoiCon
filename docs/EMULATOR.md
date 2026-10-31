@@ -60,6 +60,14 @@ có cửa sổ `host`, `--headless` `auto`; đổi bằng `HC_GPU=…`. Pane "Mo
 `-no-window` + scrcpy ⇒ cần `hw.gpu.mode=auto`. Lỗi "emulator-5554 is not a running device" = emulator đã chết.
 Sau `adb emu kill` phải chờ tiến trình qemu tắt hẳn mới chạy lại `emu-start.sh`.
 
+**Chạy trong Orca (đo 29/10/2026, CachyOS, 15 GB RAM):** `orca emulator attach hc-api36|hc-api34` tự boot AVD (`-avd … -no-window`)
+và truyền hình bằng scrcpy riêng của Orca (`~/.config/orca/scrcpy`, không cần cài scrcpy). Có snapshot: **11–15 s**; lần
+boot nguội đầu tiên sau khi đổi cấu hình AVD mất ~30 s và Orca có thể báo `ok:false` dù máy vẫn boot ⇒ chạy lại lệnh.
+Tắt bằng `adb emu kill` (lưu snapshot) rồi chờ qemu tắt hẳn. Máy ảo cần ≈ 2,7 GB RAM thật; dưới 3 GB trống thì swap
+đầy và boot treo (`emu-start.sh` cảnh báo, bỏ qua bằng `HC_ALLOW_LOW_RAM=1`) ⇒ đóng Chrome/bớt phiên Claude trước.
+AVD đặt `hw.camera.back=none` (app không dùng camera). `orca emulator exec` hiện lỗi `'in' operator … screenshotStatus`
+với lệnh trả chuỗi thuần (bug Orca CLI) ⇒ dùng `adb shell` trực tiếp.
+
 **Giọng đọc (`tts_unavailable` / `tts error`, spec 001 US4):** trên AVD mới tạo (đo ở hc-api34, 15/10/2026), Google TTS liệt
 kê giọng `vi-vn-x-vic-seanet-embedded` là "có sẵn" nên `Speaker` chọn nó, nhưng khi đọc logcat báo
 `Failed to load pipeline definitions! … status code: -4` ⇒ không có `tts_started`. Nguyên nhân: gói dữ liệu giọng vi-VN

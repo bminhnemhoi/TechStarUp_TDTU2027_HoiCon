@@ -34,6 +34,15 @@ if "$ADB" devices | grep -q "^emulator-"; then
   exit 1
 fi
 
+# Linux: máy ảo cần ~2,7 GB RAM thật. Dưới 3 GB trống thì hệ thống nhảy vào swap, boot chậm/treo (đo 29/10/2026: 14,8 GB zram).
+if [ "$HC_OS" = linux ] && [ -r /proc/meminfo ]; then
+  avail_mb=$(awk '/^MemAvailable:/ {print int($2/1024)}' /proc/meminfo)
+  if [ "${avail_mb:-9999}" -lt 3000 ]; then
+    echo "!! Chỉ còn ${avail_mb} MB RAM trống (cần ≥ 3000): đóng bớt Chrome / phiên Claude / MCP rồi chạy lại, hoặc đặt HC_ALLOW_LOW_RAM=1." >&2
+    [ -n "${HC_ALLOW_LOW_RAM:-}" ] || exit 1
+  fi
+fi
+
 if [ -z "${HC_GPU:-}" ]; then
   if [ "$HC_OS" != linux ]; then HC_GPU=auto; elif [ "$HEADLESS" = 1 ]; then HC_GPU=auto; else HC_GPU=host; fi
 fi
