@@ -1,0 +1,197 @@
+[
+  {
+    "_why": "đồ thị lạ",
+    "graph": "coach_v9",
+    "version": "0123456789ab",
+    "nodes": [
+      {
+        "id": "__start__",
+        "label_vi": "Bắt đầu",
+        "kind": "start",
+        "step_nodes": []
+      },
+      {
+        "id": "ingest",
+        "label_vi": "Nhận sự kiện",
+        "kind": "node",
+        "step_nodes": [
+          "ingest"
+        ]
+      },
+      {
+        "id": "ask_elder",
+        "label_vi": "Hỏi bác",
+        "kind": "interrupt",
+        "step_nodes": [
+          "ask_elder"
+        ]
+      },
+      {
+        "id": "__end__",
+        "label_vi": "Kết thúc",
+        "kind": "end",
+        "step_nodes": []
+      }
+    ],
+    "edges": [
+      {
+        "source": "__start__",
+        "target": "ingest",
+        "conditional": false
+      },
+      {
+        "source": "ingest",
+        "target": "ask_elder",
+        "conditional": true
+      },
+      {
+        "source": "ask_elder",
+        "target": "__end__",
+        "conditional": false
+      }
+    ]
+  },
+  {
+    "_why": "nút thiếu nhãn",
+    "graph": "incident",
+    "version": "0123456789ab",
+    "nodes": [
+      {
+        "id": "ingest",
+        "kind": "node",
+        "step_nodes": [
+          "ingest"
+        ]
+      },
+      {
+        "id": "ask_elder",
+        "label_vi": "Hỏi bác",
+        "kind": "interrupt",
+        "step_nodes": [
+          "ask_elder"
+        ]
+      },
+      {
+        "id": "__end__",
+        "label_vi": "Kết thúc",
+        "kind": "end",
+        "step_nodes": []
+      }
+    ],
+    "edges": [
+      {
+        "source": "__start__",
+        "target": "ingest",
+        "conditional": false
+      },
+      {
+        "source": "ingest",
+        "target": "ask_elder",
+        "conditional": true
+      },
+      {
+        "source": "ask_elder",
+        "target": "__end__",
+        "conditional": false
+      }
+    ]
+  },
+  {
+    "_why": "kind lạ",
+    "graph": "incident",
+    "version": "0123456789ab",
+    "nodes": [
+      {
+        "id": "ingest",
+        "label_vi": "Nhận sự kiện",
+        "kind": "magic",
+        "step_nodes": [
+          "ingest"
+        ]
+      },
+      {
+        "id": "ask_elder",
+        "label_vi": "Hỏi bác",
+        "kind": "interrupt",
+        "step_nodes": [
+          "ask_elder"
+        ]
+      },
+      {
+        "id": "__end__",
+        "label_vi": "Kết thúc",
+        "kind": "end",
+        "step_nodes": []
+      }
+    ],
+    "edges": [
+      {
+        "source": "__start__",
+        "target": "ingest",
+        "conditional": false
+      },
+      {
+        "source": "ingest",
+        "target": "ask_elder",
+        "conditional": true
+      },
+      {
+        "source": "ask_elder",
+        "target": "__end__",
+        "conditional": false
+      }
+    ]
+  },
+  {
+    "_why": "version không phải 12 hex",
+    "graph": "incident",
+    "version": "v1",
+    "nodes": [
+      {
+        "id": "__start__",
+        "label_vi": "Bắt đầu",
+        "kind": "start",
+        "step_nodes": []
+      },
+      {
+        "id": "ingest",
+        "label_vi": "Nhận sự kiện",
+        "kind": "node",
+        "step_nodes": [
+          "ingest"
+        ]
+      },
+      {
+        "id": "ask_elder",
+        "label_vi": "Hỏi bác",
+        "kind": "interrupt",
+        "step_nodes": [
+          "ask_elder"
+        ]
+      },
+      {
+        "id": "__end__",
+        "label_vi": "Kết thúc",
+        "kind": "end",
+        "step_nodes": []
+      }
+    ],
+    "edges": [
+      {
+        "source": "__start__",
+        "target": "ingest",
+        "conditional": false
+      },
+      {
+        "source": "ingest",
+        "target": "ask_elder",
+        "conditional": true
+      },
+      {
+        "source": "ask_elder",
+        "target": "__end__",
+        "conditional": false
+      }
+    ]
+  }
+]

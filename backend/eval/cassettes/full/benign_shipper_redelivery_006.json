@@ -1,0 +1,38 @@
+{
+  "case_id": "benign_shipper_redelivery_006",
+  "source": "synthetic",
+  "behavior": "honest",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@2"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "high",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi biết rõ việc đang làm"
+        ],
+        "ask_question": "q_know_caller"
+      },
+      {
+        "level": "high",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi biết rõ việc đang làm"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "points": [
+          "unknown_call_then_finance_app",
+          "may_be_routine"
+        ],
+        "action": "call_now"
+      }
+    ]
+  }
+}

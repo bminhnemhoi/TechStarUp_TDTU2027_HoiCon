@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chỉ bản debug (P1-S2). Bản phát hành không có receiver này và không khai báo USE_FULL_SCREEN_INTENT. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      Thử nghiệm full-screen intent cho thông báo dự phòng (ADR-008). Từ Android 14 Google Play chỉ cấp quyền này
+      cho app gọi điện/báo thức ⇒ không đưa vào bản phát hành.
+    -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
+    <application android:networkSecurityConfig="@xml/network_security_config">
+        <!--
+          Mô phỏng "vừa có số lạ gọi" cho máy không có SIM (Firebase Test Lab, :latency). Quyền DUMP
+          (signature|privileged|development) ⇒ chỉ shell/adb, root hoặc app hệ thống gửi được; app thường không.
+        -->
+        <receiver
+            android:name=".debug.ScenarioReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP" />
+    </application>
+
+</manifest>

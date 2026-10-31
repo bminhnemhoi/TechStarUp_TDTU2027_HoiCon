@@ -1,0 +1,48 @@
+id: drill_police_safe_account
+scenario_ref: fake_police_safe_account_002
+title: "Cuộc gọi từ 'điều tra viên'"
+agency_fictional: "Đội Điều tra Liên ngành Minh Tâm"
+caller_last3_fictional: "305"
+steps:
+  - line_vi: >-
+      Alô, tôi là điều tra viên của Đội Điều tra Liên ngành Minh Tâm. Tài khoản của bác đang bị nghi dùng vào việc rửa
+      tiền. Bác cần hợp tác ngay với chúng tôi.
+    choices:
+      - id: a
+        label_vi: "Lo quá, bác làm theo họ"
+        correct: false
+        feedback_vi: "Người lạ nói tài khoản có chuyện thường muốn mình cuống lên. Mình cứ bình tĩnh, chưa làm gì theo lời họ nhé."
+      - id: b
+        label_vi: "Cúp máy, gọi hỏi con cháu"
+        correct: true
+        feedback_vi: "Đúng rồi ạ. Dừng lại và hỏi người thân là cách tốt nhất."
+  - line_vi: >-
+      Bác rút hết tiền tiết kiệm, chuyển sang 'tài khoản an toàn' của cơ quan để chúng tôi kiểm tra. Kiểm tra xong chúng
+      tôi sẽ trả lại nguyên vẹn.
+    choices:
+      - id: a
+        label_vi: "Không chuyển tiền cho ai cả"
+        correct: true
+        feedback_vi: "Đúng ạ. Cơ quan nhà nước không có 'tài khoản an toàn' nào để mình chuyển tiền vào."
+      - id: b
+        label_vi: "Ra ngân hàng rút tiền ngay"
+        correct: false
+        feedback_vi: "Chưa nên đâu ạ. Không ai chính đáng lại bảo mình rút hết tiền rồi chuyển cho họ."
+  - line_vi: >-
+      Việc này phải giữ bí mật. Bác không được nói với con cháu hay nhân viên ngân hàng, kẻo ảnh hưởng đến việc điều tra.
+    choices:
+      - id: a
+        label_vi: "Nghe lời, không nói với ai"
+        correct: false
+        feedback_vi: "Ai dặn mình giấu con cháu và ngân hàng thì rất đáng ngờ. Mình nên nói ngay với người thân."
+      - id: b
+        label_vi: "Kể ngay cho con cháu nghe"
+        correct: true
+        feedback_vi: "Rất tốt ạ. Kể cho người thân nghe là cách chắc chắn nhất để không bị lừa."
+debrief:
+  red_flags_vi:
+    - "Người lạ xưng là cơ quan điều tra gọi điện cho mình trước"
+    - "Bảo chuyển tiền vào 'tài khoản an toàn'"
+    - "Dặn giữ bí mật, không cho nói với con cháu hay ngân hàng"
+  praise_vi: "Bác đã bình tĩnh dừng lại và hỏi người thân. Đó chính là cách bảo vệ mình tốt nhất."
+approved: false

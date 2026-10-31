@@ -1,0 +1,85 @@
+[
+  {
+    "_why": "phone mang trường number (số thô)",
+    "kind": "phone",
+    "via": "typed",
+    "h1": "a3f1000000000000000000000000000000000000000000000000000000000000",
+    "last3": "123",
+    "number": "0900000123"
+  },
+  {
+    "_why": "h1 viết hoa",
+    "kind": "phone",
+    "via": "typed",
+    "h1": "A3F1000000000000000000000000000000000000000000000000000000000000",
+    "last3": "123"
+  },
+  {
+    "_why": "h1 ngắn hơn 64 ký tự",
+    "kind": "phone",
+    "via": "typed",
+    "h1": "abc",
+    "last3": "123"
+  },
+  {
+    "_why": "last3 không phải 3 chữ số",
+    "kind": "phone",
+    "via": "typed",
+    "h1": "a3f1000000000000000000000000000000000000000000000000000000000000",
+    "last3": "12a"
+  },
+  {
+    "_why": "phone thiếu last3",
+    "kind": "phone",
+    "via": "typed",
+    "h1": "a3f1000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "_why": "phone mang url (lẫn hai nhánh)",
+    "kind": "phone",
+    "via": "typed",
+    "h1": "a3f1000000000000000000000000000000000000000000000000000000000000",
+    "last3": "123",
+    "url": "https://a.example"
+  },
+  {
+    "_why": "kind=account để dành, chưa hỗ trợ",
+    "kind": "account",
+    "via": "typed",
+    "h1": "a3f1000000000000000000000000000000000000000000000000000000000000",
+    "last3": "123"
+  },
+  {
+    "_why": "via=call chỉ dành cho máy chủ",
+    "kind": "phone",
+    "via": "call",
+    "h1": "a3f1000000000000000000000000000000000000000000000000000000000000",
+    "last3": "123"
+  },
+  {
+    "_why": "url quá ngắn",
+    "kind": "url",
+    "via": "typed",
+    "url": "a.b"
+  },
+  {
+    "_why": "url dài hơn 2048 ký tự",
+    "kind": "url",
+    "via": "typed",
+    "url": "https://a.example/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  {
+    "_why": "incident_id không phải uuid",
+    "kind": "url",
+    "via": "typed",
+    "url": "https://a.example",
+    "incident_id": "khong-phai-uuid"
+  },
+  {
+    "_why": "url mang trường h1",
+    "kind": "url",
+    "via": "typed",
+    "url": "https://a.example",
+    "h1": "a3f1000000000000000000000000000000000000000000000000000000000000"
+  }
+]

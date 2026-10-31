@@ -60,7 +60,11 @@ export function tail(text, lines = 40) {
 
 export const exists = (...p) => existsSync(path.join(projectDir, ...p));
 
-/** Android SDK location (project settings env, then default on D:). */
+/** Android SDK location (settings env, then default: D:/Android/Sdk on Windows, ~/Android/Sdk elsewhere). */
 export function androidSdk() {
-  return process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || "D:/Android/Sdk";
+  return (
+    process.env.ANDROID_HOME ||
+    process.env.ANDROID_SDK_ROOT ||
+    (isWin ? "D:/Android/Sdk" : path.join(process.env.HOME || "", "Android", "Sdk"))
+  );
 }

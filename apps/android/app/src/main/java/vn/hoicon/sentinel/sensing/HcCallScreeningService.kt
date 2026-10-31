@@ -7,6 +7,7 @@ import vn.hoicon.rules.CallDirection
 import vn.hoicon.rules.CallSignal
 import vn.hoicon.rules.PhoneHasher
 import vn.hoicon.rules.RiskEngine
+import vn.hoicon.sentinel.SentinelServices
 
 /**
  * Bound by Telecom for calls whose number is NOT in the address book (role CALL_SCREENING) — this is the
@@ -14,6 +15,12 @@ import vn.hoicon.rules.RiskEngine
  * Observe only: always allows the call, never silences, rejects or hides it.
  */
 class HcCallScreeningService : CallScreeningService() {
+    override fun onCreate() {
+        super.onCreate()
+        // Starts loading the threat list in the background before the first call is screened (cold process).
+        SentinelServices.of(this)
+    }
+
     override fun onScreenCall(callDetails: Call.Details) {
         val now = System.currentTimeMillis()
         HcTiming.mark("call_screened", now)
@@ -50,6 +57,12 @@ class HcCallScreeningService : CallScreeningService() {
                 "trusted=${next.trusted} merged=${open != null && merged !== next} window_flagged=${call.flagged} " +
                 "last3=${hashed?.last3 ?: "-"} api=${Build.VERSION.SDK_INT}",
         )
-        if (!call.trusted) RiskWindowService.open(this)
+        if (!call.trusted) {
+            RiskWindowService.open(this)
+            // Observable window state + `risk_window_opened` event: background thread, after the window is open.
+            val sentinel = SentinelServices.of(this)
+            val signal = call.toSignal(inCallNow = true)
+            sentinel.launch { sentinel.riskWindow.onCallScreened(signal, now) }
+        }
     }
 }

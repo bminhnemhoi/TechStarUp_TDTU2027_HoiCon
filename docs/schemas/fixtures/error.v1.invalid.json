@@ -1,0 +1,28 @@
+[
+  {
+    "_name": "rỗng",
+    "_why": "thiếu detail"
+  },
+  {
+    "_name": "detail rỗng",
+    "_why": "minLength 1",
+    "detail": ""
+  },
+  {
+    "_name": "dạng cũ error/purpose",
+    "_why": "additionalProperties false",
+    "error": "consent_withdrawn",
+    "purpose": "guardian_alerts"
+  },
+  {
+    "_name": "thêm purpose",
+    "_why": "additionalProperties false",
+    "detail": "consent_withdrawn",
+    "purpose": "guardian_alerts"
+  },
+  {
+    "_name": "detail không phải chuỗi",
+    "_why": "type",
+    "detail": 403
+  }
+]

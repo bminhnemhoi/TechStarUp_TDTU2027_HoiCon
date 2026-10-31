@@ -1,0 +1,79 @@
+[
+  {
+    "_why": "is_demo false (sim chỉ cho gia đình demo)",
+    "scenario_id": "fake_police_safe_account_002",
+    "is_demo": false,
+    "llm_mode": "replay",
+    "incident_id": "5b0c1f3e-0000-4000-8000-000000000001",
+    "run_id": "5b0c1f3e-0000-4000-8000-0000000000aa",
+    "state": "awaiting_guardian",
+    "level": "critical",
+    "pending_question": null,
+    "guardian_messages": [
+      {
+        "at": "2026-12-20T09:00:05Z",
+        "template": "fast_alert",
+        "text": "Đây là trợ lý AI HỏiCon. Mẹ vừa nghe một số lạ (đuôi 123) rồi mở ứng dụng ngân hàng."
+      }
+    ],
+    "note": null
+  },
+  {
+    "_why": "tin thiếu câu công khai AI",
+    "scenario_id": "fake_police_safe_account_002",
+    "is_demo": true,
+    "llm_mode": "replay",
+    "incident_id": "5b0c1f3e-0000-4000-8000-000000000001",
+    "run_id": "5b0c1f3e-0000-4000-8000-0000000000aa",
+    "state": "awaiting_guardian",
+    "level": "critical",
+    "pending_question": null,
+    "guardian_messages": [
+      {
+        "at": "2026-12-20T09:00:05Z",
+        "template": "fast_alert",
+        "text": "Mẹ vừa nghe một số lạ."
+      }
+    ],
+    "note": null
+  },
+  {
+    "_why": "trạng thái lạ",
+    "scenario_id": "fake_police_safe_account_002",
+    "is_demo": true,
+    "llm_mode": "replay",
+    "incident_id": "5b0c1f3e-0000-4000-8000-000000000001",
+    "run_id": "5b0c1f3e-0000-4000-8000-0000000000aa",
+    "state": "hacked",
+    "level": "critical",
+    "pending_question": null,
+    "guardian_messages": [
+      {
+        "at": "2026-12-20T09:00:05Z",
+        "template": "fast_alert",
+        "text": "Đây là trợ lý AI HỏiCon. Mẹ vừa nghe một số lạ (đuôi 123) rồi mở ứng dụng ngân hàng."
+      }
+    ],
+    "note": null
+  },
+  {
+    "_why": "trường lạ chứa h1",
+    "scenario_id": "fake_police_safe_account_002",
+    "is_demo": true,
+    "llm_mode": "replay",
+    "incident_id": "5b0c1f3e-0000-4000-8000-000000000001",
+    "run_id": "5b0c1f3e-0000-4000-8000-0000000000aa",
+    "state": "awaiting_guardian",
+    "level": "critical",
+    "pending_question": null,
+    "guardian_messages": [
+      {
+        "at": "2026-12-20T09:00:05Z",
+        "template": "fast_alert",
+        "text": "Đây là trợ lý AI HỏiCon. Mẹ vừa nghe một số lạ (đuôi 123) rồi mở ứng dụng ngân hàng."
+      }
+    ],
+    "note": null,
+    "h1": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+]

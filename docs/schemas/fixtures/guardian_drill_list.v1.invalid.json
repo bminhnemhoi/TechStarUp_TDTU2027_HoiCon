@@ -1,0 +1,61 @@
+[
+  {
+    "_why": "is_drill false",
+    "drills": [
+      {
+        "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+        "member_alias": "Bà Nội",
+        "script_id": "drill_bank_card_locked",
+        "script_title": "x",
+        "window_start": "2026-11-02T14:00:00+07:00",
+        "window_end": "2026-11-02T16:00:00+07:00",
+        "status": "passed",
+        "score": 4,
+        "is_drill": false
+      }
+    ]
+  },
+  {
+    "_why": "trạng thái lạ",
+    "drills": [
+      {
+        "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+        "member_alias": "Bà Nội",
+        "script_id": "drill_bank_card_locked",
+        "script_title": "x",
+        "window_start": "2026-11-02T14:00:00+07:00",
+        "window_end": "2026-11-02T16:00:00+07:00",
+        "status": "done",
+        "is_drill": true
+      }
+    ]
+  },
+  {
+    "_why": "điểm quá 5",
+    "drills": [
+      {
+        "drill_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+        "member_alias": "Bà Nội",
+        "script_id": "drill_bank_card_locked",
+        "script_title": "x",
+        "window_start": "2026-11-02T14:00:00+07:00",
+        "window_end": "2026-11-02T16:00:00+07:00",
+        "status": "passed",
+        "score": 6,
+        "is_drill": true
+      }
+    ]
+  },
+  {
+    "_why": "elder có tên thật/số điện thoại (trường lạ)",
+    "drills": [],
+    "elders": [
+      {
+        "member_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+        "alias": "Bà Nội",
+        "drills_consent": true,
+        "phone": "x"
+      }
+    ]
+  }
+]

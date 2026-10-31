@@ -1,0 +1,23 @@
+[
+  {
+    "_why": "mã có ký tự dễ nhầm (O, 0, I, 1)",
+    "code": "K0M1QI"
+  },
+  {
+    "_why": "quá 50 khách",
+    "code": "K7M2QX",
+    "expires_at": "2027-02-27T09:10:00+07:00",
+    "max_guests": 51,
+    "is_demo": true
+  },
+  {
+    "_why": "không phải demo",
+    "family_alias": "Gia đình Mẫu",
+    "expires_at": "2027-02-27T09:10:00+07:00",
+    "is_demo": false
+  },
+  {
+    "_why": "mã 5 ký tự",
+    "code": "K7M2Q"
+  }
+]

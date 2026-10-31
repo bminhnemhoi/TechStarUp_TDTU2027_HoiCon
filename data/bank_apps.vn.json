@@ -1,6 +1,6 @@
 {
-  "version": "2026.10.08-seed",
-  "description": "Danh sách app tài chính VN cho luật R1 + <queries> (P1-S1 seed; hoàn thiện ở P1-S2)",
+  "version": "2026.10.14-v1",
+  "description": "Danh sách app tài chính VN cho luật R1 + <queries> (v1, P1-S2). Sửa file này rồi chạy python scripts/gen-bank-apps.py.",
   "source": "Google Play, xác minh thủ công từng trang",
   "verified_at": "2026-10-08",
   "apps": [
@@ -402,7 +402,7 @@
     {
       "name": "Techcombank OneU",
       "candidate_package": "com.vingroup.vinid",
-      "reason": "App ưu đãi/tích điểm (đổi tên từ VinID ngày 4/7/2026), Play xếp mục LIFESTYLE, không phải app ngân hàng hay ví. Cân nhắc lại ở P1-S2."
+      "reason": "App ưu đãi/tích điểm (đổi tên từ VinID ngày 4/7/2026), Play xếp mục LIFESTYLE, không chuyển tiền tới người khác. P1-S2 chốt: KHÔNG đưa vào R1 (báo nhầm cao, người dùng mở hằng ngày để tích điểm)."
     }
   ]
 }

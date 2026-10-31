@@ -1,0 +1,84 @@
+[
+  {
+    "_name": "số trong danh sách, nguy hiểm",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": false,
+    "kind": "phone",
+    "verdict": "dangerous",
+    "confidence": 0.9,
+    "reasons": [
+      {
+        "code": "listed_high",
+        "text": "Số này nằm trong danh sách cảnh báo. Bác đừng chuyển tiền, hãy hỏi con trước nhé."
+      }
+    ],
+    "sources": [
+      {
+        "name": "Cục An toàn thông tin",
+        "type": "threat_list",
+        "list_version": "2026-10-16"
+      }
+    ],
+    "incident_level": "critical"
+  },
+  {
+    "_name": "số chưa có thông tin",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": false,
+    "kind": "phone",
+    "verdict": "unknown",
+    "confidence": 0.0,
+    "reasons": [
+      {
+        "code": "not_listed",
+        "text": "Số này chưa có trong danh sách cảnh báo. Bác vẫn nên hỏi con trước khi chuyển tiền."
+      }
+    ],
+    "sources": []
+  },
+  {
+    "_name": "đường link tải ứng dụng lạ",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": false,
+    "kind": "url",
+    "verdict": "dangerous",
+    "confidence": 0.9,
+    "reasons": [
+      {
+        "code": "app_download",
+        "text": "Đường link này tải một ứng dụng ngoài kho chính thức. Bác đừng cài nhé."
+      }
+    ],
+    "sources": [
+      {
+        "name": "Quy tắc HỏiCon: app_download",
+        "type": "heuristic"
+      }
+    ]
+  },
+  {
+    "_name": "diễn tập có nhãn demo",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": true,
+    "kind": "phone",
+    "verdict": "warning",
+    "confidence": 0.6,
+    "reasons": [
+      {
+        "code": "listed_low",
+        "text": "Số này có thể đáng ngờ. Bác hãy hỏi con trước."
+      }
+    ],
+    "sources": [
+      {
+        "name": "Danh sách demo",
+        "type": "threat_list",
+        "list_version": "demo-1"
+      }
+    ]
+  }
+]

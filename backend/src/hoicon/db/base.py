@@ -1,4 +1,7 @@
-from sqlalchemy import MetaData
+from datetime import datetime
+from typing import Any, ClassVar
+
+from sqlalchemy import DateTime, MetaData
 from sqlalchemy.orm import DeclarativeBase
 
 # Tên ràng buộc ổn định để Alembic autogenerate sinh migration lặp lại được.
@@ -13,3 +16,5 @@ NAMING_CONVENTION = {
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+    # Mọi mốc thời gian là timestamptz (UTC), DATA-MODEL §1.
+    type_annotation_map: ClassVar[dict[Any, Any]] = {datetime: DateTime(timezone=True)}

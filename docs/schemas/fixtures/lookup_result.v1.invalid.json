@@ -1,0 +1,112 @@
+[
+  {
+    "_why": "disclaimer thiếu câu công khai AI",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Kết quả chỉ để tham khảo.",
+    "is_demo": false,
+    "kind": "phone",
+    "verdict": "unknown",
+    "confidence": 0.0,
+    "reasons": [],
+    "sources": []
+  },
+  {
+    "_why": "verdict lạ",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": false,
+    "kind": "phone",
+    "verdict": "maybe",
+    "confidence": 0.0,
+    "reasons": [],
+    "sources": []
+  },
+  {
+    "_why": "lộ khóa h1",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": false,
+    "kind": "phone",
+    "verdict": "unknown",
+    "confidence": 0.0,
+    "reasons": [],
+    "sources": [],
+    "h1": "a3f1000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "_why": "lộ khóa subject_hmac",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": false,
+    "kind": "phone",
+    "verdict": "unknown",
+    "confidence": 0.0,
+    "reasons": [],
+    "sources": [],
+    "subject_hmac": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  {
+    "_why": "confidence lớn hơn 1",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": false,
+    "kind": "phone",
+    "verdict": "unknown",
+    "confidence": 1.5,
+    "reasons": [],
+    "sources": []
+  },
+  {
+    "_why": "reasons thiếu text",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": false,
+    "kind": "phone",
+    "verdict": "unknown",
+    "confidence": 0.0,
+    "reasons": [
+      {
+        "code": "x"
+      }
+    ],
+    "sources": []
+  },
+  {
+    "_why": "sources có type lạ",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": false,
+    "kind": "phone",
+    "verdict": "unknown",
+    "confidence": 0.0,
+    "reasons": [],
+    "sources": [
+      {
+        "name": "a",
+        "type": "llm"
+      }
+    ]
+  },
+  {
+    "_why": "thiếu is_demo",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "kind": "phone",
+    "verdict": "unknown",
+    "confidence": 0.0,
+    "reasons": [],
+    "sources": []
+  },
+  {
+    "_why": "incident_level lạ",
+    "verification_id": "0197f3a0-7b3c-7d2e-8a41-3c5e9f1b2d60",
+    "disclaimer": "Đây là trợ lý AI HỏiCon. Kết quả chỉ để tham khảo, hãy hỏi con trước khi chuyển tiền.",
+    "is_demo": false,
+    "kind": "phone",
+    "verdict": "unknown",
+    "confidence": 0.0,
+    "reasons": [],
+    "sources": [],
+    "incident_level": "severe"
+  }
+]

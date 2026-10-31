@@ -4,6 +4,671 @@
  */
 
 export interface paths {
+    "/v1/pair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pair */
+        post: operations["pair_v1_pair_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record Consents */
+        post: operations["record_consents_v1_consents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/devices/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Device Me */
+        get: operations["device_me_v1_devices_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Heartbeat */
+        post: operations["heartbeat_v1_heartbeat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Events */
+        post: operations["post_events_v1_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/incidents/{incident_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Incident */
+        get: operations["get_incident_v1_incidents__incident_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/families/{family_id}/incidents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Family Incidents */
+        get: operations["list_family_incidents_v1_families__family_id__incidents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/incidents/{incident_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Incident Decision
+         * @description Người giám hộ đã đăng nhập JWT gửi quyết định xử lý sự cố (spec 023, FR-006).
+         *
+         *     Chỉ cho phép người giám hộ thuộc cùng gia đình thao tác; sự cố gia đình khác trả 404.
+         */
+        post: operations["post_incident_decision_v1_incidents__incident_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/runs/{run_id}/steps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lịch sử các bước đã che của một lượt chạy */
+        get: operations["get_run_steps_v1_runs__run_id__steps_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/runs/{run_id}/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Luồng SSE các bước của một lượt chạy
+         * @description Khung: `retry: 3000`; `id/event: step/data` (agent_step.v1); `: ping` mỗi 15 s khi im lặng; `event: done` (run_done.v1) rồi đóng; `event: error` khi DB lỗi. Nối lại bằng header `Last-Event-ID`. Xác thực bằng `Authorization: Bearer` (app) hoặc cookie phiên `hc_guardian` cùng nguồn (web dùng `EventSource`, spec 027).
+         */
+        get: operations["stream_run_v1_runs__run_id__stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/incidents/{incident_id}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tìm lượt chạy của một sự cố (để mở luồng truy vết) */
+        get: operations["get_incident_run_v1_incidents__incident_id__run_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Đổi token đăng nhập một lần (nhận qua Zalo) lấy cookie phiên */
+        post: operations["post_session_v1_guardian_session_post"];
+        /**
+         * Đăng xuất: xóa cookie phiên
+         * @description Xóa cookie VÀ thu hồi phía máy chủ `jti` của token (tới khi hết hạn): bản sao bị lấy cắp hết tác dụng. Không có
+         *     token hợp lệ (đã hết hạn, đã xóa cookie) vẫn 204: đăng xuất luôn thành công.
+         */
+        delete: operations["delete_session_v1_guardian_session_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Thông tin phiên hiện tại */
+        get: operations["get_me_v1_guardian_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/incidents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sự cố của gia đình, đang mở trước, phân trang bằng khóa (opened_at, id) */
+        get: operations["list_incidents_v1_guardian_incidents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/incidents/{incident_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chi tiết một sự cố của gia đình (kèm lịch sử chuyển trạng thái và run_id) */
+        get: operations["get_incident_detail_v1_guardian_incidents__incident_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/incidents/{incident_id}/case-file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hồ sơ vụ việc của một sự cố (spec 031) */
+        get: operations["get_case_file_v1_guardian_incidents__incident_id__case_file_get"];
+        put?: never;
+        /** Duyệt, bỏ hoặc đánh dấu đã nộp hồ sơ (spec 031) */
+        post: operations["post_case_file_v1_guardian_incidents__incident_id__case_file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lookups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tra cứu một số điện thoại (đã băm) hoặc một đường link */
+        post: operations["post_lookup_v1_lookups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/threat-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ảnh chụp bucket k-ẩn danh của danh sách đe dọa (ADR-011) */
+        get: operations["get_threat_list_v1_threat_list_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/drills/offer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Offer */
+        get: operations["get_offer_v1_drills_offer_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/drills/{drill_id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Result */
+        post: operations["post_result_v1_drills__drill_id__result_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/data-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Người được bảo vệ yêu cầu xóa dữ liệu gia đình (spec 038) */
+        post: operations["request_deletion_v1_data_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/data-requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Hủy yêu cầu xóa còn trong khoảng chờ 24 giờ (spec 038 FR-006) */
+        delete: operations["cancel_request_v1_data_requests__request_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/booth/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Console tạo mã tham gia gian (spec 050 FR-007) */
+        post: operations["create_code_v1_booth_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/booth/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Khách đổi mã lấy phiên xem gian (spec 050 FR-007) */
+        post: operations["join_v1_booth_join_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/guardian/drills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lịch và lịch sử diễn tập của gia đình (spec 028) */
+        get: operations["list_drills_v1_guardian_drills_get"];
+        put?: never;
+        /** Đặt lịch một bài diễn tập (spec 028) */
+        post: operations["schedule_drill_v1_guardian_drills_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/action/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Action View
+         * @description Lấy dữ liệu hiển thị cho trang hành động `/a/[token]`.
+         *
+         *     Trả về chi tiết sự cố không chứa PII. Nếu token đã dùng hoặc hết hạn,
+         *     vẫn trả dữ liệu sự cố kèm token_valid=False để giao diện thông báo phù hợp.
+         */
+        get: operations["get_action_view_v1_action__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/action/{token}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Action Decision
+         * @description Người giám hộ gửi quyết định xử lý sự cố qua magic link dùng một lần.
+         *
+         *     Xác thực token, tiêu thụ token và chuyển trạng thái sự cố trong cùng một giao dịch CSDL nguyên tử.
+         */
+        post: operations["post_action_decision_v1_action__token__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/incidents/{incident_id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Elder Answer
+         * @description Nhận câu trả lời E8. Đồ thị không còn chờ câu này (đã quá hạn, đã trả lời) ⇒ `expired`.
+         */
+        post: operations["submit_elder_answer_v1_incidents__incident_id__answers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/incidents/{incident_id}/pending-question": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Pending Question
+         * @description Câu hỏi E8 đang chờ (app kéo khi nhận FCM, hoặc tự hỏi khi FCM chậm/mất mạng). Không có ⇒ 404.
+         */
+        get: operations["get_pending_question_v1_incidents__incident_id__pending_question_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/graphs/incident": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Incident Graph */
+        get: operations["get_incident_graph_v1_graphs_incident_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/eval/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Summary */
+        get: operations["get_summary_v1_eval_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scenarios */
+        get: operations["get_scenarios_v1_sim_scenarios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Run */
+        post: operations["post_run_v1_sim_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Reset
+         * @description Nút Đặt lại của `/demo/console` (spec 050 FR-005c): cùng `ops.booth.reset_sim` — xóa mọi lượt mô phỏng của
+         *     gia đình demo (sự cố, chạy, job, checkpoint, thiết bị `sim:`); không đụng gì khác.
+         */
+        post: operations["post_reset_v1_sim_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/runs/{incident_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Run */
+        get: operations["get_run_v1_sim_runs__incident_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sim/runs/{incident_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Answer */
+        post: operations["post_answer_v1_sim_runs__incident_id__answer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/zalo/{bot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Zalo Webhook */
+        post: operations["zalo_webhook_webhooks_zalo__bot_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -33,7 +698,7 @@ export interface paths {
         };
         /**
          * Readyz
-         * @description Readiness: kết nối được Postgres.
+         * @description Readiness: kết nối được Postgres (trả lời trong ≤ READYZ_TIMEOUT_S kể cả khi DB treo) và đủ khóa bắt buộc.
          */
         get: operations["readyz_readyz_get"];
         put?: never;
@@ -47,7 +712,1328 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        /** AnswerIn */
+        AnswerIn: {
+            /** Step */
+            step: number;
+            /** Choice Id */
+            choice_id: string;
+        };
+        /** App */
+        App: {
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "bank" | "wallet" | "securities" | "sideloaded" | "other";
+            /** Package */
+            package?: string | null;
+        };
+        /** Call */
+        Call: {
+            /** Direction */
+            direction?: ("incoming" | "outgoing") | null;
+            /** Active */
+            active?: boolean | null;
+            /** Duration S */
+            duration_s?: number | null;
+            /** Since End S */
+            since_end_s?: number | null;
+        };
+        /** Caller */
+        Caller: {
+            /** H1 */
+            h1: string;
+            /** Last3 */
+            last3: string;
+            /** In Contacts */
+            in_contacts: boolean;
+            /**
+             * Trusted
+             * @default false
+             */
+            trusted: boolean;
+            /**
+             * Flagged
+             * @default false
+             */
+            flagged: boolean;
+        };
+        /** CaseElderAnswer */
+        CaseElderAnswer: {
+            /** Question */
+            question: string;
+            /** Answer */
+            answer: string;
+        };
+        /**
+         * CaseFileActionIn
+         * @description Khớp `docs/schemas/case_file_action.v1.json`: không có trường nội dung nào.
+         */
+        CaseFileActionIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "approve" | "discard" | "mark_sent";
+        };
+        /**
+         * CaseFileContent
+         * @description Khớp `docs/schemas/case_file.v1.json#/$defs/content`.
+         */
+        CaseFileContent: {
+            /**
+             * Schema Version
+             * @constant
+             */
+            schema_version: 1;
+            /** Ai Label */
+            ai_label: string;
+            /** Summary */
+            summary: string;
+            /** Elder Alias */
+            elder_alias: string;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "low" | "medium" | "high" | "critical";
+            /** Reasons */
+            reasons: string[];
+            /** Rule */
+            rule: string;
+            /** Caller Last3 */
+            caller_last3: string | null;
+            /**
+             * App Category
+             * @enum {string}
+             */
+            app_category: "bank" | "wallet" | "securities" | "sideloaded" | "remote_control" | "none";
+            /** Timeline */
+            timeline: components["schemas"]["CaseTimelineItem"][];
+            /** Elder Answers */
+            elder_answers: components["schemas"]["CaseElderAnswer"][];
+            /** Verifications */
+            verifications: components["schemas"]["CaseVerification"][];
+            /**
+             * Guardian Decision
+             * @enum {string}
+             */
+            guardian_decision: "scam" | "emergency_pause";
+            /** Local Fields */
+            local_fields: components["schemas"]["CaseLocalField"][];
+        };
+        /**
+         * CaseFileOut
+         * @description Khớp `docs/schemas/case_file.v1.json`.
+         */
+        CaseFileOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "approved" | "sent" | "discarded";
+            /**
+             * Summary Source
+             * @enum {string}
+             */
+            summary_source: "template" | "llm";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Approved At */
+            approved_at: string | null;
+            /** Sent At */
+            sent_at: string | null;
+            /** Discarded At */
+            discarded_at: string | null;
+            /** Is Demo */
+            is_demo: boolean;
+            content: components["schemas"]["CaseFileContent"];
+            readonly guidance: components["schemas"]["CaseGuidance"];
+        };
+        /**
+         * CaseGuidance
+         * @description Khớp `case_file.v1#/properties/guidance`; chưa duyệt ⇒ `steps` rỗng.
+         */
+        CaseGuidance: {
+            /** Approved */
+            approved: boolean;
+            /** Steps */
+            steps: components["schemas"]["CaseGuidanceStep"][];
+            /** Fallback Vi */
+            fallback_vi: string;
+        };
+        /** CaseGuidanceStep */
+        CaseGuidanceStep: {
+            /** Id */
+            id: string;
+            /** Text Vi */
+            text_vi: string;
+            /** Source Ref */
+            source_ref?: string | null;
+        };
+        /** CaseLocalField */
+        CaseLocalField: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+        };
+        /** CaseTimelineItem */
+        CaseTimelineItem: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Text */
+            text: string;
+        };
+        /** CaseVerification */
+        CaseVerification: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "phone" | "link";
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "dangerous" | "warning" | "unknown";
+            /** Source */
+            source: string;
+            /** List Version */
+            list_version: string | null;
+        };
+        /** CodeOut */
+        CodeOut: {
+            /** Code */
+            code: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Max Guests */
+            max_guests: number;
+            /**
+             * Is Demo
+             * @default true
+             * @constant
+             */
+            is_demo: true;
+        };
+        /**
+         * ConsentBatch
+         * @description Khớp `docs/schemas/consent_record.v1.json`, chặt hơn ở hai điểm (xem mô tả schema): kênh `app` và purpose không
+         *     trùng trong một lô (UUIDv7 cùng mili-giây không có thứ tự ⇒ "dòng mới nhất" của purpose trùng sẽ mơ hồ).
+         */
+        ConsentBatch: {
+            /** Items */
+            items: components["schemas"]["ConsentItem"][];
+        };
+        /** ConsentItem */
+        ConsentItem: {
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "core_protection" | "call_screening" | "usage_monitoring" | "overlay_pause" | "guardian_alerts" | "llm_processing" | "voice_input" | "drills" | "pilot_research" | "lookups";
+            /** Granted */
+            granted: boolean;
+            /** Consent Version */
+            consent_version: string;
+            /** Text Sha256 */
+            text_sha256: string;
+            /**
+             * Channel
+             * @constant
+             */
+            channel: "app";
+        };
+        /** ConsentReceipt */
+        ConsentReceipt: {
+            /**
+             * Status
+             * @default recorded
+             * @constant
+             */
+            status: "recorded";
+            /** Count */
+            count: number;
+            /** Recorded At */
+            recorded_at: string;
+        };
+        /** ConsentState */
+        ConsentState: {
+            /** Purpose */
+            purpose: string;
+            /** Granted */
+            granted: boolean;
+            /** Consent Version */
+            consent_version: string;
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+        };
+        /** DataRequestIn */
+        DataRequestIn: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "delete";
+            /**
+             * Confirmed
+             * @constant
+             */
+            confirmed: true;
+        };
+        /** DeviceInfo */
+        DeviceInfo: {
+            /** Device Id */
+            device_id: string;
+            /** Family Id */
+            family_id: string;
+            /** Member Id */
+            member_id: string;
+            /** Family Name */
+            family_name: string;
+            /** Platform */
+            platform: string;
+            /** Label */
+            label: string | null;
+            /** App Version */
+            app_version: string;
+            /** Rules Version */
+            rules_version: string;
+            /** Threat List Version */
+            threat_list_version: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Last Heartbeat At
+             * Format: date-time
+             */
+            last_heartbeat_at: string;
+        };
+        /** DeviceMe */
+        DeviceMe: {
+            device: components["schemas"]["DeviceInfo"];
+            /** Consents */
+            consents: components["schemas"]["ConsentState"][];
+        };
+        /** DrillOffer */
+        DrillOffer: {
+            drill: components["schemas"]["DrillOut"] | null;
+        };
+        /** DrillOut */
+        DrillOut: {
+            /**
+             * Drill Id
+             * Format: uuid
+             */
+            drill_id: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
+            /**
+             * Is Drill
+             * @default true
+             * @constant
+             */
+            is_drill: true;
+            /** Script */
+            script: {
+                [key: string]: unknown;
+            };
+        };
+        /** DrillResultAck */
+        DrillResultAck: {
+            /**
+             * Drill Id
+             * Format: uuid
+             */
+            drill_id: string;
+            /** Status */
+            status: string;
+            /** Score */
+            score: number | null;
+        };
+        /** DrillResultIn */
+        DrillResultIn: {
+            /** Drill Id */
+            drill_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "declined" | "aborted" | "completed";
+            /** Answers */
+            answers: components["schemas"]["AnswerIn"][];
+            /** Started At */
+            started_at?: string | null;
+            /** Completed At */
+            completed_at?: string | null;
+        };
+        /** ElderAnswerIn */
+        ElderAnswerIn: {
+            /**
+             * Question Id
+             * @enum {string}
+             */
+            question_id: "q_caller_authority" | "q_asked_transfer" | "q_know_caller";
+            /**
+             * Answer
+             * @enum {string}
+             */
+            answer: "yes" | "no" | "unsure" | "timeout";
+            note_flags?: components["schemas"]["NoteFlags"] | null;
+        };
+        /** ElderAnswerResult */
+        ElderAnswerResult: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "accepted" | "expired" | "already_resolved";
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /** Level */
+            level: string;
+        };
+        /** EvalBaseline */
+        EvalBaseline: {
+            /** Suite */
+            suite: string;
+            /** Created */
+            created: string;
+            /** Git Sha */
+            git_sha: string;
+            /** Cassette Source */
+            cassette_source: string;
+            /** Provisional Cases */
+            provisional_cases: number | null;
+            /** Metrics */
+            metrics: {
+                [key: string]: number;
+            };
+        };
+        /** EvalGate */
+        EvalGate: {
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "provisional" | "recorded";
+            /** Reasons */
+            reasons: string[];
+        };
+        /** EvalSuite */
+        EvalSuite: {
+            /** Suite */
+            suite: string;
+            baseline: components["schemas"]["EvalBaseline"];
+            gate: components["schemas"]["EvalGate"];
+        };
+        /** EvalSummary */
+        EvalSummary: {
+            /** Suites */
+            suites: components["schemas"]["EvalSuite"][];
+        };
+        /** EventsBatch */
+        EventsBatch: {
+            /** Events */
+            events: components["schemas"]["RiskEventIn"][];
+        };
+        /** EventsResult */
+        EventsResult: {
+            /** Accepted */
+            accepted: number;
+            /** Duplicates */
+            duplicates: number;
+            /** Incident Id */
+            incident_id: string | null;
+            /** Incident Opened */
+            incident_opened: boolean;
+        };
+        /** FormElder */
+        FormElder: {
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Alias */
+            alias: string;
+            /** Drills Consent */
+            drills_consent: boolean;
+        };
+        /** FormScript */
+        FormScript: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+        };
+        /**
+         * GraphTopologyOut
+         * @description Khớp `docs/schemas/graph_topology.v1.json`.
+         */
+        GraphTopologyOut: {
+            /**
+             * Graph
+             * @constant
+             */
+            graph: "incident";
+            /** Version */
+            version: string;
+            /** Nodes */
+            nodes: components["schemas"]["TopologyNode"][];
+            /** Edges */
+            edges: components["schemas"]["TopologyEdge"][];
+        };
+        /** GuardianDrillListOut */
+        GuardianDrillListOut: {
+            /** Drills */
+            drills: components["schemas"]["GuardianDrillOut"][];
+            /** Elders */
+            elders?: components["schemas"]["FormElder"][] | null;
+            /** Scripts */
+            scripts?: components["schemas"]["FormScript"][] | null;
+        };
+        /** GuardianDrillOut */
+        GuardianDrillOut: {
+            /**
+             * Drill Id
+             * Format: uuid
+             */
+            drill_id: string;
+            /** Member Alias */
+            member_alias: string;
+            /** Script Id */
+            script_id: string;
+            /** Script Title */
+            script_title: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "scheduled" | "offered" | "in_progress" | "passed" | "failed" | "aborted" | "declined" | "expired";
+            /** Score */
+            score: number | null;
+            /**
+             * Is Drill
+             * @default true
+             * @constant
+             */
+            is_drill: true;
+        };
+        /** GuardianDrillRequestIn */
+        GuardianDrillRequestIn: {
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Script Id */
+            script_id: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
+        };
+        /** GuardianIncidentDetail */
+        GuardianIncidentDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Device Id */
+            device_id: string | null;
+            /** State */
+            state: string;
+            /** Level */
+            level: string;
+            /** Rule Floor */
+            rule_floor: string;
+            /** Version */
+            version: number;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Drill Id */
+            drill_id: string | null;
+            /** Opened By Event Id */
+            opened_by_event_id: string | null;
+            /** Outcome */
+            outcome: string | null;
+            /**
+             * Opened At
+             * Format: date-time
+             */
+            opened_at: string;
+            /** Closed At */
+            closed_at: string | null;
+            /** Transitions */
+            transitions: components["schemas"]["TransitionOut"][];
+            /** Elder Alias */
+            elder_alias: string | null;
+            /** Run Id */
+            run_id: string | null;
+        };
+        /** GuardianIncidentList */
+        GuardianIncidentList: {
+            /** Incidents */
+            incidents: components["schemas"]["GuardianIncidentSummary"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** GuardianIncidentSummary */
+        GuardianIncidentSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Device Id */
+            device_id: string | null;
+            /** State */
+            state: string;
+            /** Level */
+            level: string;
+            /** Rule Floor */
+            rule_floor: string;
+            /** Version */
+            version: number;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Drill Id */
+            drill_id: string | null;
+            /** Opened By Event Id */
+            opened_by_event_id: string | null;
+            /** Outcome */
+            outcome: string | null;
+            /**
+             * Opened At
+             * Format: date-time
+             */
+            opened_at: string;
+            /** Closed At */
+            closed_at: string | null;
+            /** Elder Alias */
+            elder_alias: string | null;
+            /** Has Run */
+            has_run: boolean;
+        };
+        /** GuardianSession */
+        GuardianSession: {
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /** Family Name */
+            family_name: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HeartbeatIn */
+        HeartbeatIn: {
+            /** App Version */
+            app_version: string;
+            /** Rules Version */
+            rules_version: string;
+            /** Threat List Version */
+            threat_list_version?: string | null;
+            /** Permission State */
+            permission_state: {
+                [key: string]: boolean;
+            };
+        };
+        /** HeartbeatOut */
+        HeartbeatOut: {
+            /**
+             * Status
+             * @default ok
+             * @constant
+             */
+            status: "ok";
+        };
+        /** IncidentDecisionIn */
+        IncidentDecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "safe" | "prevented" | "false_alarm" | "emergency_pause";
+            /** Note */
+            note?: string | null;
+        };
+        /** IncidentDecisionResult */
+        IncidentDecisionResult: {
+            /** Success */
+            success: boolean;
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /** State */
+            state: string;
+            /** Outcome */
+            outcome?: string | null;
+        };
+        /** IncidentDetail */
+        IncidentDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Device Id */
+            device_id: string | null;
+            /** State */
+            state: string;
+            /** Level */
+            level: string;
+            /** Rule Floor */
+            rule_floor: string;
+            /** Version */
+            version: number;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Drill Id */
+            drill_id: string | null;
+            /** Opened By Event Id */
+            opened_by_event_id: string | null;
+            /** Outcome */
+            outcome: string | null;
+            /**
+             * Opened At
+             * Format: date-time
+             */
+            opened_at: string;
+            /** Closed At */
+            closed_at: string | null;
+            /** Transitions */
+            transitions: components["schemas"]["TransitionOut"][];
+        };
+        /** IncidentList */
+        IncidentList: {
+            /** Incidents */
+            incidents: components["schemas"]["IncidentSummary"][];
+        };
+        /** IncidentRun */
+        IncidentRun: {
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Status */
+            status: string;
+        };
+        /** IncidentSummary */
+        IncidentSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Device Id */
+            device_id: string | null;
+            /** State */
+            state: string;
+            /** Level */
+            level: string;
+            /** Rule Floor */
+            rule_floor: string;
+            /** Version */
+            version: number;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Drill Id */
+            drill_id: string | null;
+            /** Opened By Event Id */
+            opened_by_event_id: string | null;
+            /** Outcome */
+            outcome: string | null;
+            /**
+             * Opened At
+             * Format: date-time
+             */
+            opened_at: string;
+            /** Closed At */
+            closed_at: string | null;
+        };
+        /** JoinIn */
+        JoinIn: {
+            /** Code */
+            code: string;
+        };
+        /**
+         * LookupIn
+         * @description Một chủ thể tra cứu. Cấm mọi trường lạ (kể cả `number`/`phone`): số thô không được phép tới đây.
+         */
+        LookupIn: {
+            /** Kind */
+            kind: string;
+            /**
+             * Via
+             * @enum {string}
+             */
+            via: "typed" | "qr";
+            /** H1 */
+            h1?: string | null;
+            /** Last3 */
+            last3?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Incident Id */
+            incident_id?: string | null;
+        };
+        /** LookupResult */
+        LookupResult: {
+            /**
+             * Verification Id
+             * Format: uuid
+             */
+            verification_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "phone" | "url";
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "safe" | "warning" | "dangerous" | "unknown";
+            /** Confidence */
+            confidence: number;
+            /** Reasons */
+            reasons: components["schemas"]["Reason"][];
+            /** Sources */
+            sources: components["schemas"]["Source"][];
+            /** Disclaimer */
+            disclaimer: string;
+            /** Incident Level */
+            incident_level?: ("low" | "medium" | "high" | "critical") | null;
+            /** Is Demo */
+            is_demo: boolean;
+        };
+        /**
+         * NoteFlags
+         * @description Cùng bộ cờ với `hoicon.domain.pii.NOTE_KEYWORDS` (thứ LLM nhận), có test giữ khớp.
+         */
+        NoteFlags: {
+            /**
+             * Mentions Authority
+             * @default false
+             */
+            mentions_authority: boolean;
+            /**
+             * Mentions Transfer
+             * @default false
+             */
+            mentions_transfer: boolean;
+            /**
+             * Mentions Code
+             * @default false
+             */
+            mentions_code: boolean;
+            /**
+             * Mentions Secrecy
+             * @default false
+             */
+            mentions_secrecy: boolean;
+            /**
+             * Mentions App Or Link
+             * @default false
+             */
+            mentions_app_or_link: boolean;
+        };
+        /**
+         * PairRequest
+         * @description Khớp `docs/schemas/pair_request.v1.json`.
+         */
+        PairRequest: {
+            /** Code */
+            code: string;
+            /** App Version */
+            app_version: string;
+            /** Rules Version */
+            rules_version: string;
+            /**
+             * Platform
+             * @enum {string}
+             */
+            platform: "android" | "ios" | "web";
+            /** Device Label */
+            device_label?: string | null;
+        };
+        /**
+         * PairResponse
+         * @description Khớp `docs/schemas/pair_response.v1.json`.
+         */
+        PairResponse: {
+            /** Device Id */
+            device_id: string;
+            /** Family Id */
+            family_id: string;
+            /** Member Id */
+            member_id: string;
+            /** Family Name */
+            family_name: string;
+            /** Access Token */
+            access_token: string;
+            /** Refresh Token */
+            refresh_token: string;
+            /**
+             * Token Type
+             * @default bearer
+             * @constant
+             */
+            token_type: "bearer";
+            /** Expires In */
+            expires_in: number;
+        };
+        /** PendingQuestionOut */
+        PendingQuestionOut: {
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /**
+             * Question Id
+             * @enum {string}
+             */
+            question_id: "q_caller_authority" | "q_asked_transfer" | "q_know_caller";
+            /** Text */
+            text: string;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Answers */
+            answers: string[];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /** Reason */
+        Reason: {
+            /** Code */
+            code: string;
+            /** Text */
+            text: string;
+        };
+        /** ReceiptOut */
+        ReceiptOut: {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "done" | "failed" | "cancelled";
+            /**
+             * Requested At
+             * Format: date-time
+             */
+            requested_at: string;
+            /**
+             * Deadline Hours
+             * @default 72
+             * @constant
+             */
+            deadline_hours: 72;
+            /**
+             * Execute After
+             * Format: date-time
+             */
+            execute_after: string;
+        };
+        /**
+         * RiskEventIn
+         * @description Sự kiện NHẬN từ thiết bị (`POST /v1/events`): khớp CHẶT `risk_event.v1.json` (`additionalProperties: false`) —
+         *     trường lạ (kể cả số điện thoại thô) làm hỏng cả lô, không bị lẳng lặng bỏ qua.
+         */
+        RiskEventIn: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Schema Version
+             * @constant
+             */
+            schema_version: 1;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "call_started" | "call_ended" | "flagged_number_call" | "risk_window_opened" | "risk_window_closed" | "banking_app_foreground" | "sideload_detected" | "safe_pause_shown" | "safe_pause_continued" | "safe_pause_cancelled" | "ask_child_pressed";
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /** Rule Id */
+            rule_id?: ("R0" | "R1" | "R2" | "R4") | null;
+            rule_floor: components["schemas"]["RiskLevel"];
+            /** Is Drill */
+            is_drill: boolean;
+            /** Drill Id */
+            drill_id?: string | null;
+            caller?: components["schemas"]["Caller"] | null;
+            call?: components["schemas"]["Call"] | null;
+            app?: components["schemas"]["App"] | null;
+            timing?: components["schemas"]["Timing"] | null;
+            /** App Version */
+            app_version: string;
+            /** Rules Version */
+            rules_version: string;
+        };
+        /**
+         * RiskLevel
+         * @enum {string}
+         */
+        RiskLevel: "none" | "low" | "medium" | "high" | "critical";
+        /** SessionIn */
+        SessionIn: {
+            /** Token */
+            token: string;
+        };
+        /** SessionOut */
+        SessionOut: {
+            /** Family Alias */
+            family_alias: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Is Demo
+             * @default true
+             * @constant
+             */
+            is_demo: true;
+        };
+        /** SimMessageOut */
+        SimMessageOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Template */
+            template: string;
+            /** Text */
+            text: string;
+        };
+        /** SimQuestionOut */
+        SimQuestionOut: {
+            /**
+             * Incident Id
+             * Format: uuid
+             */
+            incident_id: string;
+            /**
+             * Question Id
+             * @enum {string}
+             */
+            question_id: "q_caller_authority" | "q_asked_transfer" | "q_know_caller";
+            /** Text */
+            text: string;
+            /** Is Drill */
+            is_drill: boolean;
+            /** Answers */
+            answers: ("yes" | "no" | "unsure")[];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /**
+         * SimResetOut
+         * @description Khớp `docs/schemas/sim_reset.v1.json`.
+         */
+        SimResetOut: {
+            /** Incidents */
+            incidents: number;
+            /** Devices */
+            devices: number;
+            /** Seconds */
+            seconds: number;
+            /**
+             * Is Demo
+             * @default true
+             * @constant
+             */
+            is_demo: true;
+        };
+        /** SimRunIn */
+        SimRunIn: {
+            /** Scenario Id */
+            scenario_id: string;
+            /**
+             * Llm
+             * @default replay
+             * @enum {string}
+             */
+            llm: "replay" | "live";
+        };
+        /**
+         * SimRunOut
+         * @description Khớp `docs/schemas/sim_run.v1.json`.
+         */
+        SimRunOut: {
+            /** Scenario Id */
+            scenario_id: string;
+            /**
+             * Is Demo
+             * @constant
+             */
+            is_demo: true;
+            /**
+             * Llm Mode
+             * @enum {string}
+             */
+            llm_mode: "replay" | "live" | "fallback";
+            /** Incident Id */
+            incident_id: string | null;
+            /** Run Id */
+            run_id: string | null;
+            /** State */
+            state: string | null;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "none" | "low" | "medium" | "high" | "critical";
+            pending_question: components["schemas"]["SimQuestionOut"] | null;
+            /** Guardian Messages */
+            guardian_messages: components["schemas"]["SimMessageOut"][];
+            /** Note */
+            note: string | null;
+        };
+        /** SimScenarioOut */
+        SimScenarioOut: {
+            /** Id */
+            id: string;
+            /** Category */
+            category: string;
+            /** Title Vi */
+            title_vi: string;
+            /** Is Benign */
+            is_benign: boolean;
+            /** Injection */
+            injection: boolean;
+            /** Draft */
+            draft: boolean;
+            /** Script Vi */
+            script_vi: string;
+        };
+        /** SimScenariosOut */
+        SimScenariosOut: {
+            /** Scenarios */
+            scenarios: components["schemas"]["SimScenarioOut"][];
+        };
+        /** Source */
+        Source: {
+            /** Name */
+            name: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "threat_list" | "heuristic" | "registry";
+            /** List Version */
+            list_version?: string | null;
+            /** Url */
+            url?: string | null;
+        };
+        /** ThreatListOut */
+        ThreatListOut: {
+            /** Version */
+            version: string;
+            /** Bucket Bits */
+            bucket_bits: number;
+            /** Count */
+            count: number;
+            /** Buckets B64 */
+            buckets_b64: string;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+        };
+        /** Timing */
+        Timing: {
+            /** Detect Ms */
+            detect_ms?: number | null;
+            /** Pause Ms */
+            pause_ms?: number | null;
+        };
+        /** TopologyEdge */
+        TopologyEdge: {
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
+            /** Conditional */
+            conditional: boolean;
+        };
+        /** TopologyNode */
+        TopologyNode: {
+            /** Id */
+            id: string;
+            /** Label Vi */
+            label_vi: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "start" | "end" | "node" | "interrupt";
+            /** Step Nodes */
+            step_nodes: string[];
+        };
+        /** TransitionOut */
+        TransitionOut: {
+            /** From State */
+            from_state: string | null;
+            /** To State */
+            to_state: string;
+            /** Actor */
+            actor: string;
+            /** Reason */
+            reason: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
@@ -56,6 +2042,1512 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    pair_v1_pair_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_consents_v1_consents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    device_me_v1_devices_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceMe"];
+                };
+            };
+        };
+    };
+    heartbeat_v1_heartbeat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeartbeatIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeartbeatOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_events_v1_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventsBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventsResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_incident_v1_incidents__incident_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_family_incidents_v1_families__family_id__incidents_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_incident_decision_v1_incidents__incident_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentDecisionResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_run_steps_v1_runs__run_id__steps_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Thiếu hoặc sai token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_run_v1_runs__run_id__stream_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Last-Event-ID"?: string | null;
+            };
+            path: {
+                run_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Luồng sự kiện */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
+            };
+            /** @description Thiếu hoặc sai token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Người này đã mở đủ 3 luồng (có Retry-After) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Máy chủ đã đủ 20 luồng (có Retry-After) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_incident_run_v1_incidents__incident_id__run_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentRun"];
+                };
+            };
+            /** @description Thiếu hoặc sai token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Chưa có lượt hoặc không thuộc nhà */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_session_v1_guardian_session_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianSession"];
+                };
+            };
+            /** @description Không có bằng chứng cùng nguồn (Origin/Sec-Fetch-Site) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token sai, đã dùng, quá hạn hoặc không dùng được (cùng một thông điệp) */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_session_v1_guardian_session_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_me_v1_guardian_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianSession"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_incidents_v1_guardian_incidents_get: {
+        parameters: {
+            query?: {
+                status?: ("open" | "closed") | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianIncidentList"];
+                };
+            };
+            /** @description Chưa đăng nhập */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description cursor hoặc status không hợp lệ */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_incident_detail_v1_guardian_incidents__incident_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianIncidentDetail"];
+                };
+            };
+            /** @description Chưa đăng nhập */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_case_file_v1_guardian_incidents__incident_id__case_file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseFileOut"];
+                };
+            };
+            /** @description Chưa đăng nhập */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_case_file_v1_guardian_incidents__incident_id__case_file_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaseFileActionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseFileOut"];
+                };
+            };
+            /** @description Không có bằng chứng cùng nguồn */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không thấy (hoặc không thuộc nhà) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lệnh không hợp lệ với trạng thái hiện tại */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_lookup_v1_lookups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LookupIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupResult"];
+                };
+            };
+            /** @description Thiếu hoặc sai token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Chưa đồng ý mục đích `lookups` */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sự cố không thuộc gia đình */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Vượt hạn mức tra cứu */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_threat_list_v1_threat_list_get: {
+        parameters: {
+            query?: {
+                since?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreatListOut"];
+                };
+            };
+            /** @description `since` trùng phiên bản hiện tại: không có thân */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Thiếu hoặc sai token thiết bị */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Quá 24 lần/ngày/thiết bị */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Thiếu/sai khóa dữ liệu hoặc phần lớn `bucket_enc` không giải mã được (không đệm) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_offer_v1_drills_offer_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DrillOffer"];
+                };
+            };
+        };
+    };
+    post_result_v1_drills__drill_id__result_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                drill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DrillResultIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DrillResultAck"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_deletion_v1_data_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DataRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Đã có yêu cầu đang chờ (lũy đẳng) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptOut"];
+                };
+            };
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Đã gửi yêu cầu nhiều lần hôm nay. Bác thử lại vào ngày mai nhé. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    cancel_request_v1_data_requests__request_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptOut"];
+                };
+            };
+            /** @description Không thấy (hoặc không thuộc gia đình này) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Đã quá khoảng chờ hoặc đã xóa xong */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_code_v1_booth_codes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    join_v1_booth_join_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description `join_code_invalid` (mã sai/hết hạn/hủy/đầy) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Thử sai quá nhiều */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_drills_v1_guardian_drills_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianDrillListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    schedule_drill_v1_guardian_drills_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardianDrillRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianDrillListOut"];
+                };
+            };
+            /** @description Bị từ chối: `{detail: <mã DrillRefused>}` */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_action_view_v1_action__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_action_decision_v1_action__token__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentDecisionResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_elder_answer_v1_incidents__incident_id__answers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElderAnswerIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ElderAnswerResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_pending_question_v1_incidents__incident_id__pending_question_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingQuestionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_incident_graph_v1_graphs_incident_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphTopologyOut"];
+                };
+            };
+        };
+    };
+    get_summary_v1_eval_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvalSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scenarios_v1_sim_scenarios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimScenariosOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_run_v1_sim_runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimRunIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_reset_v1_sim_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimResetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_run_v1_sim_runs__incident_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_answer_v1_sim_runs__incident_id__answer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: {
+                hc_guardian?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ElderAnswerIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    zalo_webhook_webhooks_zalo__bot_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     healthz_healthz_get: {
         parameters: {
             query?: never;
@@ -94,7 +3586,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        [key: string]: string;
+                        [key: string]: unknown;
                     };
                 };
             };

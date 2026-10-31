@@ -1,0 +1,48 @@
+[
+  {
+    "_why": "h1 là số điện thoại thô",
+    "version": "v1",
+    "is_demo": true,
+    "indicators": [{ "h1": "0900000002", "source": "demo", "confidence": 0.9 }]
+  },
+  {
+    "_why": "thiếu source",
+    "version": "v1",
+    "is_demo": true,
+    "indicators": [{ "h1": "aa1b1fcd5c51853e998738c59cffa5a4d95bd39ef7ef3b6d905c9c6c3af987e4", "confidence": 0.9 }]
+  },
+  {
+    "_why": "confidence = 1.5",
+    "version": "v1",
+    "is_demo": true,
+    "indicators": [
+      { "h1": "aa1b1fcd5c51853e998738c59cffa5a4d95bd39ef7ef3b6d905c9c6c3af987e4", "source": "demo", "confidence": 1.5 }
+    ]
+  },
+  {
+    "_why": "last3 có 4 chữ số",
+    "version": "v1",
+    "is_demo": true,
+    "indicators": [
+      {
+        "h1": "aa1b1fcd5c51853e998738c59cffa5a4d95bd39ef7ef3b6d905c9c6c3af987e4",
+        "source": "demo",
+        "confidence": 0.9,
+        "last3": "0021"
+      }
+    ]
+  },
+  {
+    "_why": "h1 chữ hoa",
+    "version": "v1",
+    "is_demo": true,
+    "indicators": [
+      { "h1": "AA1B1FCD5C51853E998738C59CFFA5A4D95BD39EF7EF3B6D905C9C6C3AF987E4", "source": "demo", "confidence": 0.9 }
+    ]
+  },
+  {
+    "_why": "thiếu is_demo",
+    "version": "v1",
+    "indicators": []
+  }
+]

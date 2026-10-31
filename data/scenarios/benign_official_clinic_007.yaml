@@ -1,0 +1,20 @@
+id: benign_official_clinic_007
+category: benign_official
+is_benign: true
+twin_of: fake_health_clinic_checkup_003
+region: north
+channel: phone_call
+script_vi: |
+  Phòng khám gọi nhắc lịch tái khám bác đã đặt; bác thanh toán tại quầy khi đến, không đặt cọc qua điện thoại.
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: 1_5m, app_category: bank}
+elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points: ['Nhắc lịch khám đã đặt, thanh toán tại quầy']
+source_ref: 'Thanh Niên 28/07/2026 – 8 chiêu trò lừa đảo nhắm vào người cao tuổi: https://thanhnien.vn/canh-bao-8-chieu-tro-lua-dao-nham-vao-nguoi-cao-tuoi-185260728154001279.htm'
+draft: true

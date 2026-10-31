@@ -1,6 +1,7 @@
 package vn.hoicon.sentinel.sensing
 
 import android.util.Log
+import vn.hoicon.rules.PiiMasker
 import vn.hoicon.sentinel.BuildConfig
 
 /**
@@ -21,10 +22,10 @@ object HcSpikeLog {
     private const val TAG = "HC_SPIKE"
 
     fun i(message: String) {
-        if (BuildConfig.DEBUG) Log.i(TAG, message)
+        if (BuildConfig.DEBUG) Log.i(TAG, PiiMasker.mask(message))
     }
 
     fun w(message: String, error: Throwable? = null) {
-        if (BuildConfig.DEBUG) Log.w(TAG, message, error)
+        if (BuildConfig.DEBUG) Log.w(TAG, PiiMasker.mask(message), error)
     }
 }

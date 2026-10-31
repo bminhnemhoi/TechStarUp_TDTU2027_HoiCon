@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/lookup_request.v1.json",
+  "title": "LookupRequest v1",
+  "description": "Thân `POST /v1/lookups` (spec 026, P2-11). Số điện thoại thô KHÔNG bao giờ rời máy: chỉ gửi h1 = SHA-256(\"hoicon:v1:\" + E164) và 3 số cuối. Với URL chỉ gửi đường link; máy chủ bỏ đường dẫn/truy vấn/thông tin đăng nhập ngay sau khi phân tích và chỉ giữ HMAC của tên máy chủ. `kind=account` để dành, máy chủ trả 422 `kind_not_supported`.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "via", "h1", "last3"],
+      "properties": {
+        "kind": { "const": "phone" },
+        "via": { "enum": ["typed", "qr"] },
+        "h1": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "last3": { "type": "string", "pattern": "^[0-9]{3}$" },
+        "incident_id": { "type": "string", "format": "uuid" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "via", "url"],
+      "properties": {
+        "kind": { "const": "url" },
+        "via": { "enum": ["typed", "qr"] },
+        "url": { "type": "string", "minLength": 4, "maxLength": 2048 },
+        "incident_id": { "type": "string", "format": "uuid" }
+      }
+    }
+  ]
+}

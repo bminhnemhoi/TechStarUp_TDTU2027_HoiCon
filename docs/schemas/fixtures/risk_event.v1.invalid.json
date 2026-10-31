@@ -32,5 +32,70 @@
     "is_drill": true,
     "app_version": "0.1.0",
     "rules_version": "r1"
+  },
+  {
+    "_why": "package có khoảng trắng/số điện thoại",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "schema_version": 1,
+    "type": "call_started",
+    "occurred_at": "2026-12-01T02:10:00Z",
+    "rule_floor": "none",
+    "is_drill": false,
+    "app_version": "0.1.0",
+    "rules_version": "r1",
+    "app": {
+      "category": "bank",
+      "package": "call 0912345678 now"
+    }
+  },
+  {
+    "_why": "app_version trông như số điện thoại",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "schema_version": 1,
+    "type": "call_started",
+    "occurred_at": "2026-12-01T02:10:00Z",
+    "rule_floor": "none",
+    "is_drill": false,
+    "app_version": "0912345678",
+    "rules_version": "r1"
+  },
+  {
+    "_why": "rules_version có 6 chữ số liền (giống mã OTP)",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "schema_version": 1,
+    "type": "call_started",
+    "occurred_at": "2026-12-01T02:10:00Z",
+    "rule_floor": "none",
+    "is_drill": false,
+    "app_version": "0.1.0",
+    "rules_version": "OTP-123456"
+  },
+  {
+    "_why": "duration_s vượt cận trên (1 ngày) — tràn INTEGER ở DB",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "schema_version": 1,
+    "type": "call_started",
+    "occurred_at": "2026-12-01T02:10:00Z",
+    "rule_floor": "none",
+    "is_drill": false,
+    "app_version": "0.1.0",
+    "rules_version": "r1",
+    "call": {
+      "duration_s": 2147483648
+    }
+  },
+  {
+    "_why": "detect_ms vượt cận trên (1 giờ)",
+    "id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "schema_version": 1,
+    "type": "call_started",
+    "occurred_at": "2026-12-01T02:10:00Z",
+    "rule_floor": "none",
+    "is_drill": false,
+    "app_version": "0.1.0",
+    "rules_version": "r1",
+    "timing": {
+      "detect_ms": 1099511627776
+    }
   }
 ]

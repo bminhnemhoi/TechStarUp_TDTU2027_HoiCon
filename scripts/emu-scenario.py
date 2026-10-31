@@ -4,6 +4,8 @@
     python scripts/emu-scenario.py --scenario screen_only --runs 10 --prep kill  # H1: bắt cuộc gọi khi app bị kill
     python scripts/emu-scenario.py --scenario fake_police --runs 10 # cuộc gọi lạ → demobank → SafePause, đo độ trễ
     python scripts/emu-scenario.py --scenario bank_first --runs 5  # GAP: app ngân hàng mở sẵn trước cuộc gọi
+    HC_SENTINEL_PACKAGE=vn.hoicon.sentinel.demo python scripts/emu-scenario.py --scenario pause_release --runs 10  # E7 ≤ 3 s trên bản release/demo
+    python scripts/emu-scenario.py --scenario booth --playlist all  # gian trưng bày: diễn từng mục danh sách phát của /booth
 
 Chỉ dùng thư viện chuẩn + adb. Máy ảo phải đang chạy (bash scripts/emu-start.sh hc-api36 --headless).
 Số điện thoại lấy từ data/fixtures/phones.json (HƯ CẤU). Không in/lưu dump layout/logcat thô (có số gọi đến).
@@ -12,8 +14,10 @@ Số điện thoại lấy từ data/fixtures/phones.json (HƯ CẤU). Không in
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import math
+import os
 import re
 import statistics
 import subprocess
@@ -23,12 +27,21 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SDK = Path("D:/Android/Sdk")
-ADB = str(SDK / "platform-tools" / "adb.exe")
-ACLI = str(SDK / "cmdline-tools" / "latest" / "bin" / "android.exe")
-SENTINEL = "vn.hoicon.sentinel"
-DEMOBANK = "vn.hoicon.demobank"
+# SDK: biến môi trường trước, rồi mặc định theo hệ điều hành (Windows D:/Android, Linux ~/Android).
+SDK = Path(
+    os.environ.get("ANDROID_HOME")
+    or os.environ.get("ANDROID_SDK_ROOT")
+    or ("D:/Android/Sdk" if os.name == "nt" else str(Path.home() / "Android" / "Sdk"))
+)
+EXE = ".exe" if os.name == "nt" else ""
+ADB = str(SDK / "platform-tools" / f"adb{EXE}")
+ACLI = str(SDK / "cmdline-tools" / "latest" / "bin" / f"android{EXE}")
+SENTINEL = os.environ.get("HC_SENTINEL_PACKAGE", "vn.hoicon.sentinel")  # đổi sang vn.hoicon.sentinel.demo để đo bản release/demo
+DEMOBANK = os.environ.get("HC_DEMOBANK_PACKAGE", "vn.hoicon.demobank")  # đổi để thử R5 bằng bản demobank mang tên gói điều khiển từ xa
 PAUSE_WAIT_S = 30
+# `call_state()==1` (đổ chuông ở telephony.registry) tới trước khi Telecom dựng xong cuộc gọi đến (~0,1–0,3 s). Nhấc máy ngay lúc đó thì
+# Telecom báo "Found no ringing call" và ghi cuộc gọi là MISSED, không qua bước sàng lọc ⇒ "Telecom không thấy cuộc gọi" (hc-api34 0/10, 25/10/2026).
+CALL_SETTLE_S = 1.5
 PHONES = json.loads((ROOT / "data" / "fixtures" / "phones.json").read_text(encoding="utf-8"))
 
 
@@ -97,10 +110,19 @@ def ring(number: str) -> bool:
     if not ensure_idle():
         print("  cảnh báo: máy ảo vẫn còn cuộc gọi treo")
     clear_logcat()
-    adb("emu", "gsm", "call", number)
+    reply = adb("emu", "gsm", "call", number, check=False).replace("\r", " ").replace("\n", " ").strip()
     rang = wait_for(lambda: call_state() == 1, 15, step_s=0.3)
     if not rang:
-        print("  cuộc gọi giả KHÔNG đổ chuông (lỗi môi trường) — bỏ qua lần này")
+        # Chẩn đoán (không in số gọi): trả lời của console modem, danh sách cuộc gọi của modem giả, trạng thái modem/vai trò.
+        listing = adb("emu", "gsm", "list", check=False).replace("\r", " ").replace("\n", " ").strip()
+        reply, listing = (re.sub(r"\d{5,}", "<số>", t) for t in (reply, listing))  # không in số gọi
+        print(
+            "  cuộc gọi giả KHÔNG đổ chuông (lỗi môi trường) — bỏ qua lần này"
+            f" · console: {reply[:60]!r} · gsm list: {listing[:60]!r} · call_state={call_state()}"
+            f" · modem IN_SERVICE={radio_ready()} · vai trò do Lính gác giữ={role_held()}"
+            f" · uptime máy ảo: {adb('shell', 'uptime', check=False).split(',')[0].strip()}"
+            f" · com.android.phone pid: {adb('shell', 'pidof', 'com.android.phone', check=False).strip() or 'KHÔNG CÓ'}"
+        )
     return rang
 
 
@@ -129,6 +151,9 @@ def has_mark(*names: str) -> bool:
     return any(n in marks for n in names)
 
 
+E7_MARKERS = ("khoan chuyển tiền đã", "gọi cho con", "hỏi con")
+
+
 def pause_visible() -> bool:
     # Ghi ra file rồi đọc UTF-8: stdout của android.exe trên console Windows làm vỡ dấu tiếng Việt.
     # File tạm bị xóa ngay (cây UI có thể chứa số gọi đến trong thông báo hệ thống).
@@ -140,8 +165,12 @@ def pause_visible() -> bool:
             timeout=60,
             check=False,
         )
-        # Nút chính của E7 là "Gọi cho con" ⇒ so khớp không phân biệt hoa thường.
-        return out.exists() and "gọi cho con" in out.read_text(encoding="utf-8", errors="replace").lower()
+        # E7 nhận ra bằng tiêu đề "khoan chuyển tiền đã" (cả hai bản giao diện) hoặc nút chính: "Gọi cho con" (bản View
+        # của spec 001) / "Hỏi con" (bản Compose đang phát hành) ⇒ so khớp không phân biệt hoa thường.
+        if not out.exists():
+            return False
+        tree = out.read_text(encoding="utf-8", errors="replace").lower()
+        return any(marker in tree for marker in E7_MARKERS)
 
 
 def prepare(prep: str) -> None:
@@ -172,12 +201,57 @@ def prepare(prep: str) -> None:
         print(f"  cảnh báo: tiến trình vẫn sống sau prep={prep}")
 
 
+def radio_ready() -> bool:
+    """SIM đã nạp và mạng thoại ở trạng thái IN_SERVICE. Ngay sau khởi động nguội (`--no-snapshot-load`) máy ảo báo
+    sys.boot_completed trước khi modem giả đăng ký mạng; cuộc gọi giả lúc đó có thể đổ chuông (telephony.registry) mà Telecom
+    không thấy ("Telecom không thấy cuộc gọi đến")."""
+    sim = adb("shell", "getprop", "gsm.sim.state").strip()
+    registry = adb("shell", "dumpsys", "telephony.registry")
+    return sim.startswith(("LOADED", "READY")) and "mVoiceRegState=0(IN_SERVICE)" in registry
+
+
+def holds_role(role_holders_output: str, package: str) -> bool:
+    """So từng dòng, không dùng `in` trên cả chuỗi: `vn.hoicon.sentinel` là tiền tố của `vn.hoicon.sentinel.demo`."""
+    return package in (line.strip() for line in role_holders_output.splitlines())
+
+
+def role_held() -> bool:
+    # check=False: ngay sau khởi động nguội `cmd role` có thể báo "Can't find service" (system_server vừa khởi động lại).
+    return holds_role(adb("shell", "cmd", "role", "get-role-holders", "--user", "0", "android.app.role.CALL_SCREENING", check=False), SENTINEL)
+
+
+def modem_rings(probe_wait_s: float = 8) -> bool:
+    """Cuộc gọi thử (số hư cấu, không phải số của kịch bản) có đổ chuông không. Đo 24/10 (2 lần khởi động nguội hc-api36): trong ~1–2 phút
+    đầu `radio_ready()` đã True nhưng `gsm call` trả OK mà `call_state` vẫn 0 — cuộc gọi bị nuốt, không tới Telecom."""
+    number = PHONES["drill_fake_police"]
+    adb("emu", "gsm", "call", number, check=False)
+    rang = wait_for(lambda: call_state() == 1, probe_wait_s, step_s=0.3)
+    adb("emu", "gsm", "cancel", number, check=False)
+    wait_for(lambda: call_state() == 0, 10, step_s=0.3)
+    return rang
+
+
+def ensure_ready() -> None:
+    """Chuẩn bị môi trường trước khi đo: chờ modem giả đăng ký mạng (tối đa 120 s) và bảo đảm Lính gác đang giữ vai trò
+    sàng lọc cuộc gọi (vai trò có thể không còn sau `pm clear`/cài lại). Chỉ in cảnh báo, không đổi kết quả đo."""
+    if not wait_for(radio_ready, 120, step_s=3):
+        print("  cảnh báo: modem giả chưa IN_SERVICE sau 120 s — cuộc gọi giả có thể không tới Telecom (môi trường, không phải app)")
+    if not wait_for(modem_rings, 180, step_s=2):
+        print("  cảnh báo: cuộc gọi thử không đổ chuông sau 180 s — modem giả chưa nhận cuộc gọi (môi trường, không phải app)")
+    if installed(SENTINEL) and not role_held():
+        print("  vai trò CALL_SCREENING không do Lính gác giữ ⇒ cấp lại bằng `cmd role add-role-holder`")
+        adb("shell", "cmd", "role", "add-role-holder", "--user", "0", "android.app.role.CALL_SCREENING", SENTINEL)
+
+
 def screening_diagnosis() -> str:
     """Vì sao không có call_screened: Telecom không nhận cuộc gọi, hết hạn chờ (khởi động nguội), hay app im lặng."""
     log = adb("logcat", "-d", "-s", "Telecom:I", "TelecomFramework:I", "ActivityManager:I")
     started = re.search(rf"Start proc \d+:{re.escape(SENTINEL)}/", log) is not None
     if "IncomingCallFilterGraph" not in log:
-        return "Telecom không thấy cuộc gọi đến (lỗi modem giả lập)"
+        return (
+            "Telecom không thấy cuộc gọi đến (lỗi modem giả lập)"
+            f" · modem IN_SERVICE={radio_ready()} · vai trò do Lính gác giữ={role_held()}"
+        )
     if "mCallScreeningPackageName='null'" in log:
         return "Telecom hết hạn chờ sàng lọc" + (" (đã khởi tiến trình, khởi động nguội quá chậm)" if started else "")
     if "SCREENING_COMPLETED" in log:
@@ -223,12 +297,13 @@ def screen_only(runs: int, prep: str) -> bool:
     return caught == len(results) == runs
 
 
-def fake_police_once(prep: str) -> dict[str, int | bool] | None:
-    number = PHONES["flagged_caller"]
+def fake_police_once(prep: str, caller: str = "flagged_caller") -> dict[str, int | bool] | None:
+    number = PHONES[caller]
     flush_modem()
     prepare(prep)
     if not ring(number):
         return None
+    time.sleep(CALL_SETTLE_S)
     adb("emu", "gsm", "accept", number)
     wait_for(lambda: call_state() == 2, 15)
     time.sleep(2)
@@ -264,7 +339,7 @@ def fake_police_once(prep: str) -> dict[str, int | bool] | None:
     print(
         f"  phát hiện {run['detect']} ms · mở {run.get('open', '—')} ms · SafePause {run['pause']} ms"
         f" · câu nói đầu {run.get('speech', '—')} ms"
-        f" · cây UI {'có' if visible else 'KHÔNG'} 'gọi cho con'{tts_note}"
+        f" · cây UI {'có' if visible else 'KHÔNG'} màn E7{tts_note}"
     )
     return run
 
@@ -300,6 +375,7 @@ def call_state_once() -> dict[str, int]:
 
     wait_for(lambda: complete(1), 15, step_s=0.3)
     time.sleep(3)
+    time.sleep(CALL_SETTLE_S)
     adb("emu", "gsm", "accept", number)
     wait_for(lambda: complete(2), 15, step_s=0.3)
     time.sleep(3)
@@ -337,6 +413,7 @@ def bank_first_once() -> int | None:
     if not ring(number):
         return None
     time.sleep(2)
+    time.sleep(CALL_SETTLE_S)
     adb("emu", "gsm", "accept", number)
     wait_for(lambda: has_mark("pause_shown"), PAUSE_WAIT_S, step_s=0.3)
     time.sleep(0.5)
@@ -425,6 +502,154 @@ def fake_police(runs: int, prep: str) -> bool:
     return ok
 
 
+@dataclasses.dataclass(frozen=True)
+class BoothScene:
+    """Cảnh máy ảo của một mục danh sách phát `/booth` (apps/web/src/lib/booth.ts): ai gọi, và E7 có phải hiện không."""
+
+    caller: str  # khóa trong data/fixtures/phones.json (số HƯ CẤU)
+    expect_pause: bool
+
+
+# Khóa = `scenarioId` trong PLAYLIST của booth.ts (test_emu_scenario_booth.py giữ hai bên khớp nhau).
+BOOTH_SCENES = {
+    "fake_police_safe_account_002": BoothScene("flagged_caller", True),
+    "fake_bank_card_locked_002": BoothScene("flagged_caller", True),
+    "benign_family_son_rent_002": BoothScene("trusted_child", False),  # con gọi rồi mở app ngân hàng: HỏiCon không được báo nhầm
+}
+
+
+def booth_plan(name: str) -> list[str]:
+    """`all` = cả danh sách theo thứ tự diễn; hoặc đúng một scenarioId."""
+    if name == "all":
+        return list(BOOTH_SCENES)
+    if name not in BOOTH_SCENES:
+        raise ValueError(f"không có cảnh '{name}' (có: {', '.join(BOOTH_SCENES)}, all)")
+    return [name]
+
+
+def add_contact(number: str) -> None:
+    """Lưu số (HƯ CẤU) vào danh bạ MÁY ẢO: Telecom không đưa cuộc gọi từ liên hệ đã lưu cho CallScreeningService (luật R0)."""
+    uri = "content://com.android.contacts"
+    adb("shell", "content", "insert", "--uri", f"{uri}/raw_contacts", "--bind", "account_type:n:", "--bind", "account_name:n:", check=False)
+    ids = [int(i) for i in re.findall(r"_id=(\d+)", adb("shell", "content", "query", "--uri", f"{uri}/raw_contacts", "--projection", "_id", check=False))]
+    if not ids:
+        print("  cảnh báo: không thêm được liên hệ vào danh bạ máy ảo")
+        return
+    rid = max(ids)
+    for mime, value in (("vnd.android.cursor.item/phone_v2", number), ("vnd.android.cursor.item/name", "Con (thử)")):
+        adb("shell", "content", "insert", "--uri", f"{uri}/data", "--bind", f"raw_contact_id:i:{rid}",
+            "--bind", f"mimetype:s:{mime}", "--bind", f"data1:s:{value}", check=False)
+
+
+def clear_contacts() -> None:
+    adb("shell", "content", "delete", "--uri", "content://com.android.contacts/raw_contacts", check=False)
+
+
+def benign_once(caller: str) -> bool | None:
+    """Cuộc gọi hợp lệ + mở app ngân hàng: True = E7 KHÔNG hiện (đúng), False = báo nhầm, None = lỗi môi trường."""
+    number = PHONES[caller]
+    flush_modem()
+    # Cửa sổ rủi ro của lượt trước còn mở 10 phút sau cuộc gọi: giữ nguyên thì mở app ngân hàng sẽ báo vì lượt TRƯỚC, không phải vì cuộc gọi này.
+    adb("shell", "am", "force-stop", SENTINEL)
+    adb("shell", "run-as", SENTINEL, "rm", "-f", "shared_prefs/risk_window.xml", check=False)
+    prepare("none")
+    add_contact(number)
+    if not ring(number):
+        clear_contacts()
+        return None
+    time.sleep(CALL_SETTLE_S)
+    adb("emu", "gsm", "accept", number)
+    wait_for(lambda: call_state() == 2, 15)
+    time.sleep(2)
+    adb("shell", "monkey", "-p", DEMOBANK, "-c", "android.intent.category.LAUNCHER", "1")
+    time.sleep(PAUSE_WAIT_S / 3)  # đủ lâu để một cảnh báo (nếu có) kịp hiện
+    shown = has_mark("pause_shown") or pause_visible()
+    adb("emu", "gsm", "cancel", number)
+    adb("shell", "input", "keyevent", "KEYCODE_HOME")
+    wait_for(lambda: call_state() == 0, 15)
+    clear_contacts()
+    time.sleep(2)
+    print(f"  cuộc gọi hợp lệ: E7 {'HIỆN (báo nhầm)' if shown else 'không hiện (đúng)'}")
+    return not shown
+
+
+def booth(name: str, runs: int) -> bool:
+    missing = [p for p in (SENTINEL, DEMOBANK) if not installed(p)]
+    if missing:
+        print(f"booth: thiếu app {', '.join(missing)}", file=sys.stderr)
+        return False
+    ok = True
+    for scenario_id in booth_plan(name):
+        scene = BOOTH_SCENES[scenario_id]
+        print(f"== {scenario_id} (gọi {scene.caller}, {'cần' if scene.expect_pause else 'không được'} hiện E7) ==")
+        if scene.expect_pause:
+            results = [r for _ in range(runs) if (r := fake_police_once("none", scene.caller)) is not None]
+            good = len(results) == runs and all(r["visible"] and int(r["pause"]) <= 3000 for r in results)
+        else:
+            results = [r for _ in range(runs) if (r := benign_once(scene.caller)) is not None]
+            good = len(results) == runs and all(results)
+        print(f"  {scenario_id}: {len(results)}/{runs} lần hợp lệ ⇒ {'ĐẠT' if good else 'TRƯỢT'}")
+        ok = ok and good
+    return ok
+
+
+def resumed_is_pause(dumpsys_activities: str, package: str) -> bool:
+    """Activity đang ở trên cùng có phải SafePauseActivity của đúng gói `package` không (bản release không có mốc HC_TIMING)."""
+    return any(
+        "ResumedActivity" in line and f" {package}/" in line and "SafePauseActivity" in line
+        for line in dumpsys_activities.splitlines()
+    )
+
+
+def pause_release_summary(times_ms: list[int]) -> str:
+    """Lượt đầu (nguội) báo riêng, p95 gộp CÓ lượt đầu: ngưỡng luật 4 không bỏ lượt nguội."""
+    p95 = percentile(times_ms, 0.95)
+    verdict = "ĐẠT" if p95 <= 3000 else "TRƯỢT"
+    return (
+        f"pause_release: {len(times_ms)} lượt · lượt đầu {times_ms[0]} ms · các lượt sau p50={statistics.median(times_ms[1:]) if len(times_ms) > 1 else '—'}"
+        f" · p95 gộp {p95} ms · ngưỡng ≤ 3000 ms ⇒ {verdict}"
+    )
+
+
+def pause_release_once(prep: str) -> int | None:
+    """Bản release/demo: từ lúc mở app ngân hàng tới lúc SafePauseActivity ở trên cùng (đo bằng đồng hồ máy chủ, hạt ~0,2 s)."""
+    number = PHONES["flagged_caller"]
+    flush_modem()
+    adb("shell", "run-as", SENTINEL, "rm", "-f", "shared_prefs/risk_window.xml", check=False)  # bản release không cho run-as: bỏ qua lỗi
+    prepare(prep)
+    if not ring(number):
+        return None
+    time.sleep(CALL_SETTLE_S)
+    adb("emu", "gsm", "accept", number)
+    wait_for(lambda: call_state() == 2, 15)
+    time.sleep(2)
+    t0 = time.monotonic()
+    adb("shell", "monkey", "-p", DEMOBANK, "-c", "android.intent.category.LAUNCHER", "1")
+    shown = wait_for(lambda: resumed_is_pause(adb("shell", "dumpsys", "activity", "activities", check=False), SENTINEL), PAUSE_WAIT_S, step_s=0.1)
+    elapsed = int((time.monotonic() - t0) * 1000)
+    adb("emu", "gsm", "cancel", number)
+    adb("shell", "input", "keyevent", "KEYCODE_HOME")
+    wait_for(lambda: call_state() == 0, 15)
+    time.sleep(2)
+    if not shown:
+        print("  lần chạy TRƯỢT: SafePause không hiện trong 30 s")
+        return None
+    print(f"  mở app ngân hàng → SafePause trên cùng: {elapsed} ms")
+    return elapsed
+
+
+def pause_release(runs: int, prep: str) -> bool:
+    if not installed(SENTINEL) or not installed(DEMOBANK):
+        print(f"pause_release: thiếu app {SENTINEL} hoặc {DEMOBANK}", file=sys.stderr)
+        return False
+    times = [t for _ in range(runs) if (t := pause_release_once(prep)) is not None]
+    if len(times) < runs:
+        print(f"pause_release: chỉ {len(times)}/{runs} lượt hiện SafePause ⇒ TRƯỢT")
+        return False
+    print(pause_release_summary(times))
+    return percentile(times, 0.95) <= 3000
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument(
@@ -436,6 +661,8 @@ def main() -> int:
             "bank_first",
             "launch_baseline",
             "call_state",
+            "booth",
+            "pause_release",
         ],
         default="smoke_call",
     )
@@ -446,8 +673,15 @@ def main() -> int:
         default="none",
         help="trạng thái app trước mỗi cuộc gọi (H1)",
     )
+    ap.add_argument("--playlist", default="all", help="scenario=booth: một scenarioId của danh sách phát /booth, hoặc 'all'")
     ap.add_argument("--avd", help="chỉ để ghi báo cáo; máy ảo phải đang chạy")
     args = ap.parse_args()
+    if args.scenario == "booth":
+        try:
+            booth_plan(args.playlist)
+        except ValueError as e:
+            print(e, file=sys.stderr)
+            return 2
 
     if "emulator-" not in adb("devices"):
         print(
@@ -457,6 +691,7 @@ def main() -> int:
         return 2
     # Bộ đệm logcat mặc định của máy ảo (2 MiB) có thể xoay vòng mất mốc trong một lần chạy dài.
     adb("logcat", "-G", "16M", check=False)
+    ensure_ready()
     sdk = adb("shell", "getprop", "ro.build.version.sdk").strip()
     print(f"Máy ảo API {sdk}{f' ({args.avd})' if args.avd else ''}")
     if args.scenario == "smoke_call":
@@ -469,6 +704,10 @@ def main() -> int:
         ok = launch_baseline(args.runs)
     elif args.scenario == "call_state":
         ok = call_state_scenario(args.runs)
+    elif args.scenario == "booth":
+        ok = booth(args.playlist, args.runs)
+    elif args.scenario == "pause_release":
+        ok = pause_release(args.runs, "force-stop" if args.prep == "none" else args.prep)
     else:
         ok = fake_police(args.runs, args.prep)
     return 0 if ok else 1

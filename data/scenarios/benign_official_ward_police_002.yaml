@@ -1,0 +1,22 @@
+id: benign_official_ward_police_002
+category: benign_official
+is_benign: true
+twin_of: fake_police_vneid_guide_003
+region: north
+channel: phone_call
+script_vi: |
+  Công an phường gọi mời bác ra trụ sở bổ sung thông tin cư trú, hẹn giờ làm việc, không hướng dẫn cài ứng dụng
+  hay chuyển tiền.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: none}
+elder_answers: {claims_authority: "yes", asks_transfer: "no"}
+expected:
+  min_risk_level: none
+  max_risk_level: low
+  notify_guardian: false
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Công an thật mời lên trụ sở làm việc trực tiếp"
+source_ref: "CAND 02/10/2026 – Ma trận lừa đảo nhắm vào người già (Hà Tĩnh): https://cand.vn/ma-tran-lua-dao-tren-khong-gian-mang-nham-vao-nguoi-gia-yeu-the-post823770.html"
+draft: true

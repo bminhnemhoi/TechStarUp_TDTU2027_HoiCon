@@ -1,0 +1,127 @@
+# Bằng chứng nghiệm thu Spec 024: Đánh giá rủi ro, câu hỏi nhanh E8 & tác tử can thiệp
+
+- **Ngày đo**: 16/10/2026 (rà soát độc lập, viết lại toàn bộ bản bằng chứng trước đó)
+- **Môi trường**: Linux CachyOS · Postgres dev (Docker, cổng 15432) · JBR Android Studio · AVD API 36 (`sdk_gphone64_x86_64`)
+- **Nguồn số**: máy dev + máy ảo. Không có số đo máy thật, không có FCM thật, không có LLM thật (eval dùng phản hồi ghi sẵn).
+
+## Bản bằng chứng trước bị sai ở đâu
+
+| Ghi trước đây | Thực tế khi rà soát |
+|---|---|
+| T006 "scam ⇒ `case_open` tại `resolve`" | Chưa làm: `resolve` vẫn ra `resolved_prevented` và không ghi gì vào sự cố |
+| SC-005 "10/10 test đồ thị T1/T2/T3" | Không có test nào của spec 024 cho hẹn giờ; test đồ thị cũ không đổi |
+| SC-001 "p50/p95 227/327 ms" | Là độ trễ eval smoke (LLM ghi sẵn), không phải độ trễ giao tóm tắt tới người giám hộ |
+| SC-004 "WCAG AAA" qua unit test | Không test UI; màn E8 có chữ 16–18sp, nút 52dp, chữ xám ~3,5:1, chữ trắng trên cam ~4,5:1 |
+| T010 "retry an toàn" | Gửi một lần trong `lifecycleScope` rồi `finish()` ⇒ có thể mất câu trả lời, không thử lại |
+
+## Kết quả sau rà soát
+
+| Tiêu chí | Kết quả | Trạng thái |
+|---|---|---|
+| SC-001 tóm tắt p95 ≤ 15 s | Đo ở lượt 10 (T024, xem "Lượt 10" bên dưới): đồ thị thật + LLM giả + Zalo mock, p95 ≈ 0,13 s. **Với LLM thật/Zalo thật vẫn CHƯA ĐO** (chưa có khóa); trần LLM 4 s/lần gọi + mẫu dự phòng giữ nguyên | ĐẠT (máy dev, Zalo mock); **chưa đo với LLM thật** |
+| SC-002 `level ≥ rule_floor`, E8 "có" ⇒ nâng | `test_elder_answer_raises_level_above_floor`: sàn `medium`, LLM giả cố hạ `low`, "Không quen" ⇒ `high`; eval smoke 0 vi phạm | ĐẠT |
+| SC-003 công khai AI, chỉ enum | `test_every_elder_question_discloses_ai` (mọi câu, thật + diễn tập); schema + API chỉ nhận enum + cờ bool | ĐẠT |
+| SC-004 màn E8 | Ảnh máy ảo API 36 ở cỡ chữ 100% và 200% (bên dưới); chữ ≥ 20sp, vùng chạm ≥ 64dp, "CÓ" trắng trên `BrandOrangeText` ≈ 8,5:1, "KHÔNG" trắng trên `BrandNavy` ≈ 11,5:1; 200% vẫn thấy đủ 3 nút | ĐẠT (máy ảo) |
+| SC-005 T1/T2/T3 qua jobs | `test_guardian_decision_outside_graph_stops_reminders`, `test_t3_without_answer_closes_incident_as_no_response`, `test_zalo_scam_reply_keeps_case_open`; kill -9: `test_graph_durable` (đã có) | ĐẠT |
+| SC-006 eval smoke so baseline | 20 ca · recall 100% · báo nhầm 0% · vi phạm 0 · công khai AI 100% · so baseline +0,0 / +0,0 | ĐẠT |
+
+## Lệnh đã chạy (16/10/2026, sau khi sửa)
+
+| Lệnh | Kết quả |
+|---|---|
+| `uv run --directory backend pytest -o cache_dir=/tmp/pytest_cache` | 1025 passed, thứ tự ngẫu nhiên (trước rà soát: 1016) |
+| `ruff check` / `ruff format --check` (`src/ tests/`) | sạch / 137 file đã định dạng |
+| `./apps/android/gradlew -p apps/android :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` | BUILD SUCCESSFUL; 104 test JVM, 0 lỗi (`ElderApiClientTest` 6) |
+| `gitleaks dir --config .gitleaks.toml` từng thư mục: `backend/src`, `apps/android/app/src`, `backend/tests`, `docs/schemas`, `specs/024-…` | 0 phát hiện mỗi thư mục |
+| `hoicon-eval --suite smoke --compare baseline --shared-db-ok` | ĐẠT (bảng trên) |
+| `python3 scripts/check-spec-trace.py` | 11 spec, 0 lỗi |
+
+Lưu ý: `gitleaks dir … backend/src apps/android/app/src` (hai đường dẫn trong một lệnh) KHÔNG quét hai thư mục đó mà quét
+cả cây làm việc, nên báo `backend/.env` và `apps/web/.next/` (cả hai bị git bỏ qua, không vào repo). Phải quét từng thư mục.
+
+Ảnh E8 (máy ảo API 36, ngoài repo): `~/hoicon-evidence/024-risk-and-intervention/024-e8-{real,drill}-{100,200}.png`.
+Activity `exported=false` nên ảnh được chụp từ một bản build tạm đặt `exported=true`. Manifest đã khôi phục và bản
+chuẩn đã cài lại; `am start` từ shell giờ bị từ chối như mong đợi.
+
+## Lượt review đầy đủ (JEV FULL_REVIEW)
+
+- Tra danh sách đe dọa ở `POST /v1/events` từng mượn kết nối thứ hai của pool khi đang giữ khóa thiết bị ⇒ nay tra trong
+  SAVEPOINT của chính giao dịch (`prepare_event(session, …)`); test `test_flagged_caller_is_looked_up_inside_the_batch`.
+- Uvicorn thật: có DB ⇒ `/healthz` 200, `/readyz` 200, runtime mở/đóng sạch. DB không với tới ⇒ `/healthz` 200,
+  `/readyz` 503, worker thử lại; tắt API có trần (`SHUTDOWN_WAIT_S` = 10 s, đo 12 s).
+- DB dev còn 87 job `start_graph` cũ mang `h1` (từ lượt chạy code trước khi sửa, dữ liệu test hư cấu) ⇒ đã xóa; sau
+  lượt pytest đầy đủ: 0 job mang `h1`.
+
+## T013: đường tự kéo `pending-question` (Android, 18/10/2026)
+
+- **Cách làm:** `POST /v1/events` trả `incident_id`/`incident_opened` (`events_result.v1.json`); `PairingApiClient` đọc ra
+  `EventsResult.AcceptedWithIncident`; `OutboxSender` gọi `onIncident(id)` sau khi đánh dấu lô đã gửi;
+  `SentinelServices.flushOutbox` xếp `ElderQuestionWorker` (cần mạng, KEEP theo sự cố); worker hỏi
+  `GET /v1/incidents/{id}/pending-question` (thử lại tới 6 lần cách 2 giây vì đồ thị tới `ask_elder` chậm hơn lô một chút), rồi mở
+  `ElderQuestionActivity` bằng đúng cách SafePause mở từ nền (quyền "hiển thị trên ứng dụng khác"). Mỗi câu hỏi chỉ mở một lần
+  (`ElderQuestionStore`, chỉ lưu id). Chỗ cắm FCM: một push chỉ cần gọi cùng đường `claim` + `createIntent`.
+- **Test JVM (đỏ nếu hỏng):** `EventsApiClientTest` (có/không/hỏng `incident_id`), `OutboxSenderTest` (chuyển tiếp incident; không chuyển
+  khi lỗi/từ chối/rút đồng ý; vẫn chuyển khi tách lô hỏng), `ElderQuestionPollerTest` (tìm thấy sau vài lần 404; không chờ sau lần cuối; lỗi
+  mạng ⇒ thử lại; token bị từ chối ⇒ dừng; một câu hỏi không mở hai lần). Cổng: `:app:testDebugUnitTest` 248 test, 0 lỗi.
+- **Chạy thật trên hc-api36** (backend dev cổng 18001, Zalo mock): giả lập cuộc gọi lạ (số hư cấu) → mở app ngân hàng mẫu → sự kiện lên
+  máy chủ (`POST /v1/events` 200) → `GET …/pending-question` 404, 404, 404 rồi **200** → `ElderQuestionActivity` tự mở (04:49 UTC) →
+  bấm KHÔNG → `POST …/answers` 200, log máy chủ `elder_answer … answer=no`. Ảnh: `~/hoicon-evidence/024-risk-and-intervention/e8-pull-{100,200}.png`.
+- **Chưa kiểm:** FCM thật; E8 mở khi chưa cấp quyền "hiển thị trên ứng dụng khác" (Android chặn mở từ nền, chưa có thông báo dự phòng);
+  hc-api34/29; máy thật; E8 hiện 3 nút ngang hàng (CÓ/KHÔNG/KHÔNG RÕ) trong khi luật 15 nói ≤ 2 hành động chính (có sẵn từ T009, chưa xử lý ở đây).
+
+## Còn mở (không đánh ☑)
+
+- **E8 mở trên máy bằng đường tự kéo, chưa có FCM thật** (T013, 18/10/2026): xem mục "T013" bên dưới. FCM thật chờ P0-08 (Firebase);
+  máy chủ chỉ có FCM mock.
+- SC-001 với LLM thật. (Câu cũ "mức nâng sau E8 chưa ghi ngược vào `incidents.level`" **sai**: node `verification` chạy sau `risk_scorer` và đã ghi xuyên `incidents.level` bằng `IncidentService.raise_level`; xem T023 ở "Lượt 10".)
+- FR-006 "nâng mức ⇒ đánh thức đồ thị": đồ thị khởi động khi sự cố đạt `high`/`critical` (mở mới hoặc được nâng), chưa
+  đánh thức lượt đang chạy khi mức tăng thêm.
+- Client TS (`apps/web/src/lib/api/schema.d.ts`) chưa sinh lại từ spec 020 tới nay (`scripts/gen-api-client.sh`).
+
+## Wave 3 — F-2 (ADR-012), làn B, 22/10/2026
+
+- **T014 ĐẠT** (đỏ trước): `test_guardian_brief_schema.py`, `test_brief_points.py` lỗi import; `-k prose_injection` đỏ ở dạng v1 trước khi sửa mã.
+- **T015 ĐẠT:** `GuardianBrief` v2 (`extra=forbid`, 1–3 mã không trùng), `brief_points`, `texts.BRIEF_POINT_VI`/`brief_summary`, `prompts/intervention.md` v2, 20 cassette smoke sửa sang `points` + `intervention@2`, `docs/AGENTS.md`. `agent_steps.output` chỉ ghi mã `points_kept/points_dropped`.
+- **T018 ĐẠT** (2 reviewer, môi trường: subagent đọc diff; lần đầu chết vì lỗi mạng, chạy lại):
+  - bảo mật: 0 Critical/0 High; Medium #1 (`may_be_routine` đứng cạnh dữ kiện nguy hiểm) → SỬA: bỏ khi `flagged`/xưng cơ quan/đòi tiền/giữ kín/cài app; Medium #2 (kiểm eval hở alias và đuôi sau `\n\n`) → SỬA: alias chỉ chữ cái/cách/`/` ≤ 20, đuôi phải đúng `REPLY_GUIDE_NO_DETAIL`.
+  - UX: Chặn B1 (trấn an cạnh cảnh báo) → SỬA bằng luật loại trừ trên + câu mới; B2 (nói như đã nghe cuộc gọi) → SỬA: 4 câu dùng "{alias} cho biết …"; Cao H1 (chữ hoa đầu câu với alias "bác Hùng") → SỬA trong `brief_summary`; H2 (`common_scam_pattern` "Đây là…") → SỬA câu; M1/M3/L1/L2 → SỬA câu.
+  - **CHƯA sửa, cần Opus** (đổi `spec.md` §5 bảng câu chữ, tôi không sửa spec): thứ tự ghép cố định (sự kiện → nghi ngờ → nhận định) và loại trừ `common_scam_pattern`/`may_be_routine`; H3 câu `call_still_ongoing` kèm "máy báo bận" (sửa `ACTION_VI`); M2 (`sideloaded_app` lặp ý với ứng dụng tài chính); câu sửa B2 thêm "cho biết" nghĩa là spec §5 đã lệch mã. Bảng spec §5 nay khác `BRIEF_POINT_VI`.
+  - Security Low chưa sửa: #3 số `19001234` trong cassette `fake_tax_debt_link_001` (có từ trước), #4 `unknown_call_then_finance_app` không xét danh bạ, #5 `common_scam_pattern` luôn đúng kể cả mức thấp, #6 `reasons` LLM nằm trong checkpoint; `_UNSAFE_SUMMARY` nay là mã chết (giữ cho test).
+- **T019 ĐẠT:** pytest 2273 passed/21 skipped; ruff sạch; smoke 20 ca, full 110 ca, injection **17/17**, đều recall 100%, báo nhầm 0%, 0 vi phạm, công khai AI 100%, không lệch baseline; `check-spec-trace` 0 lỗi; gitleaks 8 thư mục sạch; `alembic heads` = 1. **SC-007 ĐẠT** trên cassette `synthetic` (n=1 lượt/suite, máy dev; chưa chứng minh bằng model thật, P0-08). SC-008/F-1: BLOCKED chờ Minh (§8 mục 8); T016/T017 không làm.
+
+## Wave 5 — FR-013 (T020/T021), làn B, 23/10/2026
+
+- **T020 ĐẠT** (đỏ trước): `pytest tests/unit/test_brief_points.py` 22 failed / 42 passed — đỏ đúng ở (c) hoán vị, (d) hai mã nhận định, (e) chỉ nhận định, (f) tóm tắt rỗng, (g) câu "máy bận"; (a) bảng = mã và (b) thứ tự khóa = enum hợp đồng = cột "#" xanh sẵn. 5 test cũ mâu thuẫn FR-013 đã đảo chiều (thứ tự theo bảng; `common_scam_pattern` cần ≥ 1 điểm trước nó; không ứng dụng ⇒ rỗng).
+- **T021 ĐẠT:** `brief_points` 4 bước (lọc/cắt 3 → một mã nhận định → chỉ nhận định thì rơi về bộ mặc định → sắp theo bảng); `texts.ACTION_BUSY_VI`; `guardian_detail(..., call_ongoing=)` bỏ hẳn phần tóm tắt khi rỗng, thêm câu "máy bận" chỉ với `call_now`/`call_and_stay_on_line`; `fallback` của `intervention` dùng `["common_scam_pattern"]` làm chỗ giữ (hợp đồng đòi ≥ 1 mã), `brief_points` lọc lại. Bộ kiểm eval 036: tóm tắt rỗng hợp lệ, đuôi hành động nhận thêm câu bận. Test cũ "tóm tắt rỗng là vi phạm" đảo chiều (rỗng không chứa chữ lạ).
+- Số đo: `cassettes check` khớp (không cần sinh lại); smoke 20 ca, full 110 ca, injection 17/17 — recall 100%, báo nhầm 0%, 0 vi phạm, công khai AI 100%, không lệch baseline (cassette `synthetic`, chưa phải số M3).
+- `ux-elder-reviewer` đọc 3 tin mẫu: 0 High, 5 Medium. **CHƯA sửa, cần Opus** (đều đổi chữ bảng spec §5/`ACTION_VI`, ngoài quyền): (1) tin rất cao mở bằng "Mức nguy cơ: rất cao." trước việc cần làm — đề xuất "Cần anh/chị gọi ngay cho {alias} (mức nguy cơ: rất cao)."; (2) hai câu "{alias} cho biết…" liên tiếp — đề xuất gộp, thêm "(OTP)"; (3) tin có `call_still_ongoing` đã có câu bận nhưng tin không có nó thì thiếu hướng dẫn khi bác không nghe máy; (4) câu `common_scam_pattern` đứng cạnh `call_still_ongoing` — đề xuất "giống các cuộc gọi giả danh… nhưng trợ lý chưa chắc chắn"; (5) tóm tắt rỗng chỉ còn mức + lệnh gọi, người nhận không biết vì sao — đề xuất một câu trung tính thay phần bị bỏ.
+- Cổng cuối: pytest 2726 passed/21 skipped; ruff sạch; `alembic heads` = 1 (0012); `check-spec-trace` 0 lỗi; gitleaks quét từng thư mục (`backend/src|tests|eval`, `data`, `specs`, `infra`, `apps/web/src`) sạch. `docs` có 1 dương tính giả: `docs/schemas/fixtures/device_me.v1.invalid.json:28` là SHA-256 của chuỗi rỗng (fixture "invalid" của Opus, không phải bí mật). Lưu ý: `gitleaks dir` chỉ nhận một đường dẫn; lệnh nhiều đường dẫn trong chỉ dẫn lần này quét cả `apps/web/.next` và `backend/.env` (bị ignore).
+
+## Lượt 10 (làn B, 25/10/2026)
+
+### T023 — mức nâng sau E8 ghi ngược `incidents.level`
+Đọc đồ thị: `ask_elder → risk_scorer → verification → intervention`; `verification` gọi `IncidentService.raise_level(..., "graph_verify")` với mức hiện hành của state (đã gồm mức `risk_scorer` nâng sau câu trả lời), nên **hành vi đã đúng từ 026**; ghi chú "chưa ghi ngược" của evidence cũ là sai. Không đổi mã. Thêm `tests/integration/test_graph_elder_answer_level.py` (3 ca): trả lời "có" (đang bị bảo chuyển tiền) ⇒ `incidents.level` = `critical`, `rule_floor` giữ `high`; trả lời không nâng ⇒ level và `version` không đổi; LLM nói `low` ⇒ không hạ dưới `high`. Test KHÔNG đỏ trước khi đổi mã (không có gì để đổi); kiểm hiệu lực bằng đột biến: thay lời gọi `raise_level` bằng lỗi ⇒ ca đầu đỏ, bỏ đột biến ⇒ xanh. Verify: `pytest tests/integration -k elder_answer` xanh.
+
+### T024 — đo SC-001 (tóm tắt tới người giám hộ)
+`tests/integration/test_summary_latency.py`: 20 lượt qua `IncidentRuntime` thật (Postgres thật), LLM giả trả tức thì, client Zalo mock có dấu thời gian; đo từ lúc nhận lô sự kiện (mốc `time.monotonic()` ngay trước `runtime.start`) tới lúc `send_to_guardian` gọi `send_message` cho tin `detail` (node `intervention`).
+
+| Số đo | Giá trị | Nguồn |
+|---|---|---|
+| n | 20 | máy dev, Zalo mock, LLM giả |
+| p50 / p95 / max | 0,091 s / 0,128 s / 0,128 s | một lần chạy, 25/10/2026 |
+| Trần SC-001 | p95 ≤ 15 s | test khẳng định |
+
+Giới hạn: không gồm nhịp thăm dò worker (≤ 0,5 s/tin), độ trễ LLM thật (trần cứng 4 s/lần, 2 lần gọi ⇒ ≤ 8 s + điều phối) hay độ trễ mạng Zalo thật; số này KHÔNG dùng làm số M3. **Câu cũ "p50/p95 227/327 ms" là số eval smoke (LLM ghi sẵn), đã bị gỡ khỏi mọi tuyên bố SC-001** (dòng bảng "Ghi trước đây" ở đầu tệp đã ghi rõ).
+
+## Lượt 10 (làn A, 25/10/2026) — T022 E8: ≤ 2 hành động chính + thông báo dự phòng
+
+**Nguồn: hc-api34, bản debug, backend dev cổng 18001 (đồ thị thật, `llm fallback: no_api_key` ⇒ mẫu soạn sẵn); máy ảo ≠ máy thật.**
+- **Đã làm:** `elderAnswerLayout()` — "CÓ" và "KHÔNG" là hai nút đặc (đo uiautomator **71,2 dp**), "Không rõ" là **nút chữ phụ** gạch chân (**67,0 dp**; trước là nút viền thứ ba); thứ tự máy chủ gửi không đổi nút nào là nút nào; mã gửi máy chủ **không đổi** (`yes`/`no`/`unsure`). Khi thiếu "hiển thị trên ứng dụng khác": `ElderQuestionWorker` chọn `elderQuestionOpenMode(canDrawOverlays)` ⇒ `Notifications.showElderQuestion` (kênh `safe_pause` có sẵn, **không xin quyền mới**, `subText` "Trợ lý AI HỏiCon", `FLAG_IMMUTABLE`, nội dung cố định không chứa câu hỏi/PII; chạm ⇒ mở E8). Test `ElderAnswerLayoutTest` (4) + `ElderQuestionOpenTest` (2): đỏ (không biên dịch) → xanh.
+- **Chạy thật (đồ thị thật, 1 gia đình dev mỗi lượt vì mỗi sự cố chỉ hỏi một lần):** overlay bật ⇒ SafePause rồi **E8 tự mở** (100% và 200%, ảnh `e8-top`, `e8-200-top`); overlay `deny` ⇒ **thông báo "…hỏi bác" hiện sau ~6 s** và **chạm ⇒ `ElderQuestionActivity` ở trên cùng** (`e8-fallback-notification`, `e8-after-tap`). Ảnh `~/hoicon-evidence/024-risk-and-intervention/t022/`.
+- **Harness (ghi để khỏi lặp):** `modem_rings()` thăm dò lặp (gọi/hủy mỗi 2 s trong ≤ 180 s) **tự làm kẹt modem giả** sau cold boot hc-api34 (0/3 cuộc gọi đổ chuông cả khi đã 7 phút) — chờ yên ≥ 3 phút rồi gọi MỘT cuộc thì bình thường. `appops set … SYSTEM_ALERT_WINDOW deny` bị đảo về `allow` nếu chạy TRƯỚC `cmd role add-role-holder`; đặt `deny` SAU cùng.
+- **`ux-elder-reviewer`: lỗi bản dựng 0 Chặn, 1 Cao** (nhãn TalkBack "Có, đồng ý với câu hỏi"/"Không, không đồng ý…" sai nghĩa) ⇒ **đã sửa** ("Trả lời Có/Không/Không rõ"); sửa thêm: khoảng cách nút 12 → 20 dp, thông báo rút gọn ("Trợ lý AI HỏiCon hỏi bác" / "Chạm để trả lời, chỉ vài giây."). Còn mở (không chặn): dòng "Tự động đóng sau N giây" gây cảm giác thúc ép + bị cắt ở 200%; E8 diễn tập chưa chụp (nhãn "[DIỄN TẬP]" nằm trong vùng cuộn); biểu tượng cho nút; chữ nằm trong Kotlin chứ chưa vào `strings.xml`; hai thông báo ưu tiên cao liền nhau (dừng an toàn + câu hỏi) thuộc spec 010; câu hỏi máy chủ nên ghi "mã xác thực (OTP)". **Cần Opus/Minh:** thông báo có tính là "tin đầu tiên tới người cao tuổi" của luật 6 không (hiện có `subText` "Trợ lý AI HỏiCon" + tiêu đề nêu "Trợ lý AI").
+- Chưa đo: TalkBack thật; ảnh sau khi chạm Có/Không; hết 60 giây.
+
+### Rà soát bảo mật (`security-privacy-reviewer`, nhánh feat/w10-android): 0 Chặn · 0 Cao · 3 TB · 4 Thấp
+- **Đã sửa:** (3) `ElderAnswerWorker` không kiểm `mayShare()` ⇒ câu trả lời đã xếp hàng vẫn lọt sau khi tắt `guardian_alerts` ⇒ thêm kiểm; (5) `request_id` ghép vào đường DELETE ⇒ chỉ nhận UUID (test); (6) `DataRequestApiClient` bắt thêm `RuntimeException`.
+- **Còn mở, cần Opus:** (1) `serverHasPurged` chỉ dựa vào `needsRepair` (mọi 401 từ worker nào cũng đặt) sau `execute_after` — có thể xóa cục bộ nhầm nếu token hết hạn vì lý do khác và máy chủ chưa purge; cần xác nhận rõ từ máy chủ (vd. `GET /v1/data-requests/{id}` = executed hoặc mã lỗi riêng) ⇒ đề xuất cho 038 T007 [B]; (2) dòng sổ `guardian_alerts false` chỉ được thử gửi lại ở `onResume` của E6 (offline lúc tắt ⇒ máy chủ vẫn coi là đồng ý tới lần mở app kế) — nên có worker thử lại; (4) `wipeAfterPurge` xóa token/outbox/drill nhưng chưa xóa Room/`CallSignalStore` — cần xác minh; (7) độ trễ cộng dồn `CALL_SETTLE_S` của harness, không phải bảo mật. Chưa kiểm phía máy chủ (route/purge/hủy).

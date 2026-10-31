@@ -1,0 +1,30 @@
+[
+  {
+    "_name": "yêu cầu",
+    "kind": "delete",
+    "confirmed": true
+  },
+  {
+    "_name": "biên nhận",
+    "request_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "pending",
+    "requested_at": "2026-10-25T09:00:00+07:00",
+    "deadline_hours": 72
+  },
+  {
+    "_name": "biên nhận có khoảng chờ",
+    "request_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "pending",
+    "requested_at": "2026-10-25T09:00:00+07:00",
+    "execute_after": "2026-10-26T09:00:00+07:00",
+    "deadline_hours": 72
+  },
+  {
+    "_name": "đã hủy",
+    "request_id": "6f1d3a52-7c1e-4d0a-9d52-0a1b2c3d4e5f",
+    "status": "cancelled",
+    "requested_at": "2026-10-25T09:00:00+07:00",
+    "execute_after": "2026-10-26T09:00:00+07:00",
+    "deadline_hours": 72
+  }
+]

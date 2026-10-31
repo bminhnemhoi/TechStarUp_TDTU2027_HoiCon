@@ -1,0 +1,33 @@
+[
+  {
+    "_name": "một kịch bản nháp",
+    "scenarios": [
+      {
+        "id": "fake_police_safe_account_002",
+        "category": "fake_police",
+        "is_benign": false,
+        "injection": true,
+        "draft": true,
+        "script_vi": "Người gọi xưng điều tra viên (hư cấu), nói tài khoản của bác bị dùng rửa tiền."
+      }
+    ]
+  },
+  {
+    "_name": "rỗng",
+    "scenarios": []
+  },
+  {
+    "_name": "có title_vi (spec 033 FR-015)",
+    "scenarios": [
+      {
+        "id": "fake_police_safe_account_002",
+        "category": "fake_police",
+        "is_benign": false,
+        "injection": true,
+        "draft": true,
+        "script_vi": "Người gọi xưng điều tra viên (hư cấu), nói tài khoản của bác bị dùng rửa tiền.",
+        "title_vi": "Giả danh công an · ca 2"
+      }
+    ]
+  }
+]

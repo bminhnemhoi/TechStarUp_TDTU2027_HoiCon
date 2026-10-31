@@ -5,6 +5,7 @@ Hướng dẫn cho mọi tác tử lập trình (Claude Code, Codex, Gemini CLI,
 - **Nguồn quy tắc chính là `CLAUDE.md`** — đọc và tuân theo toàn bộ (quyền riêng tư, Android cấm quyền, LLM chỉ nâng rủi ro, công khai AI, Definition of Done).
 - Tài liệu nguồn sự thật nằm trong `docs/` (ROADMAP, PRD, ARCHITECTURE, DATA-MODEL, API, AGENTS, DESIGN-SYSTEM, PRIVACY-DPIA, PLAY-POLICY, EMULATOR).
 - Chỉ làm task có mã trong `docs/ROADMAP.md`. Báo cáo bằng tiếng Việt. Không commit/push khi chưa được yêu cầu.
+- **Kỷ luật Master Plan**: Tuyệt đối không tự bịa Đợt hay kế hoạch mới. Nguồn sự thật duy nhất về tên đợt và danh mục spec là `docs/MASTER-PLAN.md` (§3) và `docs/ROADMAP.md` (chỉ có 7 Đợt: từ Đợt 0 đến Đợt 6). Phân biệt rõ "Đợt của Master Plan" với "Lượt chạy song song" của lính.
 - Không đọc `.env*`, keystore, `D:/secrets`. Không hardcode số điện thoại thật; fixture hư cấu đặt trong `tests/` hoặc `data/`.
 - Next.js: API thay đổi giữa các phiên bản — đọc tài liệu trong `apps/web/node_modules/next/dist/docs/` trước khi dùng API lạ.
 - Android: dùng Android CLI (`D:/Android/Sdk/cmdline-tools/latest/bin/android.exe`) cho `emulator`, `run`, `layout`, `screen`, `docs`; xem `docs/EMULATOR.md`.

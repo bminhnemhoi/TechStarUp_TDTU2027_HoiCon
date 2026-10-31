@@ -1,0 +1,11 @@
+[
+  {
+    "_name": "mặc định replay",
+    "scenario_id": "fake_police_safe_account_002"
+  },
+  {
+    "_name": "live",
+    "scenario_id": "benign_family_vegetables_001",
+    "llm": "live"
+  }
+]

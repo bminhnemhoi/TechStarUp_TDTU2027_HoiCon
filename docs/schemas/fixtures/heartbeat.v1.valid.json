@@ -1,0 +1,36 @@
+[
+  {
+    "_name": "android_full",
+    "_why": "Thân Android dựng cho HeartbeatStatus đủ trường; test Android ghim đúng nội dung này",
+    "app_version": "0.3.0",
+    "rules_version": "0.2.0",
+    "threat_list_version": "3f9a1c07d25e8b46",
+    "permission_state": {
+      "call_screening_role": true,
+      "display_over_apps": true,
+      "usage_access": true,
+      "notifications": false,
+      "battery_unrestricted": false
+    }
+  },
+  {
+    "_name": "android_minimal",
+    "_why": "Máy chưa tải danh sách mối đe dọa: không có threat_list_version; mọi quyền tắt",
+    "app_version": "0.3.0-debug",
+    "rules_version": "0.2.0",
+    "permission_state": {
+      "call_screening_role": false,
+      "display_over_apps": false,
+      "usage_access": false,
+      "notifications": false,
+      "battery_unrestricted": false
+    }
+  },
+  {
+    "_name": "empty_permission_state",
+    "_why": "Bản đồ quyền rỗng vẫn hợp lệ (chưa biết quyền nào)",
+    "app_version": "0.3.0",
+    "rules_version": "0.2.0",
+    "permission_state": {}
+  }
+]

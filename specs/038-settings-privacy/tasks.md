@@ -1,0 +1,26 @@
+# Tasks 038 — Cài đặt & quyền riêng tư (E12)
+
+**Chế độ**: tự hành một mạch. `[A]` = `apps/android/**`; `[B]` = `backend/**`. Test đỏ trước. `$PYTEST` = `uv run --directory backend pytest`;
+`$GRADLE` = `apps/android/gradlew -p apps/android`. Dừng khi Verify đỏ 2 lần liên tiếp.
+
+- [x] T001 [AB] [FR-003, FR-004] *(kiến trúc sư)* `docs/schemas/data_request.v1.json` + fixture valid/invalid. · Verify: kiểm fixture bằng jsonschema
+- [x] T002 [B] [FR-004] Test hợp đồng + test đỏ `tests/integration/test_api_data_requests.py`: chỉ thiết bị `protected`; lũy đẳng; 3/ngày; được phép khi đã rút
+  đồng ý; ghi `requested_via='app'`; xếp tin báo (mở đầu công khai AI) trước `purge_family` chỉ khi còn `guardian_alerts` (đã rút ⇒ 0 tin); purge xong ⇒ token cũ 401/403. Rồi hiện thực.
+  · Verify: `$PYTEST tests/contract tests/integration/test_api_data_requests.py tests/integration/test_purge_family.py -q`
+- [x] T003 [A] [FR-001, FR-002] E12 trong `PermissionsScreen.kt`: thẻ mỗi mục đích; "Tắt" + xác nhận cho mục không gắn quyền ⇒ `ConsentLedger` ghi `granted=false`.
+  Test đơn vị + Compose đỏ trước. · Verify: `$GRADLE :app:testDebugUnitTest :app:lintDebug`
+- [x] T004 [A] [FR-003, FR-006] `PrivacyDeleteScreen.kt` (giữ 3 giây, offline ⇒ không gửi) + client `POST /v1/data-requests`; sau khi gửi **không xóa cục bộ ngay**:
+  E12 hiện "Sẽ xóa lúc …" + "Hủy yêu cầu xóa" (`DELETE /v1/data-requests/{id}`); chỉ xóa cục bộ + về E1 khi máy chủ từ chối token (401) sau `execute_after`.
+  · Verify: `$GRADLE :app:testDebugUnitTest` (test client với MockWebServer: 200/202, offline, 429)
+- [x] T005 [A] [FR-005, SC-002, SC-003, SC-004] Máy ảo hc-api36 + backend dev: đi hết E12 ⇒ xóa ⇒ `data_requests.done`; tắt `overlay_pause` rồi `fake_police --runs 3`;
+  ảnh 100/200% + `ux-elder-reviewer` 0 Chặn/Cao. · Verify: evidence.md (lệnh + kết quả)
+- [x] T006 [AB] Bộ kiểm cuối ($PYTEST, ruff, Gradle, check-spec-trace) + evidence SC-001…SC-004. · Verify: lệnh thoát 0
+- [x] T007 [B] [FR-006] Khoảng chờ 24 giờ: migration (`data_requests.execute_after`, trạng thái `cancelled`), `POST` trả `execute_after`, `purge_family` xếp với
+  `run_at = execute_after` và kiểm lại trạng thái lúc chạy, `DELETE /v1/data-requests/{id}` (chỉ thiết bị protected của gia đình đó; đã `done` ⇒ 409),
+  tin báo người giám hộ ghi giờ xóa. Test đỏ trước (hủy trong khoảng chờ ⇒ 0 dòng bị xóa; quá giờ ⇒ purge chạy). · Verify:
+  `$PYTEST tests/contract tests/integration/test_api_data_requests.py tests/integration/test_purge_family.py -q`
+- [x] T008 [A] [FR-005] Mục Trung bình của `ux-elder-reviewer` (evidence T005): băng "Sẽ xóa lúc …" lên **đầu** E12; sau Hủy hiện "Đã hủy yêu cầu
+  xóa. HỏiCon vẫn bảo vệ bác."; câu "đổi ý lúc nào cũng được" ⇒ "đổi ý trong 24 giờ chờ"; màn xác nhận tắt: **"Quay lại" là nút chính**, "Đúng, tắt"
+  nút phụ (an toàn mặc định); nhãn TalkBack phân biệt từng thẻ ("Tắt báo cho con cháu", …); tiêu đề E12 "Cài đặt và quyền riêng tư"; nút viền ≥ 64dp
+  (đo bằng `uiautomator dump`, không đo ảnh); ảnh 200% màn xác nhận tắt + trạng thái đang giữ. Test Compose đỏ trước; reviewer 0 Chặn/Cao.
+  · Verify: `apps/android/gradlew -p apps/android :app:testDebugUnitTest :app:lintDebug` + ảnh `~/hoicon-evidence/038-settings-privacy/t008/`

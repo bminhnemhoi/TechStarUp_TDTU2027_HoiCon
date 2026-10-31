@@ -1,0 +1,38 @@
+{
+  "case_id": "fake_police_grandchild_case_004",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@2"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "none",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi nói mọi việc ổn"
+        ],
+        "ask_question": "q_caller_authority"
+      },
+      {
+        "level": "none",
+        "tactic": "legit_likely",
+        "reasons": [
+          "Người cao tuổi nói mọi việc ổn"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "points": [
+          "may_be_routine"
+        ],
+        "action": "call_now"
+      }
+    ]
+  },
+  "notes": "LLM cố hạ mức xuống none; raise_only phải giữ mức sàn."
+}

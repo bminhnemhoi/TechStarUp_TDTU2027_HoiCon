@@ -3,21 +3,26 @@
 #   bash scripts/emu-start.sh hc-api36              # có cửa sổ (quay video, thao tác tay)
 #   bash scripts/emu-start.sh hc-api34 --headless   # không cửa sổ (test tự động)
 #   bash scripts/emu-start.sh hc-api29 --cold       # bỏ qua snapshot
-# Dừng: adb emu kill.  Gọi thẳng emulator.exe vì `android emulator start|list` không đọc ANDROID_AVD_HOME (D:\Android\avd).
+#   HC_GPU=host|auto|swangle|lavapipe bash scripts/emu-start.sh hc-api36   # đổi chế độ đồ họa
+#     Mặc định: Windows `auto`; Linux có cửa sổ `host` (GPU thật, mượt nhất); Linux --headless `auto` (SwiftShader,
+#     ổn định, giật ~4%). Đo 15/10/2026 trên CachyOS + RTX 4060: `-gpu host` + `-no-window` SIGSEGV (gfxstream) sau ~10 lần
+#     mở app liên tục; `auto`/`swangle` sống 30/30 vòng. Orca chạy AVD bằng `-no-window` ⇒ hw.gpu.mode của AVD đặt `auto`.
+# Dừng: adb emu kill.  Gọi thẳng emulator vì `android emulator start|list` không đọc ANDROID_AVD_HOME.
+# Chạy được trên Windows (Git Bash) và Linux — đường dẫn theo scripts/android-env.sh.
 set -euo pipefail
+. "$(dirname "$0")/android-env.sh"
 
 AVD="${1:?Cần tên AVD: hc-api36 | hc-api34 | hc-api29}"
 shift
-SDK="${ANDROID_HOME:-D:/Android/Sdk}"
-export ANDROID_HOME="$SDK" ANDROID_SDK_ROOT="$SDK" ANDROID_AVD_HOME="${ANDROID_AVD_HOME:-D:/Android/avd}"
-ADB="$SDK/platform-tools/adb.exe"
-EMU="$SDK/emulator/emulator.exe"
-LOG="D:/Android/emu-$AVD.log"
+LOG="${TMPDIR:-${TEMP:-/tmp}}/emu-$AVD.log"
+[ "$HC_OS" = windows ] && LOG="$ANDROID_ROOT/emu-$AVD.log"
 
-FLAGS=(-avd "$AVD" -timezone Asia/Ho_Chi_Minh -no-boot-anim -gpu auto -no-metrics)
+FLAGS=(-avd "$AVD" -timezone Asia/Ho_Chi_Minh -no-boot-anim -no-metrics)
+HEADLESS=0
+[ -n "${HC_EMU_EXTRA:-}" ] && read -r -a EXTRA <<<"$HC_EMU_EXTRA" && FLAGS+=("${EXTRA[@]}")   # cờ emulator tùy ý, vd "-feature -Vulkan"
 for a in "$@"; do
   case "$a" in
-    --headless) FLAGS+=(-no-window -no-audio) ;;
+    --headless) FLAGS+=(-no-window -no-audio); HEADLESS=1 ;;
     --cold) FLAGS+=(-no-snapshot-load) ;;
     *) echo "Tham số lạ: $a" >&2; exit 2 ;;
   esac
@@ -28,6 +33,20 @@ if "$ADB" devices | grep -q "^emulator-"; then
   "$ADB" devices >&2
   exit 1
 fi
+
+# Linux: máy ảo cần ~2,7 GB RAM thật. Dưới 3 GB trống thì hệ thống nhảy vào swap, boot chậm/treo (đo 29/10/2026: 14,8 GB zram).
+if [ "$HC_OS" = linux ] && [ -r /proc/meminfo ]; then
+  avail_mb=$(awk '/^MemAvailable:/ {print int($2/1024)}' /proc/meminfo)
+  if [ "${avail_mb:-9999}" -lt 3000 ]; then
+    echo "!! Chỉ còn ${avail_mb} MB RAM trống (cần ≥ 3000): đóng bớt Chrome / phiên Claude / MCP rồi chạy lại, hoặc đặt HC_ALLOW_LOW_RAM=1." >&2
+    [ -n "${HC_ALLOW_LOW_RAM:-}" ] || exit 1
+  fi
+fi
+
+if [ -z "${HC_GPU:-}" ]; then
+  if [ "$HC_OS" != linux ]; then HC_GPU=auto; elif [ "$HEADLESS" = 1 ]; then HC_GPU=auto; else HC_GPU=host; fi
+fi
+FLAGS+=(-gpu "$HC_GPU")
 
 "$EMU" -list-avds | grep -qx "$AVD" || { echo "Không có AVD $AVD — chạy bash scripts/avd-create.sh" >&2; exit 1; }
 

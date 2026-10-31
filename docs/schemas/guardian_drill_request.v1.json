@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/guardian_drill_request.v1.json",
+  "title": "GuardianDrillRequest v1",
+  "description": "Thân POST /v1/guardian/drills (spec 028 FR-011): người giám hộ đặt lịch một bài diễn tập cho người cao tuổi của gia đình mình. Máy chủ gọi DrillService.schedule (khung 30 phút–4 giờ, chưa qua, không chồng lấn, hạn mức tháng, đồng ý `drills`). Không có trường văn bản tự do.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "member_id",
+    "script_id",
+    "window_start",
+    "window_end"
+  ],
+  "properties": {
+    "member_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "script_id": {
+      "type": "string",
+      "pattern": "^drill_[a-z0-9_]{3,40}$"
+    },
+    "window_start": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "window_end": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

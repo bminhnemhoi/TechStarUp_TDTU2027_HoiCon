@@ -1,0 +1,41 @@
+{
+  "case_id": "investment_gold_app_001",
+  "source": "synthetic",
+  "behavior": "honest",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@2"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "critical",
+        "tactic": "investment_job",
+        "reasons": [
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
+        ],
+        "ask_question": "q_asked_transfer"
+      },
+      {
+        "level": "critical",
+        "tactic": "investment_job",
+        "reasons": [
+          "Người gọi lạ rồi mở ứng dụng tài chính",
+          "Người cao tuổi cho biết có yêu cầu chuyển tiền"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "points": [
+          "unknown_call_then_finance_app",
+          "asked_transfer_or_code",
+          "common_scam_pattern"
+        ],
+        "action": "call_and_stay_on_line"
+      }
+    ]
+  }
+}

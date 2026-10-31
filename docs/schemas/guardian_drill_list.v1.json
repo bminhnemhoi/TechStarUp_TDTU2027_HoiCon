@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/guardian_drill_list.v1.json",
+  "title": "GuardianDrillList v1",
+  "description": "Thân GET /v1/guardian/drills và phản hồi 201 của POST (một phần tử): lịch và lịch sử diễn tập của gia đình (DrillService.list_for_family, mới nhất trước, tối đa 50). Lỗi đặt lịch: 422 {\"detail\": <mã DrillRefused>} — mã trong `refusal_codes`. `elders`, `scripts` (thêm 24/10/2026, tùy chọn để mã cũ không gãy; GET luôn gửi): dữ liệu cho biểu mẫu đặt lịch.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "drills"
+  ],
+  "properties": {
+    "drills": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "$ref": "#/$defs/drill"
+      }
+    },
+    "elders": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "member_id",
+          "alias",
+          "drills_consent"
+        ],
+        "properties": {
+          "member_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "alias": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "description": "safe_alias, không tên thật"
+          },
+          "drills_consent": {
+            "type": "boolean",
+            "description": "Đã đồng ý mục đích `drills` chưa (chưa ⇒ biểu mẫu tắt nút và giải thích)"
+          }
+        }
+      }
+    },
+    "scripts": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "summary"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^drill_[a-z0-9_]{3,40}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "drill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "drill_id",
+        "member_alias",
+        "script_id",
+        "script_title",
+        "window_start",
+        "window_end",
+        "status",
+        "is_drill"
+      ],
+      "properties": {
+        "drill_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "member_alias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Bí danh gia đình đặt (safe_alias), không tên thật"
+        },
+        "script_id": {
+          "type": "string",
+          "pattern": "^drill_[a-z0-9_]{3,40}$"
+        },
+        "script_title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "window_start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "window_end": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "enum": [
+            "scheduled",
+            "offered",
+            "in_progress",
+            "passed",
+            "failed",
+            "aborted",
+            "declined",
+            "expired"
+          ]
+        },
+        "score": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 5
+        },
+        "is_drill": {
+          "const": true
+        }
+      }
+    },
+    "refusal_codes": {
+      "enum": [
+        "consent_missing",
+        "member_not_found",
+        "monthly_limit",
+        "script_not_approved",
+        "script_unknown",
+        "window_invalid",
+        "window_overlaps",
+        "window_past",
+        "window_too_long",
+        "window_too_short"
+      ]
+    }
+  }
+}

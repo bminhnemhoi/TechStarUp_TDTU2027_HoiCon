@@ -1,0 +1,22 @@
+id: benign_family_vegetables_001
+category: benign_family
+is_benign: true
+twin_of: task_scam_order_booking_002
+region: north
+channel: phone_call
+script_vi: |
+  Người bán rau quen ở chợ (chưa lưu số) gọi hỏi bác có lấy rau như mọi tuần không; bác chuyển khoản vài chục
+  nghìn tiền rau.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: lt_1m, app_category: bank}
+elder_answers: {knows_caller: "yes", asks_transfer: "yes"}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points:
+  - "Giao dịch nhỏ, quen thuộc, người quen"
+source_ref: "VietnamPlus 27/03/2026 – Bảo vệ người cao tuổi trước chiêu lừa đảo (mật khẩu gia đình, gọi lại số quen): https://www.vietnamplus.vn/bao-ve-nguoi-cao-tuoi-truoc-cac-chieu-lua-dao-tinh-vi-tren-khong-gian-mang-post1101437.vnp"
+draft: true

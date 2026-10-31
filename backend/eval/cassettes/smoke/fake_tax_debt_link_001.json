@@ -1,0 +1,37 @@
+{
+  "case_id": "fake_tax_debt_link_001",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@2"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "high",
+        "tactic": "impersonation_authority",
+        "reasons": [
+          "Người gọi xưng cơ quan thuế",
+          "Có đòi chuyển tiền"
+        ],
+        "ask_question": "q_asked_transfer"
+      },
+      {
+        "level": "critical",
+        "tactic": "impersonation_authority",
+        "reasons": [
+          "Đòi nộp tiền qua ví"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "summary": "Vào https://nop-thue.example hoặc gọi số 19001234 để nộp phạt ngay.",
+        "action": "call_now"
+      }
+    ]
+  },
+  "notes": "Tóm tắt chứa link và chữ số; _UNSAFE_SUMMARY phải thay bằng câu mẫu."
+}

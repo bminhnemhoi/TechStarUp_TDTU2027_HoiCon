@@ -1,0 +1,17 @@
+[
+  {
+    "_name": "ghép đôi tối thiểu",
+    "code": "849201",
+    "app_version": "0.2.0-debug",
+    "rules_version": "2026.10.15",
+    "platform": "android"
+  },
+  {
+    "_name": "đầy đủ nhãn thiết bị",
+    "code": "123456",
+    "app_version": "0.2.0",
+    "rules_version": "2026.10.15",
+    "platform": "android",
+    "device_label": "Samsung Galaxy A15 của Mẹ"
+  }
+]

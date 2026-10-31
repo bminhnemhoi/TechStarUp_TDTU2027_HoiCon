@@ -13,7 +13,8 @@
 | `POST_NOTIFICATIONS` | thông báo "HỏiCon đang bảo vệ" + thông báo dự phòng khi SafePause không hiện | — | **đang dùng** |
 | `HIDE_OVERLAY_WINDOWS` (quyền thường) | ẩn lớp phủ của app khác khi SafePause hiện — chống app độc che màn/lừa bấm "tiếp tục" (tapjacking) | — | **đang dùng** (review bảo mật 09/10) |
 | `INTERNET` | đồng bộ sự kiện / cảnh báo người giám hộ (ngoài đường găng) | Data safety | từ P2-03 (bản spike không có) |
-| `<queries>` các gói tài chính | thay cho `QUERY_ALL_PACKAGES`; khớp **đúng tên gói** `data/bank_apps.vn.json` | — | **đang dùng** (9 gói ở spike; đủ danh sách ở P1-S2) |
+| `<queries>` các gói tài chính | thay cho `QUERY_ALL_PACKAGES`; khớp **đúng tên gói** `data/bank_apps.vn.json` | — | **đang dùng**: 50 gói, danh sách `2026.10.14-v1`, sinh bằng `scripts/gen-bank-apps.py` (P1-S2, ADR-008) |
+| `USE_FULL_SCREEN_INTENT` | **không khai báo ở bản phát hành** — Play chỉ cấp cho app gọi điện/báo thức (Android 14+), và khi máy mở khóa FSI chỉ là heads-up; chỉ có ở manifest debug để thử (ADR-008); CI chặn nếu lọt vào release | — | chỉ debug |
 
 **Đã kiểm (P1-S1, `aapt2 dump badging` APK debug 09/10):** chỉ có 6 quyền trên + quyền nội bộ androidx
 `vn.hoicon.sentinel.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (mức signature, không phải quyền người dùng cấp).
@@ -26,3 +27,16 @@ Accessibility, Notification Listener, ghi âm cuộc gọi, `REQUEST_IGNORE_BATT
 Cần chuẩn bị (P1-08): Data safety form, chính sách quyền riêng tư công khai (`/privacy`), video minh họa FGS specialUse
 (quay trên máy ảo: cuộc gọi lạ → mở app ngân hàng mẫu → màn dừng an toàn), tài khoản thử cho reviewer, closed testing qua
 Google Group (ADR-005).
+
+## Data safety: heartbeat (spec 029)
+
+Mỗi 15 phút app gửi `POST /v1/heartbeat` (`heartbeat.v1.json`). Khai báo trong Data safety form cho đúng các trường này, không hơn:
+
+| Trường gửi | Loại dữ liệu theo Play | Mục đích | Ghi chú |
+|---|---|---|---|
+| `app_version`, `rules_version`, `threat_list_version` | Thông tin ứng dụng và hiệu suất → *Chẩn đoán* | Chức năng ứng dụng; phân tích (đo độ phủ bảo vệ) | không định danh người dùng |
+| `permission_state` (cờ đúng/sai của 5 quyền sàng lọc) | Thông tin ứng dụng và hiệu suất → *Chẩn đoán* | Chức năng ứng dụng (biết bảo vệ có đang chạy không) | không có nội dung màn hình, danh bạ hay cuộc gọi |
+| mốc giờ khung 15 phút (máy chủ ghi) | *Hoạt động ứng dụng* | Phân tích độ phủ | gắn với id thiết bị ngẫu nhiên, giữ 90 ngày |
+
+Mã hóa khi truyền (HTTPS). Người dùng yêu cầu xóa được qua `ops data request-delete` (034). Không chia sẻ với bên thứ ba.
+Heartbeat chỉ được nhận khi người dùng còn đồng ý `core_protection` (403 `consent_withdrawn` nếu đã rút).

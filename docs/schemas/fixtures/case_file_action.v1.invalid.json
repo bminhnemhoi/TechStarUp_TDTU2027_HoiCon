@@ -1,0 +1,14 @@
+[
+  {
+    "_why": "lệnh lạ",
+    "action": "send_to_police"
+  },
+  {
+    "_why": "không nhận nội dung ô tự điền",
+    "action": "approve",
+    "caller_phone": "x"
+  },
+  {
+    "_why": "thiếu action"
+  }
+]

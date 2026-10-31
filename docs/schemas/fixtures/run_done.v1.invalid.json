@@ -1,0 +1,47 @@
+[
+  {
+    "_why": "status waiting không được kết thúc luồng",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "status": "waiting",
+    "total_steps": 7,
+    "cost_usd": "0.002450",
+    "is_drill": false,
+    "is_demo": false
+  },
+  {
+    "_why": "cost_usd là số",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "status": "done",
+    "total_steps": 7,
+    "cost_usd": 0.00245,
+    "is_drill": false,
+    "is_demo": false
+  },
+  {
+    "_why": "total_steps âm",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "status": "done",
+    "total_steps": -1,
+    "cost_usd": "0.002450",
+    "is_drill": false,
+    "is_demo": false
+  },
+  {
+    "_why": "thiếu is_demo",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "status": "done",
+    "total_steps": 7,
+    "cost_usd": "0.002450",
+    "is_drill": false
+  },
+  {
+    "_why": "trường thừa",
+    "run_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "status": "done",
+    "total_steps": 7,
+    "cost_usd": "0.002450",
+    "is_drill": false,
+    "is_demo": false,
+    "steps": []
+  }
+]

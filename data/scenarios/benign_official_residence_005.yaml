@@ -1,0 +1,20 @@
+id: benign_official_residence_005
+category: benign_official
+is_benign: true
+twin_of: fake_vneid_residence_005
+region: south
+channel: phone_call
+script_vi: |
+  Công an phường gọi hẹn bác lên phường đối chiếu thông tin cư trú, không yêu cầu chuyển tiền hay đọc mã.
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: 1_5m, app_category: none}
+elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
+expected:
+  min_risk_level: none
+  max_risk_level: low
+  notify_guardian: false
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points: ['Cơ quan thật hẹn làm việc trực tiếp, không đòi tiền']
+source_ref: 'Thanh Niên 02/01/2026 – Công an TP.HCM cảnh báo thủ đoạn giả danh công an gọi học sinh: https://thanhnien.vn/tu-cong-van-cua-cong-an-tphcm-so-gd-dt-canh-bao-thu-doan-lua-dao-moi-185260102133152052.htm'
+draft: true

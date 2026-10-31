@@ -21,7 +21,7 @@ async def _db_up() -> bool:
     return True
 
 
-async def test_readyz_reports_db_up() -> None:
+async def test_readyz_reports_db_up(service_keys: None) -> None:
     if not await _db_up():
         pytest.skip("Postgres dev chưa chạy (docker compose -f infra/compose.dev.yml up -d)")
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:

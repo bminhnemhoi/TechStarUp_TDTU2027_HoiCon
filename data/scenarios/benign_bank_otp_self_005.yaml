@@ -1,0 +1,20 @@
+id: benign_bank_otp_self_005
+category: benign_bank
+is_benign: true
+twin_of: fake_bank_otp_reset_005
+region: south
+channel: phone_call
+script_vi: |
+  Bác tự gọi tổng đài in trên thẻ để đổi mật khẩu; nhân viên hướng dẫn trong ứng dụng, tuyệt đối không hỏi mã OTP.
+device_signals: {caller_flag: unknown, in_call: true, duration_bucket: 1_5m, app_category: bank}
+elder_answers: {claims_authority: 'yes', asks_transfer: 'no'}
+expected:
+  min_risk_level: high
+  max_risk_level: high
+  notify_guardian: true
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points: [Bác chủ động gọi số in trên thẻ và không bị hỏi OTP là cuộc gọi đúng cách]
+source_ref: 'Thanh Niên 28/05/2024 – Chuyển khoản trên 10 triệu phải xác thực sinh trắc từ 1/7/2024: https://thanhnien.vn/chuyen-khoan-tren-10-trieu-phai-xac-thuc-sinh-trac-hoc-tu-17-nham-chong-lua-dao-185240528174643297.htm'
+draft: true

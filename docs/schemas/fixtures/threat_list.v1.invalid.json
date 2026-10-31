@@ -1,0 +1,67 @@
+[
+  {
+    "_why": "bucket_bits = 32 vượt giới hạn",
+    "version": "0123456789abcdef",
+    "bucket_bits": 32,
+    "count": 3,
+    "buckets_b64": "AAABAAAmAD//",
+    "generated_at": "2026-10-16T08:00:00Z"
+  },
+  {
+    "_why": "bucket_bits = 8 dưới giới hạn",
+    "version": "0123456789abcdef",
+    "bucket_bits": 8,
+    "count": 3,
+    "buckets_b64": "AAABAAAmAD//",
+    "generated_at": "2026-10-16T08:00:00Z"
+  },
+  {
+    "_why": "version không phải hex 16",
+    "version": "XYZ",
+    "bucket_bits": 22,
+    "count": 3,
+    "buckets_b64": "AAABAAAmAD//",
+    "generated_at": "2026-10-16T08:00:00Z"
+  },
+  {
+    "_why": "count âm",
+    "version": "0123456789abcdef",
+    "bucket_bits": 22,
+    "count": -1,
+    "buckets_b64": "AAABAAAmAD//",
+    "generated_at": "2026-10-16T08:00:00Z"
+  },
+  {
+    "_why": "buckets_b64 không phải base64",
+    "version": "0123456789abcdef",
+    "bucket_bits": 22,
+    "count": 3,
+    "buckets_b64": "***không hợp lệ***",
+    "generated_at": "2026-10-16T08:00:00Z"
+  },
+  {
+    "_why": "lộ khóa h1",
+    "version": "0123456789abcdef",
+    "bucket_bits": 22,
+    "count": 3,
+    "buckets_b64": "AAABAAAmAD//",
+    "generated_at": "2026-10-16T08:00:00Z",
+    "h1": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+    "_why": "lộ khóa last3",
+    "version": "0123456789abcdef",
+    "bucket_bits": 22,
+    "count": 3,
+    "buckets_b64": "AAABAAAmAD//",
+    "generated_at": "2026-10-16T08:00:00Z",
+    "last3": "123"
+  },
+  {
+    "_why": "thiếu generated_at",
+    "version": "0123456789abcdef",
+    "bucket_bits": 22,
+    "count": 3,
+    "buckets_b64": "AAABAAAmAD//"
+  }
+]

@@ -3,9 +3,9 @@ name: web
 on:
   push:
     branches: [main]
-    paths: ["apps/web/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
+    paths: ["apps/web/**", "design-system/**", "docs/schemas/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
   pull_request:
-    paths: ["apps/web/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
+    paths: ["apps/web/**", "design-system/**", "docs/schemas/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/web.yml"]
 
 permissions:
   contents: read
@@ -27,7 +27,13 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      # tokens.css sinh từ design-system/hoicon/tokens.json (spec 010): sửa tay ⇒ đỏ.
+      - run: python3 scripts/gen-design-tokens.py --check
       - run: pnpm install --frozen-lockfile
       - run: pnpm --dir apps/web typecheck
       - run: pnpm --dir apps/web lint
       - run: pnpm --dir apps/web build
+      # E2E web người giám hộ (spec 027): mạng được chặn bằng fixture hợp đồng nên không cần API/DB; `live.spec.ts` tự bỏ
+      # qua khi không có HOICON_E2E_LIVE=1. Chạy trên bản đã build (`next start`).
+      - run: pnpm --dir apps/web exec playwright install --with-deps chromium
+      - run: pnpm --dir apps/web e2e

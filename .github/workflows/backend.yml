@@ -29,6 +29,8 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U hoicon -d hoicon" --health-interval 5s --health-timeout 3s --health-retries 20
     env:
+      # Spec 034: mặc định của ứng dụng là `prod`; CI chạy `test` tường minh (Zalo mock chỉ cho dev/test).
+      HOICON_ENV: test
       HOICON_DATABASE_URL: postgresql+psycopg://hoicon:hoicon_ci@localhost:5432/hoicon
     defaults:
       run:
@@ -45,3 +47,22 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run alembic upgrade head
       - run: uv run pytest -q
+      # Eval smoke tất định (spec 030): 20 ca, phản hồi LLM ghi sẵn, không khóa API, không mạng ngoài. Trượt ngưỡng
+      # (recall/báo nhầm lệch > 3 điểm %, bất kỳ vi phạm an toàn, công khai AI < 100%) ⇒ job đỏ. DB service dùng chung
+      # với pytest nên cần --shared-db-ok; eval chỉ chạm id/job `eval-*` và dọn sau lượt.
+      - name: eval smoke
+        run: uv run hoicon-eval --suite smoke --compare baseline --shared-db-ok
+        env:
+          HOICON_EVAL_DATABASE_URL: ${{ env.HOICON_DATABASE_URL }}
+          # Spec 003: danh sách đe dọa trong DB là HMAC ⇒ runner cần khóa băm để nạp seed demo. Chuỗi cố định, CÔNG KHAI
+          # (như khóa giả của tests/integration/conftest.py) — KHÔNG phải bí mật; CI không bao giờ có khóa thật.
+          HOICON_PHONE_PEPPER_1: "1111111111111111111111111111111111111111111111111111111111111111"
+      # Eval full (spec 036): ≥ 100 ca (≈ 28 s trên máy dev, n = 3; số đo trên runner CI ghi ở evidence khi mở PR), ngưỡng
+      # Gate M3 (recall ≥ 0,90, báo nhầm ≤ 0,10, 0 vi phạm, công khai AI 100%) cộng so baseline-full ±3 điểm %. Nếu bước
+      # này vượt 2 phút trên CI thì tách thành job thủ công (workflow_dispatch) thay vì để PR chờ lâu.
+      - name: eval full
+        run: uv run hoicon-eval --suite full --compare baseline-full --shared-db-ok
+        env:
+          HOICON_EVAL_DATABASE_URL: ${{ env.HOICON_DATABASE_URL }}
+          # Khóa giả công khai như bước smoke (không phải bí mật).
+          HOICON_PHONE_PEPPER_1: "1111111111111111111111111111111111111111111111111111111111111111"

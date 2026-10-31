@@ -1,11 +1,18 @@
 package vn.hoicon.rules
 
-/** Rule ids; [wire] mirrors `rule_id` in `docs/schemas/risk_event.v1.json`. */
-enum class RuleId(val wire: String) {
+/**
+ * Rule ids; [wire] mirrors `rule_id` in `docs/schemas/risk_event.v1.json`.
+ *
+ * [inContract] is false for a rule the schema does not list yet (R5, idea I1 pending the schema owner): such an event
+ * is sent without `rule_id` (still `rule_floor` critical) because a value outside the enum would make the server
+ * reject the whole batch. Flip it when `docs/schemas` lists the id; the contract test fails until you do.
+ */
+enum class RuleId(val wire: String, val inContract: Boolean = true) {
     R0("R0"),
     R1("R1"),
     R2("R2"),
     R4("R4"),
+    R5("R5", inContract = false),
 }
 
 /** Category of the app that came to the foreground; [wire] mirrors `app.category` in the risk_event schema. */
@@ -56,6 +63,7 @@ data class Decision(val level: RiskLevel, val ruleId: RuleId?) {
  * Deterministic on-device rules (ADR-001). No network, no clock reads, no randomness: same input, same output.
  *
  * - R0: trusted contact ⇒ none.
+ * - R5 (I1): remote-control app ([RemoteControlCatalog]) in front inside the window of an untrusted call ⇒ critical.
  * - R1: unknown or flagged number, call active or ended ≤ [WINDOW_MS] ago, financial app ([FINANCIAL]) in
  *   foreground ⇒ high; critical when the number is flagged or the call lasted > [LONG_CALL_MS].
  *   Also when the financial app was already in front before the call and stays there once it connects
@@ -64,7 +72,7 @@ data class Decision(val level: RiskLevel, val ruleId: RuleId?) {
  * The returned level is never below the caller-supplied `floor` (a risk can be raised, never lowered).
  */
 object RiskEngine {
-    const val VERSION = "0.1.0-s1"
+    const val VERSION = "0.2.0"
     const val WINDOW_MS: Long = 10 * 60 * 1000L
     const val LONG_CALL_MS: Long = 5 * 60 * 1000L
 
@@ -141,6 +149,9 @@ object RiskEngine {
     private fun decide(call: CallSignal?, app: AppForeground): Decision {
         if (call == null) return Decision.NONE
         if (call.trusted) return Decision(RiskLevel.NONE, RuleId.R0)
+        if (RemoteControlCatalog.isRemoteControl(app.packageName)) {
+            return if (inWindow(call, app.atMs)) Decision(RiskLevel.CRITICAL, RuleId.R5) else Decision.NONE
+        }
         if (app.category !in FINANCIAL) return Decision.NONE
         if (!inWindow(call, app.atMs)) return Decision.NONE
         val critical = call.flagged || callDurationMs(call, app.atMs) > LONG_CALL_MS

@@ -1,0 +1,56 @@
+[
+  {
+    "_why": "token chứa ký tự lạ (dấu cách/ký tự đặc biệt)",
+    "_as": "request",
+    "token": "abc def!AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "_why": "token quá ngắn",
+    "_as": "request",
+    "token": "short"
+  },
+  {
+    "_why": "token quá dài (> 64)",
+    "_as": "request",
+    "token": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "_why": "yêu cầu có trường thừa",
+    "_as": "request",
+    "token": "aBcDeFgHiJkLmNoPqRsTuVwXyZ012345-_aBcDeFg",
+    "phone": "khong-phai-so"
+  },
+  {
+    "_why": "phản hồi lộ token phiên",
+    "_as": "response",
+    "member_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "family_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e81",
+    "family_name": "Gia đình",
+    "expires_at": "2026-12-08T02:15:31Z",
+    "token": "aBcDeFgHiJkLmNoPqRsTuVwXyZ012345-_aBcDeFg"
+  },
+  {
+    "_why": "phản hồi lộ số điện thoại",
+    "_as": "response",
+    "member_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "family_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e81",
+    "family_name": "Gia đình",
+    "expires_at": "2026-12-08T02:15:31Z",
+    "phone": "khong-phai-so"
+  },
+  {
+    "_why": "phản hồi thiếu expires_at",
+    "_as": "response",
+    "member_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "family_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e81",
+    "family_name": "Gia đình"
+  },
+  {
+    "_why": "family_name quá dài",
+    "_as": "response",
+    "member_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e90",
+    "family_id": "01928f3a-7b2c-7d4e-8f10-2a3b4c5d6e81",
+    "family_name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "expires_at": "2026-12-08T02:15:31Z"
+  }
+]

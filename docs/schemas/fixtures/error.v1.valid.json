@@ -1,0 +1,10 @@
+[
+  {
+    "_name": "403 rút đồng ý",
+    "detail": "consent_withdrawn"
+  },
+  {
+    "_name": "422 văn bản lạ",
+    "detail": "Văn bản đồng ý này không còn hiệu lực. Vui lòng cập nhật ứng dụng rồi thử lại."
+  }
+]

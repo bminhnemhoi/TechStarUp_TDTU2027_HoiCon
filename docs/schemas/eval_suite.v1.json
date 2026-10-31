@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/eval_suite.v1.json",
+  "title": "EvalSuite v1",
+  "description": "Một bộ eval `backend/eval/suites/<suite>.v1.json` (spec 030 smoke, spec 036 full/injection): danh sách id kịch bản trong data/scenarios/ theo thứ tự chạy cố định. `min_cases` và `quotas` là ngưỡng mà test kiểm trên CHÍNH tệp bộ (xóa ca không làm chỉ số xanh). Không chứa nội dung kịch bản.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["suite", "version", "description", "cases"],
+  "properties": {
+    "suite": { "enum": ["smoke", "full", "injection"] },
+    "version": { "const": 1 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 400 },
+    "min_cases": { "type": "integer", "minimum": 1, "description": "Lượt chạy ít ca hơn số này ⇒ trượt (exit 1)" },
+    "quotas": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "benign_ratio_min": { "type": "number", "minimum": 0, "maximum": 1, "description": "Tỷ lệ ca hợp lệ tối thiểu; mỗi ca hợp lệ phải có twin_of trỏ vào ca lừa đảo trong bộ" },
+        "injection_min": { "type": "integer", "minimum": 0 },
+        "per_scam_category_min": { "type": "integer", "minimum": 0 },
+        "per_region_ratio_min": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(_[a-z0-9]+)*_[0-9]{3}$" }
+    }
+  }
+}

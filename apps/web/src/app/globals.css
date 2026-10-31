@@ -1,15 +1,8 @@
 @import "tailwindcss";
+@import "./tokens.css";
 
-/* Token tạm theo docs/DESIGN-SYSTEM.md — sẽ sinh từ design-system/hoicon/tokens.json ở P1-05. */
-@theme inline {
-  --color-background: #ffffff;
-  --color-foreground: #1f3a5f;
-  --color-brand-navy: #1f3a5f;
-  --color-brand-orange: #c4561d;
-  --color-brand-orange-text: #b04a17;
-  --color-brand-green: #1e7b53;
-  --font-sans: var(--font-be-vietnam-pro), Arial, sans-serif;
-}
+/* Token (màu, cỡ chữ, bo góc, chuyển động) sinh từ design-system/hoicon/tokens.json — sửa JSON rồi chạy
+   python3 scripts/gen-design-tokens.py, không sửa tokens.css bằng tay. */
 
 body {
   background: var(--color-background);

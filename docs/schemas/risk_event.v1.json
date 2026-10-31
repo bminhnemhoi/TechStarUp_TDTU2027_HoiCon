@@ -48,8 +48,8 @@
       "properties": {
         "direction": { "enum": ["incoming", "outgoing"] },
         "active": { "type": "boolean" },
-        "duration_s": { "type": "integer", "minimum": 0 },
-        "since_end_s": { "type": "integer", "minimum": 0, "description": "Số giây kể từ khi cuộc gọi kết thúc (cửa sổ ≤ 600)" }
+        "duration_s": { "type": "integer", "minimum": 0, "maximum": 86400 },
+        "since_end_s": { "type": "integer", "minimum": 0, "maximum": 86400, "description": "Số giây kể từ khi cuộc gọi kết thúc (cửa sổ ≤ 600)" }
       }
     },
     "app": {
@@ -61,6 +61,7 @@
         "package": {
           "type": "string",
           "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z0-9_]+)+$",
           "description": "Chỉ gửi khi gói nằm trong danh sách bank_apps.vn.json (không phải dữ liệu cá nhân)"
         }
       }
@@ -70,14 +71,14 @@
       "additionalProperties": false,
       "description": "Mốc đo độ trễ đường găng (ms, đồng hồ đơn điệu trên máy)",
       "properties": {
-        "detect_ms": { "type": "integer", "minimum": 0, "description": "app_foreground → risk_detected" },
-        "pause_ms": { "type": "integer", "minimum": 0, "description": "app_foreground → pause_shown" }
+        "detect_ms": { "type": "integer", "minimum": 0, "maximum": 3600000, "description": "app_foreground → risk_detected" },
+        "pause_ms": { "type": "integer", "minimum": 0, "maximum": 3600000, "description": "app_foreground → pause_shown" }
       }
     },
     "is_drill": { "type": "boolean" },
     "drill_id": { "type": "string", "format": "uuid" },
-    "app_version": { "type": "string", "maxLength": 32 },
-    "rules_version": { "type": "string", "maxLength": 32 }
+    "app_version": { "type": "string", "maxLength": 32, "pattern": "^[A-Za-z]{0,16}[-_]?\\d{1,4}(?:\\.\\d{1,4}){0,3}(?:[-+][0-9A-Za-z.]{1,16})?$" },
+    "rules_version": { "type": "string", "maxLength": 32, "pattern": "^[A-Za-z]{0,16}[-_]?\\d{1,4}(?:\\.\\d{1,4}){0,3}(?:[-+][0-9A-Za-z.]{1,16})?$" }
   },
   "allOf": [
     {

@@ -4,6 +4,7 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /** Enums sent in RiskEvent must match `docs/schemas/risk_event.v1.json` exactly (contract first, CLAUDE.md rule 10). */
 class SchemaContractTest {
@@ -19,7 +20,17 @@ class SchemaContractTest {
     }
 
     @Test
-    fun ruleIdMatchesSchema() = assertEquals(schemaEnum("rule_id"), RuleId.entries.map { it.wire })
+    fun ruleIdMatchesSchema() =
+        assertEquals(schemaEnum("rule_id"), RuleId.entries.filter { it.inContract }.map { it.wire })
+
+    /** A rule outside the schema is sent without `rule_id`; once the schema lists it, [RuleId.inContract] must flip. */
+    @Test
+    fun ruleIdsOutsideSchemaAreNotYetInIt() {
+        val listed = schemaEnum("rule_id")
+        for (rule in RuleId.entries.filter { !it.inContract }) {
+            assertTrue(rule.wire !in listed, "${rule.wire} is in the schema now: set inContract = true")
+        }
+    }
 
     @Test
     fun appCategoryMatchesSchema() = assertEquals(schemaEnum("category"), AppCategory.entries.map { it.wire })

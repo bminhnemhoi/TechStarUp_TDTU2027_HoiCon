@@ -1,0 +1,30 @@
+{
+  "case_id": "fake_bank_biometric_001",
+  "source": "synthetic",
+  "behavior": "adversarial",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@2"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "error": "timeout"
+      },
+      {
+        "error": "timeout"
+      }
+    ],
+    "intervention": [
+      {
+        "points": [
+          "unknown_call_then_finance_app",
+          "caller_claims_authority",
+          "common_scam_pattern"
+        ],
+        "action": "call_and_stay_on_line"
+      }
+    ]
+  },
+  "notes": "Chỉ node chấm rủi ro lỗi (timeout); tóm tắt trung thực. Đồ thị dùng mức sàn + câu hỏi cố định."
+}

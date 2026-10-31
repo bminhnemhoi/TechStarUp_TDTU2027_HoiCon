@@ -1,0 +1,52 @@
+[
+  {
+    "_name": "thiếu incident_id",
+    "_why": "incident_id là trường bắt buộc",
+    "question_id": "q_caller_authority",
+    "text": "Đây là trợ lý AI HỏiCon. Người đang gọi có tự xưng là công an không?",
+    "is_drill": false,
+    "answers": ["yes", "no", "unsure"],
+    "expires_at": "2026-10-16T12:01:00Z"
+  },
+  {
+    "_name": "question_id không thuộc enum",
+    "_why": "q_invalid_secret_hack không có trong danh mục câu hỏi E8",
+    "incident_id": "01851bd2-0000-7000-8000-000000000001",
+    "question_id": "q_invalid_secret_hack",
+    "text": "Đây là trợ lý AI HỏiCon. Câu hỏi không hợp lệ.",
+    "is_drill": false,
+    "answers": ["yes", "no", "unsure"],
+    "expires_at": "2026-10-16T12:01:00Z"
+  },
+  {
+    "_name": "answers thiếu phần tử",
+    "_why": "answers phải có đúng 3 phần tử",
+    "incident_id": "01851bd2-0000-7000-8000-000000000001",
+    "question_id": "q_caller_authority",
+    "text": "Đây là trợ lý AI HỏiCon. Người đang gọi có tự xưng là công an không?",
+    "is_drill": false,
+    "answers": ["yes", "no"],
+    "expires_at": "2026-10-16T12:01:00Z"
+  },
+  {
+    "_name": "chứa trường lạ cấm",
+    "_why": "additionalProperties: false cấm raw_phone_number",
+    "incident_id": "01851bd2-0000-7000-8000-000000000001",
+    "question_id": "q_caller_authority",
+    "text": "Đây là trợ lý AI HỏiCon. Người đang gọi có tự xưng là công an không?",
+    "is_drill": false,
+    "answers": ["yes", "no", "unsure"],
+    "expires_at": "2026-10-16T12:01:00Z",
+    "raw_phone_number": "0900000001"
+  },
+  {
+    "_name": "expires_at sai định dạng",
+    "_why": "expires_at phải là date-time ISO 8601",
+    "incident_id": "01851bd2-0000-7000-8000-000000000001",
+    "question_id": "q_caller_authority",
+    "text": "Đây là trợ lý AI HỏiCon. Người đang gọi có tự xưng là công an không?",
+    "is_drill": false,
+    "answers": ["yes", "no", "unsure"],
+    "expires_at": "tomorrow at 5pm"
+  }
+]

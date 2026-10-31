@@ -1,0 +1,20 @@
+[
+  {
+    "_why": "id sai mẫu",
+    "scenario_id": "../etc/passwd"
+  },
+  {
+    "_why": "chế độ LLM lạ",
+    "scenario_id": "fake_police_safe_account_002",
+    "llm": "gpt"
+  },
+  {
+    "_why": "không nhận lời kể tự do",
+    "scenario_id": "fake_police_safe_account_002",
+    "note": "số 0000 111 222"
+  },
+  {
+    "_why": "thiếu scenario_id",
+    "llm": "replay"
+  }
+]

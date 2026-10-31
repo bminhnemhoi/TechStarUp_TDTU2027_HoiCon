@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/action_view.v1.json",
+  "title": "ActionView v1",
+  "description": "Dữ liệu trả về khi người giám hộ mở magic link qua `GET /v1/action/{token}` (spec 023, P2-07). Không chứa số điện thoại hay dữ liệu cá nhân thô.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token_valid",
+    "scope",
+    "expires_at",
+    "used_at",
+    "incident"
+  ],
+  "properties": {
+    "token_valid": {
+      "type": "boolean",
+      "description": "True nếu token chưa hết hạn và chưa được sử dụng"
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["incident_decision", "guardian_view", "drill_debrief"],
+      "description": "Phạm vi của action token"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Thời điểm hết hạn ISO 8601 UTC"
+    },
+    "used_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Thời điểm đã sử dụng token (null nếu chưa dùng)"
+    },
+    "incident": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "state",
+        "level",
+        "rule_floor",
+        "is_drill",
+        "opened_at",
+        "closed_at",
+        "summary_text",
+        "protected_member_label",
+        "device_label"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Định danh sự cố UUIDv7"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "detected",
+            "assessing",
+            "awaiting_guardian",
+            "verifying",
+            "rescore",
+            "resolved_safe",
+            "resolved_prevented",
+            "resolved_false_alarm",
+            "resolved_no_response",
+            "case_open",
+            "closed"
+          ],
+          "description": "Trạng thái hiện tại của sự cố"
+        },
+        "level": {
+          "type": "string",
+          "enum": ["none", "low", "medium", "high", "critical"],
+          "description": "Mức rủi ro hiện tại"
+        },
+        "rule_floor": {
+          "type": "string",
+          "enum": ["none", "low", "medium", "high", "critical"],
+          "description": "Mức sàn rủi ro từ sự kiện mở sự cố"
+        },
+        "is_drill": {
+          "type": "boolean",
+          "description": "True nếu đây là sự cố diễn tập an toàn"
+        },
+        "opened_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Thời điểm mở sự cố ISO 8601 UTC"
+        },
+        "closed_at": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "Thời điểm đóng sự cố (null nếu đang mở)"
+        },
+        "summary_text": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Tóm tắt rủi ro dễ hiểu cho người giám hộ (không PII)"
+        },
+        "protected_member_label": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Tên xưng hô của người thân trong gia đình (ví dụ 'Bố', 'Mẹ')"
+        },
+        "device_label": {
+          "type": ["string", "null"],
+          "maxLength": 64,
+          "description": "Tên hoặc mẫu thiết bị được bảo vệ"
+        }
+      }
+    }
+  }
+}

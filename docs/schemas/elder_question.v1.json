@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/elder_question.v1.json",
+  "title": "ElderQuestion v1",
+  "description": "Câu hỏi nhanh E8 gửi tới người cao tuổi trên app Lính gác qua FCM hoặc polling (spec 024, P2-08).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "incident_id",
+    "question_id",
+    "text",
+    "is_drill",
+    "answers",
+    "expires_at"
+  ],
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "UUID của sự cố đang chờ người cao tuổi trả lời."
+    },
+    "question_id": {
+      "type": "string",
+      "enum": ["q_caller_authority", "q_asked_transfer", "q_know_caller"],
+      "description": "Mã câu hỏi chuẩn trong ngân hàng câu hỏi E8 (texts.py)."
+    },
+    "text": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 500,
+      "description": "Nội dung câu hỏi tiếng Việt, bắt buộc mở đầu bằng 'Đây là trợ lý AI HỏiCon.' (Luật 6)."
+    },
+    "is_drill": {
+      "type": "boolean",
+      "description": "True nếu là câu hỏi trong sự cố diễn tập lừa đảo an toàn (Luật 8)."
+    },
+    "answers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["yes", "no", "unsure"]
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "description": "Danh sách 3 câu trả lời tất định cho người cao tuổi bấm chọn: Có / Không / Không rõ."
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$",
+      "description": "Mốc thời gian hết hạn trả lời (mặc định 60 giây sau khi tạo câu hỏi)."
+    }
+  }
+}

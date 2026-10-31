@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/elder_answer.v1.json",
+  "title": "ElderAnswer v1",
+  "description": "Câu trả lời E8 của người cao tuổi từ app Lính gác gửi qua `POST /v1/incidents/{id}/answers` (spec 024, P2-08).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "question_id",
+    "answer"
+  ],
+  "properties": {
+    "question_id": {
+      "type": "string",
+      "enum": [
+        "q_caller_authority",
+        "q_asked_transfer",
+        "q_know_caller"
+      ],
+      "description": "Mã câu hỏi người cao tuổi đang trả lời."
+    },
+    "answer": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no",
+        "unsure",
+        "timeout"
+      ],
+      "description": "'yes' (Có), 'no' (Không), 'unsure' (Không rõ); 'timeout' do app gửi khi hết 60 s không bấm (máy chủ coi như hết hạn)."
+    },
+    "note_flags": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "Cờ tất định (cùng bộ cờ với `hoicon.domain.pii.NOTE_KEYWORDS`, ADR-009). Không bao giờ có văn bản tự do.",
+      "properties": {
+        "mentions_authority": {
+          "type": "boolean"
+        },
+        "mentions_transfer": {
+          "type": "boolean"
+        },
+        "mentions_code": {
+          "type": "boolean"
+        },
+        "mentions_secrecy": {
+          "type": "boolean"
+        },
+        "mentions_app_or_link": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

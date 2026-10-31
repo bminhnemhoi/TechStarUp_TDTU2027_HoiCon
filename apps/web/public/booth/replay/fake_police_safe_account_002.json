@@ -1,0 +1,258 @@
+{
+  "scenario_id": "fake_police_safe_account_002",
+  "recorded_at": "2026-10-23T00:56:22.370Z",
+  "duration_ms": 11962,
+  "frames": [
+    {
+      "t_ms": 157,
+      "run": {
+        "scenario_id": "fake_police_safe_account_002",
+        "is_demo": true,
+        "llm_mode": "replay",
+        "incident_id": "01a16642-19e6-7e8f-8670-f81d3ef0bd09",
+        "run_id": "01a16642-19fd-7545-ba00-fa10e8cce97f",
+        "state": "detected",
+        "level": "critical",
+        "pending_question": {
+          "incident_id": "01a16642-19e6-7e8f-8670-f81d3ef0bd09",
+          "question_id": "q_caller_authority",
+          "text": "Đây là trợ lý AI HỏiCon. Người vừa gọi có xưng là công an, ngân hàng, thuế hay cơ quan nhà nước không ạ?",
+          "is_drill": false,
+          "answers": [
+            "yes",
+            "no",
+            "unsure"
+          ],
+          "expires_at": "2026-10-23T00:57:10.535105Z"
+        },
+        "guardian_messages": [
+          {
+            "at": "2026-10-23T00:56:10.459645Z",
+            "template": "fast_alert",
+            "text": "Đây là trợ lý AI HỏiCon. Mẹ vừa nghe một cuộc gọi lạ rồi mở ứng dụng ngân hàng. Anh/chị gọi hỏi Mẹ ngay nhé.\n\nThêm: cuộc gọi từ số lạ đuôi 001; HỏiCon đang nhắc Mẹ tạm dừng.\n\nKiểm tra và xử lý khẩn cấp tại:\n(liên kết xử lý khẩn cấp — bản mô phỏng không có liên kết thật)\n\nAnh/chị trả lời:\n1 - Đã gọi được, mọi thứ an toàn\n2 - Vẫn thấy đáng ngờ (nghi lừa đảo)\n3 - Xem chi tiết\nChưa gọi được thì anh/chị cứ gọi lại, rồi trả lời sau nhé."
+          }
+        ],
+        "note": null
+      }
+    },
+    {
+      "t_ms": 3855,
+      "run": {
+        "scenario_id": "fake_police_safe_account_002",
+        "is_demo": true,
+        "llm_mode": "replay",
+        "incident_id": "01a16642-19e6-7e8f-8670-f81d3ef0bd09",
+        "run_id": "01a16642-19fd-7545-ba00-fa10e8cce97f",
+        "state": "detected",
+        "level": "critical",
+        "pending_question": null,
+        "guardian_messages": [
+          {
+            "at": "2026-10-23T00:56:10.459645Z",
+            "template": "fast_alert",
+            "text": "Đây là trợ lý AI HỏiCon. Mẹ vừa nghe một cuộc gọi lạ rồi mở ứng dụng ngân hàng. Anh/chị gọi hỏi Mẹ ngay nhé.\n\nThêm: cuộc gọi từ số lạ đuôi 001; HỏiCon đang nhắc Mẹ tạm dừng.\n\nKiểm tra và xử lý khẩn cấp tại:\n(liên kết xử lý khẩn cấp — bản mô phỏng không có liên kết thật)\n\nAnh/chị trả lời:\n1 - Đã gọi được, mọi thứ an toàn\n2 - Vẫn thấy đáng ngờ (nghi lừa đảo)\n3 - Xem chi tiết\nChưa gọi được thì anh/chị cứ gọi lại, rồi trả lời sau nhé."
+          },
+          {
+            "at": "2026-10-23T00:56:14.150168Z",
+            "template": "detail",
+            "text": "Đây là trợ lý AI HỏiCon. Mức nguy cơ: rất cao. Vừa rồi Mẹ nghe một số lạ gọi rồi mở ứng dụng ngân hàng hoặc ví điện tử. Những điểm trên thường gặp trong các cuộc gọi giả danh để lừa chuyển tiền. Anh/chị gọi ngay cho Mẹ và giữ máy cho đến khi Mẹ đóng ứng dụng ngân hàng.\n\nAnh/chị trả lời:\n1 - Đã gọi được, mọi thứ an toàn\n2 - Vẫn thấy đáng ngờ (nghi lừa đảo)\nChưa gọi được thì anh/chị cứ gọi lại, rồi trả lời sau nhé."
+          }
+        ],
+        "note": null
+      }
+    },
+    {
+      "t_ms": 8441,
+      "run": {
+        "scenario_id": "fake_police_safe_account_002",
+        "is_demo": true,
+        "llm_mode": "replay",
+        "incident_id": "01a16642-19e6-7e8f-8670-f81d3ef0bd09",
+        "run_id": "01a16642-19fd-7545-ba00-fa10e8cce97f",
+        "state": "case_open",
+        "level": "critical",
+        "pending_question": null,
+        "guardian_messages": [
+          {
+            "at": "2026-10-23T00:56:10.459645Z",
+            "template": "fast_alert",
+            "text": "Đây là trợ lý AI HỏiCon. Mẹ vừa nghe một cuộc gọi lạ rồi mở ứng dụng ngân hàng. Anh/chị gọi hỏi Mẹ ngay nhé.\n\nThêm: cuộc gọi từ số lạ đuôi 001; HỏiCon đang nhắc Mẹ tạm dừng.\n\nKiểm tra và xử lý khẩn cấp tại:\n(liên kết xử lý khẩn cấp — bản mô phỏng không có liên kết thật)\n\nAnh/chị trả lời:\n1 - Đã gọi được, mọi thứ an toàn\n2 - Vẫn thấy đáng ngờ (nghi lừa đảo)\n3 - Xem chi tiết\nChưa gọi được thì anh/chị cứ gọi lại, rồi trả lời sau nhé."
+          },
+          {
+            "at": "2026-10-23T00:56:14.150168Z",
+            "template": "detail",
+            "text": "Đây là trợ lý AI HỏiCon. Mức nguy cơ: rất cao. Vừa rồi Mẹ nghe một số lạ gọi rồi mở ứng dụng ngân hàng hoặc ví điện tử. Những điểm trên thường gặp trong các cuộc gọi giả danh để lừa chuyển tiền. Anh/chị gọi ngay cho Mẹ và giữ máy cho đến khi Mẹ đóng ứng dụng ngân hàng.\n\nAnh/chị trả lời:\n1 - Đã gọi được, mọi thứ an toàn\n2 - Vẫn thấy đáng ngờ (nghi lừa đảo)\nChưa gọi được thì anh/chị cứ gọi lại, rồi trả lời sau nhé."
+          }
+        ],
+        "note": null
+      }
+    }
+  ],
+  "steps": [
+    {
+      "t_ms": 1180,
+      "step": {
+        "id": "01a16642-1a0e-7a3d-ba3f-1c8f412bfe95",
+        "run_id": "01a16642-19fd-7545-ba00-fa10e8cce97f",
+        "node": "ingest",
+        "model_profile": null,
+        "model": null,
+        "prompt_version": null,
+        "latency_ms": 0,
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": "0.000000",
+        "fallback_used": false,
+        "error": null,
+        "output": {
+          "level": "critical",
+          "threat": "unknown"
+        },
+        "at": "2026-10-23T00:56:10.511066Z"
+      }
+    },
+    {
+      "t_ms": 1180,
+      "step": {
+        "id": "01a16642-1a16-7951-916a-8284e727341e",
+        "run_id": "01a16642-19fd-7545-ba00-fa10e8cce97f",
+        "node": "fast_alert",
+        "model_profile": null,
+        "model": null,
+        "prompt_version": null,
+        "latency_ms": 1,
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": "0.000000",
+        "fallback_used": false,
+        "error": null,
+        "output": {
+          "template": "fast_alert"
+        },
+        "at": "2026-10-23T00:56:10.519050Z"
+      }
+    },
+    {
+      "t_ms": 1180,
+      "step": {
+        "id": "01a16642-1a1e-7b5a-bb8b-be757ee209bd",
+        "run_id": "01a16642-19fd-7545-ba00-fa10e8cce97f",
+        "node": "risk_scorer",
+        "model_profile": "fast",
+        "model": "claude-haiku-5-5",
+        "prompt_version": "risk_scorer@1",
+        "latency_ms": 0,
+        "tokens_in": 800,
+        "tokens_out": 100,
+        "cost_usd": "0.000130",
+        "fallback_used": false,
+        "error": null,
+        "output": {
+          "level": "critical",
+          "tactic": "legit_likely",
+          "question": "q_caller_authority",
+          "llm_level": "low"
+        },
+        "at": "2026-10-23T00:56:10.526124Z"
+      }
+    },
+    {
+      "t_ms": 4879,
+      "step": {
+        "id": "01a16642-2822-705e-b25b-ac0e1189f880",
+        "run_id": "01a16642-19fd-7545-ba00-fa10e8cce97f",
+        "node": "ask_elder",
+        "model_profile": null,
+        "model": null,
+        "prompt_version": null,
+        "latency_ms": 4,
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": "0.000000",
+        "fallback_used": false,
+        "error": null,
+        "output": {
+          "answer": "yes",
+          "question_id": "q_caller_authority"
+        },
+        "at": "2026-10-23T00:56:14.114747Z"
+      }
+    },
+    {
+      "t_ms": 4879,
+      "step": {
+        "id": "01a16642-282b-73f2-b975-179c81cdb32e",
+        "run_id": "01a16642-19fd-7545-ba00-fa10e8cce97f",
+        "node": "risk_scorer",
+        "model_profile": "fast",
+        "model": "claude-haiku-5-5",
+        "prompt_version": "risk_scorer@1",
+        "latency_ms": 0,
+        "tokens_in": 800,
+        "tokens_out": 100,
+        "cost_usd": "0.000130",
+        "fallback_used": false,
+        "error": null,
+        "output": {
+          "level": "critical",
+          "tactic": "legit_likely",
+          "question": null,
+          "llm_level": "medium"
+        },
+        "at": "2026-10-23T00:56:14.123648Z"
+      }
+    },
+    {
+      "t_ms": 4879,
+      "step": {
+        "id": "01a16642-283a-7c90-9479-1963d3e5d226",
+        "run_id": "01a16642-19fd-7545-ba00-fa10e8cce97f",
+        "node": "verify",
+        "model_profile": null,
+        "model": null,
+        "prompt_version": null,
+        "latency_ms": 3,
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": "0.000000",
+        "fallback_used": false,
+        "error": null,
+        "output": {
+          "checked": 1,
+          "warning": 0,
+          "dangerous": 0,
+          "level_after": "critical",
+          "level_before": "critical"
+        },
+        "at": "2026-10-23T00:56:14.138099Z"
+      }
+    },
+    {
+      "t_ms": 4879,
+      "step": {
+        "id": "01a16642-2849-781a-9788-f20aa7f2f7cf",
+        "run_id": "01a16642-19fd-7545-ba00-fa10e8cce97f",
+        "node": "intervention",
+        "model_profile": "fast",
+        "model": null,
+        "prompt_version": "intervention@2",
+        "latency_ms": 7,
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": "0.000000",
+        "fallback_used": true,
+        "error": "ValidationError",
+        "output": {
+          "action": "call_and_stay_on_line",
+          "template": "detail",
+          "points_kept": [
+            "unknown_call_then_finance_app",
+            "common_scam_pattern"
+          ],
+          "points_dropped": []
+        },
+        "at": "2026-10-23T00:56:14.153544Z"
+      }
+    }
+  ]
+}

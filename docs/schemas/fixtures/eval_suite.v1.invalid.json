@@ -1,0 +1,8 @@
+[
+  { "_why": "tên bộ lạ", "suite": "nightly", "version": 1, "description": "x", "cases": ["fake_police_drug_ring_001"] },
+  { "_why": "id trùng", "suite": "full", "version": 1, "description": "x", "cases": ["fake_police_drug_ring_001", "fake_police_drug_ring_001"] },
+  { "_why": "id sai mẫu (thiếu số 3 chữ số)", "suite": "full", "version": 1, "description": "x", "cases": ["fake_police_drug_ring"] },
+  { "_why": "danh sách ca rỗng", "suite": "injection", "version": 1, "description": "x", "cases": [] },
+  { "_why": "tỷ lệ ngoài 0..1", "suite": "full", "version": 1, "description": "x", "quotas": { "benign_ratio_min": 30 }, "cases": ["fake_police_drug_ring_001"] },
+  { "_why": "trường lạ", "suite": "full", "version": 1, "description": "x", "cases": ["fake_police_drug_ring_001"], "owner": "tien" }
+]

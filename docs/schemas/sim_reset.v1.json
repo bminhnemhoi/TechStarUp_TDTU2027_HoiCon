@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/sim_reset.v1.json",
+  "title": "SimReset v1",
+  "description": "Thân 200 của POST /v1/sim/reset (spec 050 FR-005c): kết quả `ops.booth.reset_sim` — chỉ xóa sự cố mô phỏng và thiết bị `sim:` của gia đình demo. Sau cổng HOICON_SIM_ENABLED, chỉ phiên demo.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "incidents",
+    "devices",
+    "seconds",
+    "is_demo"
+  ],
+  "properties": {
+    "incidents": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "devices": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "is_demo": {
+      "const": true
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "suite": "smoke",
+  "version": 1,
+  "description": "20 ca smoke tất định (spec 030): 6 hợp lệ, 4 chèn lệnh, 2 app ngoài Play, 1 số gắn cờ nhiều ca, 1 ca không kích hoạt luật, đủ 3 miền. Thứ tự trong file = thứ tự chạy.",
+  "cases": [
+    "benign_family_vegetables_001",
+    "benign_bank_hotline_outgoing_004",
+    "benign_relative_friend_phone_002",
+    "benign_official_hospital_003",
+    "benign_official_tax_reminder_001",
+    "benign_family_son_rent_002",
+    "fake_bank_card_locked_002",
+    "fake_police_safe_account_002",
+    "fake_tax_refund_app_002",
+    "deepfake_relative_grandchild_accident_002",
+    "fake_police_drug_ring_001",
+    "fake_evn_power_cut_001",
+    "fake_tax_debt_link_001",
+    "fake_vneid_level2_001",
+    "investment_crypto_mentor_002",
+    "prize_gift_telco_points_002",
+    "recovery_scam_bank_refund_003",
+    "task_scam_recruit_group_003",
+    "fake_delivery_qr_payment_003",
+    "fake_health_insurance_refund_001"
+  ]
+}

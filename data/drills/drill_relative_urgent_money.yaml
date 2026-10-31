@@ -1,0 +1,47 @@
+id: drill_relative_urgent_money
+scenario_ref: deepfake_relative_grandchild_accident_002
+title: "Cuộc gọi 'cháu cần tiền gấp'"
+agency_fictional: "Người xưng là cháu (hư cấu)"
+caller_last3_fictional: "772"
+steps:
+  - line_vi: >-
+      Alô, cháu đây! Cháu bị tai nạn nhỏ, đang ở bệnh viện, điện thoại cháu hỏng nên cháu mượn số lạ này để gọi.
+    choices:
+      - id: a
+        label_vi: "Hỏi chuyện chỉ cháu mới biết"
+        correct: true
+        feedback_vi: "Hay lắm ạ. Hỏi một chuyện riêng mà chỉ cháu thật mới biết là cách thử rất tốt."
+      - id: b
+        label_vi: "Tin ngay, lo cho cháu"
+        correct: false
+        feedback_vi: "Thương cháu là chuyện tự nhiên, nhưng mình nên kiểm tra trước đã. Giọng nói có thể bị làm giả."
+  - line_vi: >-
+      Cháu cần đóng viện phí gấp. Ông bà chuyển giúp cháu vào số tài khoản này, đừng báo bố mẹ cháu kẻo bố mẹ lo.
+    choices:
+      - id: a
+        label_vi: "Chuyển tiền ngay cho cháu"
+        correct: false
+        feedback_vi: "Chưa nên ạ. Mình chưa biết chắc người gọi có phải cháu không, đừng chuyển tiền vội."
+      - id: b
+        label_vi: "Gọi số cũ của cháu, hỏi bố mẹ"
+        correct: true
+        feedback_vi: "Đúng ạ. Gọi lại số quen của cháu hoặc hỏi bố mẹ cháu là cách chắc chắn nhất."
+  - line_vi: >-
+      Gấp lắm rồi, không có thời gian gọi lại đâu! Nếu không chuyển ngay thì bệnh viện chưa cho cháu điều trị.
+    choices:
+      - id: a
+        label_vi: "Dừng lại, báo bố mẹ cháu"
+        correct: true
+        feedback_vi: "Rất tốt ạ. Dù họ giục thế nào, mình vẫn dừng lại và báo người nhà trước."
+      - id: b
+        label_vi: "Sợ quá, chuyển tiền luôn"
+        correct: false
+        feedback_vi: "Họ giục để mình không kịp suy nghĩ. Mình hít thở, chậm lại và gọi người nhà nhé."
+debrief:
+  red_flags_vi:
+    - "Mượn số lạ, xưng là người thân nhưng không chứng minh được"
+    - "Đòi chuyển tiền gấp vào tài khoản của người lạ"
+    - "Dặn đừng báo cho bố mẹ"
+    - "Giục liên tục, không cho thời gian gọi lại"
+  praise_vi: "Ông bà đã dừng lại và tìm cách hỏi người nhà. Đó là cách tốt nhất để tránh bị lừa."
+approved: false

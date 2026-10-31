@@ -3,7 +3,12 @@
 > Minh chưa có điện thoại Android ⇒ phát triển và kiểm thử trên máy ảo (AVD). File này ghi cách dựng lại môi trường,
 > kịch bản mô phỏng và **giới hạn** của máy ảo. Quy trình kiểm thử từng bước: skill `android-emulator-test`.
 
-## 1. Toolchain (tất cả trên D:, ổ C: gần đầy)
+## 1. Toolchain
+
+Đường dẫn do `scripts/android-env.sh` quyết định (biến môi trường có sẵn thắng). Các script `setup-android.sh`,
+`avd-create.sh`, `emu-start.sh`, `emu-scenario.py` chạy được trên cả Windows (Git Bash) và Linux.
+
+### 1.1 Windows (máy Minh — tất cả trên D:, ổ C: gần đầy)
 
 | Thành phần | Vị trí | Ghi chú |
 |---|---|---|
@@ -31,6 +36,60 @@ bash scripts/avd-create.sh             # 3 AVD (idempotent; --recreate để t�
 - Emulator tự lấy múi giờ máy chủ (Windows "SE Asia Standard Time" ⇒ `Asia/Bangkok`) ⇒ `emu-start.sh` truyền
   `-timezone Asia/Ho_Chi_Minh`.
 
+### 1.2 Linux (máy Tiến — CachyOS, KVM; đo 15/10/2026)
+
+| Thành phần | Vị trí | Ghi chú |
+|---|---|---|
+| JDK 21 (Temurin) | `~/Android/jdk-21` | `JAVA_HOME` cho Gradle |
+| Android SDK | `~/Android/Sdk` | cùng bộ gói như Windows |
+| AVD | `~/.android/avd` | `ANDROID_AVD_HOME` |
+| Gradle cache | `~/.gradle` | |
+| Tăng tốc | KVM (`/dev/kvm` đọc ghi được) | `emulator -accel-check` |
+
+```bash
+bash scripts/setup-android.sh && bash scripts/avd-create.sh
+# thêm vào ~/.profile (bash) — fish: set -gx … trong ~/.config/fish/config.fish
+export ANDROID_HOME=$HOME/Android/Sdk ANDROID_AVD_HOME=$HOME/.android/avd JAVA_HOME=$HOME/Android/jdk-21
+export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH
+bash scripts/emu-start.sh hc-api36 --headless
+```
+
+**Đồ họa (đã đo trên RTX 4060 + Radeon 780M):** `-gpu host` mượt nhất khi có cửa sổ nhưng **sập (SIGSEGV gfxstream) khi
+`-no-window`** sau ~10 lần mở app ⇒ AVD đặt `hw.gpu.mode=auto` (SwiftShader, giật ~4%); `emu-start.sh` mặc định Linux:
+có cửa sổ `host`, `--headless` `auto`; đổi bằng `HC_GPU=…`. Pane "Mobile Emulator" của Orca chạy AVD bằng
+`-no-window` + scrcpy ⇒ cần `hw.gpu.mode=auto`. Lỗi "emulator-5554 is not a running device" = emulator đã chết.
+Sau `adb emu kill` phải chờ tiến trình qemu tắt hẳn mới chạy lại `emu-start.sh`.
+
+**Chạy trong Orca (đo 29/10/2026, CachyOS, 15 GB RAM):** `orca emulator attach hc-api36|hc-api34` tự boot AVD (`-avd … -no-window`)
+và truyền hình bằng scrcpy riêng của Orca (`~/.config/orca/scrcpy`, không cần cài scrcpy). Có snapshot: **11–15 s**; lần
+boot nguội đầu tiên sau khi đổi cấu hình AVD mất ~30 s và Orca có thể báo `ok:false` dù máy vẫn boot ⇒ chạy lại lệnh.
+Tắt bằng `adb emu kill` (lưu snapshot) rồi chờ qemu tắt hẳn. Máy ảo cần ≈ 2,7 GB RAM thật; dưới 3 GB trống thì swap
+đầy và boot treo (`emu-start.sh` cảnh báo, bỏ qua bằng `HC_ALLOW_LOW_RAM=1`) ⇒ đóng Chrome/bớt phiên Claude trước.
+AVD đặt `hw.camera.back=none` (app không dùng camera). `orca emulator exec` hiện lỗi `'in' operator … screenshotStatus`
+với lệnh trả chuỗi thuần (bug Orca CLI) ⇒ dùng `adb shell` trực tiếp.
+
+**Giọng đọc (`tts_unavailable` / `tts error`, spec 001 US4):** trên AVD mới tạo (đo ở hc-api34, 15/10/2026), Google TTS liệt
+kê giọng `vi-vn-x-vic-seanet-embedded` là "có sẵn" nên `Speaker` chọn nó, nhưng khi đọc logcat báo
+`Failed to load pipeline definitions! … status code: -4` ⇒ không có `tts_started`. Nguyên nhân: gói dữ liệu giọng vi-VN
+có trong ảnh hệ thống bị hỏng/thiếu, không phải lỗi app (luật chỉ-giọng-offline trong `Speaker.kt` giữ nguyên). Cách sửa
+(cần mạng **một lần**, AVD có Internet qua máy chủ; sau đó chạy offline):
+```bash
+$ADB shell am start -a android.speech.tts.engine.INSTALL_TTS_DATA     # mở "Dữ liệu giọng nói"
+# cuộn tới "Tiếng Việt (Việt Nam)" → biểu tượng thùng rác → "Gỡ cài đặt" → biểu tượng tải xuống (~8,8 MB) → đợi
+# hiện lại "Giọng nói I…V". Dữ liệu nằm trong userdata nên bền qua `emu-start.sh --cold`, mất khi tạo lại AVD.
+python scripts/emu-scenario.py --avd hc-api34 --scenario fake_police --runs 10   # "câu nói đầu" phải có ở ≥ 9/10 lần
+```
+Kiểm: `adb logcat -d | grep -E "GoogleTTS|tts_"`. Máy `-no-window -no-audio` không có tiếng ⇒ chỉ kiểm bằng mốc
+`tts_started` trong log, không bằng tai.
+
+**Chỉ chạy `:latency:connectedDebugAndroidTest` trên AVD hoặc Firebase Test Lab** — bộ đo tự bỏ qua trên máy thật khác, nhưng Gradle vẫn cài rồi gỡ bản debug của Lính gác trên mọi thiết bị đang cắm (đừng cắm máy có bản HỏiCon thật).
+
+**Hai bẫy khi dùng `:latency:connectedDebugAndroidTest` trên AVD:** (1) lỗi `UiAutomationService … already registered`
+là do `android layout`/`screen capture` của Android CLI để lại tiến trình `com.android.cli.interact.instrumentation` ⇒
+`adb shell am force-stop com.android.cli.interact.instrumentation` rồi chạy lại; (2) sau khi chạy, Gradle gỡ APK `:app`
+nên mất vai trò sàng lọc cuộc gọi/miễn tối ưu pin — cài lại và cấp quyền theo skill `android-emulator-test` §2 trước
+khi chạy `emu-scenario.py`.
+
 ## 2. Ma trận AVD
 
 | AVD | Android (API) | Thiết bị | Màn hình | RAM | Vai trò |
@@ -55,6 +114,18 @@ adb emu kill                                   # tắt
 `emu-start.sh` chờ `sys.boot_completed`, đặt múi giờ VN, `system_locales=vi-VN` (có hiệu lực sau lần khởi động lại
 kế tiếp — chỉ cần một lần vì userdata được giữ), cỡ chữ 1.0, màn hình luôn sáng.
 **Mỗi lúc chỉ chạy 1 AVD** (RAM trống trên máy dev ~3 GB khi các stack khác đang chạy).
+
+### 3.1 Bộ đo giọng nói `:voicelab` (spec 004)
+```bash
+bash scripts/emu-start.sh hc-api36 --headless                       # MỘT AVD; --headless = -no-audio (không mở micro máy chủ)
+bash scripts/voice-lab.sh --avd hc-api36 --probe tts                # giọng vi + độ trễ nguội/ấm (mạng tắt)
+bash scripts/voice-lab.sh --avd hc-api36 --probe clip|synth         # clip thu sẵn · WAV tổng hợp (kéo về ~/hoicon-evidence/004-voice-vi)
+bash scripts/voice-lab.sh --avd hc-api36 --probe stt --set synthetic   # nhận dạng vi-VN từ tệp WAV (cần --allow-network nếu vi-VN không có trên máy)
+python3 scripts/voice-wer.py --sentences data/voice/sentences.v1.json --results <jsonl> --out <dir>
+```
+Chỉ chạy trên máy ảo/máy thử (script từ chối máy khác). Bản thu giọng người thật và điểm nghe nằm ngoài repo
+(`~/hoicon-evidence/004-voice-vi/`). Kết quả: `docs/spikes/P1-S5-giong-noi.md`. Cần ≥ 5 GB RAM khả dụng (`free -m`, cột available);
+dừng Gradle daemon (`gradlew --stop`) trước khi bật máy ảo nếu thiếu.
 
 ## 4. Smoke test đã đạt (08/10/2026)
 
@@ -85,7 +156,8 @@ Android (`scripts/stop-other-stacks.sh`, P0-06).
 | Tình huống | Cách mô phỏng |
 |---|---|
 | Cuộc gọi đến từ số lạ / số bị gắn cờ | `adb emu gsm call <số>` → `gsm accept` → `gsm cancel` (số **hư cấu** trong `data/fixtures/`) |
-| Mở app ngân hàng | `adb shell monkey -p vn.hoicon.demobank -c android.intent.category.LAUNCHER 1` |
+| Mở app ngân hàng | `adb shell monkey -p vn.hoicon.demobank -c android.intent.category.LAUNCHER 1` (hoặc `am start -n vn.hoicon.demobank/.MainActivity --es screen transfer` để vào thẳng form chuyển tiền) |
+| "Số lạ vừa gọi" không cần modem (bản debug) | `adb shell am broadcast -f 0x20 -n vn.hoicon.sentinel/.debug.ScenarioReceiver -a vn.hoicon.debug.CALL` (`…CLEAR` để đóng cửa sổ) |
 | Đo độ trễ | logcat tag `HC_TIMING` (`app_foreground`, `risk_detected`, `pause_shown`) |
 | Kiểm tra màn hình | `android layout` (cây UI) / UI Automator; `android screen capture` |
 | Cấp quyền tự động | `cmd role add-role-holder android.app.role.CALL_SCREENING <pkg>`; `appops set <pkg> GET_USAGE_STATS allow`; `appops set <pkg> SYSTEM_ALERT_WINDOW allow`; `pm grant <pkg> android.permission.POST_NOTIFICATIONS` |
@@ -98,7 +170,9 @@ Android (`scripts/stop-other-stacks.sh`, P0-06).
 ## 6. Giới hạn của máy ảo (phải nói rõ trong thuyết minh & rủi ro)
 
 - **Không** tái hiện việc Xiaomi/Oppo/Vivo/Samsung diệt tác vụ nền, chế độ tiết kiệm pin riêng của hãng.
-- App ngân hàng Việt Nam thật thường **từ chối chạy trên máy ảo/máy root** ⇒ dùng `:demobank`.
+- App ngân hàng Việt Nam thật **phải tự dừng trên máy ảo, khi bật ADB/gỡ lỗi, khi máy root** (Thông tư 77/2025/TT-NHNN,
+  từ 01/3/2026, theo nguồn thứ cấp, chưa đối chiếu Công báo) ⇒ dùng `:demobank`; app thật chỉ thử trên máy thật cài HỏiCon qua Play, đã tắt tùy chọn nhà phát triển
+  (giao thức trong `docs/spikes/P1-S2-dung-an-toan.md` §5, ADR-008).
 - Cuộc gọi là giả lập modem: không có âm thanh thật, không có VoLTE/hai SIM.
 
 **Giảm thiểu:** (a) thiết kế phòng thủ — FGS trong cửa sổ rủi ro, heartbeat báo "mất bảo vệ", thông báo dự phòng sau
@@ -106,3 +180,14 @@ cuộc gọi; (b) **Firebase Test Lab** (máy vật lý) trước M2 cho test in
 (c) `android device remote` (Android Device Streaming, cần dự án Google Cloud + `android auth`) để thao tác máy thật từ
 xa; (d) máy của gia đình thí điểm + số liệu heartbeat; (e) **khuyến nghị mua máy Android cũ 1–2 triệu trước 06/12**.
 Không tuyên bố tương thích hãng nào chưa thử.
+
+## Kinh nghiệm đo trên máy ảo (làn A, 23–24/10/2026)
+- **Chờ ≥ 3 phút sau cold boot** rồi mới đo: trong ~2 phút đầu modem giả nhận `gsm call` nhưng không đổ chuông (H1, evidence 010 lượt 9);
+  một lần `system_server` khởi động lại ~20 s sau boot. Số đo lấy trong khoảng này không dùng.
+- **Không để hai bản app tranh vai trò sàng lọc**: cài cả `vn.hoicon.sentinel` (debug) và `vn.hoicon.sentinel.demo` ⇒ vai trò chỉ thuộc một bản;
+  `emu-scenario.py` kiểm bằng `holds_role()` (so đúng tên gói, không so tiền tố).
+- Sau `pm clear` hoặc cài lại: `appops set <gói> SYSTEM_ALERT_WINDOW allow` và `GET_USAGE_STATS allow`.
+- Đã ghép đôi thì E8 có thể chen lên E7 ⇒ chụp E7 khi chưa ghép đôi.
+- Máy dev chỉ đủ RAM cho **một** AVD tại một thời điểm.
+- Ngưỡng "E7 ≤ 3 s" (luật 4) đo trên **bản release** và **gộp cả lượt nguội** (`--scenario pause_release`); không bỏ lượt đầu.
+

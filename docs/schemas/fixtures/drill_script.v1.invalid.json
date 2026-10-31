@@ -1,0 +1,934 @@
+[
+  {
+    "_why": "3 lựa chọn ở một bước",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          },
+          {
+            "id": "c",
+            "label_vi": "Cách khác",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": false
+  },
+  {
+    "_why": "choice_id là 'x1'",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "x1",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": false
+  },
+  {
+    "_why": "choice_id viết hoa",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "A",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": false
+  },
+  {
+    "_why": "chỉ 1 bước",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": false
+  },
+  {
+    "_why": "6 bước",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      },
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": false
+  },
+  {
+    "_why": "thiếu approved",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    }
+  },
+  {
+    "_why": "approved là chuỗi",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": "yes"
+  },
+  {
+    "_why": "id sai mẫu (thiếu tiền tố drill_)",
+    "id": "bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": false
+  },
+  {
+    "_why": "caller_last3_fictional có 4 chữ số",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "4180",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": false
+  },
+  {
+    "_why": "line_vi dài quá 400 ký tự",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": false
+  },
+  {
+    "_why": "label_vi dài quá 40 ký tự",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": false
+  },
+  {
+    "_why": "thêm trường lạ",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ],
+      "praise_vi": "Bác đã không bấm link và không đọc mã OTP. Cứ giữ thói quen chậm lại và hỏi người thân như vậy nhé."
+    },
+    "approved": false,
+    "extra": "x"
+  },
+  {
+    "_why": "thiếu praise_vi trong debrief",
+    "id": "drill_bank_card_locked",
+    "scenario_ref": "fake_bank_card_locked_002",
+    "title": "Cuộc gọi báo thẻ bị khóa",
+    "agency_fictional": "Ngân hàng Sen Xanh",
+    "caller_last3_fictional": "418",
+    "steps": [
+      {
+        "line_vi": "Chào bác, tôi gọi từ Ngân hàng Sen Xanh. Thẻ của bác vừa bị khóa vì có giao dịch lạ. Tôi gửi bác đường link để mở khóa ngay nhé.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Bấm vào link để mở khóa",
+            "correct": false,
+            "feedback_vi": "Chưa nên đâu ạ. Link lạ do người gọi gửi có thể dẫn tới trang giả."
+          },
+          {
+            "id": "b",
+            "label_vi": "Tự gọi số in trên thẻ để hỏi",
+            "correct": true,
+            "feedback_vi": "Đúng ạ. Ngân hàng thật không bắt mình bấm link lạ. Tự gọi số in trên thẻ là chắc nhất."
+          }
+        ]
+      },
+      {
+        "line_vi": "Bây giờ bác đọc giúp tôi mã OTP vừa gửi về điện thoại, để tôi xác nhận đúng chủ thẻ.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Không đọc mã OTP cho ai",
+            "correct": true,
+            "feedback_vi": "Đúng rồi ạ. Mã OTP là chìa khóa của mình, ngân hàng thật không bao giờ hỏi mã này."
+          },
+          {
+            "id": "b",
+            "label_vi": "Đọc mã OTP cho họ",
+            "correct": false,
+            "feedback_vi": "Chưa nên ạ. Ai có mã OTP thì lấy được tiền trong tài khoản. Đừng đọc cho bất kỳ ai."
+          }
+        ]
+      },
+      {
+        "line_vi": "Nếu bác không làm ngay, thẻ sẽ bị khóa vĩnh viễn sau ít phút nữa. Bác phải làm nhanh lên.",
+        "choices": [
+          {
+            "id": "a",
+            "label_vi": "Cuống lên, làm cho nhanh",
+            "correct": false,
+            "feedback_vi": "Người lừa đảo hay giục mình để mình không kịp nghĩ. Mình cứ chậm lại nhé."
+          },
+          {
+            "id": "b",
+            "label_vi": "Bình tĩnh, hỏi lại con cháu",
+            "correct": true,
+            "feedback_vi": "Rất tốt ạ. Chậm lại và hỏi người thân luôn là cách an toàn."
+          }
+        ]
+      }
+    ],
+    "debrief": {
+      "red_flags_vi": [
+        "Gọi điện rồi gửi link lạ để 'mở khóa' thẻ",
+        "Xin mã OTP, ngân hàng thật không bao giờ hỏi",
+        "Giục làm thật nhanh, dọa khóa thẻ"
+      ]
+    },
+    "approved": false
+  }
+]

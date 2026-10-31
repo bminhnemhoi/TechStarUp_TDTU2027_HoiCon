@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "note": "Câu hư cấu, không PII. 'answer' = câu người cao tuổi trả lời ngắn; 'story' = câu kể ngắn.",
+  "sentences": [
+    {
+      "id": "a01",
+      "text": "Vâng, đúng rồi ạ, tôi có đang nghe điện thoại.",
+      "kind": "answer",
+      "intent": "yes",
+      "region": "north"
+    },
+    {
+      "id": "a02",
+      "text": "Dạ phải, tui có nghe cuộc gọi đó.",
+      "kind": "answer",
+      "intent": "yes",
+      "region": "central"
+    },
+    {
+      "id": "a03",
+      "text": "Dạ có nha, họ mới gọi cho tui hồi nãy.",
+      "kind": "answer",
+      "intent": "yes",
+      "region": "south"
+    },
+    {
+      "id": "a04",
+      "text": "Có, tôi đã làm theo lời họ rồi.",
+      "kind": "answer",
+      "intent": "yes",
+      "region": "any"
+    },
+    {
+      "id": "a05",
+      "text": "Không, tôi chưa chuyển tiền cho ai cả.",
+      "kind": "answer",
+      "intent": "no",
+      "region": "north"
+    },
+    {
+      "id": "a06",
+      "text": "Chưa, tui chưa đưa mã cho ai hết.",
+      "kind": "answer",
+      "intent": "no",
+      "region": "central"
+    },
+    {
+      "id": "a07",
+      "text": "Hông, tui hông có đưa mã cho ai hết.",
+      "kind": "answer",
+      "intent": "no",
+      "region": "south"
+    },
+    {
+      "id": "a08",
+      "text": "Không có, tôi vẫn chưa làm gì cả.",
+      "kind": "answer",
+      "intent": "no",
+      "region": "any"
+    },
+    {
+      "id": "a09",
+      "text": "Tôi không biết nữa, để tôi hỏi con.",
+      "kind": "answer",
+      "intent": "unsure",
+      "region": "north"
+    },
+    {
+      "id": "a10",
+      "text": "Tui không rõ lắm, chắc không phải đâu.",
+      "kind": "answer",
+      "intent": "unsure",
+      "region": "central"
+    },
+    {
+      "id": "a11",
+      "text": "Hông biết nữa, tui lú lắm rồi.",
+      "kind": "answer",
+      "intent": "unsure",
+      "region": "south"
+    },
+    {
+      "id": "a12",
+      "text": "Tôi không chắc, để tôi hỏi con cháu đã.",
+      "kind": "answer",
+      "intent": "unsure",
+      "region": "any"
+    },
+    {
+      "id": "s01",
+      "text": "Họ xưng là công an và nói tài khoản của tôi liên quan đến một vụ án.",
+      "kind": "story",
+      "intent": null,
+      "region": "any"
+    },
+    {
+      "id": "s02",
+      "text": "Người lạ bảo tôi phải chuyển tiền vào tài khoản an toàn ngay hôm nay.",
+      "kind": "story",
+      "intent": null,
+      "region": "any"
+    },
+    {
+      "id": "s03",
+      "text": "Có người gọi báo con tôi bị tai nạn và cần tiền gấp.",
+      "kind": "story",
+      "intent": null,
+      "region": "any"
+    },
+    {
+      "id": "s04",
+      "text": "Họ gửi cho tôi một đường dẫn lạ và bảo cài ứng dụng ngân hàng mới.",
+      "kind": "story",
+      "intent": null,
+      "region": "any"
+    },
+    {
+      "id": "s05",
+      "text": "Họ yêu cầu tôi đọc mã xác nhận vừa gửi về điện thoại.",
+      "kind": "story",
+      "intent": null,
+      "region": "any"
+    },
+    {
+      "id": "s06",
+      "text": "Cô nhân viên nói tôi trúng thưởng và phải đóng phí trước khi nhận.",
+      "kind": "story",
+      "intent": null,
+      "region": "any"
+    },
+    {
+      "id": "s07",
+      "text": "Tôi đang mở ứng dụng ngân hàng để chuyển tiền cho người mới quen.",
+      "kind": "story",
+      "intent": null,
+      "region": "any"
+    },
+    {
+      "id": "s08",
+      "text": "Họ dặn tôi không được nói chuyện này với con cháu trong nhà.",
+      "kind": "story",
+      "intent": null,
+      "region": "any"
+    }
+  ]
+}

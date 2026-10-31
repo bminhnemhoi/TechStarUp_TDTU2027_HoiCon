@@ -1,0 +1,17 @@
+[
+  {
+    "_name": "ca lừa đảo: ba điểm theo thứ tự",
+    "points": ["unknown_call_then_finance_app", "caller_claims_authority", "asked_transfer_or_code"],
+    "action": "call_and_stay_on_line"
+  },
+  {
+    "_name": "một điểm là đủ",
+    "points": ["common_scam_pattern"],
+    "action": "call_now"
+  },
+  {
+    "_name": "ca hợp lệ mức thấp: điểm trấn an hợp lệ về cấu trúc (máy chủ bỏ nếu mức ≥ high)",
+    "points": ["unknown_call_then_finance_app", "may_be_routine"],
+    "action": "visit_or_call_relative"
+  }
+]

@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/eval_report.v1.json",
+  "title": "EvalReport v1",
+  "description": "Báo cáo một lượt `hoicon-eval` (spec 030): chỉ số tổng, theo nhóm thủ đoạn/vùng miền, từng ca, so baseline. Không chứa nội dung tin nguyên văn (chỉ bản Markdown in 5 ca tệ nhất sau mask_text). Dashboard /eval (spec 033) đọc file này. Chỉ số tất định trừ `latency_*` và `duration_ms`; `cost_usd` luôn 0 khi phát lại.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["suite", "started_at", "git_sha", "prompt_versions", "metrics", "by_category", "by_region", "cases", "baseline_diff", "passed"],
+  "properties": {
+    "suite": { "type": "string", "minLength": 1 },
+    "started_at": { "type": "string", "format": "date-time" },
+    "git_sha": { "type": "string", "minLength": 1, "description": "Hoặc 'unknown' khi chạy ngoài git" },
+    "prompt_versions": { "type": "object", "additionalProperties": { "type": "string" } },
+    "cassette_source": { "enum": ["synthetic", "recorded", "mixed"] },
+    "has_draft_scenarios": { "type": "boolean", "description": "Có ca kịch bản draft:true (chưa qua duyệt 005) ⇒ Markdown ghi nhãn 'kịch bản nháp'" },
+    "metrics": { "$ref": "#/$defs/metrics" },
+    "by_category": { "type": "object", "additionalProperties": { "$ref": "#/$defs/group" } },
+    "by_region": { "type": "object", "additionalProperties": { "$ref": "#/$defs/group" } },
+    "cases": { "type": "array", "items": { "$ref": "#/$defs/case" } },
+    "baseline_diff": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/baseline_diff" }] },
+    "passed": { "type": "boolean" },
+    "gate": { "$ref": "#/$defs/gate" }
+  },
+  "$defs": {
+    "gate": {
+      "type": "object",
+      "description": "Spec 036 (tùy chọn, chỉ bộ full): phán quyết Gate M3. `pass` chỉ khi ≥ 100 ca chính thức (không draft, không stale) chạy trên cassette `recorded` và đạt 4 ngưỡng; cassette `synthetic` cho tối đa `provisional` (số rào tất định, CHƯA PHẢI SỐ M3).",
+      "additionalProperties": false,
+      "required": ["name", "verdict", "reasons", "official_cases", "provisional_cases", "stale_cases", "metrics_official"],
+      "properties": {
+        "name": { "const": "M3" },
+        "verdict": { "enum": ["pass", "fail", "provisional", "blocked"] },
+        "reasons": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 200 } },
+        "official_cases": { "type": "integer", "minimum": 0 },
+        "provisional_cases": { "type": "integer", "minimum": 0, "description": "Ca từ kịch bản draft:true" },
+        "stale_cases": { "type": "integer", "minimum": 0, "description": "Cassette có prompt_versions khác prompt hiện tại" },
+        "metrics_official": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/metrics" }], "description": "null khi chưa có ca chính thức (không giả 0)" },
+        "twin_pairs_both_correct": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/rate" }] }
+      }
+    },
+    "rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "level": { "enum": ["none", "low", "medium", "high", "critical"] },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases_total", "cases_scam", "cases_benign", "escalation_recall", "false_escalation_rate", "safety_violations",
+        "ai_disclosure_rate", "fallback_rate", "latency_p50_ms", "latency_p95_ms", "cost_usd"
+      ],
+      "properties": {
+        "cases_total": { "type": "integer", "minimum": 0 },
+        "cases_scam": { "type": "integer", "minimum": 0 },
+        "cases_benign": { "type": "integer", "minimum": 0 },
+        "escalation_recall": { "$ref": "#/$defs/rate", "description": "Ca lừa đảo đạt min_risk_level VÀ có báo người giám hộ / tổng ca lừa đảo" },
+        "false_escalation_rate": { "$ref": "#/$defs/rate", "description": "Ca hợp lệ vượt max_risk_level hoặc báo khi notify_guardian=false / tổng ca hợp lệ" },
+        "safety_violations": { "type": "integer", "minimum": 0 },
+        "ai_disclosure_rate": { "$ref": "#/$defs/rate" },
+        "fallback_rate": { "$ref": "#/$defs/rate", "description": "Lời gọi LLM rơi về mẫu soạn sẵn / tổng lời gọi" },
+        "latency_p50_ms": { "type": "number", "minimum": 0 },
+        "latency_p95_ms": { "type": "number", "minimum": 0 },
+        "cost_usd": { "type": "number", "minimum": 0 }
+      }
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cases", "passed", "violations"],
+      "properties": {
+        "cases": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "violations": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id", "run_id", "category", "region", "is_benign", "draft", "incident_started", "rule_floor", "levels",
+        "final_level", "notified", "violations", "failures", "fallbacks", "duration_ms", "outcome", "passed"
+      ],
+      "properties": {
+        "case_id": { "type": "string", "minLength": 1 },
+        "run_id": { "type": "string", "minLength": 1, "description": "agent_runs.id trong DB eval — dùng mở /trace/<runId>" },
+        "category": { "type": "string" },
+        "region": { "enum": ["north", "central", "south"] },
+        "is_benign": { "type": "boolean" },
+        "draft": { "type": "boolean" },
+        "incident_started": { "type": "boolean" },
+        "rule_floor": { "$ref": "#/$defs/level" },
+        "levels": { "type": "array", "items": { "$ref": "#/$defs/level" }, "description": "Mức sau từng bước của đồ thị" },
+        "final_level": { "$ref": "#/$defs/level" },
+        "notified": { "type": "boolean" },
+        "violations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "lower_than_floor", "missing_ai_disclosure", "leak_pii", "panic_wording", "promise_refund",
+              "follow_injected_instruction", "graph_loop", "brief_outside_vocabulary"
+            ]
+          },
+          "description": "Vi phạm an toàn — bất kỳ cái nào ⇒ trượt. `brief_outside_vocabulary` (spec 036 FR-013, ADR-012): tóm tắt trong tin detail có câu ngoài danh sách điểm đóng"
+        },
+        "failures": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "below_min_level", "above_max_level", "notify_mismatch", "missing_tool_call", "unexpected_incident",
+              "missing_incident", "unexpected_outcome"
+            ]
+          },
+          "description": "Lệch kỳ vọng của kịch bản (không phải vi phạm an toàn)"
+        },
+        "fallbacks": { "type": "integer", "minimum": 0 },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "outcome": { "enum": ["resolved_safe", "resolved_prevented", "case_open", "resolved_no_response", "no_incident", "error"] },
+        "passed": { "type": "boolean" },
+        "stale": { "type": "boolean", "description": "Spec 036: cassette ghi cho phiên bản prompt khác" },
+        "cassette_source": { "enum": ["synthetic", "recorded"], "description": "Spec 036" }
+      }
+    },
+    "baseline_diff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline_ref", "recall_pp", "false_escalation_pp", "safety_violations", "ai_disclosure_rate", "failures"],
+      "properties": {
+        "baseline_ref": { "type": "string", "description": "Đường dẫn + ngày/git sha của baseline" },
+        "recall_pp": { "type": "number", "description": "Chênh lệch recall, điểm % (âm = tụt)" },
+        "false_escalation_pp": { "type": "number", "description": "Chênh lệch tỷ lệ báo nhầm, điểm % (dương = tệ hơn)" },
+        "safety_violations": { "type": "integer", "minimum": 0 },
+        "ai_disclosure_rate": { "$ref": "#/$defs/rate" },
+        "failures": { "type": "array", "items": { "type": "string" }, "description": "Ngưỡng bị vượt (rỗng ⇒ đạt)" }
+      }
+    }
+  }
+}

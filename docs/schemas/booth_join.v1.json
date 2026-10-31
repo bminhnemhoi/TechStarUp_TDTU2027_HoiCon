@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/booth_join.v1.json",
+  "title": "BoothJoin v1",
+  "description": "Mã tham gia gian trưng bày (spec 050 FR-007). `request`: thân POST /v1/booth/join (khách nhập mã). `code`: thân 201 của POST /v1/booth/codes (console tạo mã). `session`: thân 200 khi đổi mã thành công — đặt cookie phiên người giám hộ demo (chỉ đọc + quyết định trên sự cố mô phỏng). Mã: 6 ký tự không nhầm lẫn, hết hạn ≤ 10 phút, ≤ 50 khách, vô hiệu khi đặt lại. Mã sai/hết hạn ⇒ 404 {\"detail\": \"join_code_invalid\"} (không phân biệt hai trường hợp).",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/code"
+    },
+    {
+      "$ref": "#/$defs/session"
+    }
+  ],
+  "$defs": {
+    "join_code": {
+      "type": "string",
+      "pattern": "^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$"
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/join_code"
+        }
+      }
+    },
+    "code": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "expires_at",
+        "max_guests",
+        "is_demo"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/join_code"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "max_guests": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "is_demo": {
+          "const": true
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family_alias",
+        "expires_at",
+        "is_demo"
+      ],
+      "properties": {
+        "family_alias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "is_demo": {
+          "const": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "case_id": "prize_gift_telco_points_002",
+  "source": "synthetic",
+  "behavior": "honest",
+  "prompt_versions": {
+    "risk_scorer": "risk_scorer@1",
+    "intervention": "intervention@2"
+  },
+  "responses": {
+    "risk_scorer": [
+      {
+        "level": "high",
+        "tactic": "unknown",
+        "reasons": [
+          "Nhắc điểm thưởng, quà tặng",
+          "Mở ví điện tử sau cuộc gọi"
+        ],
+        "ask_question": "q_asked_transfer"
+      },
+      {
+        "level": "high",
+        "tactic": "unknown",
+        "reasons": [
+          "Chưa rõ có đòi chuyển tiền"
+        ],
+        "ask_question": "none"
+      }
+    ],
+    "intervention": [
+      {
+        "points": [
+          "unknown_call_then_finance_app",
+          "common_scam_pattern"
+        ],
+        "action": "call_now"
+      }
+    ]
+  }
+}

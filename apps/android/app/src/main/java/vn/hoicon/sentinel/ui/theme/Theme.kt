@@ -4,13 +4,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-// Light only for now; navy on white is ~11.5:1 (>= 7:1 required for the elder app).
+// Light only (DS5); navy on white is ~11.5:1 (>= 7:1 required for the elder app).
 private val HoiConColors = lightColorScheme(
     primary = BrandNavy,
     onPrimary = SurfaceWhite,
-    secondary = BrandOrange,
+    // Text-on-colour roles use the >= 7:1 variants (DS3): white on BrandOrange / BrandGreen is only ~4.5-5.2:1.
+    secondary = BrandOrangeText,
     onSecondary = SurfaceWhite,
-    tertiary = BrandGreen,
+    tertiary = BrandGreenText,
     onTertiary = SurfaceWhite,
     background = SurfaceWhite,
     onBackground = BrandNavy,

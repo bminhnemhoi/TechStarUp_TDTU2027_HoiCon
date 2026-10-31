@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/sim_run.v1.json",
+  "title": "SimRun v1",
+  "description": "Khung nhìn một lượt mô phỏng (spec 033): POST /v1/sim/runs và GET /v1/sim/runs/{incident_id}. Chỉ gia đình demo, dữ liệu hư cấu, tin là văn bản mẫu đã che PII. incident_id null ⇔ kịch bản không kích hoạt luật trên máy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scenario_id", "is_demo", "llm_mode", "incident_id", "run_id", "state", "level", "pending_question", "guardian_messages", "note"],
+  "properties": {
+    "scenario_id": { "type": "string", "pattern": "^[a-z0-9]+(_[a-z0-9]+)*_[0-9]{3}$" },
+    "is_demo": { "const": true },
+    "llm_mode": { "enum": ["replay", "live", "fallback"], "description": "fallback = chọn live nhưng không có khóa ⇒ mẫu soạn sẵn" },
+    "incident_id": { "oneOf": [{ "type": "null" }, { "type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" }] },
+    "run_id": { "oneOf": [{ "type": "null" }, { "type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" }] },
+    "state": { "oneOf": [{ "type": "null" }, { "$ref": "incident.v1.json#/$defs/state" }] },
+    "level": { "enum": ["none", "low", "medium", "high", "critical"] },
+    "pending_question": { "oneOf": [{ "type": "null" }, { "$ref": "elder_question.v1.json" }] },
+    "guardian_messages": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "template", "text"],
+        "properties": {
+          "at": { "type": "string", "format": "date-time" },
+          "template": { "type": "string", "pattern": "^[a-z_]{1,32}$" },
+          "text": { "type": "string", "minLength": 1, "maxLength": 1000, "pattern": "^Đây là trợ lý AI HỏiCon", "description": "Mọi tin trong sự cố mở đầu bằng câu công khai AI (CLAUDE.md luật 6)" }
+        }
+      }
+    },
+    "note": { "oneOf": [{ "type": "null" }, { "type": "string", "maxLength": 200 }], "description": "Lời giải thích cho BGK, ví dụ 'Máy không bật nhắc dừng lại với tình huống này'" }
+  }
+}

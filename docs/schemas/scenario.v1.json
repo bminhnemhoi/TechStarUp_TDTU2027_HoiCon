@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/scenario.v1.json",
+  "title": "Scenario v1",
+  "description": "Một kịch bản lừa đảo (hoặc cuộc gọi hợp lệ đối chứng) trong data/scenarios/<id>.yaml — nguồn cho eval (P2-15), diễn tập (P2-13) và demo. Mọi tên, cơ quan, số điện thoại, số tài khoản đều HƯ CẤU (CLAUDE.md luật 8). Skill add-scam-scenario.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "category", "is_benign", "region", "channel", "script_vi", "device_signals", "elder_answers", "expected", "red_flags", "teach_points", "source_ref", "draft"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(_[a-z0-9]+)*_[0-9]{3}$" },
+    "category": {
+      "enum": [
+        "fake_police", "fake_tax", "fake_evn", "deepfake_relative", "task_scam", "recovery_scam", "fake_vneid",
+        "fake_bank", "investment", "fake_delivery", "prize_gift", "fake_health",
+        "benign_bank", "benign_relative_new_number", "benign_shipper", "benign_official", "benign_utility", "benign_family"
+      ]
+    },
+    "is_benign": { "type": "boolean" },
+    "twin_of": { "type": "string", "description": "id của ca song sinh (ca hợp lệ ↔ ca lừa đảo gần giống)" },
+    "injection": { "type": "boolean", "description": "Lời kể của người cao tuổi (elder_note) chứa lệnh chèn nhằm vào tác tử" },
+    "region": { "enum": ["north", "central", "south"] },
+    "channel": { "enum": ["phone_call", "zalo_call", "sms_reported"] },
+    "script_vi": { "type": "string", "minLength": 20, "maxLength": 1200 },
+    "elder_note": { "type": "string", "maxLength": 500, "description": "Lời người cao tuổi kể lại (đi vào <untrusted>)" },
+    "device_signals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caller_flag", "in_call", "duration_bucket", "app_category"],
+      "properties": {
+        "caller_flag": { "enum": ["unknown", "flagged", "trusted"] },
+        "in_call": { "type": "boolean" },
+        "duration_bucket": { "enum": ["lt_1m", "1_5m", "5_15m", "gt_15m"] },
+        "app_category": { "enum": ["bank", "wallet", "securities", "sideloaded", "none"] }
+      }
+    },
+    "elder_answers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claims_authority": { "enum": ["yes", "no", "unsure"] },
+        "asks_transfer": { "enum": ["yes", "no", "unsure"] },
+        "knows_caller": { "enum": ["yes", "no", "unsure"] },
+        "asks_secrecy": { "enum": ["yes", "no", "unsure"] }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min_risk_level", "notify_guardian", "must_not"],
+      "properties": {
+        "min_risk_level": { "enum": ["none", "low", "medium", "high", "critical"] },
+        "max_risk_level": { "enum": ["none", "low", "medium", "high", "critical"] },
+        "notify_guardian": { "type": "boolean" },
+        "must_call_tools": { "type": "array", "items": { "enum": ["threat.lookup_phone"] }, "uniqueItems": true },
+        "must_not": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["lower_than_floor", "missing_ai_disclosure", "follow_injected_instruction", "leak_pii", "panic_wording", "promise_refund"] }
+        }
+      }
+    },
+    "red_flags": { "type": "array", "items": { "type": "string" } },
+    "teach_points": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "source_ref": { "type": "string", "minLength": 10, "description": "Cảnh báo chính thức/báo chí (có ngày + đường dẫn); ca hợp lệ ghi nguồn mô tả hành vi thật" },
+    "draft": { "type": "boolean", "description": "true cho tới khi Minh duyệt" }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoicon.vn/schemas/error.v1.json",
+  "title": "Error v1",
+  "description": "Thân lỗi đồng ý (spec 037 FR-001/FR-002, sửa 24/10/2026 cho khớp thân thật). Dạng `{\"detail\": ...}` của FastAPI `HTTPException`. 403 của POST /v1/events, /v1/devices/* mang MÃ MÁY `consent_withdrawn` (Android `OutboxSender`/`PairingApiClient` dựa vào mã này, spec 034). 422 của POST /v1/consents (văn bản ngoài manifest) mang câu tiếng Việt cho người dùng, không nêu sha mong đợi. Không có trường `purpose`: máy chủ không gửi và chưa ai cần.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "detail"
+  ],
+  "properties": {
+    "detail": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/code"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "Câu tiếng Việt hiển thị cho người dùng"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "code": {
+      "enum": [
+        "consent_withdrawn"
+      ],
+      "description": "Mã máy cố định; đổi ⇒ phiên bản lược đồ mới + sửa Android"
+    }
+  }
+}

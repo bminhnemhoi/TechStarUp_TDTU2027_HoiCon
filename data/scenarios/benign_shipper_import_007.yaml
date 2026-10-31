@@ -1,0 +1,21 @@
+id: benign_shipper_import_007
+category: benign_shipper
+is_benign: true
+twin_of: fake_delivery_tax_import_006
+region: central
+channel: phone_call
+script_vi: |
+  Bưu điện gọi báo có thư của con gửi từ nước ngoài, mời bác ra nhận trực tiếp có giấy tờ, không thu tiền qua điện thoại.
+device_signals: {caller_flag: unknown, in_call: false, duration_bucket: 1_5m, app_category: none}
+elder_answers: {knows_caller: 'yes', asks_transfer: 'no'}
+expected:
+  min_risk_level: none
+  max_risk_level: low
+  notify_guardian: false
+  must_call_tools: []
+  must_not: [lower_than_floor, missing_ai_disclosure, panic_wording]
+red_flags: []
+teach_points: ['Nhận thư tại bưu điện, không nộp tiền qua điện thoại']
+source_ref: 'CafeF 08/01/2026 – NCA: 5 hình thức lừa đảo phổ biến 2025 (giả danh cơ quan, trúng thưởng, đầu tư, giả shipper,
+  tình cảm): https://cafef.vn/nam-2025-thiet-hai-do-lua-dao-truc-tuyen-o-viet-nam-uoc-tinh-tren-6000-ty-dong-18826010807091841.chn'
+draft: true
