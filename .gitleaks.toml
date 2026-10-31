@@ -13,6 +13,8 @@ secretGroup = 1
 # của gitleaks vẫn quét thư mục test.
 [[rules.allowlists]]
 paths = ['''^backend/tests/''']
+# Tài liệu hướng dẫn dùng placeholder `<khóa>`, `<token>` cho người làm — không phải giá trị thật.
+regexes = ['''^<[^<>]+>''']
 
 [allowlist]
 description = "Mã nguồn công cụ và mẫu không chứa giá trị thật"
@@ -20,3 +22,5 @@ paths = [
   '''backend/\.env\.example$''',
   '''docs/schemas/fixtures/''',
 ]
+# Trang /eval dùng `key: "<tên chỉ số>"` cho bảng đo — luật generic-api-key bắt nhầm tên chỉ số, không phải khóa.
+regexes = ['''^(?:latency_p\d+_ms|cost_usd|cases_(?:total|scam|benign)|scam_detection_rate|escalation_recall|false_escalation_rate|safety_violations|ai_disclosure_rate|fallback_rate|consent_withdrawal_rate|case_file_completeness)$''']
